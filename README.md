@@ -14,4 +14,4 @@ Functionality
 
 Testcases
 =========
-- circular trajectory of an electron in a homogeneous magnet
+- circular trajectory of an electron in a homogeneous dipole magnet
