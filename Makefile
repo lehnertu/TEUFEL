@@ -8,7 +8,7 @@ SRCDIR = ./src
 OBJDIR = ./obj
 LIBDIR = ./lib
 
-SDDS = ./lib/SDDS/SDDSToolKit-devel-3.4
+SDDS = ./lib/SDDSToolKit-devel-3.4
 
 INCPATH      = -I $(SDDS)
 
