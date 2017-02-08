@@ -5,6 +5,7 @@
 SHELL = /bin/sh
 
 SRCDIR = ./src
+TESTDIR = ./tests
 OBJDIR = ./obj
 LIBDIR = ./lib
 
@@ -45,6 +46,8 @@ OBJ = 	$(OBJDIR)/cavity.o \
 
 TARGET = teufel
 
+TESTS = $(TESTDIR)/teufel.magnet
+
 first: all
 
 ####### Implicit rules
@@ -63,6 +66,8 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 
 ####### Build rules
 
+.PHONY : tests
+
 all: $(TARGET)
 
 $(TARGET):  $(OBJ)  
@@ -76,8 +81,11 @@ $(OBJ): $(SRCDIR)/global.h \
 	$(SRCDIR)/vector.h \
 	$(SRCDIR)/wave.h
 
+test: $(OBJ) 
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.magnet $(LFLAGS) $(OBJ) $(LIBS)
+
 clean:
 	-rm $(OBJ)
 	-rm $(TARGET)
-
+	-rm $(TESTS)
 
