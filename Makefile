@@ -23,7 +23,7 @@ LIBS         =  -L$(SDDS) -lSDDS1 -lmdblib -lmdbcommon -llzma -lz -lm
 
 ####### Output directory
 
-OBJECTS_DIR   = ./obj/
+OBJECTS_DIR   = ./obj
 
 ####### Files
 
@@ -58,6 +58,7 @@ first: all
 	$(CC) -c $(CFLAGS) $(INCPATH) -o "$@" "$<"
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
+	@mkdir -p $(@D)
 	$(CXX) -c $(CXXFLAGS) $(INCPATH) -o $@ $<
 
 ####### Build rules
