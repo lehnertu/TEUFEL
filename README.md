@@ -1,5 +1,5 @@
 # TEUFEL
-Terahertz Emission from Undulators and Free-Electron Lasers
+THz Emission from Undulators and Free-Electron Lasers
 =======================================
 
 This is a C++ project to support tracking of charged particles in
