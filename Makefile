@@ -64,7 +64,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 
 ####### Build rules
 
-.PHONY : first all test clean
+.PHONY : first all tests clean
 
 first: $(TARGET)
 
@@ -91,4 +91,5 @@ clean:
 	-rm $(OBJ)
 	-rm $(TARGET)
 	-rm $(TESTS)
+	-rm -rf doc
 
