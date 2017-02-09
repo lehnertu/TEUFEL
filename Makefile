@@ -48,8 +48,6 @@ TARGET = teufel
 
 TESTS = $(TESTDIR)/teufel.magnet
 
-first: all
-
 ####### Implicit rules
 
 .SUFFIXES: .o .c .cpp
@@ -66,9 +64,11 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 
 ####### Build rules
 
-.PHONY : tests
+.PHONY : first all test clean
 
-all: $(TARGET)
+first: $(TARGET)
+
+all: $(TARGET) tests docs
 
 $(TARGET):  $(OBJ)  
 	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJ) $(LIBS)
@@ -81,8 +81,11 @@ $(OBJ): $(SRCDIR)/global.h \
 	$(SRCDIR)/vector.h \
 	$(SRCDIR)/wave.h
 
-test: $(OBJ) 
+tests: $(OBJ) 
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.magnet $(LFLAGS) $(OBJ) $(LIBS)
+
+docs:
+	doxygen setup.dox
 
 clean:
 	-rm $(OBJ)
