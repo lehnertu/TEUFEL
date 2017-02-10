@@ -11,7 +11,7 @@ LIBDIR = ./lib
 
 SDDS = ./lib/SDDSToolKit-devel-3.4
 
-INCPATH      = -I $(SDDS)
+INCPATH      = -I $(SDDS) -I $(SRCDIR)
 
 CC           = gcc
 CXX          = g++
@@ -39,10 +39,11 @@ SRC = 	$(SRCDIR)/cavity.cpp \
 OBJ = 	$(OBJDIR)/cavity.o \
 	$(OBJDIR)/externalfield.o \
 	$(OBJDIR)/particle.o \
-	$(OBJDIR)/teufel.o \
 	$(OBJDIR)/undulator.o \
 	$(OBJDIR)/vector.o \
 	$(OBJDIR)/wave.o
+
+TARGETOBJ = $(OBJDIR)/teufel.o
 
 TARGET = teufel
 
@@ -70,8 +71,8 @@ first: $(TARGET)
 
 all: $(TARGET) tests docs
 
-$(TARGET):  $(OBJ)  
-	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJ) $(LIBS)
+$(TARGET):  $(OBJ)  $(TARGETOBJ)  
+	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJ) $(TARGETOBJ) $(LIBS)
 
 $(OBJ): $(SRCDIR)/global.h \
 	$(SRCDIR)/cavity.h \
@@ -82,7 +83,7 @@ $(OBJ): $(SRCDIR)/global.h \
 	$(SRCDIR)/wave.h
 
 tests: $(OBJ) 
-	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.magnet $(LFLAGS) $(OBJ) $(LIBS)
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.magnet $(TESTDIR)/teufel.magnet.cpp $(LFLAGS) $(OBJ) $(LIBS)
 
 docs:
 	doxygen setup.dox

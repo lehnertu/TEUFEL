@@ -24,10 +24,28 @@
 /*!
     \brief Homogeneous magnetic field test case
 
-    This test case tracks a single electron in a homogeneous magnetic field.
+    This test case tracks a single electron in a homogeneous magnetic field \f$\vec B(\vec x)=\vec B_0\f$.
+    
     This electron moves on an periodic circular trajectory.
     The cyclotron frequency and trajectory radius are compared to known values.
+    \f[
+	R_{gyro} = \beta \gamma \frac{m_0 c}{B}
+    \f]
+    \f[
+	\Omega_{c} = \frac{e B}{\gamma m_0}
+    \f]
 
+    The program computes the trajectory of the electron starting at the coordinate system origin
+    with a velocity perpendicular to the field. The magnitude of the velocity is choosen such that
+    it is relativistic with \f$\gamma = 10.0\f$. The trajectory radius should be R=0.169613 m in
+    a magnetic field with B=0.1 T. The electron ist tracked for an amount of time
+    corresponding to one revolution which is . After that it is checked that :
+    @li the time is correct
+    @li the particle has arrived back at the origin
+    @li the kinetic energy has not changed
+    
+    @return The number of errors encountered in the above list of checks is reported.
+    
     @author Ulf Lehnert
     @date 10.2.2017
     @file teufel.magnet.cpp
@@ -43,8 +61,6 @@
 #include "particle.h"
 #include "externalfield.h"
 
-// <bunch> parameters
-int NOP = 1;                    // number of (real) particles
 int NOTS = 3000;                // number of time steps
 
 class HomogeneousMagnet : public ExternalField
@@ -72,61 +88,28 @@ class HomogeneousMagnet : public ExternalField
 
 int main ()
 {
-  FILE *dump;
-  int d;                // integer buffer used for file writing
 
-  printf("\nTEUFEL Version 0.01 U.Lehnert 10/2014\n");
-  printf("homogeneous magnet testcase\n\n");
+    printf("\nTEUFEL Version 0.01 U.Lehnert 10/2014\n");
+    printf("homogeneous magnet testcase\n\n");
 
-  // define oscillator
-  double B = 0.4;
-  HomogeneousMagnet *mag = new HomogeneousMagnet(B);
-  printf("B =  %9.6g T\n",mag->BPeak);
-  double cp = 10.0e6;   // 10 MeV
-  printf("c*p =  %9.6g MeV\n",1e-6*cp);
-  double betagamma= cp / mecsquared;
-  printf("gamma =  %9.6g\n",sqrt(1.0+betagamma*betagamma));
-  double Rgyro = betagamma * mecsquared / SpeedOfLight / B;
-  printf("R =  %9.6g m\n",Rgyro);
+    double B = 0.1;
+    HomogeneousMagnet *mag = new HomogeneousMagnet(B);
+    printf("B =  %9.6g T\n",mag->BPeak);
+    double gamma = 10.0;
+    double betagamma= sqrt(gamma*gamma-1.0);
+    printf("gamma =  %9.6g\n",sqrt(1.0+betagamma*betagamma));
+    printf("c*p =  %9.6g MeV\n",1e-6*mecsquared*betagamma);
+    double Rgyro = betagamma * mecsquared / SpeedOfLight / B;
+    printf("R =  %9.6g m\n",Rgyro);
 
-  ChargedParticle *bunch = new ChargedParticle[NOP];
+    Lattice *lattice = new Lattice;
+    lattice->addElement(mag);
 
-  for (int i=0; i<NOP; i++)
-    {
-      // initial position of the particle
-      // amplitude of fig-8 oscillation is a0/k
-      Vector X0 = Vector(0.0, 0.0, Rgyro);
-      // initial momentum of the particle
-      Vector P0 = Vector(betagamma, 0.0, 0.0);
-      bunch[i].TrackLF(NOTS, 1.0e-12, X0, P0, mag);
-    }
+    ChargedParticle *electron = new ChargedParticle();
 
-  // dump the particle trajectories into a binary file
-  dump = fopen("particles.bin","wb");
-  // first write the number of particles
-  d = NOP;
-  fwrite(&d, sizeof(int), 1, dump);
-  // write the number of time steps
-  d = NOTS;
-  fwrite(&d, sizeof(int), 1, dump);
-  // write the traces
-  // it is transposed while writing because z (the 1-step index)
-  // ist used as the outer loop index
-  for (int ip=0; ip<NOP; ip++)
-    for (int it=0; it<NOTS; it++)
-      {
-        Vector XP = bunch[ip].TrajPoint(it);
-        // fwrite expects a pointer to the value to be written
-        fwrite(&(XP.x), sizeof(double), 1, dump);
-        fwrite(&(XP.y), sizeof(double), 1, dump);
-        fwrite(&(XP.z), sizeof(double), 1, dump);
-         // write the momentum in addition
-        XP = bunch[ip].TrajMomentum(it);
-        fwrite(&(XP.x), sizeof(double), 1, dump);
-        fwrite(&(XP.y), sizeof(double), 1, dump);
-        fwrite(&(XP.z), sizeof(double), 1, dump);
-     };
-  fclose(dump);
-
+    Vector X0 = Vector(0.0, 0.0, Rgyro);
+    // initial momentum of the particle
+    Vector P0 = Vector(betagamma, 0.0, 0.0);
+    electron->TrackLF(NOTS, 1.0e-12, X0, P0, lattice);
 
 }
