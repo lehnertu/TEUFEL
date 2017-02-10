@@ -24,6 +24,10 @@
 /*!
     \brief Homogeneous magnetic field test case
 
+    @author Ulf Lehnert
+    @date 10.2.2017
+    @file teufel.magnet.cpp
+    
     This test case tracks a single electron in a homogeneous magnetic field.
     The electron moves on an periodic circular trajectory.
     The cyclotron frequency and trajectory radius are compared to known values.
@@ -40,15 +44,14 @@
     a magnetic field with B=0.1 T. The electron ist tracked for an amount of time
     corresponding to one revolution which is 3.57273 ns. After that it is checked that :
     @li the time is correct
+    @li the maximum distance from the origin is twice the trajectory radius
     @li the particle has arrived back at the origin
     @li the kinetic energy has not changed
     
+    Using the Vay algorithm, the tracking reaches the required accuracy for 1000 Steps.
+    
     @return The number of errors encountered in the above list of checks is reported.
     
-    @author Ulf Lehnert
-    @date 10.2.2017
-    @file teufel.magnet.cpp
- 
  */
 
 #include <math.h>
@@ -118,13 +121,33 @@ int main ()
     Vector P0 = Vector(betagamma, 0.0, 0.0);
     electron->TrackVay(NOTS, deltaT, X0, P0, lattice);
 
+    int errors = 0;
+    
     Vector MiddlePosition = electron->TrajPoint(NOTS/2);
-    printf("middle position =  (%12.9f, %12.9f, %12.9f) m\n", MiddlePosition.x, MiddlePosition.y, MiddlePosition.z);
+    // printf("middle position =  (%12.9f, %12.9f, %12.9f) m\n", MiddlePosition.x, MiddlePosition.y, MiddlePosition.z);
+    double dist = MiddlePosition.norm();
+    if (fabs(0.5*dist-Rgyro) > 1e-5) {
+	errors++;
+	printf("trajectory radius = %9.6f m - \033[1;31m test failed!\033[0m\n", 0.5*dist);
+    } else {
+	printf("trajectory radius = %9.6f m - \033[1;32m OK\033[0m\n", 0.5*dist);
+    }	
     double FinalTime = electron->TrajTime(NOTS);
+    if (1e12*fabs(FinalTime-tau) > 0.01) {
+	errors++;
+	printf("final time = %12.9g s - \033[1;31m test failed!\033[0m\n", FinalTime);
+    } else {
+	printf("final time = %12.9g s - \033[1;32m OK\033[0m\n", FinalTime);
+    }	
     Vector FinalPosition = electron->TrajPoint(NOTS);
-    Vector FinalMomentum = electron->TrajMomentum(NOTS);
-    printf("final time =  %12.9g s\n",FinalTime);
-    printf("final position =  (%12.9f, %12.9f, %12.9f) m\n", FinalPosition.x, FinalPosition.y, FinalPosition.z);
-    printf("final momentum =  (%12.9f, %12.9f, %12.9f)\n", FinalMomentum.x, FinalMomentum.y, FinalMomentum.z);
-
+    // printf("final position =  (%12.9f, %12.9f, %12.9f) m\n", FinalPosition.x, FinalPosition.y, FinalPosition.z);
+    if (FinalPosition.norm() > 1e-5) {
+	errors++;
+	printf("final position error = %6.2f µm - \033[1;31m test failed!\033[0m\n", 1e6*FinalPosition.norm());
+    } else {
+	printf("final position error = %6.2f µm - \033[1;32m OK\033[0m\n", 1e6*FinalPosition.norm());
+    }	
+    printf("\n");
+    
+    return errors;
 }
