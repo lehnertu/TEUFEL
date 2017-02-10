@@ -1,12 +1,38 @@
-/************************************************************************/
-/*                                                                      */
-/*  TEUFEL - THz Emission from Undulators and Free-Electron Lasers      */
-/*                                                                      */
-/*  written by  U.Lehnert                               12/2016         */
-/*                                                                      */
-/*  Example: circular motion in homogeneous magnetic field              */
-/*                                                                      */
-/************************************************************************/
+/*=========================================================================
+
+  Program:   TEUFEL - THz Emission from Undulators and Free-Electron Lasers
+
+  Module:    Homogeneous magnetic field test case
+
+  Copyright (c) 2017 U. Lehnert
+
+  This program is free software: you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation, either version 3 of the License, or
+  (at your option) any later version.
+
+  This program is distributed in the hope that it will be useful,
+  but WITHOUT ANY WARRANTY; without even the implied warranty of
+  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  GNU General Public License for more details.
+
+  You should have received a copy of the GNU General Public License
+  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+=========================================================================*/
+
+/*!
+    \brief Homogeneous magnetic field test case
+
+    This test case tracks a single electron in a homogeneous magnetic field.
+    This electron moves on an periodic circular trajectory.
+    The cyclotron frequency and trajectory radius are compared to known values.
+
+    @author Ulf Lehnert
+    @date 10.2.2017
+    @file teufel.magnet.cpp
+ 
+ */
 
 #include <math.h>
 #include <stdio.h>
@@ -49,7 +75,7 @@ int main ()
   FILE *dump;
   int d;                // integer buffer used for file writing
 
-  printf("\nWGFEL Version 0.01 U.Lehnert 10/2014\n");
+  printf("\nTEUFEL Version 0.01 U.Lehnert 10/2014\n");
   printf("homogeneous magnet testcase\n\n");
 
   // define oscillator
