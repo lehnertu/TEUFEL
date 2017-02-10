@@ -24,12 +24,11 @@
 /*!
     \brief Homogeneous magnetic field test case
 
-    This test case tracks a single electron in a homogeneous magnetic field \f$\vec B(\vec x)=\vec B_0\f$.
-    
-    This electron moves on an periodic circular trajectory.
+    This test case tracks a single electron in a homogeneous magnetic field.
+    The electron moves on an periodic circular trajectory.
     The cyclotron frequency and trajectory radius are compared to known values.
     \f[
-	R_{gyro} = \beta \gamma \frac{m_0 c}{B}
+	R_{gyro} = \beta \gamma \frac{m_0 c}{e B}
     \f]
     \f[
 	\Omega_{c} = \frac{e B}{\gamma m_0}
@@ -39,7 +38,7 @@
     with a velocity perpendicular to the field. The magnitude of the velocity is choosen such that
     it is relativistic with \f$\gamma = 10.0\f$. The trajectory radius should be R=0.169613 m in
     a magnetic field with B=0.1 T. The electron ist tracked for an amount of time
-    corresponding to one revolution which is . After that it is checked that :
+    corresponding to one revolution which is 3.57273 ns. After that it is checked that :
     @li the time is correct
     @li the particle has arrived back at the origin
     @li the kinetic energy has not changed
@@ -89,18 +88,24 @@ class HomogeneousMagnet : public ExternalField
 int main ()
 {
 
-    printf("\nTEUFEL Version 0.01 U.Lehnert 10/2014\n");
-    printf("homogeneous magnet testcase\n\n");
+    printf("\nTEUFEL - homogeneous magnet testcase\n");
 
     double B = 0.1;
     HomogeneousMagnet *mag = new HomogeneousMagnet(B);
     printf("B =  %9.6g T\n",mag->BPeak);
     double gamma = 10.0;
+    double beta = sqrt(1.0-1.0/(gamma*gamma));
     double betagamma= sqrt(gamma*gamma-1.0);
-    printf("gamma =  %9.6g\n",sqrt(1.0+betagamma*betagamma));
+    printf("beta =  %9.6g\n",beta);
+    printf("gamma =  %9.6g\n",gamma);
     printf("c*p =  %9.6g MeV\n",1e-6*mecsquared*betagamma);
     double Rgyro = betagamma * mecsquared / SpeedOfLight / B;
     printf("R =  %9.6g m\n",Rgyro);
+    double Omega = beta*SpeedOfLight/Rgyro;
+    printf("Omega =  %9.6g/s\n",Omega);
+    double tau = 2*Pi*Rgyro/(beta*SpeedOfLight);
+    printf("tau =  %9.6g s\n",tau);
+    double deltaT = tau/NOTS;
 
     Lattice *lattice = new Lattice;
     lattice->addElement(mag);
@@ -110,6 +115,6 @@ int main ()
     Vector X0 = Vector(0.0, 0.0, Rgyro);
     // initial momentum of the particle
     Vector P0 = Vector(betagamma, 0.0, 0.0);
-    electron->TrackLF(NOTS, 1.0e-12, X0, P0, lattice);
+    electron->TrackLF(NOTS, deltaT, X0, P0, lattice);
 
 }
