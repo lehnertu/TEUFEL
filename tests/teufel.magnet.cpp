@@ -60,7 +60,7 @@
 #include "particle.h"
 #include "externalfield.h"
 
-int NOTS = 3000;                // number of time steps
+int NOTS = 1000;                // number of time steps
 
 class HomogeneousMagnet : public ExternalField
 {
@@ -96,25 +96,35 @@ int main ()
     double gamma = 10.0;
     double beta = sqrt(1.0-1.0/(gamma*gamma));
     double betagamma= sqrt(gamma*gamma-1.0);
-    printf("beta =  %9.6g\n",beta);
-    printf("gamma =  %9.6g\n",gamma);
-    printf("c*p =  %9.6g MeV\n",1e-6*mecsquared*betagamma);
+    printf("beta =  %12.9g\n",beta);
+    printf("gamma =  %12.9g\n",gamma);
+    printf("c*p =  %12.9g MeV\n",1e-6*mecsquared*betagamma);
     double Rgyro = betagamma * mecsquared / SpeedOfLight / B;
-    printf("R =  %9.6g m\n",Rgyro);
+    printf("R =  %12.9g m\n",Rgyro);
     double Omega = beta*SpeedOfLight/Rgyro;
-    printf("Omega =  %9.6g/s\n",Omega);
+    printf("Omega =  %12.9g/s\n",Omega);
     double tau = 2*Pi*Rgyro/(beta*SpeedOfLight);
-    printf("tau =  %9.6g s\n",tau);
+    printf("tau =  %12.9g s\n",tau);
     double deltaT = tau/NOTS;
+    printf("\n");
 
     Lattice *lattice = new Lattice;
     lattice->addElement(mag);
 
     ChargedParticle *electron = new ChargedParticle();
 
-    Vector X0 = Vector(0.0, 0.0, Rgyro);
+    Vector X0 = Vector(0.0, 0.0, 0.0);
     // initial momentum of the particle
     Vector P0 = Vector(betagamma, 0.0, 0.0);
-    electron->TrackLF(NOTS, deltaT, X0, P0, lattice);
+    electron->TrackVay(NOTS, deltaT, X0, P0, lattice);
+
+    Vector MiddlePosition = electron->TrajPoint(NOTS/2);
+    printf("middle position =  (%12.9f, %12.9f, %12.9f) m\n", MiddlePosition.x, MiddlePosition.y, MiddlePosition.z);
+    double FinalTime = electron->TrajTime(NOTS);
+    Vector FinalPosition = electron->TrajPoint(NOTS);
+    Vector FinalMomentum = electron->TrajMomentum(NOTS);
+    printf("final time =  %12.9g s\n",FinalTime);
+    printf("final position =  (%12.9f, %12.9f, %12.9f) m\n", FinalPosition.x, FinalPosition.y, FinalPosition.z);
+    printf("final momentum =  (%12.9f, %12.9f, %12.9f)\n", FinalMomentum.x, FinalMomentum.y, FinalMomentum.z);
 
 }
