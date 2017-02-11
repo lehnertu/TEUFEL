@@ -1,0 +1,17 @@
+#!/bin/bash
+
+num=0
+red='\033[1;31m'
+green='\033[1;32m'
+nc='\033[0m'
+
+./tests/teufel.magnet; rc=$?
+num=$(($num + $rc))
+
+if [ $num = "0" ]
+then
+    echo -e "$green no errors - all tests passed.$nc"
+else
+    echo -e "$red there were errors - some test failed!$nc"
+fi
+
