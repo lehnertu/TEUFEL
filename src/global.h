@@ -6,7 +6,7 @@
 /*                                                                      */
 /************************************************************************/
 
-#define ElementaryCharge 1.60203e-19            // [As]
+#define ElementaryCharge 1.6021766208e-19       // [As]
 #define mecsquared 0.5109989461e6               // electron mass [eV]
 #define SpeedOfLight 2.99792458e8               // [m/s]
 #define Pi 3.1415926535897932384626433832795029
