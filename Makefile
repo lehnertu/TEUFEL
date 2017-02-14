@@ -30,6 +30,7 @@ OBJECTS_DIR   = ./obj
 
 SRC = 	$(SRCDIR)/cavity.cpp \
 	$(SRCDIR)/externalfield.cpp \
+	$(SRCDIR)/HomogeneousMagnet.cpp \
 	$(SRCDIR)/particle.cpp\
 	$(SRCDIR)/teufel.cpp\
 	$(SRCDIR)/undulator.cpp \
@@ -38,6 +39,7 @@ SRC = 	$(SRCDIR)/cavity.cpp \
 
 OBJ = 	$(OBJDIR)/cavity.o \
 	$(OBJDIR)/externalfield.o \
+	$(OBJDIR)/HomogeneousMagnet.o \
 	$(OBJDIR)/particle.o \
 	$(OBJDIR)/undulator.o \
 	$(OBJDIR)/vector.o \
@@ -47,7 +49,8 @@ TARGETOBJ = $(OBJDIR)/teufel.o
 
 TARGET = teufel
 
-TESTS = $(TESTDIR)/teufel.magnet
+TESTS = $(TESTDIR)/teufel.undulator 
+	
 
 ####### Implicit rules
 
@@ -77,13 +80,14 @@ $(TARGET):  $(OBJ)  $(TARGETOBJ)
 $(OBJ): $(SRCDIR)/global.h \
 	$(SRCDIR)/cavity.h \
 	$(SRCDIR)/externalfield.h \
+	$(SRCDIR)/HomogeneousMagnet.h \
 	$(SRCDIR)/particle.h \
 	$(SRCDIR)/undulator.h \
 	$(SRCDIR)/vector.h \
 	$(SRCDIR)/wave.h
 
 tests: $(OBJ) 
-	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.magnet $(TESTDIR)/teufel.magnet.cpp $(LFLAGS) $(OBJ) $(LIBS)
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.undulator $(TESTDIR)/teufel.undulator.cpp $(LFLAGS) $(OBJ) $(LIBS)
 
 docs:
 	doxygen setup.dox
