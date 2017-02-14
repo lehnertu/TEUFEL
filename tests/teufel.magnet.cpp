@@ -62,47 +62,33 @@
 #include "global.h"
 #include "particle.h"
 #include "externalfield.h"
+#include "HomogeneousMagnet.h"
 
 int NOTS = 1000;                // number of time steps
-
-class HomogeneousMagnet : public ExternalField
-{
-
-  public:
-
-    // constructor
-    HomogeneousMagnet(double B)                 // peak field [T]
-    { BPeak = B; };
-
-  private:
-
-    Vector ElementLocalEField(double t, Vector X)
-    { return Vector(0.0 ,0.0 ,0.0); };
-
-    Vector ElementLocalBField(double t, Vector X)
-    { return Vector(0.0 ,BPeak ,0.0); };
-
-  public:
-
-    double  BPeak;                              // peak field [T]
-};
-
 
 int main ()
 {
 
     printf("\nTEUFEL - homogeneous magnet testcase\n");
 
-    double B = 0.1;
+    Vector B=Vector(0.033166247903554,0.05,0.08);
     HomogeneousMagnet *mag = new HomogeneousMagnet(B);
-    printf("B =  %9.6g T\n",mag->BPeak);
+    printf("B =  %9.6g T\n",(mag->b).norm());
+    printf("Bx = %9.6g T  ",(mag->b).x);
+    printf("By = %9.6g T  ",(mag->b).y);
+    printf("Bz = %9.6g T\n",(mag->b).z);
+    
     double gamma = 10.0;
+    Vector p= Vector(B.x+rand(),B.y+rand(),B.z);
+//define the normal to the magnetic field.
+    Vector n=cross(p,B);
+    n=n/n.norm();
     double beta = sqrt(1.0-1.0/(gamma*gamma));
     double betagamma= sqrt(gamma*gamma-1.0);
     printf("beta =  %12.9g\n",beta);
     printf("gamma =  %12.9g\n",gamma);
     printf("c*p =  %12.9g MeV\n",1e-6*mecsquared*betagamma);
-    double Rgyro = betagamma * mecsquared / SpeedOfLight / B;
+    double Rgyro = betagamma * mecsquared / SpeedOfLight / B.norm();
     printf("R =  %12.9g m\n",Rgyro);
     double Omega = beta*SpeedOfLight/Rgyro;
     printf("Omega =  %12.9g/s\n",Omega);
@@ -120,7 +106,7 @@ int main ()
     // initial potion at the origin
     Vector X0 = Vector(0.0, 0.0, 0.0);
     // initial momentum of the particle
-    Vector P0 = Vector(betagamma, 0.0, 0.0);
+    Vector P0 = n*betagamma;
     
     // track the particle for the duration of one revolution
     double deltaT = tau/NOTS;
