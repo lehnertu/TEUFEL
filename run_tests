@@ -8,6 +8,9 @@ nc='\033[0m'
 ./tests/teufel.magnet; rc=$?
 num=$(($num + $rc))
 
+./tests/teufel.undulator; rc=$?
+num=$(($num + $rc))
+
 if [ $num = "0" ]
 then
     echo -e "$green no errors - all tests passed.$nc"

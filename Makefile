@@ -30,7 +30,7 @@ OBJECTS_DIR   = ./obj
 
 SRC = 	$(SRCDIR)/cavity.cpp \
 	$(SRCDIR)/externalfield.cpp \
-	$(SRCDIR)/HomogeneousMagnet.cpp \
+	$(SRCDIR)/homogeneousmagnet.cpp \
 	$(SRCDIR)/particle.cpp\
 	$(SRCDIR)/teufel.cpp\
 	$(SRCDIR)/undulator.cpp \
@@ -39,7 +39,7 @@ SRC = 	$(SRCDIR)/cavity.cpp \
 
 OBJ = 	$(OBJDIR)/cavity.o \
 	$(OBJDIR)/externalfield.o \
-	$(OBJDIR)/HomogeneousMagnet.o \
+	$(OBJDIR)/homogeneousmagnet.o \
 	$(OBJDIR)/particle.o \
 	$(OBJDIR)/undulator.o \
 	$(OBJDIR)/vector.o \
@@ -49,7 +49,8 @@ TARGETOBJ = $(OBJDIR)/teufel.o
 
 TARGET = teufel
 
-TESTS = $(TESTDIR)/teufel.undulator 
+TESTS = $(TESTDIR)/teufel.magnet \
+	$(TESTDIR)/teufel.undulator
 	
 
 ####### Implicit rules
@@ -80,13 +81,14 @@ $(TARGET):  $(OBJ)  $(TARGETOBJ)
 $(OBJ): $(SRCDIR)/global.h \
 	$(SRCDIR)/cavity.h \
 	$(SRCDIR)/externalfield.h \
-	$(SRCDIR)/HomogeneousMagnet.h \
+	$(SRCDIR)/homogeneousmagnet.h \
 	$(SRCDIR)/particle.h \
 	$(SRCDIR)/undulator.h \
 	$(SRCDIR)/vector.h \
 	$(SRCDIR)/wave.h
 
 tests: $(OBJ) 
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.magnet $(TESTDIR)/teufel.magnet.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.undulator $(TESTDIR)/teufel.undulator.cpp $(LFLAGS) $(OBJ) $(LIBS)
 
 docs:
@@ -94,6 +96,7 @@ docs:
 
 clean:
 	-rm $(OBJ)
+	-rm $(TARGETOBJ)
 	-rm $(TARGET)
 	-rm $(TESTS)
 	-rm -rf doc
