@@ -62,31 +62,9 @@
 #include "global.h"
 #include "particle.h"
 #include "externalfield.h"
+#include "homogeneousmagnet.h"
 
 int NOTS = 1000;                // number of time steps
-
-class HomogeneousMagnet : public ExternalField
-{
-
-  public:
-
-    // constructor
-    HomogeneousMagnet(double B)                 // peak field [T]
-    { BPeak = B; };
-
-  private:
-
-    Vector ElementLocalEField(double t, Vector X)
-    { return Vector(0.0 ,0.0 ,0.0); };
-
-    Vector ElementLocalBField(double t, Vector X)
-    { return Vector(0.0 ,BPeak ,0.0); };
-
-  public:
-
-    double  BPeak;                              // peak field [T]
-};
-
 
 int main ()
 {
@@ -94,8 +72,8 @@ int main ()
     printf("\nTEUFEL - homogeneous magnet testcase\n");
 
     double B = 0.1;
-    HomogeneousMagnet *mag = new HomogeneousMagnet(B);
-    printf("B =  %9.6g T\n",mag->BPeak);
+    HomogeneousMagnet *mag = new HomogeneousMagnet(Vector(0.0,B,0.0));
+    printf("B =  %9.6g T\n",(mag->getB0()).norm());
     double gamma = 10.0;
     double beta = sqrt(1.0-1.0/(gamma*gamma));
     double betagamma= sqrt(gamma*gamma-1.0);

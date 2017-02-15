@@ -15,6 +15,11 @@ HomogeneousMagnet::HomogeneousMagnet(Vector B)
   B0=B;
 }
 
+Vector HomogeneousMagnet::getB0()
+{
+  return B0;
+}
+
 Vector HomogeneousMagnet::ElementLocalEField(double t, Vector X)
 {
   Vector p=Vector(0.0,0.0,0.0);
