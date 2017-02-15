@@ -26,7 +26,7 @@
 
     @author Ulf Lehnert, Vipul Joshi
     @date 10.2.2017
-    @file teufel.magnet.cpp
+    @file teufel.undulator.cpp
     
     This test case tracks a single electron in an undulator field.
     The electron moves on an periodic sinusoidal trajectory.
@@ -35,7 +35,7 @@
 	x_max{undu} = e*B/(gamma*me*beta*c*ku^2)
     \f]
     \f[
-	\slippage ~ radiation wavelength
+	slippage ~ radiation wavelength
     \f]
 
     The program computes the trajectory of the electron starting at the coordinate system origin

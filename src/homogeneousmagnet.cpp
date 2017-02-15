@@ -6,13 +6,18 @@
 /*                                                                      */
 /************************************************************************/
 
-#include "HomogeneousMagnet.h"
+#include "homogeneousmagnet.h"
 #include "global.h"
 #include <math.h>
 
 HomogeneousMagnet::HomogeneousMagnet(Vector B)
 {
-  b=B;
+  B0=B;
+}
+
+Vector HomogeneousMagnet::getB0()
+{
+  return B0;
 }
 
 Vector HomogeneousMagnet::ElementLocalEField(double t, Vector X)
@@ -23,8 +28,7 @@ Vector HomogeneousMagnet::ElementLocalEField(double t, Vector X)
 
 Vector HomogeneousMagnet::ElementLocalBField(double t, Vector X)
 {
-  Vector p=b;
-  return p;
+  return B0;
 }
 
 

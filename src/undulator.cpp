@@ -56,15 +56,30 @@ Vector Undulator::ElementLocalEField(double t, Vector X)
 
 Vector Undulator::ElementLocalBField(double t, Vector X)
   {
-    Vector B;
+    Vector B=Vector (0,0,0);
+    double z1=-GetLambdaU()/2;
+    double z2=GetLambdaU()/2;
     B.x=0.0;
-    if ((X.z>=0.0) && (X.z<=LambdaU*NPeriods)) {
-      B.y=BPeak*cosh(ky*X.y)*sin(kz*X.z);
-      B.z=BPeak*sinh(ky*X.y)*cos(kz*X.z);
-      }
-    else {
-      B.y=0.0;
-      B.z=0.0;
-      };
+    if(X.z<z1)
+    {
+        B.y=0;
+        B.z=0;
+    }
+    if(z1<=X.z&&X.z<z2)
+    {
+        B.y=((X.z-z1)/(z2-z1))*BPeak*sin(kz*X.z)*cosh(kz*X.y);
+        B.z=((X.z-z1)/(z2-z1))*BPeak*cos(kz*X.z)*sin(kz*X.y);
+    }
+    if(z2<=X.z&&X.z<LambdaU*NPeriods-z2)
+    {
+        B.y=BPeak*sin(kz*X.z)*cosh(kz*X.y);
+        B.z=BPeak*cos(kz*X.z)*sinh(kz*X.y);
+    }
+    if(LambdaU*NPeriods-z2<=X.z&&X.z<=LambdaU*NPeriods-z1)
+    {
+        B.y=((LambdaU*NPeriods-z1-X.z)/(z2-z1))*BPeak*sin(kz*X.z)*cosh(kz*X.y);
+        B.z=((LambdaU*NPeriods-z1-X.z)/(z2-z1))*BPeak*cos(kz*X.z)*sinh(kz*X.y);
+    }
+
     return(B);
   };

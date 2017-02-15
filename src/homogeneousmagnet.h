@@ -18,15 +18,20 @@ class HomogeneousMagnet : public ExternalField
   public:
 
     // constructor
-    HomogeneousMagnet(Vector B);              // peak field of B Vector[T]
+    HomogeneousMagnet(Vector B);        // field vector B[T]
 
+    Vector getB0();			// report the field vector
+    
   private:
 
     Vector ElementLocalEField(double t, Vector X);
 
     Vector ElementLocalBField(double t, Vector X);
-  public:
-	Vector b;
+
+  private:
+      
+    Vector B0;				// the constant field vector
+
 };
 
 #endif

@@ -62,7 +62,8 @@
 #include "global.h"
 #include "particle.h"
 #include "externalfield.h"
-#include "HomogeneousMagnet.h"
+
+#include "homogeneousmagnet.h"
 
 int NOTS = 1000;                // number of time steps
 
