@@ -29,35 +29,13 @@
 #include "global.h"
 #include "particle.h"
 #include "externalfield.h"
+#include "homogeneousmagnet.h"
 
 #include "SDDS.h"
 
 // <bunch> parameters
 int NOP = 1;                    // number of (real) particles
 int NOTS = 3000;                // number of time steps
-
-class HomogeneousMagnet : public ExternalField
-{
-
-  public:
-
-    // constructor
-    HomogeneousMagnet(double B)                 // peak field [T]
-    { BPeak = B; };
-
-  private:
-
-    Vector ElementLocalEField(double t, Vector X)
-    { return Vector(0.0 ,0.0 ,0.0); };
-
-    Vector ElementLocalBField(double t, Vector X)
-    { return Vector(0.0 ,BPeak ,0.0); };
-
-  public:
-
-    double  BPeak;                              // peak field [T]
-};
-
 
 int main ()
 {
@@ -67,15 +45,18 @@ int main ()
   printf("\nTEUFEL Version 0.01 U.Lehnert 12/2016\n");
   printf("homogeneous magnet testcase\n\n");
 
-  // define oscillator
-  double B = 0.4;
+  Vector B=Vector(0.033166247903554,0.05,0.08);
   HomogeneousMagnet *mag = new HomogeneousMagnet(B);
-  printf("B =  %9.6g T\n",mag->BPeak);
+  printf("B =  %9.6g T\n",(mag->getB0()).norm());
+  printf("Bx = %9.6g T  ",(mag->getB0()).x);
+  printf("By = %9.6g T  ",(mag->getB0()).y);
+  printf("Bz = %9.6g T\n",(mag->getB0()).z);
+  
   double cp = 10.0e6;   // 10 MeV
   printf("c*p =  %9.6g MeV\n",1e-6*cp);
   double betagamma= cp / mecsquared;
   printf("gamma =  %9.6g\n",sqrt(1.0+betagamma*betagamma));
-  double Rgyro = betagamma * mecsquared / SpeedOfLight / B;
+  double Rgyro = betagamma * mecsquared / SpeedOfLight / mag->getB0().norm();
   printf("R =  %9.6g m\n",Rgyro);
 
   Lattice *lattice = new Lattice;
@@ -201,7 +182,7 @@ int main ()
        0 on failure 
   */
   if (SDDS_SetParameters(&SDDS_dataset, SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, 
-                         "B", mag->BPeak, 
+			 "B", mag->getB0().norm(), 
                          "cp",  cp, 
                          "gamma", sqrt(1.0+betagamma*betagamma), 
                          "R",  Rgyro,
