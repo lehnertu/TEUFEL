@@ -26,7 +26,7 @@
 
     @author Ulf Lehnert, Vipul Joshi
     @date 14.2.2017
-    @file teufel.magnet.cpp
+    @file teufel.radiation.cpp
     
     This test case tracks a single electron in a magnetic field and computes the radiation field generated at the centre of the loop of radius a. 
     The electrons moves in the x-z plane and the radiation is observed at its centre. The angular frequency is given by w=qB/gamma*me
