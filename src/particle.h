@@ -83,7 +83,8 @@ class ChargedParticle
   private:
 
     int NP;			// number of trajectory points
-    int Charge;			// in units of ElementaryCharge
+    int Charge;			// charge in units of ElementaryCharge
+    int Mass;			// mass in unit of the electron rest mass
     double *Time;		// time in lab-frame [s]
     Vector *X;			// position in lab frame [m]
     Vector *P;                  // momentum in lab frame : c p = beta gamma mc²

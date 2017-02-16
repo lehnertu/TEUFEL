@@ -13,8 +13,11 @@
 
 ChargedParticle::ChargedParticle()
 {
-  Charge = - 1.0;
+  Charge = -1.0;
+  Mass = 1.0;
+  // no trajectory points
   NP = 0;
+  // no memory allocated, all pointers are zero
   Time = 0;
   X = 0;
   P = 0;
@@ -24,6 +27,7 @@ ChargedParticle::ChargedParticle()
 ChargedParticle::ChargedParticle(const ChargedParticle *Part)
 {
   Charge = Part->Charge;
+  Mass = Part->Mass;
   NP = Part->NP;
   if (NP>0)
     {
@@ -102,6 +106,7 @@ void ChargedParticle::TrackEuler(
   Time[0] = 0.0;
   X[0] = X0;
   P[0] = P0;
+  double qm = Charge*InvRestMass/Mass;     // charge over mass
   for (int i=0; i<NP-1; i++)
   {
     // compute derivatives of the particle motion
@@ -114,7 +119,7 @@ void ChargedParticle::TrackEuler(
     Vector bfield = field->BField(Time[i], X[i]);
     Vector force = cross(beta, bfield) + efield/SpeedOfLight;
     Vector dX_dt = beta * SpeedOfLight;
-    Vector dP_dt = force * Charge * InvRestMass;
+    Vector dP_dt = force * qm;
     // store acceleration
     A[i] = dP_dt;
     // integrator step
@@ -143,10 +148,10 @@ void ChargedParticle::TrackLF(
   // The algorithm defines velocities (momenta) at integer time steps
   // positions and field are computed at half-step points.
   // We store all quantities at the half-step points.
-  double qm = Charge * InvRestMass;     // charge over mass
-  double t_h = 0.0;             // time at the half-step point
-  Vector x_h = X0;              // position at the half-step point
-  Vector p_h = P0;              // momentum at the half-step point
+  double qm = Charge*InvRestMass/Mass;		// charge over mass
+  double t_h = 0.0;             		// time at the half-step point
+  Vector x_h = X0;              		// position at the half-step point
+  Vector p_h = P0;              		// momentum at the half-step point
   double gamma_h = sqrt(p_h.abs2nd() + 1.0);
   Vector beta_h = p_h / gamma_h;
   Vector E_h = field->EField(t_h, x_h);
@@ -206,8 +211,8 @@ void ChargedParticle::TrackVay(
   // We store all quantities at the half-step points.
   // The stored velocity is beta_h * gamma_h = u_h / c
   // u_h := u^(i+1/2)
-  double qm = Charge * InvRestMass;     // charge over mass
-  double t2 = 0.5 * tstep;              // half time step
+  double qm = Charge*InvRestMass/Mass;		// charge over mass
+  double t2 = 0.5 * tstep;              	// half time step
   double qmt2 = qm*t2;
   double t_h = 0.0;             // time at the half-step point
   Vector x_h = X0;              // position at the half-step point
