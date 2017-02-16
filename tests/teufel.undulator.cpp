@@ -2,7 +2,7 @@
 
   Program:   TEUFEL - THz Emission from Undulators and Free-Electron Lasers
 
-  Module:    Homogeneous magnetic field test case
+  Module:    undulator test case
 
   Copyright (c) 2017 U. Lehnert
 
@@ -24,7 +24,8 @@
 /*!
     \brief Undulator test case
 
-    @author Ulf Lehnert, Vipul Joshi
+    @author Ulf Lehnert
+    @author Vipul Joshi
     @date 10.2.2017
     @file teufel.undulator.cpp
     

@@ -25,6 +25,7 @@
     \brief Homogeneous magnetic field test case
 
     @author Ulf Lehnert
+    @author Vipul Joshi
     @date 10.2.2017
     @file teufel.magnet.cpp
     
