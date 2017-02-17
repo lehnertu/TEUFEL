@@ -25,7 +25,7 @@
 #include "externalfield.h"
 #include "vector.h"
 #include "undulator.h"
-
+#include <tuple>
 using namespace std;
 
 // a class for charged particle trajectories
@@ -91,7 +91,7 @@ class ChargedParticle
     // electric field radiated by the particle
     // at a given observation point at time t in lab frame
     // retardation is properly accounted for
-    Vector RetardedEField(double time, Vector ObservationPoint);
+    tuple<Vector,Vector> RetardedEField(double time, Vector ObservationPoint);
 
   private:
 

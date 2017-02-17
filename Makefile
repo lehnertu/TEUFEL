@@ -18,7 +18,7 @@ CXX          = g++
 LINK         = g++
 
 CFLAGS       = -O2 -g -Wall
-CXXFLAGS     = -O2 -g -Wall
+CXXFLAGS     = -std=c++11
 LFLAGS       =
 LIBS         =  -L$(SDDS) -lSDDS1 -lmdblib -lmdbcommon -llzma -lz -lm
 
@@ -50,7 +50,8 @@ TARGETOBJ = $(OBJDIR)/teufel.o
 TARGET = teufel
 
 TESTS = $(TESTDIR)/teufel.magnet \
-	$(TESTDIR)/teufel.undulator
+	$(TESTDIR)/teufel.undulator \
+	$(TESTDIR)/teufel.radiation
 	
 
 ####### Implicit rules
@@ -90,6 +91,7 @@ $(OBJ): $(SRCDIR)/global.h \
 tests: $(OBJ) 
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.magnet $(TESTDIR)/teufel.magnet.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.undulator $(TESTDIR)/teufel.undulator.cpp $(LFLAGS) $(OBJ) $(LIBS)
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.radiation $(TESTDIR)/teufel.radiation.cpp $(LFLAGS) $(OBJ) $(LIBS)
 
 docs:
 	doxygen setup.dox

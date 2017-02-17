@@ -60,8 +60,7 @@
 #include "global.h"
 #include "particle.h"
 #include "externalfield.h"
-#include "HomogeneousEField.h"
-#include "HomogeneousMagnet.h"
+#include "homogeneousmagnet.h"
 #include <iostream>
 #include <fstream>
 #include <tuple>

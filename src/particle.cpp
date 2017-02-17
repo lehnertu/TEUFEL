@@ -294,9 +294,10 @@ void ChargedParticle::MirrorY(double MirrorY)
     };
 }
 
-Vector ChargedParticle::RetardedEField(double time, Vector ObservationPoint)
+tuple<Vector,Vector> ChargedParticle::RetardedEField(double time, Vector ObservationPoint)
 {
   Vector EField = Vector(0.0, 0.0, 0.0);
+  Vector BField = Vector(0.0,0.0,0.0);
 
   int i1 = 0;                                   // index of the first trajectory point
   Vector RVec = ObservationPoint - X[i1];
@@ -350,6 +351,9 @@ Vector ChargedParticle::RetardedEField(double time, Vector ObservationPoint)
     EField += (N-SourceBeta)/(R*R*bn3rd)/(gamma*gamma);
     // acceleration term
     EField += cross(N,cross(N-SourceBeta,SourceBetaPrime))/(R*bn3rd)/SpeedOfLight;
+    double scale=(ElementaryCharge/(4.0*Pi*8.85e-12));
+    EField=EField*scale;
+    BField =cross(N/SpeedOfLight,EField);
   }
-  return EField*Charge;
+  return make_tuple(EField,BField);
 }
