@@ -21,13 +21,11 @@
 
 #include "particle.h"
 #include "global.h"
-
+#include <iostream>
 #include <math.h>
 
 ChargedParticle::ChargedParticle()
 {
-  Charge = -1.0;
-  Mass = 1.0;
   // no trajectory points
   NP = 0;
   // no memory allocated, all pointers are zero
@@ -74,6 +72,37 @@ ChargedParticle::~ChargedParticle()
 int ChargedParticle::GetNP()
 {
   return NP;
+}
+
+void ChargedParticle::setCharge(int charge)
+{
+  Charge=charge;
+}
+
+int ChargedParticle::getCharge()
+{
+  return Charge;
+}
+
+void ChargedParticle::setMass(int mass)
+{
+  Mass=mass;
+}
+
+int ChargedParticle::getMass()
+{
+  return Mass;
+}
+
+void ChargedParticle::setdebyeL(double L)
+{
+   debyeL=L;
+}
+
+double ChargedParticle::getdebyeL()
+{
+   return debyeL;
+
 }
 
 double ChargedParticle::TrajTime(int step)
@@ -355,5 +384,85 @@ tuple<Vector,Vector> ChargedParticle::RetardedEField(double time, Vector Observa
     EField=EField*scale;
     BField =cross(N/SpeedOfLight,EField);
   }
+  return make_tuple(EField,BField);
+}
+
+tuple<Vector,Vector> ChargedParticle::InteractionField(int stepnumber,double time, Vector ObservationPoint)
+{
+  Vector EField = Vector(0.0, 0.0, 0.0);
+  Vector BField = Vector(0.0,0.0,0.0);
+  double scale=(Charge*ElementaryCharge/(4.0*Pi*8.85e-12)); 
+  int i1 = 0;                                   // index of the first trajectory point
+  Vector RVec = ObservationPoint - X[i1];
+  double R = RVec.norm();
+  double t1 = Time[i1] + R / SpeedOfLight;      // retarded observation time
+
+  int i2 = stepnumber;                                // index of the last known trajectory point
+  RVec = ObservationPoint - X[i2];
+  R = RVec.norm();
+  double t2 = Time[i2] + R / SpeedOfLight;      // retarded observation time
+
+  // the field is different from zero only if the observation
+  // time is within the possible retarded time interval
+  if ((time>=t1) && (time<=t2))
+  {
+    // reduce the interval until the trajectory segment is found
+    while (i2-i1>1)
+    {
+      int i = (i2+i1)/2;
+      RVec = ObservationPoint - X[i];
+      R = RVec.norm();
+      double t = Time[i] + R / SpeedOfLight;    // retarded observation time
+      if (t < time)
+      {
+        i1 = i;
+        t1 = t;
+      }
+      else
+      {
+        i2 = i;
+        t2 = t;
+      }
+    }
+    // interpolate the source point within the interval
+    // interpolation could be improved using higher-order terms
+    double frac = (time-t1)/(t2-t1);
+    Vector SourceX = X[i1]*(1.0-frac) + X[i2]*frac;
+    Vector SourceBeta = P[i1]*(1.0-frac) + P[i2]*frac;
+    double betagamma2 = SourceBeta.abs2nd();
+    double gamma = sqrt(betagamma2 + 1.0);
+    SourceBeta/=gamma;
+    Vector SourceBetaPrime = A[i1]*(1.0-frac) + A[i2]*frac;
+    SourceBetaPrime/=gamma;
+    // now compute the field emitted from an interpolated source point
+    RVec = ObservationPoint - SourceX;
+    R = RVec.norm();
+    Vector N = RVec;
+    N.normalize();
+    double bn3rd = pow(1.0-dot(SourceBeta,N),3.0);
+    // velocity term
+    EField += (N-SourceBeta)/(R*R*bn3rd)/(gamma*gamma);
+    // acceleration term
+    EField += cross(N,cross(N-SourceBeta,SourceBetaPrime))/(R*bn3rd)/SpeedOfLight;
+    EField=EField*scale;
+    BField =cross(N/SpeedOfLight,EField);
+  }
+  else
+  {
+    Vector RVec=ObservationPoint-X[stepnumber];
+    if (RVec.norm()>debyeL)
+    {    
+      EField=RVec/(pow(RVec.norm(),3.0));
+      EField=EField*scale;
+    }
+    else
+    {
+      RVec.normalize();
+      EField=RVec/pow(debyeL,2.0);
+      EField=EField*scale;
+     }
+    
+   }
+  
   return make_tuple(EField,BField);
 }

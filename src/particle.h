@@ -88,22 +88,54 @@ class ChargedParticle
     // (this also reverses the charge)
     void MirrorY(double MirrorY);
 
-    // electric field radiated by the particle
+    // electric field and magnetic field radiated by the particle
     // at a given observation point at time t in lab frame
     // retardation is properly accounted for
     tuple<Vector,Vector> RetardedEField(double time, Vector ObservationPoint);
 
+    //set the particle's charge in terms of Elementary Charge
+    void setCharge(int charge);
+
+    //return the integer value of the Charge
+    int getCharge();
+
+    //set the particle's mass in terms of electron's mass
+    void setMass(int Mass);
+
+    //return the integer value of the mass;
+    int getMass();
+
+    // electric field and magnetic field radiated by the particle
+    // and seen by some other particle
+    // time is the  present time value and Observation point
+    // is the 'present' Vector Position  of the other paricle
+    // retardation is properly accounted for
+    // returns a Coloumb Field , if the particle is not yet seeing the retarded field
+    // if particles are too close (less than ~5.10 microns), then a minimum distance (equal to debye length) is 
+    //assumed. The default value is calculated for an electron beam with 
+    // Energy=135MeV; Total Beam Charge=1nC; bunch radius=100 microns; bunch length=6ps
+    //thermal temperature; kbTe=0.2eV; lambdaD=sqrt(epsilon*gamma*kbTe/(e*e*ne)) =5.1 microns
+    // typical LCLS parameter
+    tuple<Vector,Vector> InteractionField(int stepnumber,double time, Vector ObservationPoint);
+
+    //set and return the debyeL value ~ minimum value between two particles
+
+    void setdebyeL(double L);
+    double getdebyeL();
+
+
   private:
 
     int NP;			// number of trajectory points
-    int Charge;			// charge in units of ElementaryCharge
-    int Mass;			// mass in unit of the electron rest mass
+    int Charge=-1;			// charge in units of ElementaryCharge
+    int Mass= 1;			// mass in unit of the electron rest mass
     double *Time;		// time in lab-frame [s]
     Vector *X;			// position in lab frame [m]
     Vector *P;                  // momentum in lab frame : c p = beta gamma mc²
                                 // dimensionless in units of mc²
     Vector *A;                  // acceleration in lab frame a = d/dt(p*c)
 				// in unit of 1/s (scaled by mc²)
+    double debyeL =5.1e-6;
 };
 
 #endif
