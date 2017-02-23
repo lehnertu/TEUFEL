@@ -104,7 +104,27 @@ class ChargedParticle
 
     //return the integer value of the mass;
     int getMass();
+ 
+    //set intial position of the particle -- X[0]
+    void setInitialPosition(Vector InitialPosition);
+ 
+    //set intial momentum of the particle  --P[0]
+    void setInitialMomentum(Vector InitialMomentum);
 
+    //get the initial position and the momentum
+
+    Vector getInitialPosition();
+    Vector getInitialMomentum();
+
+    //set the various trajectory values while tracking via external routine
+    void setTrajPoint(int stepnumber,Vector Position);
+    void setTrajMomentum(int stepnumber,Vector Momentum);
+    void setTrajAcceleration(int stepnumber,Vector Accel);
+    void setTrajTime(int stepnumber, double time);
+    //set the number of trajectory points the particle can have	
+    void setNOP(int NOP);
+
+ 
     // electric field and magnetic field radiated by the particle
     // and seen by some other particle
     // time is the  present time value and Observation point
@@ -126,7 +146,7 @@ class ChargedParticle
 
   private:
 
-    int NP;			// number of trajectory points
+    int NP =0;			// number of trajectory points
     int Charge=-1;			// charge in units of ElementaryCharge
     int Mass= 1;			// mass in unit of the electron rest mass
     double *Time;		// time in lab-frame [s]
@@ -135,6 +155,8 @@ class ChargedParticle
                                 // dimensionless in units of mc²
     Vector *A;                  // acceleration in lab frame a = d/dt(p*c)
 				// in unit of 1/s (scaled by mc²)
+    Vector X0;			//initial position
+    Vector P0;			//initial momentum (gamma*beta)
     double debyeL =5.1e-6;
 };
 

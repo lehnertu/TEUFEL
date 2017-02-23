@@ -100,6 +100,7 @@ int main ()
 
     // one single electron
     ChargedParticle *electron = new ChargedParticle();
+    
 
     // initial position at the origin
     Vector X0 = Vector(0.0, 0.0, -lambda/2);

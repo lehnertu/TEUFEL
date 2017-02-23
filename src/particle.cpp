@@ -23,11 +23,11 @@
 #include "global.h"
 #include <iostream>
 #include <math.h>
+#include <assert.h>
 
 ChargedParticle::ChargedParticle()
 {
-  // no trajectory points
-  NP = 0;
+  // no trajectory points - by default 
   // no memory allocated, all pointers are zero
   Time = 0;
   X = 0;
@@ -84,6 +84,46 @@ int ChargedParticle::getCharge()
   return Charge;
 }
 
+void ChargedParticle::setTrajPoint(int stepnumber,Vector Position)
+{
+  int Index=sizeof(X)/sizeof(X[0]);
+  assert(0<stepnumber<=Index);
+  X[stepnumber]=Position;
+}
+
+void ChargedParticle::setTrajMomentum(int stepnumber,Vector Momentum)
+{
+  int Index=sizeof(X)/sizeof(X[0]);
+  assert(0<stepnumber<=Index);
+  P[stepnumber]=Momentum;
+}
+
+void ChargedParticle:: setTrajAcceleration(int stepnumber,Vector Accel)
+{
+  int Index=sizeof(X)/sizeof(X[0]);
+  assert(0<stepnumber<=Index);
+  A[stepnumber]=Accel;
+}
+
+void ChargedParticle:: setTrajTime(int stepnumber, double time)
+{
+  int Index=sizeof(X)/sizeof(X[0]);
+  assert(0<stepnumber<=Index);
+  Time[stepnumber]=time;
+}
+
+//set the number of trajectory points the particle can have
+//initialise the trajectory arrays
+void ChargedParticle::setNOP(int NOP)
+{
+  NP=NOP;
+  X=new Vector[NP];
+  P=new Vector[NP];
+  A=new Vector[NP];
+  Time=new double[NP];
+}
+
+
 void ChargedParticle::setMass(int mass)
 {
   Mass=mass;
@@ -103,6 +143,26 @@ double ChargedParticle::getdebyeL()
 {
    return debyeL;
 
+}
+
+void ChargedParticle::setInitialPosition(Vector InitialPosition)
+{
+  X0=InitialPosition;
+}
+
+void ChargedParticle::setInitialMomentum(Vector InitialMomentum)
+{
+  P0=InitialMomentum;
+}
+
+Vector ChargedParticle::getInitialPosition()
+{
+  return X0;
+}
+
+Vector ChargedParticle::getInitialMomentum()
+{
+  return P0;
 }
 
 double ChargedParticle::TrajTime(int step)
