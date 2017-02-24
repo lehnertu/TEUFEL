@@ -78,8 +78,8 @@ int main ()
     double ku=2*Pi/lambda;
     Undulator *Undu = new Undulator(B,lambda,N);
     printf("B =  %9.6g T\n",B);
-    printf("Undulator Period = %9.6g T\n ",lambda);
-    printf("N = %9.6g T\n ",(double)N);   
+    printf("Undulator Period = %9.6g m\n ",lambda);
+    printf("N = %9.6g \n ",(double)N);   
     double gamma = 30.35823388162631;
     double beta = sqrt(1.0-1.0/(gamma*gamma));
     double betagamma= sqrt(gamma*gamma-1.0);
@@ -90,7 +90,7 @@ int main ()
     printf("c*p =  %12.9g MeV\n",1e-6*mecsquared*betagamma);
     double xdis = ElementaryCharge*B*SpeedOfLight/(gamma*beta*9.1e-31*SpeedOfLight*SpeedOfLight*ku*ku);
     printf("X-Displacement =  %12.9g m\n",xdis);
-    printf("Radiation Wavelength =  %12.9g/s\n",lambdar);
+    printf("Radiation Wavelength =  %12.9g/m\n",lambdar);
     double avgvz=(1-(1/(2*gamma*gamma))*(1+K*K/2))*SpeedOfLight;
 
 
@@ -121,9 +121,9 @@ int main ()
     double xdisp=0; //maximum displacement in + direction
     if (FinalPosition.z < N*lambda) {
 	errors++;
-	printf("final position = %12.9g s - \033[1;31m test failed!\033[0m\n", FinalPosition.z);
+	printf("final position = %12.9g m - \033[1;31m test failed!\033[0m\n", FinalPosition.z);
     } else {
-	printf("final position = %12.9g s - \033[1;32m OK\033[0m\n", FinalPosition.z);
+	printf("final position = %12.9g m - \033[1;32m OK\033[0m\n", FinalPosition.z);
     }
     // look for the maximum displacement
     for (int i=0;i<NOTS;i++)

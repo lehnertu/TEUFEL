@@ -28,7 +28,8 @@ OBJECTS_DIR   = ./obj
 
 ####### Files
 
-SRC = 	$(SRCDIR)/cavity.cpp \
+SRC = 	$(SRCDIR)/bunch.cpp \
+	$(SRCDIR)/cavity.cpp \
 	$(SRCDIR)/externalfield.cpp \
 	$(SRCDIR)/homogeneousmagnet.cpp \
 	$(SRCDIR)/homogeneouselectricfield.cpp \
@@ -38,7 +39,8 @@ SRC = 	$(SRCDIR)/cavity.cpp \
 	$(SRCDIR)/vector.cpp \
 	$(SRCDIR)/wave.cpp
 
-OBJ = 	$(OBJDIR)/cavity.o \
+OBJ =	$(OBJDIR)/bunch.o \
+	$(OBJDIR)/cavity.o \
 	$(OBJDIR)/externalfield.o \
 	$(OBJDIR)/homogeneousmagnet.o \
 	$(OBJDIR)/homogeneouselectricfield.o \
@@ -54,7 +56,8 @@ TARGET = teufel
 TESTS = $(TESTDIR)/teufel.EcrossB \
 	$(TESTDIR)/teufel.magnet \
 	$(TESTDIR)/teufel.undulator \
-	$(TESTDIR)/teufel.radiation 
+	$(TESTDIR)/teufel.radiation \
+	$(TESTDIR)/trial
 	
 
 ####### Implicit rules
@@ -83,6 +86,7 @@ $(TARGET):  $(OBJ)  $(TARGETOBJ)
 	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJ) $(TARGETOBJ) $(LIBS)
 
 $(OBJ): $(SRCDIR)/global.h \
+	$(SRCDIR)/bunch.h \
 	$(SRCDIR)/cavity.h \
 	$(SRCDIR)/externalfield.h \
 	$(SRCDIR)/homogeneouselectricfield.h \
@@ -97,6 +101,7 @@ tests: $(OBJ)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.magnet $(TESTDIR)/teufel.magnet.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.undulator $(TESTDIR)/teufel.undulator.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.radiation $(TESTDIR)/teufel.radiation.cpp $(LFLAGS) $(OBJ) $(LIBS)
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/trial $(TESTDIR)/trial.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	
 
 docs:

@@ -107,22 +107,38 @@ class ChargedParticle
  
     //set intial position of the particle -- X[0]
     void setInitialPosition(Vector InitialPosition);
+    Vector getInitialPosition();
  
     //set intial momentum of the particle  --P[0]
-    void setInitialMomentum(Vector InitialMomentum);
-
     //get the initial position and the momentum
-
-    Vector getInitialPosition();
+    void setInitialMomentum(Vector InitialMomentum);
     Vector getInitialMomentum();
+
+    //set and get InitialParticle Time
+    void setInitialTime(double t);
+    double getInitialTime();
+    
+
+    
+    
+
+    //set particle ID for the particles
+    //useful to identify if generating multiple particles
+    void setParticleID(int ParticleID);
+    int getParticleID();
 
     //set the various trajectory values while tracking via external routine
     void setTrajPoint(int stepnumber,Vector Position);
     void setTrajMomentum(int stepnumber,Vector Momentum);
     void setTrajAcceleration(int stepnumber,Vector Accel);
     void setTrajTime(int stepnumber, double time);
+
+
     //set the number of trajectory points the particle can have	
-    void setNOP(int NOP);
+    //allocates memory to position, momentum,acceleration, time arrays
+    //sets the first point as the initial condition
+    void setNP(int NOTS);
+    
 
  
     // electric field and magnetic field radiated by the particle
@@ -136,7 +152,7 @@ class ChargedParticle
     // Energy=135MeV; Total Beam Charge=1nC; bunch radius=100 microns; bunch length=6ps
     //thermal temperature; kbTe=0.2eV; lambdaD=sqrt(epsilon*gamma*kbTe/(e*e*ne)) =5.1 microns
     // typical LCLS parameter
-    tuple<Vector,Vector> InteractionField(int stepnumber,double time, Vector ObservationPoint);
+    tuple<Vector,Vector> InteractionField(int ParticleID2,int stepnumber,double time, Vector ObservationPoint);
 
     //set and return the debyeL value ~ minimum value between two particles
 
@@ -157,7 +173,9 @@ class ChargedParticle
 				// in unit of 1/s (scaled by mc²)
     Vector X0;			//initial position
     Vector P0;			//initial momentum (gamma*beta)
+    double T0;
     double debyeL =5.1e-6;
+    int ID=0;			//default id for particle is zero
 };
 
 #endif
