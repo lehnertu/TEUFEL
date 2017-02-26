@@ -239,7 +239,7 @@ int Bunch::FileCheck(const char *filename, int NP)
 	}
 	else {
 		return 0;	
-		printf("Error opening the file: %c", filename);};
+		printf("Error opening the file: %p", filename);};
 	InFile.close();
 	InFile2.close();
 }
