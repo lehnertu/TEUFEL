@@ -15,13 +15,13 @@ int main()
   int NOTS=2000;
   double dt=3.6e-12;
   BB= new Bunch(filename, NOP, -100, 100);
-  Undulator *undu =new Undulator(0.534,0.037,54);
+  Undulator *undu =new Undulator(0.1623918,0.045,25);
   Lattice *field =new Lattice();
   field->addElement(undu);
   BB->Track_Euler(NOTS,dt,field);
   int FT=pow(2,12);
   tuple<Vector,Vector> Field[FT];
-  double time_begin=1.03398e-8;
+  double time_begin=1.031e-8;
   double time_end=1.03506e-8;
   double dt1;
 #pragma omp parallel for shared(time_end,time_begin, dt) 
