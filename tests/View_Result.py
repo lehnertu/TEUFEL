@@ -3,10 +3,14 @@ import numpy as np
 
 x,y,z=np.loadtxt("test.txt",delimiter='\t',unpack='True')
 plt.figure(0)
-plt.plot(z,x)
+plt.scatter(z,x)
+plt.xlabel("Displacement in z(m)")
+plt.ylabel("Displacement in y(m)")
 plt.grid()
 plt.figure(1)
-plt.plot(z,y)
+plt.scatter(z,y)
+plt.xlabel("Displacement in z(m)")
+plt.ylabel("Displacement in x(m)")
 plt.grid()
 
 plt.show()

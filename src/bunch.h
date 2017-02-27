@@ -53,6 +53,7 @@ class Bunch
 	ChargedParticle *b;	//charged particle
 	void Track_Euler(int NOTS, double tstep, Lattice *field);
 	void Track_LeapFrog(int NOTS, double tstep, Lattice *field);
+	tuple<Vector,Vector>RadiationField(Vector Robs, double t);
 	
         
     

@@ -405,7 +405,7 @@ tuple<Vector,Vector> ChargedParticle::RetardedEField(double time, Vector Observa
 {
   Vector EField = Vector(0.0, 0.0, 0.0);
   Vector BField = Vector(0.0,0.0,0.0);
-
+  double scale=(Charge*ElementaryCharge/(4.0*Pi*8.85e-12));
   int i1 = 0;                                   // index of the first trajectory point
   Vector RVec = ObservationPoint - X[i1];
   double R = RVec.norm();
@@ -458,7 +458,7 @@ tuple<Vector,Vector> ChargedParticle::RetardedEField(double time, Vector Observa
     EField += (N-SourceBeta)/(R*R*bn3rd)/(gamma*gamma);
     // acceleration term
     EField += cross(N,cross(N-SourceBeta,SourceBetaPrime))/(R*bn3rd)/SpeedOfLight;
-    double scale=(ElementaryCharge/(4.0*Pi*8.85e-12));
+    
     EField=EField*scale;
     BField =cross(N/SpeedOfLight,EField);
   }
@@ -481,9 +481,11 @@ tuple<Vector,Vector> ChargedParticle::InteractionField(int ParticleID2,int stepn
   Vector EField = Vector(0.0, 0.0, 0.0);
   Vector BField = Vector(0.0,0.0,0.0);
   int ParticleID1 = getParticleID();
+  double scale=(Charge*ElementaryCharge/(4.0*Pi*8.85e-12)); 
   if(ParticleID1 != ParticleID2)
   {
-	  double scale=(Charge*ElementaryCharge/(4.0*Pi*8.85e-12)); 
+	  
+	  
 	  int i1 = 0;                                   // index of the first trajectory point
 	  Vector RVec = ObservationPoint - X[i1];
 	  double R = RVec.norm();
@@ -501,6 +503,7 @@ tuple<Vector,Vector> ChargedParticle::InteractionField(int ParticleID2,int stepn
 	    // reduce the interval until the trajectory segment is found
 	    while (i2-i1>1)
 	    {
+	      
 	      int i = (i2+i1)/2;
 	      RVec = ObservationPoint - X[i];
 	      R = RVec.norm();
@@ -536,6 +539,7 @@ tuple<Vector,Vector> ChargedParticle::InteractionField(int ParticleID2,int stepn
 	    //but it can also be set according to need
 	    if(R<debyeL)
 	    {
+		cout<<"Warning: Particles closer than one Debye Length\n";
 		R=debyeL;
 	    }
 	    Vector N = RVec;
@@ -558,6 +562,7 @@ tuple<Vector,Vector> ChargedParticle::InteractionField(int ParticleID2,int stepn
 	    }
 	    else
 	    {
+	      cout<<"Warning: Particles closer than one Debye Length\n";
 	      RVec.normalize();
 	      EField=RVec/pow(debyeL,2.0);
 	      EField=EField*scale;
