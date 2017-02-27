@@ -13,9 +13,9 @@ SDDS = ./lib/SDDSToolKit-devel-3.4
 
 INCPATH      = -I $(SDDS) -I $(SRCDIR)
 
-CC           = gcc
-CXX          = g++
-LINK         = g++
+CC           = gcc -fopenmp
+CXX          = g++ -fopenmp
+LINK         = g++ -fopenmp
 
 CFLAGS       = -O2 -g -Wall
 CXXFLAGS     = -std=c++11
