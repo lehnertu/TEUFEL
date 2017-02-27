@@ -11,7 +11,7 @@ int main()
   std::ofstream Out ("test.txt", std::ofstream::out);
   const char *filename= "BeamProfile.txt";
   Bunch *BB= new Bunch();
-  int NOP=1000;
+  int NOP=2000;
   int NOTS=2000;
   double dt=3.6e-12;
   BB= new Bunch(filename, NOP, -100, 100);
@@ -21,7 +21,7 @@ int main()
   BB->Track_Euler(NOTS,dt,field);
   int FT=pow(2,12);
   tuple<Vector,Vector> Field[FT];
-  double time_begin=1.031e-8;
+  double time_begin=1.034e-8;
   double time_end=1.03506e-8;
   double dt1;
 #pragma omp parallel for shared(time_end,time_begin, dt) 

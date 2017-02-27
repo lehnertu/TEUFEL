@@ -20,7 +20,7 @@ def GenerateBunch(nop1,mean_x1,mean_y1,mean_z1,sigma_x1,sigma_y1,sigma_z1,sigma_
   pz1=np.divide(np.subtract(pz1,0),0.511e6)*beta
   return (time,x1,y1,z1,px1,py1,pz1)
 
-nop=500
+nop=1000
 mean_x=0.0
 mean_y=0.0
 mean_z=-0.1
@@ -36,7 +36,7 @@ time,x,y,z,px,py,pz=GenerateBunch(nop,mean_x,mean_y,mean_z,sigma_x,sigma_y,sigma
 f=open("BeamProfile.txt",'w+')
 for i in range(0,len(x)):
 	f.write(str(time[i])+"\t"+str(x[i])+"\t"+str(y[i])+"\t"+str(z[i])+"\t"+str(px[i])+"\t"+str(py[i])+"\t"+str(pz[i])+"\n")
-nop=500
+nop=1000
 mean_x=0.0
 mean_y=0.0
 mean_z=-0.1-0.0001
