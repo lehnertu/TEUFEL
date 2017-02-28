@@ -133,14 +133,14 @@ int ChargedParticle::getMass()
   return Mass;
 }
 
-void ChargedParticle::setdebyeL(double L)
+void ChargedParticle::setParticleSize(double L)
 {
-   debyeL=L;
+   Radius=L;
 }
 
-double ChargedParticle::getdebyeL()
+double ChargedParticle::getParticleSize()
 {
-   return debyeL;
+   return Radius;
 
 }
 
@@ -534,13 +534,11 @@ tuple<Vector,Vector> ChargedParticle::InteractionField(int ParticleID2,int stepn
 	    R = RVec.norm();
 	    //check whether the particles are overlapping
 	    //if overlapping; set the distance between them
-	    // equal to the debye Length
-	    //debyeL has a default value
 	    //but it can also be set according to need
-	    if(R<debyeL)
+	    if(R<Radius)
 	    {
-		cout<<"Warning: Particles closer than one Debye Length\n";
-		R=debyeL;
+		cout<<"Warning: Particles Overlap\n";
+		R=Radius;
 	    }
 	    Vector N = RVec;
 	    N.normalize();
@@ -555,21 +553,21 @@ tuple<Vector,Vector> ChargedParticle::InteractionField(int ParticleID2,int stepn
 	  else
 	  {
 	    Vector RVec=ObservationPoint-X[stepnumber];
-	    if (RVec.norm()>debyeL)
+	    if (RVec.norm()>Radius)
 	    {    
 	      EField=RVec/(pow(RVec.norm(),3.0));
 	      EField=EField*scale;
 	    }
 	    else
 	    {
-	      cout<<"Warning: Particles closer than one Debye Length\n";
+	      cout<<"Warning: Particles Overlap\n";
 	      RVec.normalize();
-	      EField=RVec/pow(debyeL,2.0);
+	      //separate the particles by a diameter
+	      EField=RVec/pow(2.0*Radius,2.0);
 	      EField=EField*scale;
 	     }
 	    
 	  }
   }
-  
   return make_tuple(EField,BField);
 }

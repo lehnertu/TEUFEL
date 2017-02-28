@@ -31,6 +31,7 @@ OBJECTS_DIR   = ./obj
 SRC = 	$(SRCDIR)/bunch.cpp \
 	$(SRCDIR)/cavity.cpp \
 	$(SRCDIR)/externalfield.cpp \
+	$(SRCDIR)/gen_grid.cpp \
 	$(SRCDIR)/homogeneousmagnet.cpp \
 	$(SRCDIR)/homogeneouselectricfield.cpp \
 	$(SRCDIR)/particle.cpp\
@@ -42,6 +43,7 @@ SRC = 	$(SRCDIR)/bunch.cpp \
 OBJ =	$(OBJDIR)/bunch.o \
 	$(OBJDIR)/cavity.o \
 	$(OBJDIR)/externalfield.o \
+	$(OBJDIR)/gen_grid.o \
 	$(OBJDIR)/homogeneousmagnet.o \
 	$(OBJDIR)/homogeneouselectricfield.o \
 	$(OBJDIR)/particle.o \
@@ -89,6 +91,7 @@ $(OBJ): $(SRCDIR)/global.h \
 	$(SRCDIR)/bunch.h \
 	$(SRCDIR)/cavity.h \
 	$(SRCDIR)/externalfield.h \
+	$(SRCDIR)/gen_grid.h \
 	$(SRCDIR)/homogeneouselectricfield.h \
 	$(SRCDIR)/homogeneousmagnet.h \
 	$(SRCDIR)/particle.h \

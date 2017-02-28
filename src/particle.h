@@ -147,17 +147,15 @@ class ChargedParticle
     // is the 'present' Vector Position  of the other paricle
     // retardation is properly accounted for
     // returns a Coloumb Field , if the particle is not yet seeing the retarded field
-    // if particles are too close (less than ~5.10 microns), then a minimum distance (equal to debye length) is 
-    //assumed. The default value is calculated for an electron beam with 
-    // Energy=135MeV; Total Beam Charge=1nC; bunch radius=100 microns; bunch length=6ps
-    //thermal temperature; kbTe=0.2eV; lambdaD=sqrt(epsilon*gamma*kbTe/(e*e*ne)) =5.1 microns
-    // typical LCLS parameter
+    // if particles are too close (less than 3 microns), then a minimum distance is 
+    //assumed.
     tuple<Vector,Vector> InteractionField(int ParticleID2,int stepnumber,double time, Vector ObservationPoint);
 
-    //set and return the debyeL value ~ minimum value between two particles
-
-    void setdebyeL(double L);
-    double getdebyeL();
+    //set and return the size of the particle
+    //assuming the particle as sphere
+    //set radius
+    void setParticleSize(double L);
+    double getParticleSize();
 
 
   private:
@@ -174,7 +172,7 @@ class ChargedParticle
     Vector X0;			//initial position
     Vector P0;			//initial momentum (gamma*beta)
     double T0;
-    double debyeL =5.1e-6;
+    double Radius =3e-6;
     int ID=0;			//default id for particle is zero
 };
 

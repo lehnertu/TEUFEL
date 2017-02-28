@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-x,y,z=np.loadtxt("test.txt",delimiter='\t',unpack='True')
+x,y,z=np.loadtxt("trajectory.txt",delimiter='\t',unpack='True')
 plt.figure(0)
 plt.scatter(z,x)
 plt.xlabel("Displacement in z(m)")

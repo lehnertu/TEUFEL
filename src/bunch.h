@@ -34,7 +34,7 @@ class Bunch
 {
 
   public:
-	//default constructor. creates two particles resting at origin .
+	//default constructor. creates single particles resting at origin .
 	// the charge and mass of particles is equal to that of electron 
 	Bunch();
 

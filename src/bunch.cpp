@@ -35,21 +35,15 @@
 Bunch::Bunch()
 {
 	//Create a single charged particle with default charge, mass values.
-	setNOP(2);
-	b=new ChargedParticle[2];
+	setNOP(1);
+	b=new ChargedParticle[1];
 	//Initial values has to be set at the initialization
 	b[0].setInitialMomentum(Vector(0.0,0,0.0));
 	b[0].setInitialPosition(Vector(0.0,0.00,0.0));
 	b[0].setInitialTime(0.0);	
 	b[0].setParticleID(0);
 	b[0].setCharge(-1);
-	b[1].setCharge(-1);
 	b[0].setMass(1);
-	b[1].setMass(1);
-	b[1].setInitialMomentum(Vector(-0.00,-0.00,0.0));
-	b[1].setInitialPosition(Vector(0.0,0.0,0.0));
-	b[1].setInitialTime(0.0);	
-	b[1].setParticleID(1);
 
 }
 
@@ -213,6 +207,10 @@ void Bunch::Track_Euler(int NOTS, double tstep, Lattice *field)
 			b[k].setTrajPoint(i+1,X0+dX_dt*tstep);
 			b[k].setTrajTime(i+1,t0+tstep);
 			b[k].setTrajMomentum(i+1,P0+dP_dt*tstep);
+		}
+		if (int(100.0*(double)i/(double)NOTS) == 25 || int(100.0*(double)i/(double)NOTS) == 50 || int(100.0*(double)i/(double)NOTS) == 75 ||int(100.0*(double)i/(double)NOTS) == 75)
+		{
+			printf("\033[1;31m Tracking Completed: %f\033[0m",100.0*(double)i/(double)NOTS));
 		}
 		
 	}
