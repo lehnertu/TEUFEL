@@ -20,7 +20,7 @@ def GenerateBunch(nop1,mean_x1,mean_y1,mean_z1,sigma_x1,sigma_y1,sigma_z1,sigma_
   pz1=np.divide(np.subtract(pz1,0),0.511e6)*beta
   return (time,x1,y1,z1,px1,py1,pz1)
 
-nop=2000
+nop=50
 mean_x=0.0
 mean_y=0.0
 mean_z=-0.1

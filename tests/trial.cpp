@@ -14,7 +14,7 @@ int main()
   std::ofstream Out2("trajectory.txt", std::ofstream::out);
   const char *filename= "BeamProfile.txt";
   Bunch *BB;
-  int NOP=2000;
+  int NOP=50;
   int NOTS=3000;
   double dt=2.4e-12;
   BB= new Bunch(filename, NOP, -2000, 2000);
@@ -35,6 +35,13 @@ int main()
   Vector Ar=Vector(0.0,0.0,1.0)*Area;
   double t_max;
   tuple<Vector,Vector> Grid1[Grid.GetGridSize()];
+  for (int i=0; i<NOTS;i++)
+	{
+		Vector XP=BB->b[10].TrajPoint(i);
+		Vector XP1=BB->b[10].TrajMomentum(i);
+		double tt=BB->b[10].TrajTime(i);
+		Out2<<tt<<"\t"<<XP.x<<"\t"<<XP.y<<"\t"<<XP.z<<"\t"<<XP1.x<<"\t"<<XP1.y<<"\t"<<XP1.z<<"\n";
+	}
 #pragma omp parallel for shared(time_end,time_begin, dt, Robs) 
   for (int i=0;i<FT;i++)
 	{	

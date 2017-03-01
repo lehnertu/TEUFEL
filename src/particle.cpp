@@ -98,7 +98,7 @@ void ChargedParticle::setTrajMomentum(int stepnumber,Vector Momentum)
 
 void ChargedParticle:: setTrajAcceleration(int stepnumber,Vector Accel)
 {
-  assert(0<=stepnumber && stepnumber<=NP);
+  assert(stepnumber<=NP);
   A[stepnumber]=Accel;
 }
 
@@ -537,8 +537,8 @@ tuple<Vector,Vector> ChargedParticle::InteractionField(int ParticleID2,int stepn
 	    //but it can also be set according to need
 	    if(R<Radius)
 	    {
-		cout<<"Warning: Particles Overlap\n";
-		R=Radius;
+		//cout<<"Warning: Particles Overlap\n";
+		R=2*Radius;
 	    }
 	    Vector N = RVec;
 	    N.normalize();
@@ -560,7 +560,7 @@ tuple<Vector,Vector> ChargedParticle::InteractionField(int ParticleID2,int stepn
 	    }
 	    else
 	    {
-	      cout<<"Warning: Particles Overlap\n";
+	      //cout<<"Warning: Particles Overlap\n";
 	      RVec.normalize();
 	      //separate the particles by a diameter
 	      EField=RVec/pow(2.0*Radius,2.0);

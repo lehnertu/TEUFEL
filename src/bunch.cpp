@@ -178,7 +178,6 @@ void Bunch::Track_Euler(int NOTS, double tstep, Lattice *field)
 	//allocate memory to every particle
 	//to store trajectory details
 	InitializeTrajectory(NOTS);
-	double x, pi, sum = 0.0;
 	double start=omp_get_wtime();
 	for (int i=0;i<NOTS;i++)
 	{
@@ -208,10 +207,6 @@ void Bunch::Track_Euler(int NOTS, double tstep, Lattice *field)
 			b[k].setTrajTime(i+1,t0+tstep);
 			b[k].setTrajMomentum(i+1,P0+dP_dt*tstep);
 		}
-		if (int(100.0*(double)i/(double)NOTS) == 25 || int(100.0*(double)i/(double)NOTS) == 50 || int(100.0*(double)i/(double)NOTS) == 75 ||int(100.0*(double)i/(double)NOTS) == 75)
-		{
-			printf("\033[1;31m Tracking Completed: %f\033[0m",100.0*(double)i/(double)NOTS));
-		}
 		
 	}
 	double end=omp_get_wtime();
@@ -219,17 +214,78 @@ void Bunch::Track_Euler(int NOTS, double tstep, Lattice *field)
 
 }
 
-void Bunch::Track_LeapFrog(int NOTS, double tstep, Lattice *field)
+void Bunch::Track_Vay(int NOTS, double tstep, Lattice *field)
 {
 	InitializeTrajectory(NOTS);
+	double qm=b[0].getCharge()*InvRestMass/b[0].getMass();
+	double t2=0.5*tstep;
+	double qmt2=qm*t2;
+	double t_h[NOP];
+	Vector x_h[NOP];
+	Vector p_h[NOP];
+	double gamma_h[NOP];
+	Vector beta_h[NOP];
+	Vector E_h[NOP];
+	Vector B_h[NOP];
+	Vector dp_dt[NOP];
+	Vector A[NOP];
+	Vector p_i1[NOP];
+	double gamma_i1[NOP];
+	Vector beta_i1[NOP];
+	tuple<Vector,Vector> F[NOP];
+//first of all setup the initial information for half steps
+//for all the particles	
+#pragma parallel for private(t_h,x_h,p_h,gamma_h,beta_h,F,E_h,B_h,dp_dt,p_i1,gamma_i1,beta_i1,k,qmt2,qm,tstep)
+	for(int k=0;k<NOP;k++)
+		{
+			t_h[k]=b[k].TrajTime(0);
+			x_h[k]=b[k].TrajPoint(0);
+			p_h[k]=b[k].getInitialMomentum();
+			gamma_h[k]=sqrt(p_h[k].abs2nd()+1.0);
+			beta_h[k]=p_h[k]/gamma_h[k];
+			F[k]=MutualField(0, k, t_h[k]);
+			E_h[k]=field->EField(t_h[k],x_h[k])+get<0>(F[k]);
+			B_h[k]=field->BField(t_h[k],x_h[k])+get<1>(F[k]);
+			dp_dt[k]=(cross(beta_h[k],B_h[k])+E_h[k]/SpeedOfLight)*qm;
+			b[k].setTrajAcceleration(0,dp_dt[k]);
+			p_i1[k]=p_h[k]-dp_dt[k]*0.5*tstep;
+			gamma_i1[k]=sqrt(p_i1[k].abs2nd()+1.0);
+			beta_i1[k]=p_i1[k]/gamma_i1[k];	
+		};
+
 	for (int i=0;i<NOTS;i++)
 	{
+		Vector p_i[NOP],beta_i[NOP],p_prime[NOP],tau[NOP],T[NOP];
+		double gamma_prime[NOP],u_star[NOP],tau2nd[NOP],sigma[NOP];
+//#pragma parallel for private(t_h,x_h,p_h,gamma_h,beta_h,F,E_h,B_h,dp_dt,p_i1,gamma_i1,beta_i1,k,qmt2,qm,tstep,p_i,beta_i,p_prime,gamma_prime,tau,u_star,gamma_i1,T)
 		for (int k=0;k<NOP;k++)
 		{
-			double qm=b[k].getCharge()*InvRestMass/Mass;
+			p_i[k]=p_i1[k];	
+			beta_i[k]=beta_i1[k];
+			F[k]=MutualField(i, k, t_h[k]);
+			E_h[k]=field->EField(t_h[k],x_h[k])+get<0>(F[k]);
+			B_h[k]=field->BField(t_h[k],x_h[k])+get<1>(F[k]);
+			dp_dt[k]=(cross(beta_i[k],B_h[k])+E_h[k]/SpeedOfLight)*qm;
+			p_h[k]=p_i[k]+dp_dt[k]*t2;			
+			p_prime[k]=p_h[k]+E_h[k]/SpeedOfLight * qmt2;			
+			gamma_prime[k]=sqrt(p_prime[k].abs2nd()+1.0);			
+			tau[k]=B_h[k]*qmt2;			
+			u_star[k]=dot(p_prime[k],tau[k]);			
+			tau2nd[k]=tau[k].abs2nd();			
+			sigma[k]=gamma_prime[k]*gamma_prime[k]-tau2nd[k];
+			gamma_i1[k]=sqrt(0.5*(sigma[k]+sqrt(sigma[k]*sigma[k]+4.0*(tau2nd[k]+u_star[k]*u_star[k]))));			
+			T[k]=tau[k]/gamma_i1[k];
+			p_i1[k]=(p_prime[k]+T[k]*dot(p_prime[k],T[k])+cross(p_prime[k],T[k]))/(1.0+T[k].abs2nd());
+			beta_i1[k]=p_i1[k]/gamma_i1[k];
+			b[k].setTrajTime(i+1,t_h[k]);
+			b[k].setTrajPoint(i+1,x_h[k]);
+			b[k].setTrajMomentum(i+1,p_h[k]);
+			b[k].setTrajAcceleration(i+1,dp_dt[k]);
+			x_h[k]=x_h[k]+beta_i1[k]*SpeedOfLight*tstep;
+			t_h[k]=t_h[k]+tstep;				
 			
 		}
-	}
+	};
 
 
 
