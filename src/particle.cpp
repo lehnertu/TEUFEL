@@ -461,7 +461,7 @@ tuple<Vector,Vector> ChargedParticle::RetardedEField(double time, Vector Observa
     
     EField=EField*scale;
     BField =cross(N/SpeedOfLight,EField);
-  }
+  } 
   return make_tuple(EField,BField);
 }
 

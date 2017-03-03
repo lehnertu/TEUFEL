@@ -38,8 +38,8 @@ Bunch::Bunch()
 	setNOP(1);
 	b=new ChargedParticle[1];
 	//Initial values has to be set at the initialization
-	b[0].setInitialMomentum(Vector(0.0,0,0.0));
-	b[0].setInitialPosition(Vector(0.0,0.00,0.0));
+	b[0].setInitialMomentum(Vector(0.0,0,30.35));
+	b[0].setInitialPosition(Vector(0.0,0.00,-0.1));
 	b[0].setInitialTime(0.0);	
 	b[0].setParticleID(0);
 	b[0].setCharge(-1);
@@ -82,7 +82,7 @@ tuple<Vector,Vector> Bunch::MutualField(int stepnumber, int ParticleID, double t
 	int j=ParticleID;
 	Vector Robs=b[j].TrajPoint(stepnumber);
 	tuple<Vector,Vector>FF[NOP];
-#pragma omp parallel for 
+#pragma omp parallel for shared(j,stepnumber,t,Robs)
 	for (int i=0; i<NOP;i++)
 	{
 		// for i == j; i.e. field due to particle i on its position is zero
@@ -130,7 +130,7 @@ tuple<Vector,Vector> Bunch::RadiationField(Vector Robs, double t)
 	Vector Ef = Vector(0.0,0.0,0.0);
 	Vector Bf = Vector(0.0,0.0,0.0);
 	tuple<Vector,Vector>FF[NOP];
-#pragma omp parallel for 
+#pragma omp parallel for shared(t,Robs)
 	for (int i=0; i<NOP;i++)
 	{
 		// for i == j; i.e. field due to particle i on its position is zero
@@ -233,6 +233,7 @@ void Bunch::Track_Vay(int NOTS, double tstep, Lattice *field)
 	double gamma_i1[NOP];
 	Vector beta_i1[NOP];
 	tuple<Vector,Vector> F[NOP];
+	double start=omp_get_wtime();
 //first of all setup the initial information for half steps
 //for all the particles	
 #pragma parallel for private(t_h,x_h,p_h,gamma_h,beta_h,F,E_h,B_h,dp_dt,p_i1,gamma_i1,beta_i1,k,qmt2,qm,tstep)
@@ -257,7 +258,7 @@ void Bunch::Track_Vay(int NOTS, double tstep, Lattice *field)
 	{
 		Vector p_i[NOP],beta_i[NOP],p_prime[NOP],tau[NOP],T[NOP];
 		double gamma_prime[NOP],u_star[NOP],tau2nd[NOP],sigma[NOP];
-//#pragma parallel for private(t_h,x_h,p_h,gamma_h,beta_h,F,E_h,B_h,dp_dt,p_i1,gamma_i1,beta_i1,k,qmt2,qm,tstep,p_i,beta_i,p_prime,gamma_prime,tau,u_star,gamma_i1,T)
+#pragma parallel for private(t_h,x_h,p_h,gamma_h,beta_h,F,E_h,B_h,dp_dt,p_i1,gamma_i1,beta_i1,k,qmt2,qm,tstep,p_i,beta_i,p_prime,gamma_prime,tau,u_star,gamma_i1,T)
 		for (int k=0;k<NOP;k++)
 		{
 			p_i[k]=p_i1[k];	
@@ -288,6 +289,8 @@ void Bunch::Track_Vay(int NOTS, double tstep, Lattice *field)
 	};
 
 
+	double end=omp_get_wtime();
+	cout<<"\033[1;31m Tracking Completed in: \033[0m"<<(end-start)<<"\033[1;31m seconds\033[0m\n"<<endl;
 
 }
 
