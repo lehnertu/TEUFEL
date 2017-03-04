@@ -19,54 +19,29 @@
  * 
  * =========================================================================*/
 
-#ifndef VECTOR_H
-#define VECTOR_H
+#include "homogeneouselectricfield.h"
+#include "global.h"
+#include <math.h>
 
-using namespace std;
-
-class Vector
+HomogeneousElectricField::HomogeneousElectricField(Vector E)
 {
+  E0=E;
+}
 
-  public:
+Vector HomogeneousElectricField::getE0()
+{
+  return E0;
+}
 
-    Vector();
-    Vector(double x0, double y0, double z0);
+Vector HomogeneousElectricField::ElementLocalEField(double t, Vector X)
+{
+  Vector p=E0;
+  return (p);
+}
 
-    double x;
-    double y;
-    double z;
+Vector HomogeneousElectricField::ElementLocalBField(double t, Vector X)
+{
+  return Vector(0.0,0.0,0.0);
+}
 
-    // sum and difference of two vectors
-    Vector operator+ (Vector v2);
-    Vector& operator+= (Vector v2);
-    Vector operator- (Vector v2);
 
-    // negative vector
-    Vector operator- ();
-
-    // multiplication of a vector with a factor
-    Vector operator* (double faktor);
-    Vector& operator*= (double faktor);
-    Vector operator/ (double faktor);
-    Vector& operator/= (double faktor);
-
-    // absolute value of a vector
-    double norm();
-
-    // squared absolute value of a vector
-    double abs2nd();
-
-    // make a vector unit length
-    void normalize();
-
-  private:
-
-};
-
-// dot product of two vectors
-double dot(Vector a, Vector b);
-
-// cross product of two vectors
-Vector cross(Vector a, Vector b);
-
-#endif

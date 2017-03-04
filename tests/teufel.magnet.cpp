@@ -151,6 +151,38 @@ int main ()
 	printf("beta gamma = %9.6f - \033[1;32m OK\033[0m\n", FinalMomentum.norm());
     }	
     printf("\n");
+
+    //Track the electron in the same fields with the Euler routine
+    Vector ExpectedPosition=X0;
+    Vector ExpectedMomentum=P0;
+    ChargedParticle *electron1 = new ChargedParticle();
+    electron1->TrackEuler(NOTS, deltaT, X0, P0, lattice);
+    FinalPosition=electron1->TrajPoint(NOTS);
+    FinalMomentum=electron1->TrajMomentum(NOTS);
+    if (fabs(FinalPosition.x-ExpectedPosition.x) >2e-6 && fabs(FinalPosition.y-ExpectedPosition.y) >2e-6 && fabs(FinalPosition.z-ExpectedPosition.z) >2e-6 && FinalMomentum.norm()-ExpectedMomentum.norm() >1.5e-3) {
+	printf(" Euler Algorithm Fails ! \033[1;31m test failed!\033[0m\n"); 
+    } else {
+	printf("Euler Algorithm Pass - \033[1;32m OK\033[0m\n");
+	printf("final x position = %12.9g m - \033[1;32m OK\033[0m\n",FinalPosition.x);
+	printf("final y position = %12.9g m - \033[1;32m OK\033[0m\n",FinalPosition.y);
+	printf("final z position = %12.9g m - \033[1;32m OK\033[0m\n",FinalPosition.z);
+    }
+   
+    //Track the electron in the same fields with the LeapFrog routine
+    ChargedParticle *electron2 = new ChargedParticle();
+    electron2->TrackLF(NOTS, deltaT, X0, P0, lattice);
+    FinalPosition=electron2->TrajPoint(NOTS);
+    FinalMomentum=electron2->TrajMomentum(NOTS);
+    if (fabs(FinalPosition.x-ExpectedPosition.x) >2e-6 && fabs(FinalPosition.y-ExpectedPosition.y) >2e-6 && fabs(FinalPosition.z-ExpectedPosition.z) >2e-6 && FinalMomentum.norm()-ExpectedMomentum.norm() >1.5e-3) {
+	printf(" Leap Frog Algorithm Fails ! \033[1;31m test failed!\033[0m\n"); 
+    } else {
+	printf("Leap Frog Algorithm Pass - \033[1;32m OK\033[0m\n");
+	printf("final x position = %12.9g m - \033[1;32m OK\033[0m\n",FinalPosition.x);
+	printf("final y position = %12.9g m - \033[1;32m OK\033[0m\n",FinalPosition.y);
+	printf("final z position = %12.9g m - \033[1;32m OK\033[0m\n",FinalPosition.z);
+	printf("final Momentum = %12.9g m - \033[1;32m OK\033[0m\n", FinalMomentum.norm());
+    }
+    
     
     return errors;
 }

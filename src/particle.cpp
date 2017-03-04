@@ -21,15 +21,13 @@
 
 #include "particle.h"
 #include "global.h"
-
+#include <iostream>
 #include <math.h>
+#include <assert.h>
 
 ChargedParticle::ChargedParticle()
 {
-  Charge = -1.0;
-  Mass = 1.0;
-  // no trajectory points
-  NP = 0;
+  // no trajectory points - by default 
   // no memory allocated, all pointers are zero
   Time = 0;
   X = 0;
@@ -74,6 +72,115 @@ ChargedParticle::~ChargedParticle()
 int ChargedParticle::GetNP()
 {
   return NP;
+}
+
+void ChargedParticle::setCharge(int charge)
+{
+  Charge=charge;
+}
+
+int ChargedParticle::getCharge()
+{
+  return Charge;
+}
+
+void ChargedParticle::setTrajPoint(int stepnumber,Vector Position)
+{
+  assert(0<=stepnumber &&stepnumber<=NP);
+  X[stepnumber]=Position;
+}
+
+void ChargedParticle::setTrajMomentum(int stepnumber,Vector Momentum)
+{
+  assert(0<=stepnumber &&stepnumber<=NP);
+  P[stepnumber]=Momentum;
+}
+
+void ChargedParticle:: setTrajAcceleration(int stepnumber,Vector Accel)
+{
+  assert(stepnumber<=NP);
+  A[stepnumber]=Accel;
+}
+
+void ChargedParticle:: setTrajTime(int stepnumber, double time)
+{
+  assert(0<=stepnumber && stepnumber<=NP);
+  Time[stepnumber]=time;
+}
+
+//set the number of trajectory points the particle can have
+//initialise the trajectory arrays
+void ChargedParticle::setNP(int NOTS)
+{
+  NP=NOTS;
+  X=new Vector[NP];
+  X[0]=getInitialPosition();
+  P=new Vector[NP];
+  P[0]=getInitialMomentum();
+  A=new Vector[NP];
+  Time=new double[NP];
+  Time[0]=getInitialTime();
+}
+
+
+void ChargedParticle::setMass(int mass)
+{
+  Mass=mass;
+}
+
+int ChargedParticle::getMass()
+{
+  return Mass;
+}
+
+void ChargedParticle::setParticleSize(double L)
+{
+   Radius=L;
+}
+
+double ChargedParticle::getParticleSize()
+{
+   return Radius;
+
+}
+
+void ChargedParticle::setParticleID(int ParticleID)
+{
+  ID=ParticleID;
+}
+
+int ChargedParticle::getParticleID()
+{
+  return ID;
+}
+void ChargedParticle::setInitialPosition(Vector InitialPosition)
+{
+  X0=InitialPosition;
+}
+
+void ChargedParticle::setInitialMomentum(Vector InitialMomentum)
+{
+  P0=InitialMomentum;
+}
+
+Vector ChargedParticle::getInitialPosition()
+{
+  return X0;
+}
+
+void ChargedParticle::setInitialTime(double t)
+{
+  T0=t;
+}
+
+double ChargedParticle::getInitialTime()
+{
+  return T0;
+}
+
+Vector ChargedParticle::getInitialMomentum()
+{
+  return P0;
 }
 
 double ChargedParticle::TrajTime(int step)
@@ -294,10 +401,11 @@ void ChargedParticle::MirrorY(double MirrorY)
     };
 }
 
-Vector ChargedParticle::RetardedEField(double time, Vector ObservationPoint)
+tuple<Vector,Vector> ChargedParticle::RetardedEField(double time, Vector ObservationPoint)
 {
   Vector EField = Vector(0.0, 0.0, 0.0);
-
+  Vector BField = Vector(0.0,0.0,0.0);
+  double scale=(Charge*ElementaryCharge/(4.0*Pi*8.85e-12));
   int i1 = 0;                                   // index of the first trajectory point
   Vector RVec = ObservationPoint - X[i1];
   double R = RVec.norm();
@@ -350,6 +458,116 @@ Vector ChargedParticle::RetardedEField(double time, Vector ObservationPoint)
     EField += (N-SourceBeta)/(R*R*bn3rd)/(gamma*gamma);
     // acceleration term
     EField += cross(N,cross(N-SourceBeta,SourceBetaPrime))/(R*bn3rd)/SpeedOfLight;
+    
+    EField=EField*scale;
+    BField =cross(N/SpeedOfLight,EField);
+  } 
+  return make_tuple(EField,BField);
+}
+
+
+
+//find the radiation field
+// because of particle identified by ParticleID1 --source
+// on Particle identified by ParticleID2 --observer
+//Particle1D1 != ParticleID2
+//stepnumber is the iteration step number --to identify the last known trajectory point
+//time is the lab time or iteration time 
+//Observation Point is the position of the particle identified by ParticleID2
+
+tuple<Vector,Vector> ChargedParticle::InteractionField(int ParticleID2,int stepnumber,double time, Vector ObservationPoint)
+{
+
+  Vector EField = Vector(0.0, 0.0, 0.0);
+  Vector BField = Vector(0.0,0.0,0.0);
+  int ParticleID1 = getParticleID();
+  double scale=(Charge*ElementaryCharge/(4.0*Pi*8.85e-12)); 
+  if(ParticleID1 != ParticleID2)
+  {
+	  
+	  
+	  int i1 = 0;                                   // index of the first trajectory point
+	  Vector RVec = ObservationPoint - X[i1];
+	  double R = RVec.norm();
+	  double t1 = Time[i1] + R / SpeedOfLight;      // retarded observation time
+
+	  int i2 = stepnumber;                                // index of the last known trajectory point
+	  RVec = ObservationPoint - X[i2];
+	  R = RVec.norm();
+	  double t2 = Time[i2] + R / SpeedOfLight;      // retarded observation time
+
+	  // the field is different from zero only if the observation
+	  // time is within the possible retarded time interval
+	  if ((time>=t1) && (time<=t2))
+	  {
+	    // reduce the interval until the trajectory segment is found
+	    while (i2-i1>1)
+	    {
+	      
+	      int i = (i2+i1)/2;
+	      RVec = ObservationPoint - X[i];
+	      R = RVec.norm();
+	      double t = Time[i] + R / SpeedOfLight;    // retarded observation time
+	      if (t < time)
+	      {
+		i1 = i;
+		t1 = t;
+	      }
+	      else
+	      {
+		i2 = i;
+		t2 = t;
+	      }
+	    }
+	    // interpolate the source point within the interval
+	    // interpolation could be improved using higher-order terms
+	    double frac = (time-t1)/(t2-t1);
+	    Vector SourceX = X[i1]*(1.0-frac) + X[i2]*frac;
+	    Vector SourceBeta = P[i1]*(1.0-frac) + P[i2]*frac;
+	    double betagamma2 = SourceBeta.abs2nd();
+	    double gamma = sqrt(betagamma2 + 1.0);
+	    SourceBeta/=gamma;
+	    Vector SourceBetaPrime = A[i1]*(1.0-frac) + A[i2]*frac;
+	    SourceBetaPrime/=gamma;
+	    // now compute the field emitted from an interpolated source point
+	    RVec = ObservationPoint - SourceX;
+	    R = RVec.norm();
+	    //check whether the particles are overlapping
+	    //if overlapping; set the distance between them
+	    //but it can also be set according to need
+	    if(R<Radius)
+	    {
+		//cout<<"Warning: Particles Overlap\n";
+		R=2*Radius;
+	    }
+	    Vector N = RVec;
+	    N.normalize();
+	    double bn3rd = pow(1.0-dot(SourceBeta,N),3.0);
+	    // velocity term
+	    EField += (N-SourceBeta)/(R*R*bn3rd)/(gamma*gamma);
+	    // acceleration term
+	    EField += cross(N,cross(N-SourceBeta,SourceBetaPrime))/(R*bn3rd)/SpeedOfLight;
+	    EField=EField*scale;
+	    BField =cross(N/SpeedOfLight,EField);
+	  }
+	  else
+	  {
+	    Vector RVec=ObservationPoint-X[stepnumber];
+	    if (RVec.norm()>Radius)
+	    {    
+	      EField=RVec/(pow(RVec.norm(),3.0));
+	      EField=EField*scale;
+	    }
+	    else
+	    {
+	      //cout<<"Warning: Particles Overlap\n";
+	      RVec.normalize();
+	      //separate the particles by a diameter
+	      EField=RVec/pow(2.0*Radius,2.0);
+	      EField=EField*scale;
+	     }
+	    
+	  }
   }
-  return EField*Charge;
+  return make_tuple(EField,BField);
 }

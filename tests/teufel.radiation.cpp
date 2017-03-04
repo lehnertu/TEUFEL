@@ -60,8 +60,7 @@
 #include "global.h"
 #include "particle.h"
 #include "externalfield.h"
-#include "HomogeneousEField.h"
-#include "HomogeneousMagnet.h"
+#include "homogeneousmagnet.h"
 #include <iostream>
 #include <fstream>
 #include <tuple>
@@ -107,7 +106,6 @@ int main ()
     double tau=2.1697404117106876e-09;
     double deltaT = tau/NOTS;
     electron->TrackVay(NOTS, deltaT, X0, P0, lattice);
-
     // count the errors
     int errors = 0;
   

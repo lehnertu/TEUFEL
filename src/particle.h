@@ -25,7 +25,7 @@
 #include "externalfield.h"
 #include "vector.h"
 #include "undulator.h"
-
+#include <tuple>
 using namespace std;
 
 // a class for charged particle trajectories
@@ -88,22 +88,92 @@ class ChargedParticle
     // (this also reverses the charge)
     void MirrorY(double MirrorY);
 
-    // electric field radiated by the particle
+    // electric field and magnetic field radiated by the particle
     // at a given observation point at time t in lab frame
     // retardation is properly accounted for
-    Vector RetardedEField(double time, Vector ObservationPoint);
+    tuple<Vector,Vector> RetardedEField(double time, Vector ObservationPoint);
+
+    //set the particle's charge in terms of Elementary Charge
+    void setCharge(int charge);
+
+    //return the integer value of the Charge
+    int getCharge();
+
+    //set the particle's mass in terms of electron's mass
+    void setMass(int Mass);
+
+    //return the integer value of the mass;
+    int getMass();
+ 
+    //set intial position of the particle -- X[0]
+    void setInitialPosition(Vector InitialPosition);
+    Vector getInitialPosition();
+ 
+    //set intial momentum of the particle  --P[0]
+    //get the initial position and the momentum
+    void setInitialMomentum(Vector InitialMomentum);
+    Vector getInitialMomentum();
+
+    //set and get InitialParticle Time
+    void setInitialTime(double t);
+    double getInitialTime();
+    
+
+    
+    
+
+    //set particle ID for the particles
+    //useful to identify if generating multiple particles
+    void setParticleID(int ParticleID);
+    int getParticleID();
+
+    //set the various trajectory values while tracking via external routine
+    void setTrajPoint(int stepnumber,Vector Position);
+    void setTrajMomentum(int stepnumber,Vector Momentum);
+    void setTrajAcceleration(int stepnumber,Vector Accel);
+    void setTrajTime(int stepnumber, double time);
+
+
+    //set the number of trajectory points the particle can have	
+    //allocates memory to position, momentum,acceleration, time arrays
+    //sets the first point as the initial condition
+    void setNP(int NOTS);
+    
+
+ 
+    // electric field and magnetic field radiated by the particle
+    // and seen by some other particle
+    // time is the  present time value and Observation point
+    // is the 'present' Vector Position  of the other paricle
+    // retardation is properly accounted for
+    // returns a Coloumb Field , if the particle is not yet seeing the retarded field
+    // if particles are too close (less than 3 microns), then a minimum distance is 
+    //assumed.
+    tuple<Vector,Vector> InteractionField(int ParticleID2,int stepnumber,double time, Vector ObservationPoint);
+
+    //set and return the size of the particle
+    //assuming the particle as sphere
+    //set radius
+    void setParticleSize(double L);
+    double getParticleSize();
+
 
   private:
 
-    int NP;			// number of trajectory points
-    int Charge;			// charge in units of ElementaryCharge
-    int Mass;			// mass in unit of the electron rest mass
+    int NP =0;			// number of trajectory points
+    int Charge=-1;			// charge in units of ElementaryCharge
+    int Mass= 1;			// mass in unit of the electron rest mass
     double *Time;		// time in lab-frame [s]
     Vector *X;			// position in lab frame [m]
     Vector *P;                  // momentum in lab frame : c p = beta gamma mc²
                                 // dimensionless in units of mc²
     Vector *A;                  // acceleration in lab frame a = d/dt(p*c)
 				// in unit of 1/s (scaled by mc²)
+    Vector X0;			//initial position
+    Vector P0;			//initial momentum (gamma*beta)
+    double T0;
+    double Radius =0.5e-6;
+    int ID=0;			//default id for particle is zero
 };
 
 #endif

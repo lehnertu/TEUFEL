@@ -19,54 +19,41 @@
  * 
  * =========================================================================*/
 
-#ifndef VECTOR_H
-#define VECTOR_H
+#ifndef HOMOGENEOUSELECTRICFIELD_H
+#define HOMOGENEOUSELECTRICFIELD_H
+
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include "externalfield.h"
+#include "vector.h"
 
 using namespace std;
 
-class Vector
+//a class for a homogenous electric field 
+//the field would extend everywhere
+
+class HomogeneousElectricField : public ExternalField
 {
 
   public:
 
-    Vector();
-    Vector(double x0, double y0, double z0);
+    // constructor
+    HomogeneousElectricField(Vector E);        // field vector E[V/m]
 
-    double x;
-    double y;
-    double z;
-
-    // sum and difference of two vectors
-    Vector operator+ (Vector v2);
-    Vector& operator+= (Vector v2);
-    Vector operator- (Vector v2);
-
-    // negative vector
-    Vector operator- ();
-
-    // multiplication of a vector with a factor
-    Vector operator* (double faktor);
-    Vector& operator*= (double faktor);
-    Vector operator/ (double faktor);
-    Vector& operator/= (double faktor);
-
-    // absolute value of a vector
-    double norm();
-
-    // squared absolute value of a vector
-    double abs2nd();
-
-    // make a vector unit length
-    void normalize();
-
+    Vector getE0();			// report the field vector
+    
   private:
 
+    Vector ElementLocalEField(double t, Vector X);
+
+    Vector ElementLocalBField(double t, Vector X);
+
+  private:
+      
+    Vector E0;				// the constant field vector
+
 };
-
-// dot product of two vectors
-double dot(Vector a, Vector b);
-
-// cross product of two vectors
-Vector cross(Vector a, Vector b);
 
 #endif
