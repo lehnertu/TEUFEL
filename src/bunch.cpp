@@ -74,6 +74,10 @@ int Bunch::getNOP()
 	return NOP;
 };
 
+int Bunch:: getNOTS()
+{
+	return NT;
+}
 
 tuple<Vector,Vector> Bunch::MutualField(int stepnumber, int ParticleID, double t)
 {
@@ -178,6 +182,7 @@ void Bunch::Track_Euler(int NOTS, double tstep, Lattice *field)
 	//allocate memory to every particle
 	//to store trajectory details
 	InitializeTrajectory(NOTS);
+	NT = NOTS;
 	double start=omp_get_wtime();
 	for (int i=0;i<NOTS;i++)
 	{
@@ -217,6 +222,7 @@ void Bunch::Track_Euler(int NOTS, double tstep, Lattice *field)
 void Bunch::Track_Vay(int NOTS, double tstep, Lattice *field)
 {
 	InitializeTrajectory(NOTS);
+	NT = NOTS;
 	double qm=b[0].getCharge()*InvRestMass/b[0].getMass();
 	double t2=0.5*tstep;
 	double qmt2=qm*t2;

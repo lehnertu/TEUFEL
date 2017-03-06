@@ -49,10 +49,28 @@ class Bunch
 	
 	//set and get the number of particles;
 	int getNOP();
-	void setNOP(int NP);	
-	ChargedParticle *b;	//charged particle
+	void setNOP(int NP);
+
+	//get the number of time steps each particle in bunch undergoes	
+	int getNOTS();
+
+
+
+	//charged particle
+	ChargedParticle *b;	
+
+
+	//Track the bunch through lattice fields
+	//interaction fields included
 	void Track_Euler(int NOTS, double tstep, Lattice *field);
 	void Track_Vay(int NOTS, double tstep, Lattice *field);
+	
+
+
+	// returns the radiation field obtained at a time
+	// at some observation point
+	// for the complete bunch
+
 	tuple<Vector,Vector>RadiationField(Vector Robs, double t);
 	
         
@@ -86,6 +104,9 @@ class Bunch
 	//allocate memory to the every particle for stroing the trajectory points
 	//arrays will have size NOTS
 	void InitializeTrajectory(int NOTS);
+
+	//number of time steps every particle moves;
+	int NT;
 
 	
    

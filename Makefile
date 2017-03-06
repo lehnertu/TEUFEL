@@ -28,7 +28,8 @@ OBJECTS_DIR   = ./obj
 
 ####### Files
 
-SRC = 	$(SRCDIR)/bunch.cpp \
+SRC = 	$(SRCDIR)/analysis.cpp \
+	$(SRCDIR)/bunch.cpp \
 	$(SRCDIR)/cavity.cpp \
 	$(SRCDIR)/externalfield.cpp \
 	$(SRCDIR)/gen_grid.cpp \
@@ -40,7 +41,8 @@ SRC = 	$(SRCDIR)/bunch.cpp \
 	$(SRCDIR)/vector.cpp \
 	$(SRCDIR)/wave.cpp
 
-OBJ =	$(OBJDIR)/bunch.o \
+OBJ =	$(OBJDIR)/analysis.o \
+	$(OBJDIR)/bunch.o \
 	$(OBJDIR)/cavity.o \
 	$(OBJDIR)/externalfield.o \
 	$(OBJDIR)/gen_grid.o \
@@ -87,7 +89,8 @@ all: $(TARGET) tests docs
 $(TARGET):  $(OBJ)  $(TARGETOBJ)  
 	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJ) $(TARGETOBJ) $(LIBS)
 
-$(OBJ): $(SRCDIR)/global.h \
+$(OBJ): $(SRCDIR)/analysis.h \
+	$(SRCDIR)/global.h \
 	$(SRCDIR)/bunch.h \
 	$(SRCDIR)/cavity.h \
 	$(SRCDIR)/externalfield.h \

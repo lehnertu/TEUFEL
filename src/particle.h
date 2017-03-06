@@ -172,7 +172,7 @@ class ChargedParticle
     Vector X0;			//initial position
     Vector P0;			//initial momentum (gamma*beta)
     double T0;
-    double Radius =0.5e-6;
+    double Radius =0.5e-8;
     int ID=0;			//default id for particle is zero
 };
 

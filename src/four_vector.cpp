@@ -23,6 +23,8 @@
 #include "global.h"
 #include <math.h>
 #include <iostream>
+#include <vector>
+#include <tuple>
 
 using namespace std;
 
@@ -33,7 +35,7 @@ Four_Vector::Four_Vector()
 Four_Vector::Four_Vector(double t0,double x0, double y0, double z0)
 {
   
-  t =SpeedOfLight*t0;
+  t =t0;
   
   x=x0;
   
@@ -148,18 +150,7 @@ double Four_Vector:: dot(Four_Vector a, Four_Vector b)
   return (temp);
 }
 
-Four_Vector Four_Vector::Four_Momentum(double E, Vector p)
-{
-  Four_Vector temp;
-  temp.t = E;
-  p = p*SpeedOfLight;
-  temp.x = p.x;
-  temp.y = p.y;
-  temp.z = p.z;
-  return temp;
-}
-
-double Four_Vector::TransferMatrix(int i, int j,Vector S1)
+vector<vector<double>> TransferMatrix(Vector S1)
 {
 	
 	double gammabeta=S1.norm();
@@ -168,7 +159,7 @@ double Four_Vector::TransferMatrix(int i, int j,Vector S1)
 	double betay = S1.y/gamma;
 	double betaz = S1.z/gamma;
 	double beta  = sqrt(betax*betax+betay*betay+betaz*betaz);
-	double L[4][4];
+	vector<vector<double>> L(4,vector<double>(4));
 	L[0][0] = gamma;
 	L[0][1] = -gamma*betax;
 	L[0][2]	= -gamma*betay;
@@ -185,10 +176,11 @@ double Four_Vector::TransferMatrix(int i, int j,Vector S1)
 	L[3][1] = (gamma-1)*betax*betaz/(beta*beta);
 	L[3][2] = (gamma-1)*betaz*betay/(beta*beta);
 	L[3][3] = 1+(gamma-1)*betaz*betaz/(beta*beta);
-	return (L[i][j]);
+	
+	return L;
 }
 
-double Four_Vector::InverseTransferMatrix(int i, int j ,Vector S1)
+vector<vector<double>> InverseTransferMatrix(Vector S1)
 {
 	//S1 is a vector having gamma beta of the moving frame;
 	//so that vector S1=Vector(gammabetax, gammabetay,gammabetaz)
@@ -199,7 +191,7 @@ double Four_Vector::InverseTransferMatrix(int i, int j ,Vector S1)
 	double betay = S1.y/gamma;
 	double betaz = S1.z/gamma;
 	double beta  = sqrt(betax*betax+betay*betay+betaz*betaz);
-	double L[4][4];
+	vector<vector<double>> L(4,vector<double>(4));
 	L[0][0] = gamma;
 	L[0][1] = gamma*betax;
 	L[0][2]	= gamma*betay;
@@ -217,7 +209,46 @@ double Four_Vector::InverseTransferMatrix(int i, int j ,Vector S1)
 	L[3][2] = -(gamma-1)*betaz*betay/(beta*beta);
 	L[3][3] = 1+(gamma-1)*betaz*betaz/(beta*beta);
 	
-	return L[i][j];
+	return L;
+}
+
+vector<vector<double>> TransposeMatrix(vector<vector<double>> S1)
+{
+	vector<vector<double>> L(4,vector<double>(4));
+	// do the transpose
+	for (int i=0;i<4;i++)
+	{
+		for (int k=0;k<4;k++)	
+		{
+			L[k][i] = S1[i][k];
+		}	
+	}	
+	return L;
+}
+
+
+vector<vector<double>>Multiply(vector<vector<double>> S1,vector<vector<double>> S2)
+{
+
+	vector<vector<double>> L(4,vector<double>(4));
+	for (int i=0;i<4;i++)
+	{
+		
+		for (int k=0;k<4;k++)	
+		{
+			double value;
+			value = 0;
+			int j = 0;
+			while (j<4)
+			{
+				value=value+S1[i][j]*S2[j][k];
+				j = j+1;
+			};
+			L[i][k] = value;
+		};	
+		
+	}
+	return L;
 }
 
 Four_Vector Four_Vector:: LorentzTransform( Vector S1)
@@ -231,14 +262,15 @@ Four_Vector Four_Vector:: LorentzTransform( Vector S1)
 	B[2]=y;
 	B[3]=z;
 	double A[4]={0,0,0,0};
+	vector<vector<double>> L=TransferMatrix(S1);
+	
 	for (int i=0;i<4;i++)
 	{
 		for (int k=0;k<4;k++)	
 		{
-			A[i]+=TransferMatrix(i,k,S1)*B[k];
-			cout<<TransferMatrix(i,k,S1)<<"\t";
+			A[i]+=L[i][k]*B[k];
 		}
-		cout<<"\n";
+		
 
 	}
 	Four_Vector Inverted = Four_Vector(A[0]/SpeedOfLight,A[1],A[2],A[3]);
@@ -255,15 +287,120 @@ Four_Vector Four_Vector:: InverseLorentzTransform( Vector S1)
 	B[2]=y;
 	B[3]=z;
 	double A[4]={0,0,0,0};
+	vector<vector<double>> L=InverseTransferMatrix(S1);
+	
 	for (int i=0;i<4;i++)
 	{
 		for (int k=0;k<4;k++)	
 		{
-			A[i]+=InverseTransferMatrix(i,k,S1)*B[k];
+			A[i]+=L[i][k]*B[k];			
 		}
-	
-
 	}
 	Four_Vector Inverted = Four_Vector(A[0]/SpeedOfLight,A[1],A[2],A[3]);
 	return Inverted;
 }
+tuple<Vector,Vector> EMTransform(Vector S1,Vector EField,Vector BField)
+{
+	vector<vector<double>>F = EMT(S1,EField,BField);
+	Vector E = Vector(F[0][1],F[0][2],F[0][3]);
+	Vector B = Vector(F[2][3],-F[1][3],F[1][2]);
+	return make_tuple(E,B);		
+
+}
+
+tuple<Vector,Vector>EMInverseTransform(Vector S1,Vector EField,Vector BField)
+{
+	vector<vector<double>> L(4,vector<double>(4));
+	vector<vector<double>> F(4,vector<double>(4));
+	vector<vector<double>> L1(4,vector<double>(4));
+	vector<vector<double>> LT(4,vector<double>(4));
+	F = EMTensor(EField,BField);
+	L = InverseTransferMatrix(S1);
+	LT = TransposeMatrix(L);
+	L1= Multiply(L,F);
+	LT = InvertMatrix(LT);
+	F = Multiply(L1,LT);
+	Vector E = Vector(-F[0][1],-F[0][2],-F[0][3]);
+	Vector B = Vector(-F[2][3],F[1][3],-F[1][2]);
+	return make_tuple(E,B);		
+
+}
+
+vector<vector<double>>EMTensor(Vector Efield,Vector BField)
+{
+	vector<vector<double>> L(4,vector<double>(4));
+	L[0][0] = 0.0;
+	L[0][1] = Efield.x;
+	L[0][2]	= Efield.y;
+	L[0][3] = Efield.z;
+	L[1][0] = -Efield.x;
+	L[1][1] = 0.0;
+	L[1][2] = BField.z;
+	L[1][3] = -BField.y;
+	L[2][0] = -Efield.y;
+	L[2][1] = -BField.z;
+	L[2][2] = (double)0.0;
+	L[2][3] = BField.x;
+	L[3][0] = -Efield.z;
+	L[3][1] = BField.y;
+	L[3][2] = -BField.x;
+	L[3][3] = 0.0;
+	
+	return L;
+	
+
+}
+
+vector<vector<double>> EMT(Vector S1,Vector EField,Vector BField)
+{
+	vector<vector<double>> L(4,vector<double>(4));
+	vector<vector<double>> FPrime(4,vector<double>(4));
+	vector<vector<double>> L1(4,vector<double>(4));
+	vector<vector<double>> LT(4,vector<double>(4));
+	FPrime = EMTensor(EField,BField);
+	L = TransferMatrix(S1);
+	L1= Multiply(L,FPrime);
+	LT = TransposeMatrix(L);
+	FPrime = Multiply(L1,LT);
+	return FPrime;
+}
+vector<vector<double>>InverseEMTensor(Vector Efield,Vector BField)
+{
+	vector<vector<double>> L(4,vector<double>(4));
+	L[0][0] = 0.0;
+	L[0][1] = -Efield.x;
+	L[0][2]	= -Efield.y;
+	L[0][3] = -Efield.z;
+	L[1][0] = Efield.x;
+	L[1][1] = 0.0;
+	L[1][2] = -BField.z;
+	L[1][3] = BField.y;
+	L[2][0] = Efield.y;
+	L[2][1] = BField.z;
+	L[2][2] = (double)0.0;
+	L[2][3] = -BField.x;
+	L[3][0] = Efield.z;
+	L[3][1] = -BField.y;
+	L[3][2] = BField.x;
+	L[3][3] = 0.0;
+	
+	return L;
+	
+
+}
+
+vector<vector<double>>InvertMatrix(vector<vector<double>> S1)
+{
+	vector<vector<double>>A(4,vector<double>(4));
+	for (int i=0;i<4;i++)
+	{
+		for (int k=0;k<4;k++)	
+		{
+			A[i][k]=pow(-1.0,i+k)*S1[i][k];
+			
+		}		
+
+	}	
+	return A;
+}
+

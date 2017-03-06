@@ -23,6 +23,8 @@
 #define FOUR_VECTOR_H
 #include "vector.h"
 #include "vector.cpp"
+#include <vector>
+#include <tuple>
 using namespace std;
 
 class Four_Vector
@@ -35,10 +37,6 @@ class Four_Vector
 		// SpeedOfLight is multiplied to t0
 		// Note the following:
 		// Four Position = (ct,x,y,z)
-		// four Momentum = (E,pxc,pyc,pzc);
-		// special type of four vector
-		// arguments: double E (Energy) Vector(p)(not multiplied by c)
-		Four_Vector Four_Momentum(double E, Vector p);
 		double t;
 		double x;
 		double y;
@@ -81,18 +79,37 @@ class Four_Vector
 
 		//find the dot product of twoo vectors
 		double dot(Four_Vector a, Four_Vector b);
+		
+
+		// transform electric and magnetic field from lab frame
+		// to frame S1 where Vector S1=Vector(gammabetax,gammabetay,gammabetaz)
+		//returns tuple of four vectors
+		
+		//returns the element (i,j)of the EM Tensor
+		
 
 	private:
 		//LorentZ Transformation Matrix
 		// takes the gamma beta of the moving frame
 		// creates a 4 by 4 matrix of the transformation elements
 		// Vector S1 = Vector(gamma*betax, gamma*betay,gamma*betaz)
-		double TransferMatrix(int i, int j,Vector S1);
-		double InverseTransferMatrix(int i, int j,Vector S1);
+		
 		
 		
 
 
 };
-
+vector<vector<double>> TransferMatrix(Vector S1);
+vector<vector<double>> InverseTransferMatrix(Vector S1);
+//transpose only (4,4) transfer matrices
+vector<vector<double>> TransposeMatrix(vector<vector<double>> S1);
+vector<vector<double>> EMTensor(Vector Efield,Vector BField);
+vector<vector<double>> Multiply(vector<vector<double>> S1,vector<vector<double>> S2);
+//transform fields from lab frame to frame moving with S1
+tuple<Vector,Vector> EMTransform(Vector S1,Vector EField,Vector BField);
+//transform back to the lab frame
+tuple<Vector,Vector> EMInverseTransform(Vector S1,Vector EField,Vector BField);
+vector<vector<double>>InverseEMTensor(Vector Efield,Vector BField);
+vector<vector<double>>InvertMatrix(vector<vector<double>> S1);
+vector<vector<double>> EMT(Vector S1,Vector EField,Vector BField);
 #endif

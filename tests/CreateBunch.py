@@ -9,7 +9,7 @@ def GenerateBunch(nop1,mean_x1,mean_y1,mean_z1,sigma_x1,sigma_y1,sigma_z1,sigma_
   gamma=np.mean(Gamma1)
   beta=np.sqrt(1.0-1.0/pow(gamma,2.0))
   c=3.0e8
-  time = np.linspace(0,0,nop1)
+  time = z1/3.0e8
   """Shift the distribution that the mean position is (mean_x,mean_y,mean_z)"""
   x1=np.add(x1,mean_x1)
   y1=np.add(y1,mean_y1)
@@ -17,15 +17,15 @@ def GenerateBunch(nop1,mean_x1,mean_y1,mean_z1,sigma_x1,sigma_y1,sigma_z1,sigma_
   pz1=np.divide(np.subtract(pz1,0),0.511e6)*beta
   return (time,x1,y1,z1,px1,py1,pz1)
 
-nop=500
+nop=1000
 mean_x=0.0
 mean_y=0.0
 mean_z=-0.1
-sigma_x= 0.0044721359549995798
-sigma_y= 0.0044721359549995798
-sigma_z=(120.0e-15)*(3.0e-8)
-sigma_px=0.001
-sigma_py=0.001
+sigma_x= 0.0005
+sigma_y= 0.0005
+sigma_z=0.0001/2.355
+sigma_px=0.01
+sigma_py=0.01
 mean_E= 8e6
 sigma_E=10e3
 
