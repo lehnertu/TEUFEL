@@ -160,7 +160,7 @@ int main ()
     FinalPosition=electron1->TrajPoint(NOTS);
     FinalMomentum=electron1->TrajMomentum(NOTS);
     if (fabs(FinalPosition.x-ExpectedPosition.x) >2e-6 && fabs(FinalPosition.y-ExpectedPosition.y) >2e-6 && fabs(FinalPosition.z-ExpectedPosition.z) >2e-6 && FinalMomentum.norm()-ExpectedMomentum.norm() >1.5e-3) {
-	printf(" Euler Algorithm Fails ! \033[1;31m test failed!\033[0m\n"); 
+	printf(" Euler Algorithm Fails ! \033[1;31m OK!\033[0m\n"); 
     } else {
 	printf("Euler Algorithm Pass - \033[1;32m OK\033[0m\n");
 	printf("final x position = %12.9g m - \033[1;32m OK\033[0m\n",FinalPosition.x);
@@ -174,7 +174,7 @@ int main ()
     FinalPosition=electron2->TrajPoint(NOTS);
     FinalMomentum=electron2->TrajMomentum(NOTS);
     if (fabs(FinalPosition.x-ExpectedPosition.x) >2e-6 && fabs(FinalPosition.y-ExpectedPosition.y) >2e-6 && fabs(FinalPosition.z-ExpectedPosition.z) >2e-6 && FinalMomentum.norm()-ExpectedMomentum.norm() >1.5e-3) {
-	printf(" Leap Frog Algorithm Fails ! \033[1;31m test failed!\033[0m\n"); 
+	printf(" Leap Frog Algorithm Fails ! \033[1;31m OK!\033[0m\n"); 
     } else {
 	printf("Leap Frog Algorithm Pass - \033[1;32m OK\033[0m\n");
 	printf("final x position = %12.9g m - \033[1;32m OK\033[0m\n",FinalPosition.x);
