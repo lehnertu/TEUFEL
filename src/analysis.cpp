@@ -29,7 +29,7 @@
 #include <tuple>
 #include <externalfield.h>
 #include "omp.h"
-
+#include <iostream>
 using namespace std;
 
 Analysis::Analysis(Bunch *bunch)
@@ -45,6 +45,7 @@ void Analysis::avg()
   	std::ofstream Out3("stdx.txt", std::ofstream::out);
 	int NOTS = B->getNOTS();
 	int NOP = B->getNOP();
+	cout<<NOP<<endl;
 	for (int i=0;i<NOTS;i++)
   	{
 	  double sumx=0.0;
@@ -58,14 +59,13 @@ void Analysis::avg()
 	  double sum2z=0.0;
 	  double sum2px=0.0;
 	  double sum2py=0.0;
-	  double sum2pz = 0.0;
+	  double sum2pz=0.0;
 	  double stdx = 0.0;
 	  double stdy = 0.0;
 	  double stdz = 0.0;
 	  double stdpx=0.0;
-	  double stdpy=0.0;
-	  double stdpz=0.0;
-#pragma omp parallel for reduction(+:sumx,sumy,sumz,sumpx,sumpy,sumpz,sum2x,sum2y,sum2z,sum2px,sum2py,sum2pz)
+	  double avgz1 = 0.0;
+//#pragma omp parallel for reduction(+:sumx,sumy,sumz,sumpx,sumpy,sumpz,avgz1) shared(i)
 	  for (int k=0; k<NOP;k++)
 		{
 			Vector XP =(B->b[k].TrajPoint(i));
@@ -75,25 +75,39 @@ void Analysis::avg()
 			sumz += XP.z;
 			sumpx += XP1.x;
 			sumpy += XP1.y;
-			sumpz += XP1.z;
-			sum2x += pow(XP.x,2);
-			sum2y += pow(XP.y,2);
-			sum2z += pow(XP.z,2);
-			sum2px += pow(XP1.x,2);
-			sum2py += pow(XP1.y,2);
-			sum2pz += pow(XP1.z,2);
+			sumpz +=XP1.z;
+			avgz1 += XP.z;
 		}
 		
-		double tt=B->b[0].TrajTime(i);
-		Out2<<tt<<"\t"<<sumx/(double)NOP<<"\t"<<sumy/(double)NOP<<"\t"<<sumz/(double)NOP<<"\t"<<sumpx/(double)NOP<<"\t"<<sumpy/(double)NOP<<"\t"<<sumpz/(double)NOP<<"\n";
-		stdx = sqrt(sum2x/(double)NOP - pow(sumx/(double)NOP,2));
-		stdy = sqrt(sum2y/(double)NOP - pow(sumy/(double)NOP,2));
-		stdz = sqrt(sum2z/(double)NOP - pow(sumz/(double)NOP,2));
-		stdpx = sqrt(sum2px/(double)NOP - pow(sumpx/(double)NOP,2));
-		stdpy = sqrt(sum2py/(double)NOP - pow(sumpy/(double)NOP,2));
-		stdpz = sqrt(sum2pz/(double)NOP - pow(sumpz/(double)NOP,2));
-		Out3<<tt<<"\t"<<stdx<<"\t"<<stdy<<"\t"<<stdz<<"\t"<<stdpx<<"\t"<<stdpy<<"\t"<<stdpz<<"\n";
-  }
+	  double NP =(double)NOP;
+	  double avgx = sumx/NP;
+	  double avgy = sumy/NP;
+	  double avgz = sumz/NP;
+	  double avgpx = sumpx/NP;
+	  double avgpy = sumpy/NP;
+	  double avgpz = sumpz/NP;
+	  avgz = avgz1/NP;
+	  Out2<<avgz1<<"\t"<<avgx<<"\t"<<avgy<<"\t"<<avgz<<"\t"<<avgpx<<"\t"<<avgpy<<"\t"<<avgpz<<"\n";
+//#pragma omp parallel for reduction(+:sum2x,sum2y,sum2z,sum2px,sum2py,sum2pz) 
+	  for (int k=0; k<NOP;k++)
+		{
+			Vector XP =(B->b[k].TrajPoint(i));
+			Vector XP1=(B->b[k].TrajMomentum(i));
+			sum2x += pow((XP.x-avgx),2);
+			sum2y += pow((XP.y-avgy),2);
+			sum2z += pow((XP.z-avgy),2);
+			sum2px += pow(XP1.x-avgpx,2);
+			sum2py += pow(XP1.y-avgpy,2);
+			sum2pz += pow(XP1.z-avgpz,2);
+		}
+	  stdx = sqrt(sum2x/NP);
+	  stdy = sqrt(sum2y/NP);
+	  stdz = sqrt(sum2z/NP);
+	  stdpx = sqrt(sum2px/NP);
+	  double stdpy = sqrt(sum2py/NP);
+	  double stdpz = sqrt(sum2pz/NP);
+	  Out3<<avgz1<<"\t"<<stdx<<"\t"<<stdy<<"\t"<<stdz<<"\t"<<stdpx<<"\t"<<stdpy<<"\t"<<stdpz<<"\n";
+ 	 }
 
 Out2.close();
 Out3.close();

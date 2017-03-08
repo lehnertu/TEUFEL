@@ -158,14 +158,18 @@ void ChargedParticle::setInitialPosition(Vector InitialPosition)
   X0=InitialPosition;
 }
 
+Vector ChargedParticle::getInitialPosition()
+{
+  return X0;
+}
 void ChargedParticle::setInitialMomentum(Vector InitialMomentum)
 {
   P0=InitialMomentum;
 }
 
-Vector ChargedParticle::getInitialPosition()
+Vector ChargedParticle::getInitialMomentum()
 {
-  return X0;
+  return P0;
 }
 
 void ChargedParticle::setInitialTime(double t)
@@ -178,10 +182,7 @@ double ChargedParticle::getInitialTime()
   return T0;
 }
 
-Vector ChargedParticle::getInitialMomentum()
-{
-  return P0;
-}
+
 
 double ChargedParticle::TrajTime(int step)
 {

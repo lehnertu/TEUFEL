@@ -220,7 +220,7 @@ tuple<Vector,Vector> EMTransform(Vector S1,Vector EField,Vector BField)
 	L1= Multiply(L,FPrime);
 	LT = TransposeMatrix(L);
 	FPrime = Multiply(L1,LT);
-	Vector E = Vector(FPrime[0][1],FPrime[0][2],FPrime[0][3]);
+	Vector E = Vector(FPrime[0][1],FPrime[0][2],FPrime[0][3])*SpeedOfLight;
 	Vector B = Vector(FPrime[2][3],-FPrime[1][3],FPrime[1][2]);
 	return make_tuple(E,B);		
 
@@ -232,13 +232,21 @@ tuple<Vector,Vector>EMInverseTransform(Vector S1,Vector EField,Vector BField)
 	vector<vector<double>> F(4,vector<double>(4));
 	vector<vector<double>> L1(4,vector<double>(4));
 	vector<vector<double>> LT(4,vector<double>(4));
-	F = EMTensor(EField,BField);
+	F = InverseEMTensor(EField,BField);
 	L = TransferMatrix(S1);
 	L1 = InvertMatrix(L);
 	L1= Multiply(L1,F);
 	LT = TransposeMatrix(L);
 	LT = InvertMatrix(LT);
 	F = Multiply(L1,LT);
+	for (int i=0;i<4;i++)
+	{
+		for (int k=0;k<4;k++)	
+		{
+			cout<<F[i][k]<<"\t";
+		}	
+		cout<<"\n";
+	}
 	Vector E = Vector(F[0][1],F[0][2],F[0][3]);
 	Vector B = Vector(F[2][3],-F[1][3],F[1][2]);
 	return make_tuple(E,B);		
@@ -359,6 +367,29 @@ vector<vector<double>>EMTensor(Vector Efield,Vector BField)
 	return L;
 
 }
+vector<vector<double>>InverseEMTensor(Vector Efield,Vector BField)
+{
+	vector<vector<double>> L(4,vector<double>(4));
+	L[0][0] = 0.0;
+	L[0][1] = Efield.x/SpeedOfLight;
+	L[0][2]	= Efield.y/SpeedOfLight;
+	L[0][3] = Efield.z/SpeedOfLight;
+	L[1][0] = -Efield.x/SpeedOfLight;
+	L[1][1] = 0.0;
+	L[1][2] = BField.z;
+	L[1][3] = -BField.y;
+	L[2][0] = -Efield.y/SpeedOfLight;
+	L[2][1] = -BField.z;
+	L[2][2] = 0.0;
+	L[2][3] = BField.x;
+	L[3][0] = -Efield.z/SpeedOfLight;
+	L[3][1] = BField.y;
+	L[3][2] = -BField.x;
+	L[3][3] = 0.0;
+	
+	return L;
+
+}
 
 
 // matrix operations
@@ -414,6 +445,7 @@ vector<vector<double>>InvertMatrix(vector<vector<double>> S1)
 		b14 = a12*a24*a33 + a13*a22*a34 + a14*a23*a32 - a12*a23*a34 - a13*a24*a32 - a14*a22*a33;
 		b21 = a21*a34*a43 + a23*a31*a44 + a24*a33*a41 - a21*a33*a44 - a23*a34*a41 - a24*a31*a43;
 		b22 = a11*a33*a44 + a13*a34*a41 + a14*a31*a43 - a11*a34*a43 - a13*a31*a44 - a14*a33*a41;
+
 		b23 = a11*a24*a43 + a13*a21*a44 + a14*a23*a41 - a11*a23*a44 - a13*a24*a41 - a14*a21*a43;
 		b24 = a11*a23*a34 + a13*a24*a31 + a14*a21*a33 - a11*a24*a33 - a13*a21*a34 - a14*a23*a31;
 		b31 = a21*a32*a44 + a22*a34*a41+ a24*a31*a42 - a21*a34*a42 - a22*a31*a44 - a24*a32*a41;

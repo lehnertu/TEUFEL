@@ -247,7 +247,7 @@ void Bunch::Track_Vay(int NOTS, double tstep, Lattice *field)
 		{
 			t_h[k]=b[k].TrajTime(0);
 			x_h[k]=b[k].TrajPoint(0);
-			p_h[k]=b[k].getInitialMomentum();
+			p_h[k]=b[k].TrajMomentum(0);
 			gamma_h[k]=sqrt(p_h[k].abs2nd()+1.0);
 			beta_h[k]=p_h[k]/gamma_h[k];
 			F[k]=MutualField(0, k, t_h[k]);

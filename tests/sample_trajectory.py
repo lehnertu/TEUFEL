@@ -1,0 +1,22 @@
+import matplotlib.pyplot as plt
+import numpy as np
+
+t,x,y,z,px,py,pz = np.loadtxt("test1.txt",delimiter = '\t',unpack = 'True')
+plt.figure(0)
+plt.subplot(221)
+plt.plot(z,x,'.')
+plt.xlabel("z")
+plt.ylabel("x")
+plt.subplot(222)
+plt.plot(z,y,'.')
+plt.xlabel("z")
+plt.ylabel("y")
+plt.subplot(223)
+plt.plot(z,px,'.')
+plt.xlabel("z")
+plt.ylabel("px")
+plt.subplot(220)
+plt.plot(z,pz,'.')
+plt.xlabel("z")
+plt.ylabel("pz")
+plt.show()
