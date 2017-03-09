@@ -16,20 +16,20 @@ int main()
   std::ofstream Out1("test1.txt", std::ofstream::out);
   const char *filename= "BeamProfile.txt";
   Bunch *BB;
-  int NOP=200;
-  int NOTS=3000;
+  int NOP=3000;
+  int NOTS=4000;
   double dt=1.4e-12;
   //BB=new Bunch();
-  BB= new Bunch(filename, NOP, -15000, 15000);
-  Undulator *undu =new Undulator(0.1,0.045,25);
+  BB= new Bunch(filename, NOP, -10000, 10000);
+  Undulator *undu =new Undulator(0.1,0.060,25);
   Lattice *field =new Lattice();
   field->addElement(undu);
   BB->Track_Vay(NOTS,dt,field);
   int FT=pow(2,13);
   tuple<Vector,Vector> Field[FT];
-  double time_begin=1.03406e-8;
-  double time_end=1.03491e-8;
-  Vector Robs=Vector(0.0,0.0,3.0);
+  double time_begin=0.7168e-8;
+  double time_end=0.71854e-8;
+  Vector Robs=Vector(0.0,0.0,2.0);
   double dt1 =(time_end-time_begin)/FT;
   tuple<Vector,Vector> Field1[FT];
   GenGrid Grid;
@@ -38,17 +38,16 @@ int main()
   Vector Ar=Vector(0.0,0.0,1.0)*Area;
   double t_max;
   tuple<Vector,Vector> Grid1[Grid.GetGridSize()];
-  Analysis(BB).avg();
- for (int k = 0;k<NOP;k++)
-	{
-	  for (int i = 0;i<NOTS;i++)
-		{
-			Vector XP = BB->b[k].TrajPoint(i);
-			double t = BB->b[k].TrajTime(i);
-			Vector XP1 = BB->b[k].TrajMomentum(i);
-			Out1<<t<<"\t"<<XP.x<<"\t"<<XP.y<<"\t"<<XP.z<<"\t"<<XP1.x<<"\t"<<XP1.y<<"\t"<<XP1.z<<"\n";
-		}
-	}
+  Analysis an = Analysis(BB);
+  an.avg();
+  an.DumpTrajectory();
+  double lambdau = undu->GetLambdaU();
+  double K = 0.934*lambdau*100*(undu->GetBPeak());
+  double gamma =8.511/0.511;
+  double lambdar = lambdau*(1+K*K)/(2.0*gamma*gamma);
+  double freq = SpeedOfLight/lambdar;
+  cout<<freq<<endl;
+  an.BunchFactor(0.060,lambdar);
 #pragma omp parallel for shared(time_begin, dt, Robs) 
   for (int i=0;i<FT;i++)
 	{	
@@ -60,10 +59,8 @@ int main()
 	{
 		Vector E=get<0>(Field[i]);
 		Vector B=get<1>(Field[i]);
-		Vector Poynting1=cross(E,B);
-		B = B/(4.0*Pi*1.0e-7);
-		Eavg+=Poynting1.norm()*dt1;
-		Out<<time_begin+i*dt1<<"\t"<<E.x<<"\t"<<B.y<<"\n";
+		Vector Poynting1=cross(E,B);		
+		Out<<time_begin+i*dt1<<"\t"<<E.x<<"\t"<<Poynting1.z<<"\n";
 	}
   Eavg = Eavg/FT;
 /*#pragma omp parallel for 
@@ -81,7 +78,7 @@ int main()
 		Out1<<XP.x<<"\t"<<XP.y<<"\t"<<XP.z<<"\t"<<Power<<"\n";
 	}
 */
-  cout<<"Average Energy flux(per unit area) is: "<<Eavg;
+  
   Out.close();  
   Out1.close();
   

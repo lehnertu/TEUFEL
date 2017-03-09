@@ -203,7 +203,42 @@ int main()
    B1 = get<1>(EE1);
    cout<<"Electric Field in lab frame: "<<E1.x<<"\t"<<E1.y<<"\t"<<E1.z<<"\n"<<endl;
    cout<<"Magnetic Field in lab frame: "<<B1.x<<"\t"<<B1.y<<"\t"<<B1.z<<"\n"<<endl;
+
+   cout<<"\n************************************************************\n\n";
+   cout<<"\t Matrix Multiply [4,4]&[4,1]\n\n";
+   vector<vector<double>>L(4,vector<double>(4));
+   vector<vector<double>>L1(4,vector<double>(1));
+   cout<<"First Matrix is: \n\n";
+   for(int i = 0;i<4;i++)
+    	{
+		for (int k=0;k<4;k++)
+		{
+			L[i][k] = rand()%10;
+			cout<<L[i][k]<<"\t";
+		}
+		cout<<"\n";
+
+	}
+
+    cout<<"Second Matrix is: \n\n";
+    for(int i = 0;i<4;i++)
+    	{
+		for (int k=0;k<1;k++)
+		{
+			L1[i][k] = rand()%10;
+			cout<<L1[i][k]<<"\t";
+		}
+		cout<<"\n";
+
+	}
    
-   
+   vector<vector<double>>L2(4,vector<double>(1));
+   L2=Multiply(L,L1);
+   //cout<<L2.size()<<"\t"<<L2[0].size()<<"\n";
+
+   cout<<"Result Matrix is: \n\n";
+   Four_Vector D = Four_Vector(L2[0][0],L2[1][0],L2[2][0],L2[3][0]);
+   cout<<D.t<<"\t"<<D.x<<"\t"<<D.y<<"\t"<<D.z<<"\n"<<endl;
+   //delete L2;
    return 1;
 }

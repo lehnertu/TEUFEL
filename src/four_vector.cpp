@@ -491,19 +491,21 @@ vector<vector<double>>InvertMatrix(vector<vector<double>> S1)
 vector<vector<double>>Multiply(vector<vector<double>> S1,vector<vector<double>> S2)
 {
 
-	vector<vector<double>> L(4,vector<double>(4));
-	for (int i=0;i<4;i++)
+	vector<vector<double>> L(S1.size(),vector<double>(S2[0].size()));
+	for (int i=0;i<S1.size();i++)
 	{
 		
-		for (int k=0;k<4;k++)	
+		for (int k=0;k<S2[0].size();k++)	
 		{
 			double value;
 			value = 0;
-			for (int in = 0;in<4;in++)
+			for (int in = 0;in<S2.size();in++)
 			{
 				value=value+S1[i][in]*S2[in][k];
+				
 			};
 			L[i][k] = value;
+			
 		};	
 		
 	}

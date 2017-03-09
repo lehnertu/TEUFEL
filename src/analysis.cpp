@@ -41,11 +41,10 @@ Analysis::Analysis(Bunch *bunch)
 
 void Analysis::avg()
 {
-	std::ofstream Out2("trajectory.txt", std::ofstream::out);
+	std::ofstream Out2("avg.txt", std::ofstream::out);
   	std::ofstream Out3("stdx.txt", std::ofstream::out);
 	int NOTS = B->getNOTS();
 	int NOP = B->getNOP();
-	cout<<NOP<<endl;
 	for (int i=0;i<NOTS;i++)
   	{
 	  double sumx=0.0;
@@ -64,8 +63,8 @@ void Analysis::avg()
 	  double stdy = 0.0;
 	  double stdz = 0.0;
 	  double stdpx=0.0;
-	  double avgz1 = 0.0;
-//#pragma omp parallel for reduction(+:sumx,sumy,sumz,sumpx,sumpy,sumpz,avgz1) shared(i)
+	  
+#pragma omp parallel for reduction(+:sumx,sumy,sumz,sumpx,sumpy,sumpz) shared(i)
 	  for (int k=0; k<NOP;k++)
 		{
 			Vector XP =(B->b[k].TrajPoint(i));
@@ -76,7 +75,6 @@ void Analysis::avg()
 			sumpx += XP1.x;
 			sumpy += XP1.y;
 			sumpz +=XP1.z;
-			avgz1 += XP.z;
 		}
 		
 	  double NP =(double)NOP;
@@ -86,16 +84,15 @@ void Analysis::avg()
 	  double avgpx = sumpx/NP;
 	  double avgpy = sumpy/NP;
 	  double avgpz = sumpz/NP;
-	  avgz = avgz1/NP;
-	  Out2<<avgz1<<"\t"<<avgx<<"\t"<<avgy<<"\t"<<avgz<<"\t"<<avgpx<<"\t"<<avgpy<<"\t"<<avgpz<<"\n";
-//#pragma omp parallel for reduction(+:sum2x,sum2y,sum2z,sum2px,sum2py,sum2pz) 
+	  Out2<<avgz<<"\t"<<avgx<<"\t"<<avgy<<"\t"<<avgz<<"\t"<<avgpx<<"\t"<<avgpy<<"\t"<<avgpz<<"\n";
+#pragma omp parallel for reduction(+:sum2x,sum2y,sum2z,sum2px,sum2py,sum2pz) 
 	  for (int k=0; k<NOP;k++)
 		{
 			Vector XP =(B->b[k].TrajPoint(i));
 			Vector XP1=(B->b[k].TrajMomentum(i));
 			sum2x += pow((XP.x-avgx),2);
 			sum2y += pow((XP.y-avgy),2);
-			sum2z += pow((XP.z-avgy),2);
+			sum2z += pow((XP.z-avgz),2);
 			sum2px += pow(XP1.x-avgpx,2);
 			sum2py += pow(XP1.y-avgpy,2);
 			sum2pz += pow(XP1.z-avgpz,2);
@@ -106,10 +103,64 @@ void Analysis::avg()
 	  stdpx = sqrt(sum2px/NP);
 	  double stdpy = sqrt(sum2py/NP);
 	  double stdpz = sqrt(sum2pz/NP);
-	  Out3<<avgz1<<"\t"<<stdx<<"\t"<<stdy<<"\t"<<stdz<<"\t"<<stdpx<<"\t"<<stdpy<<"\t"<<stdpz<<"\n";
+	  Out3<<avgz<<"\t"<<stdx<<"\t"<<stdy<<"\t"<<stdz<<"\t"<<stdpx<<"\t"<<stdpy<<"\t"<<stdpz<<"\n";
  	 }
 
 Out2.close();
 Out3.close();
+}
+
+
+//dump all the trajectory to a file named "trajectory.txt"
+void Analysis::DumpTrajectory()
+{
+
+	std::ofstream Out1("trajectory.txt", std::ofstream::out);
+	int NOTS = B->getNOTS();
+	int NOP = B->getNOP();
+	for (int k = 0;k<NOTS;k++)
+	{
+	  for (int i = 0;i<NOP;i++)
+		{
+			Vector XP = B->b[i].TrajPoint(k);
+			Vector XP1 = B->b[i].TrajMomentum(k);
+			double t = B->b[i].TrajTime(k);
+			Out1<<t<<"\t"<<XP.x<<"\t"<<XP.y<<"\t"<<XP.z<<"\t"<<XP1.x<<"\t"<<XP1.y<<"\t"<<XP1.z<<"\n";
+		}
+	}
+
+Out1.close();
+}
+
+void Analysis::BunchFactor(double lambdau, double lambdar)
+{
+	std::ofstream Out1("Bfactor.txt", std::ofstream::out);
+	double ku = 2.0*Pi/lambdau;
+	double kr = 2.0*Pi/lambdar;
+	int NOTS = B->getNOTS();
+	int NOP = B->getNOP();
+	for (int k = 0;k<NOTS;k++)
+	{
+	  
+	  double sumz = 0;
+	  double breal=0.0;
+	  double bimag=0.0;
+#pragma omp parallel for reduction(+:sumz,breal,bimag) private(ku,kr)
+	  for (int i = 0;i<NOP;i++)
+		{
+			Vector XP = B->b[i].TrajPoint(k);
+			sumz += XP.z;
+			breal+=cos((ku+kr)*XP.z);
+			bimag+=sin((ku+kr)*XP.z);
+		}
+		double avgz = sumz/(double)NOP;
+		breal = breal/(double)NOP;
+		bimag = bimag/(double)NOP;
+		double b = sqrt(breal*breal + bimag*bimag);
+		Out1<<avgz<<"\t"<<b<<"\n";
+	}
+
+
+Out1.close();
 }
 

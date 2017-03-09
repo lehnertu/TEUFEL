@@ -38,8 +38,8 @@ Bunch::Bunch()
 	setNOP(1);
 	b=new ChargedParticle[1];
 	//Initial values has to be set at the initialization
-	b[0].setInitialMomentum(Vector(0.0,0,30.35));
-	b[0].setInitialPosition(Vector(0.0,0.00,-0.1));
+	b[0].setInitialMomentum(Vector(0.0,0,0.0));
+	b[0].setInitialPosition(Vector(0.0,0.00,0.0));
 	b[0].setInitialTime(0.0);	
 	b[0].setParticleID(0);
 	b[0].setCharge(-1);
@@ -62,6 +62,7 @@ Bunch::Bunch(const char *filename, int NP, int charge, int mass)
 
 };
 
+// set the number of particles the bunch will have
 void Bunch:: setNOP(int NP)
 {
 	NOP=NP;
@@ -245,28 +246,30 @@ void Bunch::Track_Vay(int NOTS, double tstep, Lattice *field)
 #pragma parallel for private(t_h,x_h,p_h,gamma_h,beta_h,F,E_h,B_h,dp_dt,p_i1,gamma_i1,beta_i1,k,qmt2,qm,tstep)
 	for(int k=0;k<NOP;k++)
 		{
-			t_h[k]=b[k].TrajTime(0);
-			x_h[k]=b[k].TrajPoint(0);
-			p_h[k]=b[k].TrajMomentum(0);
+			t_h[k]=b[k].getInitialTime();
+			x_h[k]=b[k].getInitialPosition();
+			p_h[k]=b[k].getInitialMomentum();
 			gamma_h[k]=sqrt(p_h[k].abs2nd()+1.0);
 			beta_h[k]=p_h[k]/gamma_h[k];
 			F[k]=MutualField(0, k, t_h[k]);
 			E_h[k]=field->EField(t_h[k],x_h[k])+get<0>(F[k]);
 			B_h[k]=field->BField(t_h[k],x_h[k])+get<1>(F[k]);
 			dp_dt[k]=(cross(beta_h[k],B_h[k])+E_h[k]/SpeedOfLight)*qm;
-			b[k].setTrajAcceleration(0,dp_dt[k]);
 			p_i1[k]=p_h[k]-dp_dt[k]*0.5*tstep;
 			gamma_i1[k]=sqrt(p_i1[k].abs2nd()+1.0);
 			beta_i1[k]=p_i1[k]/gamma_i1[k];	
+			b[k].setTrajAcceleration(0,dp_dt[k]);
+			
 		};
 
 	for (int i=0;i<NOTS;i++)
 	{
 		Vector p_i[NOP],beta_i[NOP],p_prime[NOP],tau[NOP],T[NOP];
 		double gamma_prime[NOP],u_star[NOP],tau2nd[NOP],sigma[NOP];
-#pragma parallel for private(t_h,x_h,p_h,gamma_h,beta_h,F,E_h,B_h,dp_dt,p_i1,gamma_i1,beta_i1,k,qmt2,qm,tstep,p_i,beta_i,p_prime,gamma_prime,tau,u_star,gamma_i1,T)
+#pragma parallel for private(i,t_h,x_h,p_h,gamma_h,beta_h,F,E_h,B_h,dp_dt,p_i1,gamma_i1,beta_i1,k,qmt2,qm,tstep,p_i,beta_i,p_prime,gamma_prime,tau,u_star,gamma_i1,T)
 		for (int k=0;k<NOP;k++)
 		{
+			
 			p_i[k]=p_i1[k];	
 			beta_i[k]=beta_i1[k];
 			F[k]=MutualField(i, k, t_h[k]);
@@ -284,15 +287,17 @@ void Bunch::Track_Vay(int NOTS, double tstep, Lattice *field)
 			T[k]=tau[k]/gamma_i1[k];
 			p_i1[k]=(p_prime[k]+T[k]*dot(p_prime[k],T[k])+cross(p_prime[k],T[k]))/(1.0+T[k].abs2nd());
 			beta_i1[k]=p_i1[k]/gamma_i1[k];
-			b[k].setTrajTime(i+1,t_h[k]);
-			b[k].setTrajPoint(i+1,x_h[k]);
-			b[k].setTrajMomentum(i+1,p_h[k]);
-			b[k].setTrajAcceleration(i+1,dp_dt[k]);
+			int stepnumber = i+1;
+			b[k].setTrajTime(stepnumber,t_h[k]);
+			b[k].setTrajPoint(stepnumber,x_h[k]);
+			b[k].setTrajMomentum(stepnumber,p_h[k]);
+			b[k].setTrajAcceleration(stepnumber,dp_dt[k]);
 			x_h[k]=x_h[k]+beta_i1[k]*SpeedOfLight*tstep;
-			t_h[k]=t_h[k]+tstep;				
-			
+			t_h[k]=t_h[k]+tstep;
+			b[k].setTrajTime(0,b[k].getInitialTime());
+			b[k].setTrajMomentum(0,b[k].getInitialMomentum());
 		}
-	};
+	}
 
 
 	double end=omp_get_wtime();

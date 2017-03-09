@@ -45,6 +45,8 @@ class Analysis
 	void FindStd();
 	double avgGamma();
 	void FindEmittance();
+	void DumpTrajectory();
+	void BunchFactor(double lambdau, double lambdar);
   private:
 	Bunch *B;
 };

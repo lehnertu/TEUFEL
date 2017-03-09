@@ -86,25 +86,25 @@ int ChargedParticle::getCharge()
 
 void ChargedParticle::setTrajPoint(int stepnumber,Vector Position)
 {
-  assert(0<=stepnumber &&stepnumber<=NP);
+  
   X[stepnumber]=Position;
 }
 
 void ChargedParticle::setTrajMomentum(int stepnumber,Vector Momentum)
 {
-  assert(0<=stepnumber &&stepnumber<=NP);
+  
   P[stepnumber]=Momentum;
 }
 
 void ChargedParticle:: setTrajAcceleration(int stepnumber,Vector Accel)
 {
-  assert(stepnumber<=NP);
+  
   A[stepnumber]=Accel;
 }
 
 void ChargedParticle:: setTrajTime(int stepnumber, double time)
 {
-  assert(0<=stepnumber && stepnumber<=NP);
+  
   Time[stepnumber]=time;
 }
 
@@ -114,12 +114,12 @@ void ChargedParticle::setNP(int NOTS)
 {
   NP=NOTS;
   X=new Vector[NP];
-  X[0]=getInitialPosition();
+  X[0]=X0;
   P=new Vector[NP];
-  P[0]=getInitialMomentum();
+  P[0]=P0;
   A=new Vector[NP];
   Time=new double[NP];
-  Time[0]=getInitialTime();
+  Time[0]=T0;
 }
 
 
@@ -206,6 +206,12 @@ Vector ChargedParticle::TrajMomentum(int step)
   if (step>=0 && step<NP)
     p = P[step];
   return p;
+}
+
+void ChargedParticle::seeTime()
+{
+	cout<<Time[0]<<"\t"<<X[0].x<<"\t"<<X[0].y<<"\t"<<X[0].z<<"\t"<<endl;
+
 }
 
 void ChargedParticle::TrackEuler(
@@ -406,7 +412,7 @@ tuple<Vector,Vector> ChargedParticle::RetardedEField(double time, Vector Observa
 {
   Vector EField = Vector(0.0, 0.0, 0.0);
   Vector BField = Vector(0.0,0.0,0.0);
-  double scale=(Charge*ElementaryCharge/(4.0*Pi*8.85e-12));
+  double scale=(Charge*ElementaryCharge/(4.0*Pi*EpsNull));
   int i1 = 0;                                   // index of the first trajectory point
   Vector RVec = ObservationPoint - X[i1];
   double R = RVec.norm();
@@ -482,7 +488,7 @@ tuple<Vector,Vector> ChargedParticle::InteractionField(int ParticleID2,int stepn
   Vector EField = Vector(0.0, 0.0, 0.0);
   Vector BField = Vector(0.0,0.0,0.0);
   int ParticleID1 = getParticleID();
-  double scale=(Charge*ElementaryCharge/(4.0*Pi*8.85e-12)); 
+  double scale=(Charge*ElementaryCharge/(4.0*Pi*EpsNull)); 
   if(ParticleID1 != ParticleID2)
   {
 	  
@@ -538,16 +544,16 @@ tuple<Vector,Vector> ChargedParticle::InteractionField(int ParticleID2,int stepn
 	    //but it can also be set according to need
 	    if(R<Radius)
 	    {
-		//cout<<"Warning: Particles Overlap\n";
+		cout<<"Warning: Particles Overlap\n";
 		R=2*Radius;
 	    }
 	    Vector N = RVec;
 	    N.normalize();
 	    double bn3rd = pow(1.0-dot(SourceBeta,N),3.0);
 	    // velocity term
-	    EField += (N-SourceBeta)/(R*R*bn3rd)/(gamma*gamma);
+	    EField += (N-SourceBeta)/((R*R*bn3rd)*(gamma*gamma));
 	    // acceleration term
-	    EField += cross(N,cross(N-SourceBeta,SourceBetaPrime))/(R*bn3rd)/SpeedOfLight;
+	    EField += cross(N,cross(N-SourceBeta,SourceBetaPrime))/(R*bn3rd*SpeedOfLight);
 	    EField=EField*scale;
 	    BField =cross(N/SpeedOfLight,EField);
 	  }

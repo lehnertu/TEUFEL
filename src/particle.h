@@ -156,7 +156,7 @@ class ChargedParticle
     //set radius
     void setParticleSize(double L);
     double getParticleSize();
-
+    void seeTime();
 
   private:
 

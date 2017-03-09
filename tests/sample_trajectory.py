@@ -1,7 +1,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-t,x,y,z,px,py,pz = np.loadtxt("test1.txt",delimiter = '\t',unpack = 'True')
+t,x,y,z,px,py,pz = np.loadtxt("trajectory.txt",delimiter = '\t',unpack = 'True')
 plt.figure(0)
 plt.subplot(221)
 plt.plot(z,x,'.')

@@ -34,7 +34,7 @@ class Bunch
 {
 
   public:
-	//default constructor. creates single particles resting at origin .
+	//default constructor. creates single particle resting at origin .
 	// the charge and mass of particles is equal to that of electron 
 	Bunch();
 
@@ -49,7 +49,7 @@ class Bunch
 	
 	//set and get the number of particles;
 	int getNOP();
-	void setNOP(int NP);
+	
 
 	//get the number of time steps each particle in bunch undergoes	
 	int getNOTS();
@@ -107,6 +107,9 @@ class Bunch
 
 	//number of time steps every particle moves;
 	int NT;
+
+	// to be used while initializing the bunch
+	void setNOP(int NP);
 
 	
    
