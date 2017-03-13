@@ -52,7 +52,7 @@ class ChargedParticle
     double TrajTime(int step);
     Vector TrajPoint(int step);
     Vector TrajMomentum(int step);
-
+    Vector TrajAcceleration(int step);
     // track the particle through a given field
     // use the most simple Euler algorithm
     void TrackEuler
@@ -132,7 +132,7 @@ class ChargedParticle
     void setTrajMomentum(int stepnumber,Vector Momentum);
     void setTrajAcceleration(int stepnumber,Vector Accel);
     void setTrajTime(int stepnumber, double time);
-
+    
 
     //set the number of trajectory points the particle can have	
     //allocates memory to position, momentum,acceleration, time arrays
@@ -169,9 +169,10 @@ class ChargedParticle
                                 // dimensionless in units of mc²
     Vector *A;                  // acceleration in lab frame a = d/dt(p*c)
 				// in unit of 1/s (scaled by mc²)
-    Vector X0;			//initial position
-    Vector P0;			//initial momentum (gamma*beta)
-    double T0;
+    Vector X0 = Vector(0.0,0.0,0.0);			//initial position
+    Vector P0 = Vector(0.0,0.0,0.0);			//initial momentum (gamma*beta)
+    double T0 = 0.0;
+    Vector A0 = Vector(0.0,0.0,0.0);
     double Radius =0.5e-8;
     int ID=0;			//default id for particle is zero
 };

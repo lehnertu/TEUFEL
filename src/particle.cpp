@@ -118,6 +118,7 @@ void ChargedParticle::setNP(int NOTS)
   P=new Vector[NP];
   P[0]=P0;
   A=new Vector[NP];
+  A[0] = A0;
   Time=new double[NP];
   Time[0]=T0;
 }
@@ -197,6 +198,14 @@ Vector ChargedParticle::TrajPoint(int step)
   Vector p = Vector(0.0, 0.0, 0.0);
   if (step>=0 && step<NP)
     p = X[step];
+  return p;
+}
+
+Vector ChargedParticle::TrajAcceleration(int step)
+{
+  Vector p = Vector(0.0, 0.0, 0.0);
+  if (step>=0 && step<NP)
+    p = A[step];
   return p;
 }
 
@@ -399,7 +408,8 @@ void ChargedParticle::Translate(Vector R)
 
 void ChargedParticle::MirrorY(double MirrorY)
 {
-  Charge = - Charge;
+  Charge = - getCharge();
+  Mass = getMass();
   for (int i=0; i<NP; i++)
     {
       X[i].y = 2.0*MirrorY - X[i].y;

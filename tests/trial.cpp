@@ -14,26 +14,26 @@ int main()
 {
   std::ofstream Out("test.txt", std::ofstream::out);
   std::ofstream Out1("test1.txt", std::ofstream::out);
-  const char *filename= "BeamProfile.txt";
+  const char *filename= "TEUFEL-EXAMPLE.txt";
   Bunch *BB;
-  int NOP=3000;
-  int NOTS=4000;
-  double dt=1.4e-12;
+  int NOP=999;
+  int NOTS=1700;
+  double dt=3.2692307692307693e-12;
   //BB=new Bunch();
-  BB= new Bunch(filename, NOP, -10000, 10000);
-  Undulator *undu =new Undulator(0.1,0.060,25);
+  BB= new Bunch(filename, NOP, -12500, 12500);
+  Undulator *undu =new Undulator(0.3653,0.045,34);
   Lattice *field =new Lattice();
   field->addElement(undu);
   BB->Track_Vay(NOTS,dt,field);
-  int FT=pow(2,13);
+  int FT=pow(2,16);
   tuple<Vector,Vector> Field[FT];
-  double time_begin=0.7168e-8;
-  double time_end=0.71854e-8;
-  Vector Robs=Vector(0.0,0.0,2.0);
+  double time_begin=5.48886e-9;
+  double time_end=5.52795e-9;
+  Vector Robs=Vector(0.0,0.0,4.0);
   double dt1 =(time_end-time_begin)/FT;
   tuple<Vector,Vector> Field1[FT];
   GenGrid Grid;
-  Grid.GenPlanarGrid(0.01,0.01,3.0,150);
+  Grid.GenPlanarGrid(0.006,0.006,4,150);
   double Area=Grid.GetMeshArea();
   Vector Ar=Vector(0.0,0.0,1.0)*Area;
   double t_max;
@@ -44,29 +44,39 @@ int main()
   double lambdau = undu->GetLambdaU();
   double K = 0.934*lambdau*100*(undu->GetBPeak());
   double gamma =8.511/0.511;
-  double lambdar = lambdau*(1+K*K)/(2.0*gamma*gamma);
+  double lambdar = lambdau*(1+K*K/2.0)/(2.0*gamma*gamma);
   double freq = SpeedOfLight/lambdar;
   cout<<freq<<endl;
-  an.BunchFactor(0.060,lambdar);
+  an.BunchFactor(lambdau,lambdar);
+  Bunch *BB2;
+  BB2 = new Bunch(BB);
+  for (int i = 0;i<NOP;i++)
+	{
+		
+		BB2->b[i].MirrorY(0.014);
+		//cout<<BB->b[i].TrajPoint(10).y+BB2->b[i].TrajPoint(10).y<<endl;
+	}		
 #pragma omp parallel for shared(time_begin, dt, Robs) 
   for (int i=0;i<FT;i++)
 	{	
+		
 		Field[i]=BB->RadiationField(Robs,time_begin+i*dt1);
+		Field1[i]=BB2->RadiationField(Robs,time_begin+i*dt1);
 	}
 
   double Eavg = 0;
   for (int i=0;i<FT;i++)
 	{
-		Vector E=get<0>(Field[i]);
-		Vector B=get<1>(Field[i]);
+		Vector E=get<0>(Field[i])+get<0>(Field1[i]);
+		Vector B=get<1>(Field[i])+get<1>(Field1[i]);
 		Vector Poynting1=cross(E,B);		
 		Out<<time_begin+i*dt1<<"\t"<<E.x<<"\t"<<Poynting1.z<<"\n";
 	}
   Eavg = Eavg/FT;
-/*#pragma omp parallel for 
+#pragma omp parallel for 
   for (int i=0;i<Grid.GetGridSize();i++)
 	{	
-		Grid1[i]=BB->RadiationField(Grid.GetGridPoints(i),1.034545e-8);
+		Grid1[i]=BB->RadiationField(Grid.GetGridPoints(i),1.43464e-8);
 	}
   for (int i=0;i<Grid.GetGridSize();i++)
 	{
@@ -77,7 +87,7 @@ int main()
 		double Power=dot(Poynting,Ar);		
 		Out1<<XP.x<<"\t"<<XP.y<<"\t"<<XP.z<<"\t"<<Power<<"\n";
 	}
-*/
+
   
   Out.close();  
   Out1.close();

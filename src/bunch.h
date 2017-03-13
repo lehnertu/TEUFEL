@@ -46,7 +46,8 @@ class Bunch
 	//Charge and mass of the particles have to be provided
 	//in units of electron's mass and charge
 	Bunch(const char *filename,int NP,int charge,int mass);
-	
+
+	Bunch(const Bunch *bunch);
 	//set and get the number of particles;
 	int getNOP();
 	
