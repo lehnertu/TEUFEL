@@ -19,8 +19,7 @@
  * 
  * =========================================================================*/
 
-#ifndef BUNCH_H
-#define BUNCH_H
+#pragma once
 
 #include "externalfield.h"
 #include "particle.h"
@@ -28,57 +27,169 @@
 #include <tuple>
 using namespace std;
 
-// a class for tracking bunch of charged particles in external and mutual interaction fields
+
+/*!
+    \class Bunch
+    \brief Bunching Tracking class
+ 
+    @author Ulf Lehnert, Vipul Joshi
+    @date 10.2.2017
+    \todo: Read SDDS Input, modify tracking routine
+ */
+
 
 class Bunch
 {
 
   public:
-	//default constructor. creates single particle resting at origin .
-	// the charge and mass of particles is equal to that of electron 
+	/*!
+
+	default constructor: creates single particle resting at origin .
+	
+	the charge and mass of particles is equal to that of electron 
+	
+	*/	
 	Bunch();
 
-	//reads a file containing information on
-        //time,x,y,z,px,py,pz of the particles
-        //each row of the file must contain above information
-	//Number of particles equals NP
-	//must be equal to number of rows
-	//Charge and mass of the particles have to be provided
-	//in units of electron's mass and charge
+	/*
+	
+	standard constructor:		
+
+	reads a file containing information on
+        time,x,y,z,px,py,pz of the particles
+        each row of the file must contain above information
+	Number of particles equals NP
+	must be equal to number of rows
+	Charge and mass of the particles have to be provided
+	in units of electron's mass and charge
+
+	*/
 	Bunch(const char *filename,int NP,int charge,int mass);
 
+
+	/*!
+
+	copy constructor:
+
+	Create the copy of the bunch
+
+	*/
 	Bunch(const Bunch *bunch);
-	//set and get the number of particles;
+	
+
+	/*!
+
+	 get the number of particles;
+
+	*/
 	int getNOP();
 	
 
-	//get the number of time steps each particle in bunch undergoes	
+	/*!
+
+	get the number of time steps each particle in bunch undergoes	
+	*/
 	int getNOTS();
 
 
 
-	//charged particle
+	/*!
+
+	charged particle containing all the particles and its information
+
+	*/
 	ChargedParticle *b;	
 
-	//get charge
+	/*!
+
+	get total charge of the bunch in terms of electron's charge
+	
+	*/
 	int getCharge();
+
+
+	/*
+
+	get total mass of the bunch of particles in terms of electron's mass
+
+	*/
 	int getMass();
-	//Track the bunch through lattice fields
-	//interaction fields included
+
+
+	/*!
+
+	Track the bunch through lattice fields using the Euler algorithm 
+	interaction fields included
+	*/
 	void Track_Euler(int NOTS, double tstep, Lattice *field);
+
+	/*!
+
+	Track the bunch through the laatice fields using the Vay Algorithm
+
+	To do: Track individual particles in particle routine
+	*/
 	void Track_Vay(int NOTS, double tstep, Lattice *field);
 	
 
 
-	// returns the radiation field obtained at a time
-	// at some observation point
-	// for the complete bunch
+	/*!
 
+	returns the radiation field obtained at a time defined by t
+	at some observation point defined by the Vector Robs
+	for the complete bunch
+	*/
 	tuple<Vector,Vector>RadiationField(Vector Robs, double t);
-	void WriteSDDS_Time();
-        void WriteSDDS();
-    
 
+
+	/*!
+
+	 write SDDS file to output file named "trajectory.sdds
+
+	 write data on a particle to particle basis
+
+	 use sddsquery trajectory.sdds to view the format of dataset
+	 
+	 routine returns values with following meaning:
+	 
+	0  ->  Successfully Written the file
+	1  ->  Error in Initializing the Output dataset
+	2  ->  Error in Defining the parameters
+	3  ->  Error in Defining Columns describing the data to be followed
+	4  ->  Error in Writing the layout of the data structure in the sdds file
+	5  ->  Error in Starting a New Page of the file
+	5  ->  Error in setting the values of the parameters
+	6  ->  Error in setting the row values i.e. the data belonging to column
+	7  ->  Error in Writing the page that was successfully initialized
+	8  ->  Error in Terminating the data flow to the sdds file
+
+	*/
+        int WriteSDDSTrajectory();
+
+
+	/*!
+
+	 write SDDS file to output file named "time-trajectory.sdds
+
+	 writes data for every time step in different page
+
+	 use sddsquery trajectory.sdds to view the format of dataset
+	 
+	 routine returns values with following meaning:
+	 
+	0  ->  Successfully Written the file
+	1  ->  Error in Initializing the Output dataset
+	2  ->  Error in Defining the parameters
+	3  ->  Error in Defining Columns describing the data to be followed
+	4  ->  Error in Writing the layout of the data structure in the sdds file
+	5  ->  Error in Starting a New Page of the file
+	5  ->  Error in setting the values of the parameters
+	6  ->  Error in setting the row values i.e. the data belonging to column
+	7  ->  Error in Writing the page that was successfully initialized
+	8  ->  Error in Terminating the data flow to the sdds file
+
+	*/
+    	int WriteSDDSTime();
   private:
 	//Number of Particles in the bunch
 	int NOP;
@@ -101,6 +212,16 @@ class Bunch
 	//time step for trajectory integration
 	double TIMESTEP;
 
+	//total integration time for the routine
+	double TotalTime;
+
+	// Total Charge of the bunch
+	double Qtot;
+	
+	//Total Mass of the bunch
+	double Mtot;
+
+
 	//total interaction field seen by particle identified by ParticleID
 	//fields are calculated with Observation Point==ParticleID
 	//time = Laboratory Time or the iteration time
@@ -121,4 +242,3 @@ class Bunch
    
 };
 
-#endif
