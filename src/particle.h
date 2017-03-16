@@ -33,14 +33,14 @@ using namespace std;
 class ChargedParticle
 {
 
-  public:
+public:
 
     // default constructor
     // charge set to electron charge
     ChargedParticle();
 
     // copy constructor
-    ChargedParticle(const ChargedParticle *Part);
+    ChargedParticle(const ChargedParticle* Part);
 
     // destructor
     ~ChargedParticle();
@@ -55,30 +55,27 @@ class ChargedParticle
 
     // track the particle through a given field
     // use the most simple Euler algorithm
-    void TrackEuler
-      (  int Nstep,            // number of timesteps
-         double tstep,         // time step size
-         Vector X0,            // initial position
-         Vector P0,            // initial momentum
-         Lattice *field);
+    void TrackEuler(int Nstep,       // number of timesteps
+                    double tstep,    // time step size
+                    Vector X0,       // initial position
+                    Vector P0,       // initial momentum
+                    Lattice* field);
 
     // track the particle through a given field
     // using a leap-frog algorithm
-    void TrackLF
-      (  int Nstep,            // number of timesteps
-         double tstep,         // time step size
-         Vector X0,            // initial position
-         Vector P0,            // initial momentum
-         Lattice *field);
+    void TrackLF(int Nstep,       // number of timesteps
+                 double tstep,    // time step size
+                 Vector X0,       // initial position
+                 Vector P0,       // initial momentum
+                 Lattice* field);
 
     // track the particle through a given field
     // using the Vay algorithm
-    void TrackVay
-      (  int Nstep,            // number of timesteps
-         double tstep,         // time step size
-         Vector X0,            // initial position
-         Vector P0,            // initial momentum
-         Lattice *field);
+    void TrackVay(int Nstep,       // number of timesteps
+                  double tstep,    // time step size
+                  Vector X0,       // initial position
+                  Vector P0,       // initial momentum
+                  Lattice* field);
 
     // translate a given particle trajectory
     void Translate(Vector R);
@@ -93,17 +90,17 @@ class ChargedParticle
     // retardation is properly accounted for
     Vector RetardedEField(double time, Vector ObservationPoint);
 
-  private:
+private:
 
-    int NP;			// number of trajectory points
-    int Charge;			// charge in units of ElementaryCharge
-    int Mass;			// mass in unit of the electron rest mass
-    double *Time;		// time in lab-frame [s]
-    Vector *X;			// position in lab frame [m]
-    Vector *P;                  // momentum in lab frame : c p = beta gamma mc²
-                                // dimensionless in units of mc²
-    Vector *A;                  // acceleration in lab frame a = d/dt(p*c)
-				// in unit of 1/s (scaled by mc²)
+    int NP;          // number of trajectory points
+    int Charge;      // charge in units of ElementaryCharge
+    int Mass;        // mass in unit of the electron rest mass
+    double* Time;    // time in lab-frame [s]
+    Vector* X;       // position in lab frame [m]
+    Vector* P;       // momentum in lab frame : c p = beta gamma mc²
+                     // dimensionless in units of mc²
+    Vector* A;       // acceleration in lab frame a = d/dt(p*c)
+                     // in unit of 1/s (scaled by mc²)
 };
 
 #endif
