@@ -30,7 +30,7 @@
 #include <tuple>
 #include <externalfield.h>
 #include "omp.h"
-
+#include "SDDS.h"
 
 Bunch::Bunch()
 {
@@ -104,6 +104,15 @@ int Bunch:: getNOTS()
 	return NT;
 }
 
+int Bunch:: getCharge()
+{
+	return Charge;
+}
+
+int Bunch:: getMass()
+{
+	return Mass;
+}
 tuple<Vector,Vector> Bunch::MutualField(int stepnumber, int ParticleID, double t)
 {
 	Vector Ef = Vector(0.0,0.0,0.0);
@@ -208,6 +217,7 @@ void Bunch::Track_Euler(int NOTS, double tstep, Lattice *field)
 	//to store trajectory details
 	InitializeTrajectory(NOTS);
 	NT = NOTS;
+	TIMESTEP=tstep;
 	double start=omp_get_wtime();
 	for (int i=0;i<NOTS;i++)
 	{
@@ -250,6 +260,7 @@ void Bunch::Track_Vay(int NOTS, double tstep, Lattice *field)
 {
 	InitializeTrajectory(NOTS);
 	NT = NOTS;
+	TIMESTEP=tstep;
 	double qm=b[0].getCharge()*InvRestMass/b[0].getMass();
 	double t2=0.5*tstep;
 	double qmt2=qm*t2;
@@ -280,8 +291,8 @@ void Bunch::Track_Vay(int NOTS, double tstep, Lattice *field)
 			F[k]=MutualField(0, k, t_h[k]);
 			E_h[k]=field->EField(t_h[k],x_h[k])+get<0>(F[k]);
 			B_h[k]=field->BField(t_h[k],x_h[k])+get<1>(F[k]);
-			/*E_h[k] = field->EField(t_h[k],x_h[k]) ;
-    			B_h[k]=field->BField(t_h[k],x_h[k]);*/
+			//E_h[k] = field->EField(t_h[k],x_h[k]) ;
+    			//B_h[k]=field->BField(t_h[k],x_h[k]);
 			dp_dt[k]=(cross(beta_h[k],B_h[k])+E_h[k]/SpeedOfLight)*qm;
 			p_i1[k]=p_h[k]-dp_dt[k]*0.5*tstep;
 			gamma_i1[k]=sqrt(p_i1[k].abs2nd()+1.0);
@@ -302,8 +313,8 @@ void Bunch::Track_Vay(int NOTS, double tstep, Lattice *field)
 			F[k]=MutualField(i, k, t_h[k]);
 			E_h[k]=field->EField(t_h[k],x_h[k])+get<0>(F[k]);
 			B_h[k]=field->BField(t_h[k],x_h[k])+get<1>(F[k]);
-			/*E_h[k] = field->EField(t_h[k],x_h[k]) ;
-    			B_h[k]=field->BField(t_h[k],x_h[k]);*/
+			//E_h[k] = field->EField(t_h[k],x_h[k]) ;
+    			//B_h[k]=field->BField(t_h[k],x_h[k]);
 			dp_dt[k]=(cross(beta_i,B_h[k])+E_h[k]/SpeedOfLight)*qm;
 			p_h[k]=p_i+dp_dt[k]*t2;			
 			Vector p_prime=p_h[k]+E_h[k]/SpeedOfLight * qmt2;			
@@ -333,7 +344,248 @@ void Bunch::Track_Vay(int NOTS, double tstep, Lattice *field)
 	cout<<"\033[1;31m Tracking Completed in: \033[0m"<<(end-start)<<"\033[1;31m seconds\033[0m\n"<<endl;
 
 }
+void Bunch::WriteSDDS()
+{
+	SDDS_DATASET data;
+	int32_t i;
+	int32_t k;
+	char buffer[100];
+	int Initialize = SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,"trajectory.sdds");
+	double charge,mass,nots,nop;
+	charge=(double)getCharge();
+	mass = (double)getMass();
+	nots =(double) getNOTS();
+	nop =(double) getNOP();
+	double TotalTime=(double)nots*TIMESTEP;
+	//nop =(double)10;
+	//nots = (double)10;
+	double Qtot = nop*charge*ElementaryCharge;
+	double Mtot = nop*mass*9.1e-31;
+	if(Initialize!=1)
+	{
+		cout<<"Error Initializing Output\n";
+	}
+	else
+	{
+		fprintf(stdout,"output initialized\n");
+	}
 
+	if(
+			SDDS_DefineSimpleParameter(&data,"NumberOfParticles",NULL, SDDS_DOUBLE)!=1 || 
+			SDDS_DefineSimpleParameter(&data,"TotalTime","seconds", SDDS_DOUBLE)!=1 || 
+			SDDS_DefineSimpleParameter(&data,"BunchTotalCharge","Coloumbs", SDDS_DOUBLE)!=1 ||
+			SDDS_DefineSimpleParameter(&data,"BunchTotalMass","kg", SDDS_DOUBLE)!=1
+	  )
+	{
+		fprintf(stdout,"error in defining parameters\n");
+		
+	}
+	else{
+	fprintf(stdout,"parameters defined \n");
+	}
+	
+	if(
+			SDDS_DefineSimpleColumn(&data,"Number",NULL, SDDS_DOUBLE)!=1 ||
+ 			SDDS_DefineSimpleColumn(&data,"t","sec", SDDS_DOUBLE)!=1 || 
+			SDDS_DefineSimpleColumn(&data,"x","m", SDDS_DOUBLE)!=1 ||
+			SDDS_DefineSimpleColumn(&data,"y","m", SDDS_DOUBLE)!=1 ||
+			SDDS_DefineSimpleColumn(&data,"z","m", SDDS_DOUBLE)!=1 || 
+			SDDS_DefineSimpleColumn(&data,"px","gammabetax", SDDS_DOUBLE)!=1 || 
+			SDDS_DefineSimpleColumn(&data,"py","gammabetay",SDDS_DOUBLE)!=1 ||
+			SDDS_DefineSimpleColumn(&data,"pz","gammabetaz", SDDS_DOUBLE) !=1 ||
+			SDDS_DefineSimpleColumn(&data,"Ax","msec2", SDDS_DOUBLE)!=1 ||
+			SDDS_DefineSimpleColumn(&data,"Ay","msec2",SDDS_DOUBLE)!=1 ||
+			SDDS_DefineSimpleColumn(&data,"Az","msec2", SDDS_DOUBLE)!=1 
+	  )
+	{
+		fprintf(stdout,"error in defining columns\n");
+	}
+	else{
+	fprintf(stdout,"Columns defined \n");	
+	}
+
+	if (SDDS_WriteLayout(&data)!=1)
+	{
+		fprintf(stdout,"error in writing layout\n");
+	}
+	else{
+	fprintf(stdout,"layout written \n");
+	}
+
+	for (i = 0;i<(int32_t)nop;i++)
+	{
+		if (SDDS_StartPage(&data,(int32_t)nots)!=1)
+			{
+				fprintf(stdout,"error in starting page\n");
+			}
+		if (
+			SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,
+			"NumberOfParticles",nop,
+			"TotalTime",TotalTime,
+			"BunchTotalCharge",Qtot,
+			"BunchTotalMass",Mtot,
+			 NULL)!=1)
+			{
+				fprintf(stdout,"error in defining parameter\n");
+			}
+			
+		for( k =0;k<(int32_t)nots;k++)
+		{
+			
+			
+			if(SDDS_SetRowValues(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,k,
+						"Number",(double)(k),
+						"t",(double)(b[i].TrajTime(k)),
+						"x",(double)((b[i].TrajPoint(k)).x),
+						"y",(double)((b[i].TrajPoint(k)).y),
+						"z",(double)((b[i].TrajPoint(k)).z),
+						"px",(double)((b[i].TrajMomentum(k)).x),
+						"py",(double)((b[i].TrajMomentum(k)).y),
+						"pz",(double)((b[i].TrajMomentum(k)).z),
+						"Ax",(double)((b[i].TrajAcceleration(k)).x),
+						"Ay",(double)((b[i].TrajAcceleration(k)).y),
+						"Az",(double)((b[i].TrajAcceleration(k)).z),
+						NULL)!=1)
+			{
+				fprintf(stdout,"error in writing columns\n");
+			}
+	
+		}
+		if(SDDS_WritePage(&data)!=1)
+			{
+				fprintf(stdout,"error in writing page\n");
+			}
+
+	}
+	
+	if (SDDS_Terminate(&data)!=1)
+	{
+		fprintf(stdout,"error terminating data\n");
+	}	
+
+}
+
+//write sdds file with time as a parameter. each page has x,y,z,px,py,pz at different time steps
+void Bunch::WriteSDDS_Time()
+{
+	SDDS_DATASET data;
+	int32_t i;
+	int32_t k;
+	char buffer[100];
+	int Initialize = SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,"time-trajectory.sdds");
+	double charge,mass,nots,nop;
+	charge=(double)(getCharge());
+	mass = (double)(getMass());
+	nots =(double) (getNOTS());
+	nop =(double) (getNOP());
+	//nop =(double)10;
+	//nots = (double)10;
+	double Qtot = nop*charge*ElementaryCharge;
+	double Mtot = nop*mass*9.1e-31;
+	double TotalTime=(double)NT*TIMESTEP;
+	if(Initialize!=1)
+	{
+		cout<<"Error Initializing Output\n";
+	}
+	else
+	{
+		fprintf(stdout,"output initialized\n");
+	}
+
+	if(
+			SDDS_DefineSimpleParameter(&data,"NumberOfParticles",NULL, SDDS_DOUBLE)!=1 || 
+			SDDS_DefineSimpleParameter(&data,"TotalTime","seconds", SDDS_DOUBLE)!=1 || 
+			SDDS_DefineSimpleParameter(&data,"BunchTotalCharge","Coloumbs", SDDS_DOUBLE)!=1 ||
+			SDDS_DefineSimpleParameter(&data,"BunchTotalMass","kg", SDDS_DOUBLE)!=1 || 
+			SDDS_DefineSimpleParameter(&data,"Time","seconds", SDDS_DOUBLE)!=1
+	  )
+	{
+		fprintf(stdout,"error in defining parameters\n");
+		
+	}
+	else{
+	fprintf(stdout,"parameters defined \n");
+	}
+	
+	if(
+			SDDS_DefineSimpleColumn(&data,"Number",NULL, SDDS_DOUBLE)!=1 ||
+			SDDS_DefineSimpleColumn(&data,"x","m", SDDS_DOUBLE)!=1 ||
+			SDDS_DefineSimpleColumn(&data,"y","m", SDDS_DOUBLE)!=1 ||
+			SDDS_DefineSimpleColumn(&data,"z","m", SDDS_DOUBLE)!=1 || 
+			SDDS_DefineSimpleColumn(&data,"px","gammabetax", SDDS_DOUBLE)!=1 || 
+			SDDS_DefineSimpleColumn(&data,"py","gammabetay",SDDS_DOUBLE)!=1 ||
+			SDDS_DefineSimpleColumn(&data,"pz","gammabetaz", SDDS_DOUBLE) !=1 ||
+			SDDS_DefineSimpleColumn(&data,"Ax","msec2", SDDS_DOUBLE)!=1 ||
+			SDDS_DefineSimpleColumn(&data,"Ay","msec2",SDDS_DOUBLE)!=1 ||
+			SDDS_DefineSimpleColumn(&data,"Az","msec2", SDDS_DOUBLE)!=1 
+	  )
+	{
+		fprintf(stdout,"error in defining columns\n");
+	}
+	else{
+	fprintf(stdout,"Columns defined \n");	
+	}
+
+	if (SDDS_WriteLayout(&data)!=1)
+	{
+		fprintf(stdout,"error in writing layout\n");
+	}
+	else{
+	fprintf(stdout,"layout written \n");
+	}
+
+	for (i = 0;i<(int32_t)nots;i++)
+	{
+		if (SDDS_StartPage(&data,(int32_t)nop)!=1)
+			{
+				fprintf(stdout,"error in starting page\n");
+			}
+		if (
+			SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,
+			"NumberOfParticles",nop,
+			"TotalTime",TotalTime,
+			"BunchTotalCharge",Qtot,
+			"BunchTotalMass",Mtot,
+			"Time",(double)(b[0].TrajTime(i)),
+			 NULL)!=1)
+			{
+				fprintf(stdout,"error in defining parameter\n");
+			}
+			
+		for( k =0;k<(int32_t)nop;k++)
+		{
+			
+			
+			if(SDDS_SetRowValues(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,k,
+						"Number",(double)(k),
+						"x",(double)((b[k].TrajPoint(i)).x),
+						"y",(double)((b[k].TrajPoint(i)).y),
+						"z",(double)((b[k].TrajPoint(i)).z),
+						"px",(double)((b[k].TrajMomentum(i)).x),
+						"py",(double)((b[k].TrajMomentum(i)).y),
+						"pz",(double)((b[k].TrajMomentum(i)).z),
+						"Ax",(double)((b[k].TrajAcceleration(i)).x),
+						"Ay",(double)((b[k].TrajAcceleration(i)).y),
+						"Az",(double)((b[k].TrajAcceleration(i)).z),
+						NULL)!=1)
+			{
+				fprintf(stdout,"error in writing columns\n");
+			}
+	
+		}
+		if(SDDS_WritePage(&data)!=1)
+			{
+				fprintf(stdout,"error in writing page\n");
+			}
+
+	}
+	
+	if (SDDS_Terminate(&data)!=1)
+	{
+		fprintf(stdout,"error terminating data\n");
+	}	
+
+}
 void Bunch::InitializeTrajectory(int NOTS)
 {
 	for (int i=0; i<NOP; i++)

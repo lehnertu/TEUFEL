@@ -60,7 +60,9 @@ class Bunch
 	//charged particle
 	ChargedParticle *b;	
 
-
+	//get charge
+	int getCharge();
+	int getMass();
 	//Track the bunch through lattice fields
 	//interaction fields included
 	void Track_Euler(int NOTS, double tstep, Lattice *field);
@@ -73,8 +75,8 @@ class Bunch
 	// for the complete bunch
 
 	tuple<Vector,Vector>RadiationField(Vector Robs, double t);
-	
-        
+	void WriteSDDS_Time();
+        void WriteSDDS();
     
 
   private:
@@ -95,6 +97,9 @@ class Bunch
 
 	//check for file layout
 	int FileCheck(const char *filename, int NP);
+
+	//time step for trajectory integration
+	double TIMESTEP;
 
 	//total interaction field seen by particle identified by ParticleID
 	//fields are calculated with Observation Point==ParticleID
