@@ -19,54 +19,81 @@
  * 
  * =========================================================================*/
 
-#ifndef VECTOR_H
-#define VECTOR_H
+#pragma once
 
 using namespace std;
 
+/*!
+    \class Vector
+    \brief 3D-Vector class
+ 
+    @author Ulf Lehnert
+    @date 10.2.2017
+
+    \todo make components private
+ */
 class Vector
 {
 
   public:
 
+    /*!
+	Default constructor:
+
+	All components are initalized as zero.
+    */
     Vector();
+    
+    /*!
+	Standard constructor:
+
+	All components are initalized with given values.
+    */
     Vector(double x0, double y0, double z0);
 
     double x;
     double y;
     double z;
 
-    // sum and difference of two vectors
+    /*! Sum of two vectors */
     Vector operator+ (Vector v2);
+
+    /*! Accumulating sum of two vectors */
     Vector& operator+= (Vector v2);
+
+    /*! Difference of two vectors */
     Vector operator- (Vector v2);
 
-    // negative vector
+    /*! The negative of a vector */
     Vector operator- ();
 
-    // multiplication of a vector with a factor
-    Vector operator* (double faktor);
-    Vector& operator*= (double faktor);
-    Vector operator/ (double faktor);
-    Vector& operator/= (double faktor);
+    /*! Multiplication of the vector with a real factor */
+    Vector operator* (double factor);
 
-    // absolute value of a vector
+    /*! In-place multiplication of the vector with a real factor */
+    Vector& operator*= (double factor);
+
+    /*! Division of the vector by a real factor */
+    Vector operator/ (double factor);
+
+    /*! In-place division of the vector by a real factor */
+    Vector& operator/= (double factor);
+
+    /*! The absolute value (cartesian norm) of the vector */
     double norm();
 
-    // squared absolute value of a vector
+    /*! The squared absolute value of the vector */
     double abs2nd();
 
-    // make a vector unit length
+    /*! Make the vector unit length */
     void normalize();
 
   private:
 
 };
 
-// dot product of two vectors
+/*! The dot product of two vectors */
 double dot(Vector a, Vector b);
 
-// cross product of two vectors
+/*! The cross product of two vectors */
 Vector cross(Vector a, Vector b);
-
-#endif

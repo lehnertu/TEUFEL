@@ -25,6 +25,9 @@
 
 Vector::Vector()
 {
+    x=0.0;
+    y=0.0;
+    z=0.0;
 }
 
 Vector::Vector(double x0, double y0, double z0)
