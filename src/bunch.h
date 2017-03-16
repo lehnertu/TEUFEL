@@ -152,16 +152,16 @@ class Bunch
 	 
 	 routine returns values with following meaning:
 	 
-	0  ->  Successfully Written the file
-	1  ->  Error in Initializing the Output dataset
-	2  ->  Error in Defining the parameters
-	3  ->  Error in Defining Columns describing the data to be followed
-	4  ->  Error in Writing the layout of the data structure in the sdds file
-	5  ->  Error in Starting a New Page of the file
-	5  ->  Error in setting the values of the parameters
-	6  ->  Error in setting the row values i.e. the data belonging to column
-	7  ->  Error in Writing the page that was successfully initialized
-	8  ->  Error in Terminating the data flow to the sdds file
+	0  ->  Successfully Written the file\n
+	1  ->  Error in Initializing the Output dataset \n
+	2  ->  Error in Defining the parameters \n
+	3  ->  Error in Defining Columns describing the data to be followed \n
+	4  ->  Error in Writing the layout of the data structure in the sdds file \n
+	5  ->  Error in Starting a New Page of the file \n
+	5  ->  Error in setting the values of the parameters \n
+	6  ->  Error in setting the row values i.e. the data belonging to column \n
+	7  ->  Error in Writing the page that was successfully initialized \n
+	8  ->  Error in Terminating the data flow to the sdds file \n
 
 	*/
         int WriteSDDSTrajectory();
@@ -177,16 +177,16 @@ class Bunch
 	 
 	 routine returns values with following meaning:
 	 
-	0  ->  Successfully Written the file
-	1  ->  Error in Initializing the Output dataset
-	2  ->  Error in Defining the parameters
-	3  ->  Error in Defining Columns describing the data to be followed
-	4  ->  Error in Writing the layout of the data structure in the sdds file
-	5  ->  Error in Starting a New Page of the file
-	5  ->  Error in setting the values of the parameters
-	6  ->  Error in setting the row values i.e. the data belonging to column
-	7  ->  Error in Writing the page that was successfully initialized
-	8  ->  Error in Terminating the data flow to the sdds file
+	0  ->  Successfully Written the file \n
+	1  ->  Error in Initializing the Output dataset \n
+	2  ->  Error in Defining the parameters \n
+	3  ->  Error in Defining Columns describing the data to be followed \n
+	4  ->  Error in Writing the layout of the data structure in the sdds file \n
+	5  ->  Error in Starting a New Page of the file  \n
+	5  ->  Error in setting the values of the parameters \n
+	6  ->  Error in setting the row values i.e. the data belonging to column \n
+	7  ->  Error in Writing the page that was successfully initialized \n
+	8  ->  Error in Terminating the data flow to the sdds file \n
 
 	*/
     	int WriteSDDSTime();
