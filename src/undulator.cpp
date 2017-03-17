@@ -70,8 +70,8 @@ Vector Undulator::ElementLocalEField(double t, Vector X)
 Vector Undulator::ElementLocalBField(double t, Vector X)
   {
     Vector B=Vector (0,0,0);
-    double z1=-GetLambdaU()/2;
-    double z2=GetLambdaU()/2;
+    double z1=0;
+    double z2=GetLambdaU();
     B.x=0.0;
     if(X.z<z1)
     {

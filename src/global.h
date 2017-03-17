@@ -26,3 +26,4 @@
 #define EpsNull 8.854187817e-12                 // vacuum permittivity [As/Vm] 1/c² = e0*µ0
 #define MuNull 4*Pi*1e-7                        // magnetic field constant [Vs/Am]
 #define InvRestMass 1.758820025e11              // 1 / m = c² / mc² [m²/s²/eV]
+#define m_e 9.10938356e-31			// electron mass [kg]

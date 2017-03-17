@@ -14,9 +14,10 @@ int main()
 {
   std::ofstream Out("test.txt", std::ofstream::out);
   std::ofstream Out1("test1.txt", std::ofstream::out);
-  const char *filename= "TEUFEL-EXAMPLE.txt";
+  //const char *filename= "TEUFEL-EXAMPLE.txt";
+  const char *filename= "BeamProfile.txt";
   Bunch *BB;
-  int NOP=999;
+  int NOP=100;
   int NOTS=1700;
   double dt=3.2692307692307693e-12;
   //BB=new Bunch();
@@ -48,6 +49,8 @@ int main()
   double freq = SpeedOfLight/lambdar;
   cout<<freq<<endl;
   an.BunchFactor(lambdau,lambdar);
+  int output = BB->WriteSDDSTrajectory();
+  int output2= BB->WriteSDDSTime();
   Bunch *BB2;
   BB2 = new Bunch(BB);
   for (int i = 0;i<NOP;i++)
