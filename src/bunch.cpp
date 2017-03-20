@@ -28,7 +28,7 @@
 #include <algorithm>
 #include <stdlib.h>
 #include <tuple>
-#include <externalfield.h>
+#include "externalfield.h"
 #include "omp.h"
 #include "SDDS.h"
 
@@ -40,13 +40,7 @@ Bunch::Bunch()
 	Mass = 1;	
 	Qtot = Charge*ElementaryCharge;
 	Mtot = Mass*m_e;
-	b=new ChargedParticle[NOP];
-	b[0].setInitialMomentum(Vector(0.0,0,0.0));
-	b[0].setInitialPosition(Vector(0.0,0.00,0.0));
-	b[0].setInitialTime(0.0);	
-	b[0].setParticleID(0);
-	b[0].setCharge(-1);
-	b[0].setMass(1);
+	b= new ChargedParticle(Charge,Mass);
 
 }
 
@@ -61,44 +55,48 @@ Bunch::Bunch(const char *filename, int NP, int charge, int mass)
 	Qtot = Charge*ElementaryCharge;
 	Mtot = Mass*m_e;
 	b=new ChargedParticle[NP];
+	for(int i=0;i<NOP;i++)
+	{
+		b[i]=ChargedParticle(Charge,Mass);
+	}
 	LoadBeamProfile(filename, b);
 
 };
 
-
-Bunch::Bunch(const Bunch *bunch)
+void Bunch::AddParticles(ChargedParticle *part)
 {
-	int NP = bunch->NOP;
-	setNOP(NP);
-	int NOTS = bunch->NT;
-	b=new ChargedParticle[NP];
-	InitializeTrajectory(NOTS);
-	for (int i=0;i<NOP;i++)
+	int NP = NOP+1;
+	ChargedParticle *b1 = new ChargedParticle[NP];
+	for(int i=0;i<NOP;i++)
 	{
-//#pragma omp parallel for
-		for (int k =0;k<NOTS;k++)
-		{
-			b[i].setTrajPoint(k,(bunch->b[i]).TrajPoint(k));
-			b[i].setTrajMomentum(k,(bunch->b[i]).TrajMomentum(k));
-			b[i].setTrajTime(k,(bunch->b[i]).TrajTime(k));
-			b[i].setTrajAcceleration(k,(bunch->b[i]).TrajAcceleration(k));
-			b[i].setParticleID(bunch->b[i].getParticleID());
-			b[i].setCharge(bunch->b[i].getCharge());
-			b[i].setMass(bunch->b[i].getMass());
-		}
-	}
-
+		b1[i] = ChargedParticle(b[i]);
+	}	
+	b1[NOP]=part;
+	delete[] b;
+	NOP = NOP+1;
+	Charge = Charge+part->getCharge();	
+	Mass = Mass + part-> getMass();
+	Qtot = Charge*ElementaryCharge;
+	Mtot = Mass*m_e;
+	b=new ChargedParticle(b1);
+	delete[] b1;
+	
 }
 
-
-
-void Bunch:: setNOP(int NP)
+Bunch::Bunch(Bunch *bunch)
 {
-	NOP=NP;
-
-};
-
-
+	NOP = bunch->getNOP();
+	int NOTS = bunch->getNOTS();
+	Charge = bunch->getCharge();
+	Mass = bunch->getMass();
+	Qtot = Charge*ElementaryCharge;
+	Mtot = Mass*m_e;
+	if (b!=0)
+	{
+		delete[] b;
+	}
+	b=new ChargedParticle(bunch->b);
+}
 
 
 int Bunch::getNOP()
@@ -110,7 +108,7 @@ int Bunch::getNOP()
 
 int Bunch:: getNOTS()
 {
-	return NT;
+	return NOTS;
 }
 
 
@@ -137,15 +135,19 @@ tuple<Vector,Vector> Bunch::MutualField(int stepnumber, int ParticleID, double t
 	int j=ParticleID;
 	Vector Robs=b[j].TrajPoint(stepnumber);
 	tuple<Vector,Vector>FF[NOP];
-#pragma omp parallel for shared(j,stepnumber,t,Robs)
+	FF[j] = make_tuple(Ef,Bf);
+#pragma omp parallel for num_threads(4) shared(j,stepnumber,t,Robs)
 	for (int i=0; i<NOP;i++)
 	{
-		// for i == j; i.e. field due to particle i on its position is zero
-		//implemented in the InteractionField routine of particles
-		FF[i]= b[i].InteractionField(j,stepnumber,t, Robs);
+
+		if(i!=j)
+		{
+			FF[i]= b[i].RetardedEField(t, Robs);
+		
+		}
+	
+		
 	}
-	// tuple of electric and magnetic fields have been obtained
-	//add all of them together
 	
 	double Ex,Ey,Ez,Bx,By,Bz;
 	Ex=0.0;
@@ -221,137 +223,24 @@ tuple<Vector,Vector> Bunch::RadiationField(Vector Robs, double t)
 }
 
 
-
-void Bunch::Track_Euler(int NOTS, double tstep, Lattice *field)
+void Bunch::Track_Vay(int NT, double tstep, Lattice *field)
 {
-
-	//allocate memory to every particle
-	//to store trajectory details
-	InitializeTrajectory(NOTS);
-	NT = NOTS;
+	
+	NOTS = NT;
 	TIMESTEP=tstep;
 	TotalTime = tstep*NOTS;
-	double start=omp_get_wtime();
-	for (int i=0;i<NOTS;i++)
-	{
-		
-#pragma omp parallel for 
-		for(int k=0;k<NOP;k++)
-		{
-			Vector X0=b[k].TrajPoint(i);
-			Vector P0=b[k].TrajMomentum(i);
-			double t0=b[k].TrajTime(i);
-			double qm=b[k].getCharge()*InvRestMass/b[k].getMass();
-			Vector p=b[k].TrajMomentum(i);
-			double betagamma2=p.abs2nd();
-			double gamma=sqrt(betagamma2+1.0);
-			Vector beta = p/gamma;
-			
-			tuple<Vector,Vector>MField=MutualField(i,k,t0);
-    			Vector efield = field->EField(t0, X0) + get<0>(MField);
-    			Vector bfield = field->BField(t0,X0)+ get<1>(MField);
-			//Vector efield = field->EField(t0, X0) ;
-    			//Vector bfield = field->BField(t0,X0);
-    			Vector force = cross(beta, bfield) + efield/SpeedOfLight;
-   			Vector dX_dt = beta * SpeedOfLight;
-   			Vector dP_dt = force * qm;
-    			// store acceleration
-   			b[k].setTrajAcceleration(i,dP_dt);
-   			// integrator step
-			b[k].setTrajPoint(i+1,X0+dX_dt*tstep);
-			b[k].setTrajTime(i+1,t0+tstep);
-			b[k].setTrajMomentum(i+1,P0+dP_dt*tstep);
-		}
-		
-	}
-	double end=omp_get_wtime();
-	cout<<"\033[1;31m Tracking Completed in: \033[0m"<<(end-start)<<"\033[1;31m seconds\033[0m\n"<<endl;
-
-}
-
-
-
-void Bunch::Track_Vay(int NOTS, double tstep, Lattice *field)
-{
-	InitializeTrajectory(NOTS);
-	NT = NOTS;
-	TIMESTEP=tstep;
-	TotalTime = tstep*NOTS;
-	double qm=b[0].getCharge()*InvRestMass/b[0].getMass();
-	double t2=0.5*tstep;
-	double qmt2=qm*t2;
-	double t_h[NOP];
-	Vector x_h[NOP];
-	Vector p_h[NOP];
-	double gamma_h[NOP];
-	Vector beta_h[NOP];
-	Vector E_h[NOP];
-	Vector B_h[NOP];
-	Vector dp_dt[NOP];
-	Vector A[NOP];
-	Vector p_i1[NOP];
-	double gamma_i1[NOP];
-	Vector beta_i1[NOP];
 	tuple<Vector,Vector> F[NOP];
-	double start=omp_get_wtime();
-//first of all setup the initial information for half steps
-//for all the particles	
-#pragma parallel for private(t_h,x_h,p_h,gamma_h,beta_h,F,E_h,B_h,dp_dt,p_i1,gamma_i1,beta_i1,k,qmt2,qm,tstep)
-	for(int k=0;k<NOP;k++)
-		{
-			t_h[k]=b[k].getInitialTime();
-			x_h[k]=b[k].getInitialPosition();
-			p_h[k]=b[k].getInitialMomentum();
-			gamma_h[k]=sqrt(p_h[k].abs2nd()+1.0);
-			beta_h[k]=p_h[k]/gamma_h[k];
-			F[k]=MutualField(0, k, t_h[k]);
-			E_h[k]=field->EField(t_h[k],x_h[k])+get<0>(F[k]);
-			B_h[k]=field->BField(t_h[k],x_h[k])+get<1>(F[k]);
-			//E_h[k] = field->EField(t_h[k],x_h[k]) ;
-    			//B_h[k]=field->BField(t_h[k],x_h[k]);
-			dp_dt[k]=(cross(beta_h[k],B_h[k])+E_h[k]/SpeedOfLight)*qm;
-			p_i1[k]=p_h[k]-dp_dt[k]*0.5*tstep;
-			gamma_i1[k]=sqrt(p_i1[k].abs2nd()+1.0);
-			beta_i1[k]=p_i1[k]/gamma_i1[k];	
-			b[k].setTrajAcceleration(0,dp_dt[k]);
-			
-		};
+	double start=omp_get_wtime();	
 
 	for (int i=0;i<NOTS;i++)
 	{
-		
-#pragma parallel for private(t2,i,t_h,x_h,p_h,gamma_h,beta_h,F,E_h,B_h,dp_dt,p_i1,gamma_i1,beta_i1,k,qmt2,qm,tstep)
+#pragma parallel for shared(NOTS,tstep)
 		for (int k=0;k<NOP;k++)
 		{
-			
-			Vector p_i=p_i1[k];	
-			Vector beta_i=beta_i1[k];
-			F[k]=MutualField(i, k, t_h[k]);
-			E_h[k]=field->EField(t_h[k],x_h[k])+get<0>(F[k]);
-			B_h[k]=field->BField(t_h[k],x_h[k])+get<1>(F[k]);
-			//E_h[k] = field->EField(t_h[k],x_h[k]) ;
-    			//B_h[k]=field->BField(t_h[k],x_h[k]);
-			dp_dt[k]=(cross(beta_i,B_h[k])+E_h[k]/SpeedOfLight)*qm;
-			p_h[k]=p_i+dp_dt[k]*t2;			
-			Vector p_prime=p_h[k]+E_h[k]/SpeedOfLight * qmt2;			
-			double gamma_prime=sqrt(p_prime.abs2nd()+1.0);			
-			Vector tau=B_h[k]*qmt2;			
-			double u_star=dot(p_prime,tau);			
-			double tau2nd=tau.abs2nd();			
-			double sigma=gamma_prime*gamma_prime-tau2nd;
-			gamma_i1[k]=sqrt(0.5*(sigma+sqrt(sigma*sigma+4.0*(tau2nd+u_star*u_star))));			
-			Vector T=tau/gamma_i1[k];
-			p_i1[k]=(p_prime+T*dot(p_prime,T)+cross(p_prime,T))/(1.0+T.abs2nd());
-			beta_i1[k]=p_i1[k]/gamma_i1[k];
-			int stepnumber = i+1;
-			b[k].setTrajTime(stepnumber,t_h[k]);
-			b[k].setTrajPoint(stepnumber,x_h[k]);
-			b[k].setTrajMomentum(stepnumber,p_h[k]);
-			b[k].setTrajAcceleration(stepnumber,dp_dt[k]);
-			x_h[k]=x_h[k]+beta_i1[k]*SpeedOfLight*tstep;
-			t_h[k]=t_h[k]+tstep;
-			b[k].setTrajTime(0,b[k].getInitialTime());
-			b[k].setTrajMomentum(0,b[k].getInitialMomentum());
+			Vector X0=InitialPosition[k];
+			Vector P0=InitialMomentum[k];
+			double t0=InitialTime[k];
+			b[k].StepVay(NOTS,tstep,X0,P0,t0, field);
 		}
 	}
 
@@ -372,7 +261,7 @@ int Bunch::WriteSDDSTrajectory()
 	double charge,mass,nots,nop;
 	charge=(double)Charge;
 	mass = (double)Mass;
-	nots =(double)NT;
+	nots =(double)NOTS;
 	nop =(double)NOP;
 	if(Initialize!=1)
 	{
@@ -470,9 +359,9 @@ int Bunch::WriteSDDSTrajectory()
 						"px",(double)((b[i].TrajMomentum(k)).x),
 						"py",(double)((b[i].TrajMomentum(k)).y),
 						"pz",(double)((b[i].TrajMomentum(k)).z),
-						"Ax",(double)((b[i].TrajAcceleration(k)).x),
-						"Ay",(double)((b[i].TrajAcceleration(k)).y),
-						"Az",(double)((b[i].TrajAcceleration(k)).z),
+						"Ax",(double)((b[i].TrajAccel(k)).x),
+						"Ay",(double)((b[i].TrajAccel(k)).y),
+						"Az",(double)((b[i].TrajAccel(k)).z),
 						NULL)!=1
 			  )
 
@@ -502,7 +391,8 @@ int Bunch::WriteSDDSTrajectory()
 }
 
 //write sdds file with time as a parameter. each page has x,y,z,px,py,pz at different time steps
-int Bunch::WriteSDDSTime()
+int
+ Bunch::WriteSDDSTime()
 {
 	SDDS_DATASET data;
 	char buffer[100];
@@ -510,7 +400,7 @@ int Bunch::WriteSDDSTime()
 	double charge,mass,nots,nop;
 	charge=(double)Charge;
 	mass = (double)Mass;
-	nots =(double)NT;
+	nots =(double)NOTS;
 	nop =(double)NOP;
 	if(Initialize!=1)
 	{
@@ -606,9 +496,9 @@ int Bunch::WriteSDDSTime()
 						"px",(double)((b[k].TrajMomentum(i)).x),
 						"py",(double)((b[k].TrajMomentum(i)).y),
 						"pz",(double)((b[k].TrajMomentum(i)).z),
-						"Ax",(double)((b[k].TrajAcceleration(i)).x),
-						"Ay",(double)((b[k].TrajAcceleration(i)).y),
-						"Az",(double)((b[k].TrajAcceleration(i)).z),
+						"Ax",(double)((b[k].TrajAccel(i)).x),
+						"Ay",(double)((b[k].TrajAccel(i)).y),
+						"Az",(double)((b[k].TrajAccel(i)).z),
 						NULL)!=1)
 			{
 				fprintf(stdout,"error in writing columns\n");
@@ -632,14 +522,7 @@ int Bunch::WriteSDDSTime()
 	
 	return 0;
 }
-void Bunch::InitializeTrajectory(int NOTS)
-{
-	for (int i=0; i<NOP; i++)
-	{
-		b[i].setNP(NOTS);
-	}
 
-}
 
 void Bunch::LoadBeamProfile(const char *filename, const ChargedParticle *part)
 {
@@ -647,6 +530,9 @@ void Bunch::LoadBeamProfile(const char *filename, const ChargedParticle *part)
 	//Generate a stream to the Beam Profile file
 	ifstream BunchProfile;
 	file=filename;
+	InitialPosition=new Vector[NOP];
+	InitialMomentum=new Vector[NOP];
+	InitialTime = new double[NOP];
 	//Check if file has correct number of rows and coumns
 	//if ok, then stream the values.
 	//else print error message and exit properly
@@ -656,22 +542,14 @@ void Bunch::LoadBeamProfile(const char *filename, const ChargedParticle *part)
 		printf("\033[7;31m Loading Beam Profile....\n\033[0m\n");
 		for(int i=0;i<NOP;i++)
 		{
-			double t;			
-			Vector position;
-			Vector momentum;
-			BeamProfile>>t;
-			BeamProfile>>position.x;
-			BeamProfile>>position.y;
-			BeamProfile>>position.z;
-			BeamProfile>>momentum.x;
-			BeamProfile>>momentum.y;
-			BeamProfile>>momentum.z;
-			b[i].setInitialPosition(position);
-			b[i].setInitialMomentum(momentum);
-			b[i].setInitialTime(t);
-			b[i].setCharge(Charge);
-			b[i].setMass(Mass);
-			b[i].setParticleID(i);
+			BeamProfile>>InitialTime[i];
+			BeamProfile>>InitialPosition[i].x;
+			BeamProfile>>InitialPosition[i].y;
+			BeamProfile>>InitialPosition[i].z;
+			BeamProfile>>InitialMomentum[i].x;
+			BeamProfile>>InitialMomentum[i].y;
+			BeamProfile>>InitialMomentum[i].z;
+			
 			
 		}
 		printf("\033[7;31m Beam Profile Loaded....\n\033[0m\n");

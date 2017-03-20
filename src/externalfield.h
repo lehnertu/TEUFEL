@@ -25,7 +25,7 @@
 #define EXTERNALFIELD_H
 
 #include <vector>
-
+#include <tuple>
 #include "vector.h"
 
 /*!
@@ -45,6 +45,7 @@
     the classes derived for specific elements.
 */
 
+using namespace std;
 class ExternalField
 {
 
@@ -95,11 +96,10 @@ class Lattice
     // add some external field to the lattice
     void addElement(ExternalField *element);
 
-    // total electric field [MV/m] of all lattice elements combined
-    Vector EField(double t, Vector X);
+    // total electric field [MV/m] and Magnetic of all lattice elements combined
+    // default value of interaction fields is defined as InteractionField = 0
+    tuple<Vector,Vector> Field(double t, Vector X);
 
-    // total magnetic field [T] of all lattice elements combined
-    Vector BField(double t, Vector X);
 
 private:
 

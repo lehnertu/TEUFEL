@@ -74,16 +74,21 @@ class Bunch
 	Create the copy of the bunch
 
 	*/
-	Bunch(const Bunch *bunch);
+	Bunch(Bunch *bunch);
 	
 
 	/*!
+	 Add particles to a bunch of particles
+	*/
+	void AddParticles(ChargedParticle *part);
 
+
+	/*!
 	 get the number of particles;
 
 	*/
-	int getNOP();
-	
+	int getNOP();	
+
 
 	/*!
 
@@ -121,7 +126,7 @@ class Bunch
 	Track the bunch through lattice fields using the Euler algorithm 
 	interaction fields included
 	*/
-	void Track_Euler(int NOTS, double tstep, Lattice *field);
+	void Track_Euler(int NT, double tstep, Lattice *field);
 
 	/*!
 
@@ -129,7 +134,7 @@ class Bunch
 
 	To do: Track individual particles in particle routine
 	*/
-	void Track_Vay(int NOTS, double tstep, Lattice *field);
+	void Track_Vay(int NT, double tstep, Lattice *field);
 	
 
 
@@ -190,6 +195,8 @@ class Bunch
 
 	*/
     	int WriteSDDSTime();
+
+	
   private:
 	//Number of Particles in the bunch
 	int NOP;
@@ -233,10 +240,12 @@ class Bunch
 	void InitializeTrajectory(int NOTS);
 
 	//number of time steps every particle moves;
-	int NT;
+	int NOTS;
 
-	// to be used while initializing the bunch
-	void setNOP(int NP);
+	// get the initial conditions to be imposed while tracking the bunch of particles
+	Vector *InitialPosition;
+	double *InitialTime;
+	Vector *InitialMomentum;
 
 	
    

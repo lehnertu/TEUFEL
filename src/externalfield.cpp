@@ -56,22 +56,16 @@ void Lattice::addElement(ExternalField *element)
   elements.push_back(element);
 }
 
-Vector Lattice::EField(double t, Vector X)
+tuple<Vector,Vector> Lattice::Field(double t, Vector X)
 {
   Vector E = Vector(0.0, 0.0, 0.0);
-  for (unsigned int i=0; i<elements.size(); i++)
-  {
-    E += elements.at(i)->EField(t, X);
-  };
-  return(E);
-}
-
-Vector Lattice::BField(double t, Vector X)
-{
   Vector B = Vector(0.0, 0.0, 0.0);
   for (unsigned int i=0; i<elements.size(); i++)
   {
+    E += elements.at(i)->EField(t, X);
     B += elements.at(i)->BField(t, X);
   };
-  return(B);
+  return(make_tuple(E,B));
 }
+
+
