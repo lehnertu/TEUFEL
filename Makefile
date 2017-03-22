@@ -61,7 +61,8 @@ TESTS = $(TESTDIR)/teufel.EcrossB \
 	$(TESTDIR)/teufel.magnet \
 	$(TESTDIR)/teufel.undulator \
 	$(TESTDIR)/teufel.radiation \
-	$(TESTDIR)/trial
+	$(TESTDIR)/trial \
+	$(TESTDIR)/try
 	
 
 ####### Implicit rules
@@ -108,6 +109,7 @@ tests: $(OBJ)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.undulator $(TESTDIR)/teufel.undulator.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.radiation $(TESTDIR)/teufel.radiation.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/trial $(TESTDIR)/trial.cpp $(LFLAGS) $(OBJ) $(LIBS)
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/try $(TESTDIR)/try.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	
 
 docs:
