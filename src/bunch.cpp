@@ -71,7 +71,7 @@ void Bunch::AddParticles(ChargedParticle *part)
 	{
 		b1[i] = ChargedParticle(b[i]);
 	}	
-	b1[NOP]=part;
+	b1[NOP]=ChargedParticle(part);
 	delete[] b;
 	NOP = NOP+1;
 	Charge = Charge+part->getCharge();	
