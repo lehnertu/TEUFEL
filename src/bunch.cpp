@@ -31,17 +31,13 @@
 #include "externalfield.h"
 #include "omp.h"
 #include "SDDS.h"
-
+#include <string.h>
 Bunch::Bunch()
 {
 	
-	NOP =1;
-	Charge =-1;
-	Mass = 1;	
-	Qtot = Charge*ElementaryCharge;
-	Mtot = Mass*m_e;
-	b= new ChargedParticle(Charge,Mass);
-
+	NOP =0;
+	Charge=0;
+	Mass = 0;	
 }
 
 
@@ -50,55 +46,66 @@ Bunch::Bunch(const char *filename, int NP, int charge, int mass)
 {
 	
 	NOP = NP;
-	Charge = charge;	
-	Mass = mass;
-	Qtot = Charge*ElementaryCharge;
-	Mtot = Mass*m_e;
-	b=new ChargedParticle[NP];
+	Charge = charge*ElementaryCharge*NOP;
+	Mass = mass*m_e*NOP;
+	LoadBeamProfile(filename);
 	for(int i=0;i<NOP;i++)
 	{
-		b[i]=ChargedParticle(Charge,Mass);
+		b.push_back(new ChargedParticle(charge,mass,InitialPosition[i],InitialMomentum[i],InitialTime[i]));
 	}
-	LoadBeamProfile(filename, b);
+	printf("\033[7;31m Particles Loaded In Bunch....\n\033[0m\n");
+	
 
 };
 
-void Bunch::AddParticles(ChargedParticle *part)
-{
-	int NP = NOP+1;
-	ChargedParticle *b1 = new ChargedParticle[NP];
-	for(int i=0;i<NOP;i++)
-	{
-		b1[i] = ChargedParticle(b[i]);
-	}	
-	b1[NOP]=ChargedParticle(part);
-	delete[] b;
-	NOP = NOP+1;
-	Charge = Charge+part->getCharge();	
-	Mass = Mass + part-> getMass();
-	Qtot = Charge*ElementaryCharge;
-	Mtot = Mass*m_e;
-	b=new ChargedParticle(b1);
-	delete[] b1;
-	
-}
 
 Bunch::Bunch(Bunch *bunch)
 {
-	NOP = bunch->getNOP();
-	int NOTS = bunch->getNOTS();
-	Charge = bunch->getCharge();
-	Mass = bunch->getMass();
-	Qtot = Charge*ElementaryCharge;
-	Mtot = Mass*m_e;
-	if (b!=0)
+	NOP = bunch->NOP;
+	NOTS = bunch->NOTS;
+	Charge = bunch->Charge;
+	Mass = bunch->Mass;
+	for(int i=0;i<NOP;i++)
 	{
-		delete[] b;
+		ChargedParticle *copy_particle = new ChargedParticle();
+		*copy_particle = bunch->b.at(i);
+		memcpy(&copy_particle, &bunch->b[i], sizeof(bunch->b[i]));
+		b.push_back(new ChargedParticle(copy_particle));
+		
 	}
-	b=new ChargedParticle(bunch->b);
 }
 
 
+Bunch:: ~Bunch()
+{
+	if(!b.empty())
+	{
+		b.erase(b.begin(),b.begin()+NOP);
+	}
+
+}
+
+void Bunch::AddParticles( ChargedParticle *part)
+{
+	NOP +=1;
+	Charge = Charge+(part->getCharge())*ElementaryCharge;
+	Mass = Mass + (part->getMass())*m_e;
+	b.push_back(part);
+	
+	
+}
+
+void Bunch::JoinBunch(Bunch *bunch)
+{
+	NOP+=bunch->NOP;
+	Charge += bunch->Charge;
+	Mass += bunch ->Mass;
+	for(int i=0; i<NOP;i++)
+	{
+		b.push_back(bunch->b[i]);
+	}
+
+}
 int Bunch::getNOP()
 {
 	return NOP;
@@ -113,18 +120,17 @@ int Bunch:: getNOTS()
 
 
 
-int Bunch:: getCharge()
+double Bunch:: getCharge()
 {
 	return Charge;
 }
 
 
 
-int Bunch:: getMass()
+double Bunch:: getMass()
 {
 	return Mass;
 }
-
 
 
 
@@ -133,7 +139,7 @@ tuple<Vector,Vector> Bunch::MutualField(int stepnumber, int ParticleID, double t
 	Vector Ef = Vector(0.0,0.0,0.0);
 	Vector Bf = Vector(0.0,0.0,0.0);
 	int j=ParticleID;
-	Vector Robs=b[j].TrajPoint(stepnumber);
+	Vector Robs=b[j]->TrajPoint(stepnumber);
 	tuple<Vector,Vector>FF[NOP];
 	FF[j] = make_tuple(Ef,Bf);
 #pragma omp parallel for num_threads(4) shared(j,stepnumber,t,Robs)
@@ -142,7 +148,7 @@ tuple<Vector,Vector> Bunch::MutualField(int stepnumber, int ParticleID, double t
 
 		if(i!=j)
 		{
-			FF[i]= b[i].RetardedEField(t, Robs);
+			FF[i]= b[i]->RetardedEField(t, Robs);
 		
 		}
 	
@@ -189,7 +195,7 @@ tuple<Vector,Vector> Bunch::RadiationField(Vector Robs, double t)
 	{
 		// for i == j; i.e. field due to particle i on its position is zero
 		//implemented in the InteractionField routine of particles
-		FF[i]= b[i].RetardedEField(t, Robs);
+		FF[i]= b[i]->RetardedEField(t, Robs);
 	}
 	// tuple of electric and magnetic fields have been obtained
 	//add all of them together
@@ -234,13 +240,10 @@ void Bunch::Track_Vay(int NT, double tstep, Lattice *field)
 
 	for (int i=0;i<NOTS;i++)
 	{
-#pragma parallel for shared(NOTS,tstep)
+#pragma parallel for 
 		for (int k=0;k<NOP;k++)
 		{
-			Vector X0=InitialPosition[k];
-			Vector P0=InitialMomentum[k];
-			double t0=InitialTime[k];
-			b[k].StepVay(NOTS,tstep,X0,P0,t0, field);
+			b[k]->StepVay(NOTS,tstep,field);
 		}
 	}
 
@@ -250,7 +253,13 @@ void Bunch::Track_Vay(int NT, double tstep, Lattice *field)
 
 }
 
-
+void Bunch::MirrorY(double Mirror)
+{
+	for(int i=0;i<NOP;i++)
+	{	
+		b[i]->MirrorY(Mirror);
+	}
+}
 
 
 int Bunch::WriteSDDSTrajectory()
@@ -258,9 +267,7 @@ int Bunch::WriteSDDSTrajectory()
 	SDDS_DATASET data;
 	char buffer[100];
 	int Initialize = SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,"trajectory.sdds");
-	double charge,mass,nots,nop;
-	charge=(double)Charge;
-	mass = (double)Mass;
+	double nots,nop;
 	nots =(double)NOTS;
 	nop =(double)NOP;
 	if(Initialize!=1)
@@ -336,8 +343,8 @@ int Bunch::WriteSDDSTrajectory()
 			SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,
 			"NumberOfParticles",nop,
 			"TotalTime",TotalTime,
-			"BunchTotalCharge",Qtot,
-			"BunchTotalMass",Mtot,
+			"BunchTotalCharge",Charge,
+			"BunchTotalMass",Mass,
 			 NULL)!=1
 		   )
 
@@ -352,16 +359,16 @@ int Bunch::WriteSDDSTrajectory()
 			
 			if(SDDS_SetRowValues(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,k,
 						"Number",(double)(k),
-						"t",(double)(b[i].TrajTime(k)),
-						"x",(double)((b[i].TrajPoint(k)).x),
-						"y",(double)((b[i].TrajPoint(k)).y),
-						"z",(double)((b[i].TrajPoint(k)).z),
-						"px",(double)((b[i].TrajMomentum(k)).x),
-						"py",(double)((b[i].TrajMomentum(k)).y),
-						"pz",(double)((b[i].TrajMomentum(k)).z),
-						"Ax",(double)((b[i].TrajAccel(k)).x),
-						"Ay",(double)((b[i].TrajAccel(k)).y),
-						"Az",(double)((b[i].TrajAccel(k)).z),
+						"t",(double)(b[i]->TrajTime(k)),
+						"x",(double)((b[i]->TrajPoint(k)).x),
+						"y",(double)((b[i]->TrajPoint(k)).y),
+						"z",(double)((b[i]->TrajPoint(k)).z),
+						"px",(double)((b[i]->TrajMomentum(k)).x),
+						"py",(double)((b[i]->TrajMomentum(k)).y),
+						"pz",(double)((b[i]->TrajMomentum(k)).z),
+						"Ax",(double)((b[i]->TrajAccel(k)).x),
+						"Ay",(double)((b[i]->TrajAccel(k)).y),
+						"Az",(double)((b[i]->TrajAccel(k)).z),
 						NULL)!=1
 			  )
 
@@ -397,9 +404,7 @@ int
 	SDDS_DATASET data;
 	char buffer[100];
 	int Initialize = SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,"time-trajectory.sdds");
-	double charge,mass,nots,nop;
-	charge=(double)Charge;
-	mass = (double)Mass;
+	double nots,nop;
 	nots =(double)NOTS;
 	nop =(double)NOP;
 	if(Initialize!=1)
@@ -475,9 +480,9 @@ int
 			SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,
 			"NumberOfParticles",nop,
 			"TotalTime",TotalTime,
-			"BunchTotalCharge",Qtot,
-			"BunchTotalMass",Mtot,
-			"Time",(double)(b[0].TrajTime(i)),
+			"BunchTotalCharge",Charge,
+			"BunchTotalMass",Mass,
+			"Time",(double)(b[0]->TrajTime(i)),
 			 NULL)!=1)
 			{
 				fprintf(stdout,"error in defining parameter\n");
@@ -490,15 +495,15 @@ int
 			
 			if(SDDS_SetRowValues(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,k,
 						"Number",(double)(k),
-						"x",(double)((b[k].TrajPoint(i)).x),
-						"y",(double)((b[k].TrajPoint(i)).y),
-						"z",(double)((b[k].TrajPoint(i)).z),
-						"px",(double)((b[k].TrajMomentum(i)).x),
-						"py",(double)((b[k].TrajMomentum(i)).y),
-						"pz",(double)((b[k].TrajMomentum(i)).z),
-						"Ax",(double)((b[k].TrajAccel(i)).x),
-						"Ay",(double)((b[k].TrajAccel(i)).y),
-						"Az",(double)((b[k].TrajAccel(i)).z),
+						"x",(double)((b[k]->TrajPoint(i)).x),
+						"y",(double)((b[k]->TrajPoint(i)).y),
+						"z",(double)((b[k]->TrajPoint(i)).z),
+						"px",(double)((b[k]->TrajMomentum(i)).x),
+						"py",(double)((b[k]->TrajMomentum(i)).y),
+						"pz",(double)((b[k]->TrajMomentum(i)).z),
+						"Ax",(double)((b[k]->TrajAccel(i)).x),
+						"Ay",(double)((b[k]->TrajAccel(i)).y),
+						"Az",(double)((b[k]->TrajAccel(i)).z),
 						NULL)!=1)
 			{
 				fprintf(stdout,"error in writing columns\n");
@@ -524,7 +529,7 @@ int
 }
 
 
-void Bunch::LoadBeamProfile(const char *filename, const ChargedParticle *part)
+void Bunch::LoadBeamProfile(const char *filename)
 {
 
 	//Generate a stream to the Beam Profile file
@@ -536,7 +541,7 @@ void Bunch::LoadBeamProfile(const char *filename, const ChargedParticle *part)
 	//Check if file has correct number of rows and coumns
 	//if ok, then stream the values.
 	//else print error message and exit properly
-	if (FileCheck(file,NOP)==1)
+	if (FileCheck(file)==1)
 	{		
 		ifstream BeamProfile(filename);
 		printf("\033[7;31m Loading Beam Profile....\n\033[0m\n");
@@ -564,9 +569,9 @@ void Bunch::LoadBeamProfile(const char *filename, const ChargedParticle *part)
 }
 
 
-int Bunch::FileCheck(const char *filename, int NP)
+int Bunch::FileCheck(const char *filename)
 {
-	NOP=NP;
+	
 	ifstream InFile(filename);
 	ifstream InFile2(filename);
 	int rows,columns,tabs;

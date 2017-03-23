@@ -53,11 +53,11 @@ class ChargedParticle
 
     /*!
 
-	Default Constructor
+	Constructor
 
-	Create Single Particle with No Trajectory Details
+	Create Single Particle with charge, mass, initial position,momentum, time 
     */ 
-    ChargedParticle(int charge, int mass);
+    ChargedParticle(int charge, int mass, Vector X0, Vector P0, double t0);
 
 
     /*!
@@ -81,7 +81,7 @@ class ChargedParticle
 	Set the number of trajectory points the particle can have \n
 	Allocate memory for the time,position,momentum,acceleration vectors
     */
-    void init( int TrajLength, Vector X0, Vector P0, double T0);    
+    void init( int TrajLength);    
     
 
     /*!
@@ -149,9 +149,6 @@ class ChargedParticle
      void StepVay(
          int Nstep,            // number of timesteps
          double tstep,         // time step size
-         Vector X0,            // initial position
-         Vector P0,            // initial momentum
-	 double T0,
          Lattice *field );
 
     /*! 
@@ -214,14 +211,14 @@ class ChargedParticle
 
 	return the integer value of the Charge
     */
-    int getCharge();
+    int getCharge() const;
 
 
     /*!
 
 	get the particle's mass in terms of electron's mass
     */
-    int getMass();
+    int getMass() const;
 
  
     /*!
@@ -229,7 +226,7 @@ class ChargedParticle
 	Return the number of points in the track
 
     */
-     int GetNOTS();
+     int getNOTS() const;
    
 
     
@@ -250,5 +247,7 @@ class ChargedParticle
     int counter = 0;		// if counter = 0; then it initializes trajector for the particle
     double qm,t2,qmt2,t_h,gamma_h,gamma_i1;
     Vector x_h,p_h,beta_h, dp_dt,beta_i,p_i1,beta_i1;
+    Vector x0, p0;
+    double t0;
 };
 

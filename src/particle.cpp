@@ -27,44 +27,48 @@
 
 ChargedParticle::ChargedParticle()
 {
-  Charge = -1;
-  Mass = 1;
-  Time = 0;
-  X = 0;
-  P = 0;
-  A = 0;
+	Charge = -1;
+	Mass = 1;
+	Time = 0;
+  	X = 0;
+  	P = 0;
+  	A = 0;
 
 }
-ChargedParticle::ChargedParticle(int charge , int mass)
+
+
+ChargedParticle::ChargedParticle(int charge, int mass, Vector X0, Vector P0, double T0)
 {
-  // no trajectory points - by default 
-  // no memory allocated, all pointers are zero
-  Charge = charge;
-  Mass = mass;
-  Time = 0;
-  X = 0;
-  P = 0;
-  A = 0;
-}
+	Charge = charge;
+	Mass = mass;
+	x0 = X0;
+	p0 = P0;
+	t0 = T0;
+	X  = 0;
+	P  = 0;
+	Time = 0;
+	A = 0;
 
+
+}
 ChargedParticle::ChargedParticle(const ChargedParticle *Part)
 {
-  Charge = Part->Charge;
-  Mass = Part->Mass;
-  NOTS = Part->NOTS;
-  if (NOTS > 0)
-    {
-      Time = new double[NOTS];
-      X = new Vector[NOTS];
-      P = new Vector[NOTS];
-      A = new Vector[NOTS];
-      for (int i=0; i<NOTS; i++)
-        {
-          Time[i] = Part->Time[i];
-          X[i] = Part->X[i];
-          P[i] = Part->P[i];
-          A[i] = Part->A[i];
-        };
+  	Charge = Part->Charge;
+  	Mass = Part->Mass;
+  	NOTS = Part->NOTS;
+  	if (NOTS > 0)
+    	{
+     	 	Time = new double[NOTS];
+      		X = new Vector[NOTS];
+      		P = new Vector[NOTS];
+      		A = new Vector[NOTS];
+      		for (int i=0; i<NOTS; i++)
+        	{
+          		Time[i] = Part->Time[i];
+         		X[i] = Part->X[i];
+         		P[i] = Part->P[i];
+          		A[i] = Part->A[i];
+        	};
     } else {
       Time = 0;
       X = 0;
@@ -81,7 +85,7 @@ ChargedParticle::~ChargedParticle()
   if (A!=0) delete[] A;
 }
 
-void ChargedParticle :: init( int TrajLength, Vector X0, Vector P0, double T0)
+void ChargedParticle :: init( int TrajLength)
 {
 			
 	NOTS = TrajLength+1;		// set the number of time steps equal to trajectory length
@@ -106,9 +110,9 @@ void ChargedParticle :: init( int TrajLength, Vector X0, Vector P0, double T0)
 	}
 	Time = new double[NOTS];
 
-	X[0] = X0;
-	P[0] = P0;
-	Time[0] = T0;
+	X[0] = x0;
+	P[0] = p0;
+	Time[0] = t0;
 	
 }
 
@@ -295,14 +299,11 @@ void ChargedParticle::TrackVay(
 void ChargedParticle::StepVay(
          int Nstep,            // number of timesteps
          double tstep,         // time step size
-         Vector X0,            // initial position
-         Vector P0,            // initial momentum
-	 double T0,
          Lattice *field )
 {
   if (counter == 0)
   {
-	  init(Nstep,X0, P0, T0);
+	  init(Nstep);
 	  
 	  qm = Charge*InvRestMass/Mass;		// charge over mass
 	  t2 = 0.5 * tstep;              	// half time step
@@ -460,18 +461,18 @@ Vector ChargedParticle::TrajMomentum(int  i)
 {
 	return P[i];
 }
-int ChargedParticle::GetNOTS()
+int ChargedParticle::getNOTS() const
 {
   return NOTS;
 }
 
 
-int ChargedParticle::getCharge()
+int ChargedParticle::getCharge() const
 {
   return Charge;
 }
 
-int ChargedParticle::getMass()
+int ChargedParticle::getMass() const
 {
   return Mass;
 }
