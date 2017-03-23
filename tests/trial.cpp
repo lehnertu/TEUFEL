@@ -14,10 +14,10 @@ int main()
 {
   std::ofstream Out("test.txt", std::ofstream::out);
   std::ofstream Out1("test1.txt", std::ofstream::out);
-  //const char *filename= "TEUFEL-EXAMPLE.txt";
-  const char *filename= "BeamProfile.txt";
+  const char *filename= "TEUFEL-EXAMPLE.txt";
+  //const char *filename= "BeamProfile.txt";
   Bunch *BB;
-  int NOP=10;
+  int NOP=999;
   int NOTS=1700;
   double dt=3.2692307692307693e-12;
   //BB=new Bunch();
@@ -28,6 +28,7 @@ int main()
   Undulator *undu =new Undulator(0.3653,0.045,34);
   Lattice *field =new Lattice();
   field->addElement(undu);
+  cout<<"beginning tracking of particles"<<endl;
   BB->Track_Vay(NOTS,dt,field);
   int FT=pow(2,16);
   tuple<Vector,Vector> Field[FT];
