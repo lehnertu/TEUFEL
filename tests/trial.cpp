@@ -14,10 +14,10 @@ int main()
 {
   std::ofstream Out("test.txt", std::ofstream::out);
   std::ofstream Out1("test1.txt", std::ofstream::out);
-  //const char *filename= "TEUFEL-EXAMPLE.txt";
-  const char *filename= "BeamProfile.txt";
+  const char *filename= "TEUFEL-EXAMPLE.txt";
+  //const char *filename= "BeamProfile.txt";
   Bunch *BB;
-  int NOP=10;
+  int NOP=999;
   int NOTS=1700;
   double dt=3.2692307692307693e-12;
   //BB=new Bunch();
@@ -29,10 +29,10 @@ int main()
   Lattice *field =new Lattice();
   field->addElement(undu);
   BB->Track_Vay(NOTS,dt,field);
-  int FT=pow(2,16);
+  int FT=pow(2,14);
   tuple<Vector,Vector> Field[FT];
-  double time_begin=1.33e-8;
-  double time_end=1.35e-8;
+  double time_begin=1.331e-8;
+  double time_end=1.341e-8;
   Vector Robs=Vector(0.0,0.0,4.0);
   double dt1 =(time_end-time_begin)/(double)FT;
   tuple<Vector,Vector> Field1[FT];
@@ -56,42 +56,19 @@ int main()
   cout<<"Now trying to copy a bunch"<<endl;
   Bunch *BB2= new Bunch(BB);
   BB2->MirrorY(0.012);
-  /*for (int i=0;i<BB2->getNOP();i++)
-	{
-
-		BB2->b[i]->MirrorY(0.012);
-	}*/
- 
-#pragma omp parallel for shared(time_begin, dt1, Robs) 
-  for (int i=0;i<FT;i++)
-	{	
-		
-		//Field[i]=BB->RadiationField(Robs,time_begin+i*dt1);
-		Field1[i]=BB2->RadiationField(Robs,time_begin+i*dt1);
-	}
-
-  
-  for (int i=0;i<FT;i++)
-	{
-		Vector E=get<0>(Field1[i]);//+get<0>(Field[i]);
-		Vector B=get<1>(Field1[i]);//+get<1>(Field[i]);
-		Vector Poynting1=cross(E,B);		
-		Out<<time_begin+i*dt1<<"\t"<<E.x<<"\t"<<Poynting1.z<<"\n";
-	}
-  
 #pragma omp parallel for 
   for (int i=0;i<Grid.GetGridSize();i++)
 	{	
-		Grid1[i]=BB->RadiationField(Grid.GetGridPoints(i),1.43464e-8);
+		Grid1[i]=BB->RadiationField(Grid.GetGridPoints(i),1.335428478e-8);
 	}
   for (int i=0;i<Grid.GetGridSize();i++)
 	{
 		Vector E=get<0>(Grid1[i]);
-		Vector B=get<1>(Grid1[i]);
+		Vector B=get<1>(Grid1[i])/MuNull;
 		Vector Poynting = cross(E,B);
 		Vector XP=Grid.GetGridPoints(i);
 		double Power=dot(Poynting,Ar);		
-		Out1<<XP.x<<"\t"<<XP.y<<"\t"<<XP.z<<"\t"<<Power<<"\n";
+		Out1<<XP.x<<"\t"<<XP.y<<"\t"<<XP.z<<"\t"<<Poynting.norm()<<"\n";
 	}
 
   BB->JoinBunch(BB2);
@@ -101,5 +78,7 @@ int main()
   cout<<"Write Trajectory return value: "<<output<<endl;
   int output2= BB->WriteSDDSTime();
   cout<<"Write Time-Trajectory return value: "<<output2<<endl;	
+  int output3 = BB->WriteSDDSRadiation(Robs, time_begin, time_end, FT);
+  cout<<"Write Radiation return value: "<<output2<<endl;	
   return 0;
 }

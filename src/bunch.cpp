@@ -120,14 +120,14 @@ int Bunch:: getNOTS()
 
 
 
-double Bunch:: getCharge()
+double Bunch:: getTotalCharge()
 {
 	return Charge;
 }
 
 
 
-double Bunch:: getMass()
+double Bunch:: getTotalMass()
 {
 	return Mass;
 }
@@ -207,14 +207,14 @@ tuple<Vector,Vector> Bunch::RadiationField(Vector Robs, double t)
 	Bx=0.0;
 	By=0.0;
 	Bz=0.0;
-//#pragma omp parallel for reduction(+:Ex,Ey,Ez)
+#pragma omp parallel for reduction(+:Ex,Ey,Ez)
 	for(int i=0;i<NOP;i++)
 	{
 		Ex+=get<0>(FF[i]).x;
 		Ey+=get<0>(FF[i]).y;
 		Ez+=get<0>(FF[i]).z;
 	}
-//#pragma omp parallel for reduction(+:Bx,By,Bz)
+#pragma omp parallel for reduction(+:Bx,By,Bz)
 	for(int i=0;i<NOP;i++)
 	{
 		Bx+=get<1>(FF[i]).x;
@@ -528,7 +528,140 @@ int
 	return 0;
 }
 
+int Bunch::WriteSDDSRadiation(Vector Robs, double time_begin, double time_end, int NumberOfPoints )
+{
+	double dt = (time_end-time_begin)/(double)NumberOfPoints;
+	tuple<Vector,Vector>Field[NumberOfPoints];
+#pragma omp parallel for shared(time_begin, dt, Robs) 
+	for (int i=0;i<NumberOfPoints;i++)
+	{
+		Field[i] = RadiationField(Robs,time_begin+i*dt);
 
+	}
+	SDDS_DATASET data;
+	char buffer[100];
+	int Initialize = SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,"radiation.sdds");
+	double nots,nop;
+	nots =(double)NOTS;
+	nop =(double)NOP;
+	if(Initialize!=1)
+	{
+			cout<<"Error Initializing Output\n";
+			return 1;
+	}
+	else
+	{
+			cout<<"output initialized\n";
+	}
+
+	if(
+			SDDS_DefineSimpleParameter(&data,"NumberOfParticles",NULL, SDDS_DOUBLE)!=1 || 
+			SDDS_DefineSimpleParameter(&data,"TimeWindow","s", SDDS_DOUBLE)!=1 || 
+			SDDS_DefineSimpleParameter(&data,"BunchTotalCharge","C", SDDS_DOUBLE)!=1 ||
+			SDDS_DefineSimpleParameter(&data,"BunchTotalMass","kg", SDDS_DOUBLE)!=1
+	  )
+	{
+			cout<<"error in defining parameters\n";
+			return 2;;
+	}
+	else
+	{
+			cout<<"parameters defined \n";
+	}
+	
+	if(
+			SDDS_DefineColumn(&data,"Number\0","No\0",NULL,"RowNumber\0",NULL, SDDS_DOUBLE,0) ==-1 ||
+ 			SDDS_DefineColumn(&data,"t\0","t\0","s\0","TimeInSeconds\0",NULL, SDDS_DOUBLE,0)   ==-1 || 
+			SDDS_DefineColumn(&data,"Ex\0","Ex\0","V/m\0","ElectricFieldInX\0",NULL, SDDS_DOUBLE,0) == -1 ||
+			SDDS_DefineColumn(&data,"Ey\0","Ey\0","V/m\0","ElectricFieldInY\0",NULL, SDDS_DOUBLE,0) == -1 ||
+			SDDS_DefineColumn(&data,"Ez\0","Ez\0","V/m\0","ElectricFieldInZ\0",NULL, SDDS_DOUBLE,0) == -1 || 
+			SDDS_DefineColumn(&data,"Bx\0","Bx\0","Tesla\0","MagneticFieldInX\0",NULL, SDDS_DOUBLE,0)== -1 || 
+			SDDS_DefineColumn(&data,"By\0","By\0","Tesla\0","MagneticFieldInY\0",NULL,SDDS_DOUBLE,0) == -1 ||
+			SDDS_DefineColumn(&data,"Bz\0","Bz\0","Tesla\0","MagneticFieldInZ\0",NULL,SDDS_DOUBLE,0)==-1   ||
+			SDDS_DefineColumn(&data,"PoyntingVector\0","|S|\0","dp/da\0","MagnitudeOfPoyntingVector\0",NULL,SDDS_DOUBLE,0) == -1
+	  )
+	{
+			cout<<"error in defining columns\n";
+			return 3;
+	}
+	else
+	{
+			cout<<"Columns defined \n";	
+	}
+
+	if (SDDS_WriteLayout(&data)!=1)
+	{
+			cout<<"error in writing layout\n";
+			return 4;
+	}
+	else{
+			cout<<"layout written \n";
+	}
+
+
+	if (SDDS_StartPage(&data,(int32_t)NumberOfPoints)!=1)
+	{
+		cout<<"error in starting page\n";
+		return 5;
+	}
+
+
+	for (int32_t i = 0;i<(int32_t)NumberOfPoints;i++)
+	{
+
+		Vector E = get<0>(Field[i]);
+		Vector B = get<1>(Field[i]);
+		Vector Poynting = cross(E,B);
+		
+
+
+		if (
+			SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,
+			"NumberOfParticles",nop,
+			"TimeWindow",time_end-time_begin,
+			"BunchTotalCharge",Charge,
+			"BunchTotalMass",Mass,
+			 NULL)!=1
+		   )
+
+			{
+				cout<<"error in defining parameter\n";
+				return 6;
+			}
+			
+		if(SDDS_SetRowValues(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,i,
+			"Number",(double)(i),
+			"t",(double)(time_begin+i*dt),
+			"Ex",(double)(E.x),
+			"Ey",(double)(E.y),
+			"Ez",(double)(E.z),
+			"Bx",(double)(B.x),
+			"By",(double)(B.y),
+			"Bz",(double)(B.z),
+			"PoyntingVector",(double)(Poynting.norm()),
+			NULL)!=1
+			)
+
+			{
+				cout<<"error in writing columns\n";
+				return 7;
+			}
+	}
+
+	if(SDDS_WritePage(&data)!=1)	
+	{
+		cout<<"error in writing page\n";
+		return 8;
+	}
+	
+	if (SDDS_Terminate(&data)!=1)
+	{
+		cout<<"error terminating data\n";
+		return 9;
+	}	
+
+	return 0;
+}
 void Bunch::LoadBeamProfile(const char *filename)
 {
 

@@ -113,7 +113,7 @@ class Bunch
 	get total charge of the bunch 
 	
 	*/
-	double getCharge();
+	double getTotalCharge();
 
 
 	/*
@@ -121,7 +121,7 @@ class Bunch
 	get total mass of the bunch of particles 
 
 	*/
-	double getMass();
+	double getTotalMass();
 
 
 	/*!
@@ -205,6 +205,36 @@ class Bunch
 	*/
     	int WriteSDDSTime();
 
+	
+	/*!
+
+	 write SDDS file to output file named "radiation.sdds
+
+	 writes data for every time step in different page
+
+	 Arguments have the following meaning:\n
+	 Vector Robs -> Observation Point of the Radiation\n
+	 time_begin  -> starting point or expected arrival time of the signal\n
+	 time_end    -> expected time at which the last wavefront would leave\n
+	 NumberOfPoints -> Total Number of Sample Points for the radiation\n	
+
+	 use sddsquery trajectory.sdds to view the format of dataset
+	 
+	 routine returns values with following meaning:
+	 
+	0  ->  Successfully Written the file \n
+	1  ->  Error in Initializing the Output dataset \n
+	2  ->  Error in Defining the parameters \n
+	3  ->  Error in Defining Columns describing the data to be followed \n
+	4  ->  Error in Writing the layout of the data structure in the sdds file \n
+	5  ->  Error in Starting a New Page of the file  \n
+	5  ->  Error in setting the values of the parameters \n
+	6  ->  Error in setting the row values i.e. the data belonging to column \n
+	7  ->  Error in Writing the page that was successfully initialized \n
+	8  ->  Error in Terminating the data flow to the sdds file \n
+
+	*/
+	int WriteSDDSRadiation(Vector Robs, double time_begin, double time_end, int NumberOfPoints );
 	/*! 
 
 	  Create Mirror particles and create a bunch of mirror particles
