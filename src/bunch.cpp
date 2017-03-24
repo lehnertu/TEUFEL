@@ -67,10 +67,10 @@ Bunch::Bunch(Bunch *bunch)
 	Mass = bunch->Mass;
 	for(int i=0;i<NOP;i++)
 	{
-		ChargedParticle *copy_particle = new ChargedParticle();
-		*copy_particle = bunch->b.at(i);
-		memcpy(&copy_particle, &bunch->b[i], sizeof(bunch->b[i]));
-		b.push_back(new ChargedParticle(copy_particle));
+		//ChargedParticle *copy_particle = new ChargedParticle();
+		//*copy_particle = bunch->b.at(i);
+		//memcpy(&copy_particle, &bunch->b[i], sizeof(bunch->b[i]));
+		b.push_back(new ChargedParticle(bunch->b[i]));
 		
 	}
 }
