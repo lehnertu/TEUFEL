@@ -28,7 +28,6 @@ int main()
   Undulator *undu =new Undulator(0.3653,0.045,34);
   Lattice *field =new Lattice();
   field->addElement(undu);
-  cout<<"beginning tracking of particles"<<endl;
   BB->Track_Vay(NOTS,dt,field);
   int FT=pow(2,14);
   tuple<Vector,Vector> Field[FT];

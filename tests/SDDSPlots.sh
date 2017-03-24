@@ -4,3 +4,4 @@
 sddsenvelope trajectory.sdds traj.env -copy=z -mean=x,y,z,px,py,pz,Ax,Ay,Az -standarddeviation=x,y,z,px,py,pz
 sddsplot -columnNames=z,'(x,y)' -split=page -separate -graphic=dot,vary -legend time-trajectory.sdds
 sddsplot -columnNames=z,'(xMean,yMean,zMean,pxMean,pyMean,pzMean,xStDev,yStDev,zStDev,pxStDev,pyStDev,pzStDev)' -separate -graphic=line,vary -legend traj.env
+sddsplot -columnNames=t,'(Ex,Ey,Ez,Bx,By,Bz)' -separate -graphic=line,vary -legend  radiation.sdds
