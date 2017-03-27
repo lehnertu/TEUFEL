@@ -700,9 +700,6 @@ void Bunch::LoadBeamProfile(const char *filename)
 	//Generate a stream to the Beam Profile file
 	ifstream BunchProfile;
 	file=filename;
-	InitialPosition=new Vector[NOP];
-	InitialMomentum=new Vector[NOP];
-	InitialTime = new double[NOP];
 	//Check if file has correct number of rows and coumns
 	//if ok, then stream the values.
 	//else print error message and exit properly
@@ -712,13 +709,20 @@ void Bunch::LoadBeamProfile(const char *filename)
 		printf("\033[7;31m Loading Beam Profile....\n\033[0m\n");
 		for(int i=0;i<NOP;i++)
 		{
-			BeamProfile>>InitialTime[i];
-			BeamProfile>>InitialPosition[i].x;
-			BeamProfile>>InitialPosition[i].y;
-			BeamProfile>>InitialPosition[i].z;
-			BeamProfile>>InitialMomentum[i].x;
-			BeamProfile>>InitialMomentum[i].y;
-			BeamProfile>>InitialMomentum[i].z;
+			double t;
+			Vector T0;
+			Vector X0;
+			Vector P0;
+			BeamProfile>>t;
+			BeamProfile>>X0.x;
+			BeamProfile>>X0.y;
+			BeamProfile>>X0.z;
+			BeamProfile>>P0.x;
+			BeamProfile>>P0.y;
+			BeamProfile>>P0.z;
+			InitialTime.push_back(t);
+			InitialPosition.push_back(X0);
+			InitialMomentum.push_back(P0);
 			
 			
 		}

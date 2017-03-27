@@ -280,9 +280,9 @@ class Bunch
 	int NOTS;
 
 	// get the initial conditions to be imposed while tracking the bunch of particles
-	Vector *InitialPosition;
-	double *InitialTime;
-	Vector *InitialMomentum;
+	vector<Vector>InitialPosition;
+	vector<double>InitialTime;
+	vector<Vector>InitialMomentum;
 	
   protected:
 	/*!

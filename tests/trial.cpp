@@ -14,10 +14,10 @@ int main()
 {
   std::ofstream Out("test.txt", std::ofstream::out);
   std::ofstream Out1("test1.txt", std::ofstream::out);
-  const char *filename= "TEUFEL-EXAMPLE.txt";
- // const char *filename= "BeamProfile.txt";
+  //const char *filename= "TEUFEL-EXAMPLE.txt";
+  const char *filename= "BeamProfile.txt";
   Bunch *BB;
-  int NOP=999;
+  int NOP=100000;
   int NOTS=1700;
   double dt=3.2692307692307693e-12;
   //BB=new Bunch();
@@ -25,10 +25,10 @@ int main()
   //ChargedParticle *e = new ChargedParticle(-12500,12500,Vector(0,0,0),Vector(0,0,16),0);
   //cout<<"Now trying to add particles to a bunch"<<endl;
   //BB->AddParticles(e);
-  Undulator *undu =new Undulator(0.3653,0.045,34);
+  Undulator *undu =new Undulator(0.1,0.045,34);
   Lattice *field =new Lattice();
   field->addElement(undu);
-  BB->Track_Vay(NOTS,dt,field,1);
+  BB->Track_Vay(NOTS,dt,field,0);
   int FT=pow(2,14);
   tuple<Vector,Vector> Field[FT];
   double time_begin=1.331e-8;
