@@ -25,6 +25,7 @@
 #include "particle.h"
 #include "vector.h"
 #include <tuple>
+#include <vector>
 using namespace std;
 
 
@@ -74,16 +75,32 @@ class Bunch
 	Create the copy of the bunch
 
 	*/
-	Bunch(const Bunch *bunch);
+	Bunch(Bunch *bunch);
 	
+	/*
+
+	 Destructor
+	*/
+	~Bunch();
+	/*!
+	 Add particles to a bunch of particles by providing a pointer to the particle and its intial trajectory details;
+	*/
+	void AddParticles(ChargedParticle *part);
+
 
 	/*!
 
+	Join a bunch to already existing bunch
+	*/
+	void JoinBunch(Bunch *bunch);
+
+
+	/*!
 	 get the number of particles;
 
 	*/
-	int getNOP();
-	
+	int getNOP();	
+
 
 	/*!
 
@@ -91,45 +108,42 @@ class Bunch
 	*/
 	int getNOTS();
 
-
-
 	/*!
 
-	charged particle containing all the particles and its information
-
-	*/
-	ChargedParticle *b;	
-
-	/*!
-
-	get total charge of the bunch in terms of electron's charge
+	get total charge of the bunch 
 	
 	*/
-	int getCharge();
+	double getTotalCharge();
 
 
 	/*
 
-	get total mass of the bunch of particles in terms of electron's mass
+	get total mass of the bunch of particles 
 
 	*/
-	int getMass();
+	double getTotalMass();
 
 
 	/*!
 
+	get a pointer to the particle in the bunch
+	*/
+	ChargedParticle* getParticle(int i);
+
+
+	/*
 	Track the bunch through lattice fields using the Euler algorithm 
 	interaction fields included
 	*/
-	void Track_Euler(int NOTS, double tstep, Lattice *field);
+	void Track_Euler(int NT, double tstep, Lattice *field);
 
 	/*!
 
-	Track the bunch through the laatice fields using the Vay Algorithm
+	Track the bunch through the lattice fields using the Vay Algorithm
 
-	To do: Track individual particles in particle routine
+	
 	*/
-	void Track_Vay(int NOTS, double tstep, Lattice *field);
+	void Track_Vay(int NT, double tstep, Lattice *field, int SpaceCharge=0);
 	
 
 
@@ -190,37 +204,67 @@ class Bunch
 
 	*/
     	int WriteSDDSTime();
+
+	
+	/*!
+
+	 write SDDS file to output file named "radiation.sdds
+
+	 writes data for every time step in different page
+
+	 Arguments have the following meaning:\n
+	 Vector Robs -> Observation Point of the Radiation\n
+	 time_begin  -> starting point or expected arrival time of the signal\n
+	 time_end    -> expected time at which the last wavefront would leave\n
+	 NumberOfPoints -> Total Number of Sample Points for the radiation\n	
+
+	 use sddsquery trajectory.sdds to view the format of dataset
+	 
+	 routine returns values with following meaning:
+	 
+	0  ->  Successfully Written the file \n
+	1  ->  Error in Initializing the Output dataset \n
+	2  ->  Error in Defining the parameters \n
+	3  ->  Error in Defining Columns describing the data to be followed \n
+	4  ->  Error in Writing the layout of the data structure in the sdds file \n
+	5  ->  Error in Starting a New Page of the file  \n
+	5  ->  Error in setting the values of the parameters \n
+	6  ->  Error in setting the row values i.e. the data belonging to column \n
+	7  ->  Error in Writing the page that was successfully initialized \n
+	8  ->  Error in Terminating the data flow to the sdds file \n
+
+	*/
+	int WriteSDDSRadiation(Vector Robs, double time_begin, double time_end, int NumberOfPoints );
+	/*! 
+
+	  Create Mirror particles and create a bunch of mirror particles
+	*/
+	void MirrorY(double Mirror);
   private:
+
 	//Number of Particles in the bunch
 	int NOP;
 	
-	//Charge of the particles in units of electron's charge							
-	int Charge;
+	//Total Charge of the particles 					
+	double Charge;
 
-	//Mass of the particles in units of electron mass								
-	int Mass;
+	//Total Mass of the particles 							
+	double Mass;
 
 	//filename of the distrubtion file							
 	const char *file;	
 
 	//read the beam profile file and set initial values						
-	void LoadBeamProfile(const char *filename,const ChargedParticle *part);
+	void LoadBeamProfile(const char *filename);
 
 	//check for file layout
-	int FileCheck(const char *filename, int NP);
+	int FileCheck(const char *filename);
 
 	//time step for trajectory integration
 	double TIMESTEP;
 
 	//total integration time for the routine
 	double TotalTime;
-
-	// Total Charge of the bunch
-	double Qtot;
-	
-	//Total Mass of the bunch
-	double Mtot;
-
 
 	//total interaction field seen by particle identified by ParticleID
 	//fields are calculated with Observation Point==ParticleID
@@ -233,10 +277,22 @@ class Bunch
 	void InitializeTrajectory(int NOTS);
 
 	//number of time steps every particle moves;
-	int NT;
+	int NOTS;
 
-	// to be used while initializing the bunch
-	void setNOP(int NP);
+	// get the initial conditions to be imposed while tracking the bunch of particles
+	vector<Vector>InitialPosition;
+	vector<double>InitialTime;
+	vector<Vector>InitialMomentum;
+	
+  protected:
+	/*!
+
+	charged particle containing all the particles and its information
+
+	*/
+	vector<ChargedParticle*> b;
+
+	ChargedParticle *p;	
 
 	
    

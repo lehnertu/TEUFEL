@@ -27,32 +27,48 @@
 
 ChargedParticle::ChargedParticle()
 {
-  // no trajectory points - by default 
-  // no memory allocated, all pointers are zero
-  Time = 0;
-  X = 0;
-  P = 0;
-  A = 0;
+	Charge = -1;
+	Mass = 1;
+	Time = 0;
+  	X = 0;
+  	P = 0;
+  	A = 0;
+
 }
 
+
+ChargedParticle::ChargedParticle(int charge, int mass, Vector X0, Vector P0, double T0)
+{
+	Charge = charge;
+	Mass = mass;
+	x0 = X0;
+	p0 = P0;
+	t0 = T0;
+	X  = 0;
+	P  = 0;
+	Time = 0;
+	A = 0;
+
+
+}
 ChargedParticle::ChargedParticle(const ChargedParticle *Part)
 {
-  Charge = Part->Charge;
-  Mass = Part->Mass;
-  NP = Part->NP;
-  if (NP>0)
-    {
-      Time = new double[NP];
-      X = new Vector[NP];
-      P = new Vector[NP];
-      A = new Vector[NP];
-      for (int i=0; i<NP; i++)
-        {
-          Time[i] = Part->Time[i];
-          X[i] = Part->X[i];
-          P[i] = Part->P[i];
-          A[i] = Part->A[i];
-        };
+  	Charge = Part->Charge;
+  	Mass = Part->Mass;
+  	NOTS = Part->NOTS;
+  	if (NOTS > 0)
+    	{
+     	 	Time = new double[NOTS];
+      		X = new Vector[NOTS];
+      		P = new Vector[NOTS];
+      		A = new Vector[NOTS];
+      		for (int i=0; i<NOTS; i++)
+        	{
+          		Time[i] = Part->Time[i];
+         		X[i] = Part->X[i];
+         		P[i] = Part->P[i];
+          		A[i] = Part->A[i];
+        	};
     } else {
       Time = 0;
       X = 0;
@@ -69,158 +85,35 @@ ChargedParticle::~ChargedParticle()
   if (A!=0) delete[] A;
 }
 
-int ChargedParticle::GetNP()
+void ChargedParticle :: init( int TrajLength)
 {
-  return NP;
-}
+			
+	NOTS = TrajLength+1;		// set the number of time steps equal to trajectory length
+	if(X!=0)
+	{
+		delete[] X;
+	}	
+	X = new Vector[NOTS];		// allocate memory to arrays containing trajectory information
+	if(P!=0)
+	{
+		delete[] P;
+	}
+	P = new Vector[NOTS];
+	if(A!=0)
+	{
+		delete[] A;
+	}
+	A = new Vector[NOTS];
+	if(Time!=0)
+	{
+		delete[] Time;
+	}
+	Time = new double[NOTS];
 
-void ChargedParticle::setCharge(int charge)
-{
-  Charge=charge;
-}
-
-int ChargedParticle::getCharge()
-{
-  return Charge;
-}
-
-void ChargedParticle::setTrajPoint(int stepnumber,Vector Position)
-{
-  
-  X[stepnumber]=Position;
-}
-
-void ChargedParticle::setTrajMomentum(int stepnumber,Vector Momentum)
-{
-  
-  P[stepnumber]=Momentum;
-}
-
-void ChargedParticle:: setTrajAcceleration(int stepnumber,Vector Accel)
-{
-  
-  A[stepnumber]=Accel;
-}
-
-void ChargedParticle:: setTrajTime(int stepnumber, double time)
-{
-  
-  Time[stepnumber]=time;
-}
-
-//set the number of trajectory points the particle can have
-//initialise the trajectory arrays
-void ChargedParticle::setNP(int NOTS)
-{
-  NP=NOTS;
-  X=new Vector[NP];
-  X[0]=X0;
-  P=new Vector[NP];
-  P[0]=P0;
-  A=new Vector[NP];
-  A[0] = A0;
-  Time=new double[NP];
-  Time[0]=T0;
-}
-
-
-void ChargedParticle::setMass(int mass)
-{
-  Mass=mass;
-}
-
-int ChargedParticle::getMass()
-{
-  return Mass;
-}
-
-void ChargedParticle::setParticleSize(double L)
-{
-   Radius=L;
-}
-
-double ChargedParticle::getParticleSize()
-{
-   return Radius;
-
-}
-
-void ChargedParticle::setParticleID(int ParticleID)
-{
-  ID=ParticleID;
-}
-
-int ChargedParticle::getParticleID()
-{
-  return ID;
-}
-void ChargedParticle::setInitialPosition(Vector InitialPosition)
-{
-  X0=InitialPosition;
-}
-
-Vector ChargedParticle::getInitialPosition()
-{
-  return X0;
-}
-void ChargedParticle::setInitialMomentum(Vector InitialMomentum)
-{
-  P0=InitialMomentum;
-}
-
-Vector ChargedParticle::getInitialMomentum()
-{
-  return P0;
-}
-
-void ChargedParticle::setInitialTime(double t)
-{
-  T0=t;
-}
-
-double ChargedParticle::getInitialTime()
-{
-  return T0;
-}
-
-
-
-double ChargedParticle::TrajTime(int step)
-{
-  double t = 0.0;
-  if (step>=0 && step<NP)
-    t = Time[step];
-  return t;
-}
-
-Vector ChargedParticle::TrajPoint(int step)
-{
-  Vector p = Vector(0.0, 0.0, 0.0);
-  if (step>=0 && step<NP)
-    p = X[step];
-  return p;
-}
-
-Vector ChargedParticle::TrajAcceleration(int step)
-{
-  Vector p = Vector(0.0, 0.0, 0.0);
-  if (step>=0 && step<NP)
-    p = A[step];
-  return p;
-}
-
-Vector ChargedParticle::TrajMomentum(int step)
-{
-  Vector p = Vector(0.0, 0.0, 0.0);
-  if (step>=0 && step<NP)
-    p = P[step];
-  return p;
-}
-
-void ChargedParticle::seeTime()
-{
-	cout<<Time[0]<<"\t"<<X[0].x<<"\t"<<X[0].y<<"\t"<<X[0].z<<"\t"<<endl;
-
+	X[0] = x0;
+	P[0] = p0;
+	Time[0] = t0;
+	
 }
 
 void ChargedParticle::TrackEuler(
@@ -230,20 +123,20 @@ void ChargedParticle::TrackEuler(
          Vector P0,            // initial momentum
          Lattice *field )
 {
-  NP = Nstep+1;
+  NOTS = Nstep+1;
   if (Time!=0) delete[] Time;
-  Time = new double[NP];
+  Time = new double[NOTS];
   if (X!=0) delete[] X;
-  X = new Vector[NP];
+  X = new Vector[NOTS];
   if (P!=0) delete[] P;
-  P = new Vector[NP];
+  P = new Vector[NOTS];
   if (A!=0) delete[] A;
-  A = new Vector[NP];
+  A = new Vector[NOTS];
   Time[0] = 0.0;
   X[0] = X0;
   P[0] = P0;
   double qm = Charge*InvRestMass/Mass;     // charge over mass
-  for (int i=0; i<NP-1; i++)
+  for (int i=0; i<NOTS-1; i++)
   {
     // compute derivatives of the particle motion
     // used to solve the equation of motion inside an undulator
@@ -251,8 +144,9 @@ void ChargedParticle::TrackEuler(
     double betagamma2 = p.abs2nd();
     double gamma = sqrt(betagamma2 + 1.0);
     Vector beta = p / gamma;
-    Vector efield = field->EField(Time[i], X[i]);
-    Vector bfield = field->BField(Time[i], X[i]);
+    tuple<Vector,Vector>Fields = field->Field(Time[i], X[i]);
+    Vector efield = get<0>(Fields);
+    Vector bfield = get<1>(Fields);
     Vector force = cross(beta, bfield) + efield/SpeedOfLight;
     Vector dX_dt = beta * SpeedOfLight;
     Vector dP_dt = force * qm;
@@ -272,15 +166,15 @@ void ChargedParticle::TrackLF(
          Vector P0,            // initial momentum
          Lattice *field )
 {
-  NP = Nstep+1;
+  NOTS = Nstep+1;
   if (Time!=0) delete[] Time;
-  Time = new double[NP];
+  Time = new double[NOTS];
   if (X!=0) delete[] X;
-  X = new Vector[NP];
+  X = new Vector[NOTS];
   if (P!=0) delete[] P;
-  P = new Vector[NP];
+  P = new Vector[NOTS];
   if (A!=0) delete[] A;
-  A = new Vector[NP];
+  A = new Vector[NOTS];
   // The algorithm defines velocities (momenta) at integer time steps
   // positions and field are computed at half-step points.
   // We store all quantities at the half-step points.
@@ -290,8 +184,9 @@ void ChargedParticle::TrackLF(
   Vector p_h = P0;              		// momentum at the half-step point
   double gamma_h = sqrt(p_h.abs2nd() + 1.0);
   Vector beta_h = p_h / gamma_h;
-  Vector E_h = field->EField(t_h, x_h);
-  Vector B_h = field->BField(t_h, x_h);
+  tuple<Vector,Vector>Fields = field->Field(t_h,x_h);
+  Vector E_h = get<0>(Fields);
+  Vector B_h = get<1>(Fields);
   Vector dp_dt = (cross(beta_h, B_h) + E_h/SpeedOfLight) * qm;
   A[0] = dp_dt;
   // The leap-frog algorithm starts one half-step "before" the initial values
@@ -300,15 +195,16 @@ void ChargedParticle::TrackLF(
   Vector p_i1 = p_h - dp_dt * 0.5 * tstep;
   double gamma_i1 = sqrt(p_i1.abs2nd() + 1.0);
   Vector beta_i1 = p_i1 / gamma_i1;
-  for (int i=0; i<NP; i++)
+  for (int i=0; i<NOTS; i++)
   {
     // velocity u^i at the integer time step i
     // has been computed in the last time step
     Vector p_i = p_i1;
     Vector beta_i = beta_i1;
     // compute the velocity change over the integer step
-    E_h = field->EField(t_h, x_h);
-    B_h = field->BField(t_h, x_h);
+    Fields = field->Field(t_h,x_h);
+    Vector E_h = get<0>(Fields);
+    Vector B_h = get<1>(Fields);
     // this is wrong, one should use beta at the half-step point which we don't know
     dp_dt = (cross(beta_i, B_h) + E_h/SpeedOfLight) * qm;
     p_i1 = p_i + dp_dt * tstep;
@@ -333,15 +229,15 @@ void ChargedParticle::TrackVay(
          Vector P0,            // initial momentum
          Lattice *field )
 {
-  NP = Nstep+1;
+  NOTS = Nstep+1;
   if (Time!=0) delete[] Time;
-  Time = new double[NP];
+  Time = new double[NOTS];
   if (X!=0) delete[] X;
-  X = new Vector[NP];
+  X = new Vector[NOTS];
   if (P!=0) delete[] P;
-  P = new Vector[NP];
+  P = new Vector[NOTS];
   if (A!=0) delete[] A;
-  A = new Vector[NP];
+  A = new Vector[NOTS];
   // The Vay algorithm defines velocities (momenta) at integer time steps
   // positions and field are computed at half-step points.
   // We store all quantities at the half-step points.
@@ -355,8 +251,9 @@ void ChargedParticle::TrackVay(
   Vector p_h = P0;              // momentum at the half-step point
   double gamma_h = sqrt(p_h.abs2nd() + 1.0);
   Vector beta_h = p_h / gamma_h;
-  Vector E_h = field->EField(t_h, x_h);
-  Vector B_h = field->BField(t_h, x_h);
+  tuple<Vector,Vector>Fields = field->Field(t_h,x_h);
+  Vector E_h = get<0>(Fields);
+  Vector B_h = get<1>(Fields);
   Vector dp_dt = (cross(beta_h, B_h) + E_h/SpeedOfLight) * qm;
   A[0] = dp_dt;
   // The leap-frog algorithm starts one half-step "before" the initial values
@@ -365,15 +262,16 @@ void ChargedParticle::TrackVay(
   Vector p_i1 = p_h - dp_dt * 0.5 * tstep;
   double gamma_i1 = sqrt(p_i1.abs2nd() + 1.0);
   Vector beta_i1 = p_i1 / gamma_i1;
-  for (int i=0; i<NP; i++)
+  for (int i=0; i<NOTS; i++)
   {
     // velocity u^i at the integer time step i
     // has been computed in the last time step
     Vector p_i = p_i1;
     Vector beta_i = beta_i1;
     // compute the velocity change over the integer step
-    E_h = field->EField(t_h, x_h);
-    B_h = field->BField(t_h, x_h);
+    Fields = field->Field(t_h,x_h);
+    Vector E_h = get<0>(Fields);
+    Vector B_h = get<1>(Fields);
     dp_dt = (cross(beta_i, B_h) + E_h/SpeedOfLight) * qm;
     p_h = p_i + dp_dt * t2;
     Vector p_prime = p_h + E_h/SpeedOfLight * qmt2;
@@ -386,7 +284,7 @@ void ChargedParticle::TrackVay(
     Vector t = tau / gamma_i1;
     p_i1 = (p_prime + t*dot(p_prime,t) + cross(p_prime,t))/(1+t.abs2nd());
     beta_i1 = p_i1 / gamma_i1;
-    // store all half-step quantities
+    // store all half-st ep quantities
     Time[i] = t_h;
     X[i] = x_h;
     P[i] = p_h;
@@ -398,28 +296,74 @@ void ChargedParticle::TrackVay(
   };
 }
 
-void ChargedParticle::Translate(Vector R)
+void ChargedParticle::StepVay(
+         double tstep,         // time step size
+         Lattice *field,	// calls for the lattice fields
+	 Vector EField,	// extra fields that can be superimposed over lattice fields--ex: ambient field
+	 Vector BField)	
 {
-  for (int i=0; i<NP; i++)
-    {
-      X[i] = X[i] + R;
-    };
-}
-
-void ChargedParticle::MirrorY(double MirrorY)
-{
-  Charge = - getCharge();
-  Mass = getMass();
-  for (int i=0; i<NP; i++)
-    {
-      X[i].y = 2.0*MirrorY - X[i].y;
-      P[i].y = -P[i].y;
-      A[i].y = -A[i].y;
-    };
+  if (counter == 0)
+  {	  
+	  qm = Charge*InvRestMass/Mass;		// charge over mass
+	  t2 = 0.5 * tstep;              	// half time step
+	  qmt2 = qm*t2;
+	  t_h = Time[0];            // time at the half-step point
+	  x_h = X[0];              // position at the half-step point
+	  p_h = P[0];              // momentum at the half-step point
+	  gamma_h = sqrt(p_h.abs2nd() + 1.0);
+	  beta_h = p_h / gamma_h;
+	  tuple<Vector,Vector>Fields = field->Field(t_h,x_h);
+          Vector E_h = get<0>(Fields)+EField;
+          Vector B_h = get<1>(Fields)+BField;
+	  Vector dp_dt = (cross(beta_h, B_h) + E_h/SpeedOfLight) * qm;
+	  A[0] = dp_dt;
+	  // The leap-frog algorithm starts one half-step "before" the initial values
+	  // velocity p^(i+1) to be computed at the integer time step i+1
+	  // we store this initial velocity in p_i1 which is copied into p_i when we actually do the time step
+	  p_i1 = p_h - dp_dt * 0.5 * tstep;
+	  gamma_i1 = sqrt(p_i1.abs2nd() + 1.0);
+	  beta_i1 = p_i1 / gamma_i1;
+	  counter += 1;
+  }
+    // velocity u^i at the integer time step i
+    // has been computed in the last time step
+    Vector p_i = p_i1;
+    Vector beta_i = beta_i1;
+    // compute the velocity change over the integer step
+    tuple<Vector,Vector>Fields = field->Field(t_h,x_h);
+    Vector E_h = get<0>(Fields);
+    Vector B_h = get<1>(Fields);
+    Vector dp_dt = (cross(beta_i, B_h) + E_h/SpeedOfLight) * qm;
+    p_h = p_i + dp_dt * t2;
+    Vector p_prime = p_h + E_h/SpeedOfLight * qmt2;
+    double gamma_prime = sqrt(p_prime.abs2nd() + 1.0);
+    Vector tau = B_h * qmt2;
+    double u_star = dot(p_prime,tau);
+    double tau2nd = tau.abs2nd();
+    double sigma = gamma_prime*gamma_prime - tau2nd;
+    gamma_i1 = sqrt(0.5*(sigma+sqrt(sigma*sigma+4.0*(tau2nd+u_star*u_star))));
+    Vector t = tau / gamma_i1;
+    p_i1 = (p_prime + t*dot(p_prime,t) + cross(p_prime,t))/(1+t.abs2nd());
+    beta_i1 = p_i1 / gamma_i1;
+    // store all half-step quantities
+    Time[counter] = t_h;
+    X[counter] = x_h;
+    P[counter] = p_h;
+    A[counter] = dp_dt;
+    // compute the change in position and time
+    // for the next step
+    x_h += beta_i1*SpeedOfLight*tstep;
+    t_h += tstep;
+    counter+=1;
 }
 
 tuple<Vector,Vector> ChargedParticle::RetardedEField(double time, Vector ObservationPoint)
 {
+  if(counter!=0)
+  {
+	NOTS=counter;
+  }
+
   Vector EField = Vector(0.0, 0.0, 0.0);
   Vector BField = Vector(0.0,0.0,0.0);
   double scale=(Charge*ElementaryCharge/(4.0*Pi*EpsNull));
@@ -428,7 +372,7 @@ tuple<Vector,Vector> ChargedParticle::RetardedEField(double time, Vector Observa
   double R = RVec.norm();
   double t1 = Time[i1] + R / SpeedOfLight;      // retarded observation time
 
-  int i2 = NP-1;                                // index of the last trajectory point
+  int i2 = NOTS-1;                                // index of the last trajectory point
   RVec = ObservationPoint - X[i2];
   R = RVec.norm();
   double t2 = Time[i2] + R / SpeedOfLight;      // retarded observation time
@@ -479,112 +423,74 @@ tuple<Vector,Vector> ChargedParticle::RetardedEField(double time, Vector Observa
     EField=EField*scale;
     BField =cross(N/SpeedOfLight,EField);
   } 
-  return make_tuple(EField,BField);
-}
-
-
-
-//find the radiation field
-// because of particle identified by ParticleID1 --source
-// on Particle identified by ParticleID2 --observer
-//Particle1D1 != ParticleID2
-//stepnumber is the iteration step number --to identify the last known trajectory point
-//time is the lab time or iteration time 
-//Observation Point is the position of the particle identified by ParticleID2
-
-tuple<Vector,Vector> ChargedParticle::InteractionField(int ParticleID2,int stepnumber,double time, Vector ObservationPoint)
-{
-
-  Vector EField = Vector(0.0, 0.0, 0.0);
-  Vector BField = Vector(0.0,0.0,0.0);
-  int ParticleID1 = getParticleID();
-  double scale=(Charge*ElementaryCharge/(4.0*Pi*EpsNull)); 
-  if(ParticleID1 != ParticleID2)
+  
+  else
   {
-	  
-	  
-	  int i1 = 0;                                   // index of the first trajectory point
-	  Vector RVec = ObservationPoint - X[i1];
-	  double R = RVec.norm();
-	  double t1 = Time[i1] + R / SpeedOfLight;      // retarded observation time
-
-	  int i2 = stepnumber;                                // index of the last known trajectory point
-	  RVec = ObservationPoint - X[i2];
-	  R = RVec.norm();
-	  double t2 = Time[i2] + R / SpeedOfLight;      // retarded observation time
-
-	  // the field is different from zero only if the observation
-	  // time is within the possible retarded time interval
-	  if ((time>=t1) && (time<=t2))
-	  {
-	    // reduce the interval until the trajectory segment is found
-	    while (i2-i1>1)
-	    {
-	      
-	      int i = (i2+i1)/2;
-	      RVec = ObservationPoint - X[i];
-	      R = RVec.norm();
-	      double t = Time[i] + R / SpeedOfLight;    // retarded observation time
-	      if (t < time)
-	      {
-		i1 = i;
-		t1 = t;
-	      }
-	      else
-	      {
-		i2 = i;
-		t2 = t;
-	      }
-	    }
-	    // interpolate the source point within the interval
-	    // interpolation could be improved using higher-order terms
-	    double frac = (time-t1)/(t2-t1);
-	    Vector SourceX = X[i1]*(1.0-frac) + X[i2]*frac;
-	    Vector SourceBeta = P[i1]*(1.0-frac) + P[i2]*frac;
-	    double betagamma2 = SourceBeta.abs2nd();
-	    double gamma = sqrt(betagamma2 + 1.0);
-	    SourceBeta/=gamma;
-	    Vector SourceBetaPrime = A[i1]*(1.0-frac) + A[i2]*frac;
-	    SourceBetaPrime/=gamma;
-	    // now compute the field emitted from an interpolated source point
-	    RVec = ObservationPoint - SourceX;
-	    R = RVec.norm();
-	    //check whether the particles are overlapping
-	    //if overlapping; set the distance between them
-	    //but it can also be set according to need
-	    if(R<Radius)
-	    {
-		cout<<"Warning: Particles Overlap\n";
-		R=2*Radius;
-	    }
-	    Vector N = RVec;
-	    N.normalize();
-	    double bn3rd = pow(1.0-dot(SourceBeta,N),3.0);
-	    // velocity term
-	    EField += (N-SourceBeta)/((R*R*bn3rd)*(gamma*gamma));
-	    // acceleration term
-	    EField += cross(N,cross(N-SourceBeta,SourceBetaPrime))/(R*bn3rd*SpeedOfLight);
-	    EField=EField*scale;
-	    BField =cross(N/SpeedOfLight,EField);
-	  }
-	  else
-	  {
-	    Vector RVec=ObservationPoint-X[stepnumber];
-	    if (RVec.norm()>Radius)
-	    {    
-	      EField=RVec/(pow(RVec.norm(),3.0));
-	      EField=EField*scale;
-	    }
-	    else
-	    {
-	      //cout<<"Warning: Particles Overlap\n";
-	      RVec.normalize();
-	      //separate the particles by a diameter
-	      EField=RVec/pow(2.0*Radius,2.0);
-	      EField=EField*scale;
-	     }
-	    
-	  }
+	Vector R = -ObservationPoint + TrajPoint(counter);
+	Vector UnitR = R/R.norm();
+	EField = UnitR*scale/(pow(R.norm(),2));
+	BField = Vector(0,0,0);
   }
   return make_tuple(EField,BField);
 }
+
+void ChargedParticle::Translate(Vector R)
+{
+  for (int i=0; i<NOTS; i++)
+    {
+      X[i] = X[i] + R;
+    };
+}
+
+
+void ChargedParticle::MirrorY(double MirrorY)
+{
+  Charge = - getCharge();
+  Mass = getMass();
+  for (int i=0; i<NOTS; i++)
+    {
+      X[i].y = 2.0*MirrorY - X[i].y;
+      P[i].y = -P[i].y;
+      A[i].y = -A[i].y;
+    };
+}
+
+double ChargedParticle::TrajTime(int i)
+{
+	return Time[i];
+}
+
+Vector ChargedParticle::TrajPoint(int i)
+{
+	return X[i];
+}
+
+
+Vector ChargedParticle::TrajAccel(int i)
+{
+	return A[i];
+}
+Vector ChargedParticle::TrajMomentum(int  i)
+{
+	return P[i];
+}
+int ChargedParticle::getNOTS() const
+{
+  return NOTS;
+}
+
+
+int ChargedParticle::getCharge() const
+{
+  return Charge;
+}
+
+int ChargedParticle::getMass() const
+{
+  return Mass;
+}
+
+
+
+
+

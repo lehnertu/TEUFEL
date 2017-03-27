@@ -28,8 +28,7 @@ OBJECTS_DIR   = ./obj
 
 ####### Files
 
-SRC = 	$(SRCDIR)/analysis.cpp \
-	$(SRCDIR)/bunch.cpp \
+SRC = 	$(SRCDIR)/bunch.cpp \
 	$(SRCDIR)/cavity.cpp \
 	$(SRCDIR)/externalfield.cpp \
 	$(SRCDIR)/gen_grid.cpp \
@@ -41,8 +40,7 @@ SRC = 	$(SRCDIR)/analysis.cpp \
 	$(SRCDIR)/vector.cpp \
 	$(SRCDIR)/wave.cpp
 
-OBJ =	$(OBJDIR)/analysis.o \
-	$(OBJDIR)/bunch.o \
+OBJ =	$(OBJDIR)/bunch.o \
 	$(OBJDIR)/cavity.o \
 	$(OBJDIR)/externalfield.o \
 	$(OBJDIR)/gen_grid.o \
@@ -61,7 +59,8 @@ TESTS = $(TESTDIR)/teufel.EcrossB \
 	$(TESTDIR)/teufel.magnet \
 	$(TESTDIR)/teufel.undulator \
 	$(TESTDIR)/teufel.radiation \
-	$(TESTDIR)/trial
+	$(TESTDIR)/trial \
+	$(TESTDIR)/try
 	
 
 ####### Implicit rules
@@ -89,8 +88,7 @@ all: $(TARGET) tests docs
 $(TARGET):  $(OBJ)  $(TARGETOBJ)  
 	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJ) $(TARGETOBJ) $(LIBS)
 
-$(OBJ): $(SRCDIR)/analysis.h \
-	$(SRCDIR)/global.h \
+$(OBJ): $(SRCDIR)/global.h \
 	$(SRCDIR)/bunch.h \
 	$(SRCDIR)/cavity.h \
 	$(SRCDIR)/externalfield.h \
@@ -108,6 +106,7 @@ tests: $(OBJ)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.undulator $(TESTDIR)/teufel.undulator.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.radiation $(TESTDIR)/teufel.radiation.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/trial $(TESTDIR)/trial.cpp $(LFLAGS) $(OBJ) $(LIBS)
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/try $(TESTDIR)/try.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	
 
 docs:
