@@ -106,6 +106,7 @@ void Bunch::JoinBunch(Bunch *bunch)
 	}
 
 }
+
 int Bunch::getNOP()
 {
 	return NOP;
@@ -230,21 +231,17 @@ tuple<Vector,Vector> Bunch::RadiationField(Vector Robs, double t)
 
 void Bunch::Track_Vay(int NT, double tstep, Lattice *field, int SpaceCharge)
 {
-	
 	NOTS = NT;
 	TIMESTEP=tstep;
 	TotalTime = tstep*NOTS;
 	tuple<Vector,Vector> F[NOP];
 	double start=omp_get_wtime();
-
-
+	
 #pragma omp parallel for 
 	for (int i=0;i<NOP;i++)
 	{
-		b[i]->init(NT);		
+		b[i]->init(NOTS);		
 	}
-
-	
 	if(SpaceCharge==0)
 	{
 		for (int i=0;i<NOTS;i++)
@@ -260,12 +257,19 @@ void Bunch::Track_Vay(int NT, double tstep, Lattice *field, int SpaceCharge)
 	{
 		for (int i=0;i<NOTS;i++)
 		{
+			
+			tuple<Vector,Vector> InteractionField[NOP];
+#pragma omp parallel for shared(InteractionField, i) 
+			for (int l=0;l<NOP;l++)
+			{
+				double time = b[l]->TrajTime(0) + i* tstep;
+				InteractionField[l]= MutualField(i, l, time );
+			}
 #pragma parallel for 
 			for (int k=0;k<NOP;k++)
 			{	
-				double time = InitialTime[k] + i* tstep;
-				tuple<Vector,Vector> InteractionField = MutualField(i, k, time );
-				b[k]->StepVay(tstep,field, get<0>(InteractionField),get<1>(InteractionField));
+				
+				b[k]->StepVay(tstep,field, get<0>(InteractionField[k]),get<1>(InteractionField[k]));
 			}
 
 			/*tuple<Vector,Vector>a = field->Field(b[100]->TrajTime(i), b[100]->TrajPoint(i));
