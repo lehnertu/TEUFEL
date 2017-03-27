@@ -139,11 +139,11 @@ class Bunch
 
 	/*!
 
-	Track the bunch through the laatice fields using the Vay Algorithm
+	Track the bunch through the lattice fields using the Vay Algorithm
 
-	To do: Track individual particles in particle routine
+	
 	*/
-	void Track_Vay(int NT, double tstep, Lattice *field);
+	void Track_Vay(int NT, double tstep, Lattice *field, int SpaceCharge=0);
 	
 
 

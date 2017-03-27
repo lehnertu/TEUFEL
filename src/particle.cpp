@@ -297,25 +297,24 @@ void ChargedParticle::TrackVay(
 }
 
 void ChargedParticle::StepVay(
-         int Nstep,            // number of timesteps
          double tstep,         // time step size
-         Lattice *field )
+         Lattice *field,	// calls for the lattice fields
+	 Vector EField,	// extra fields that can be superimposed over lattice fields--ex: ambient field
+	 Vector BField)	
 {
   if (counter == 0)
-  {
-	  init(Nstep);
-	  
+  {	  
 	  qm = Charge*InvRestMass/Mass;		// charge over mass
 	  t2 = 0.5 * tstep;              	// half time step
 	  qmt2 = qm*t2;
-	  t_h = Time[0];             // time at the half-step point
+	  t_h = Time[0];            // time at the half-step point
 	  x_h = X[0];              // position at the half-step point
 	  p_h = P[0];              // momentum at the half-step point
 	  gamma_h = sqrt(p_h.abs2nd() + 1.0);
 	  beta_h = p_h / gamma_h;
 	  tuple<Vector,Vector>Fields = field->Field(t_h,x_h);
-          Vector E_h = get<0>(Fields);
-          Vector B_h = get<1>(Fields);
+          Vector E_h = get<0>(Fields)+EField;
+          Vector B_h = get<1>(Fields)+BField;
 	  Vector dp_dt = (cross(beta_h, B_h) + E_h/SpeedOfLight) * qm;
 	  A[0] = dp_dt;
 	  // The leap-frog algorithm starts one half-step "before" the initial values
@@ -360,6 +359,11 @@ void ChargedParticle::StepVay(
 
 tuple<Vector,Vector> ChargedParticle::RetardedEField(double time, Vector ObservationPoint)
 {
+  if(counter!=0)
+  {
+	NOTS=counter;
+  }
+
   Vector EField = Vector(0.0, 0.0, 0.0);
   Vector BField = Vector(0.0,0.0,0.0);
   double scale=(Charge*ElementaryCharge/(4.0*Pi*EpsNull));
@@ -429,6 +433,7 @@ void ChargedParticle::Translate(Vector R)
       X[i] = X[i] + R;
     };
 }
+
 
 void ChargedParticle::MirrorY(double MirrorY)
 {
