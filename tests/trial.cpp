@@ -14,10 +14,10 @@ int main()
 {
   std::ofstream Out("test.txt", std::ofstream::out);
   std::ofstream Out1("test1.txt", std::ofstream::out);
-  //const char *filename= "TEUFEL-EXAMPLE.txt";
-  const char *filename= "BeamProfile.txt";
+  const char *filename= "TEUFEL-EXAMPLE.txt";
+  //const char *filename= "BeamProfile.txt";
   Bunch *BB;
-  int NOP=100000;
+  int NOP=999;
   int NOTS=1700;
   double dt=3.2692307692307693e-12;
   //BB=new Bunch();

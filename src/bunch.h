@@ -124,13 +124,6 @@ class Bunch
 	double getTotalMass();
 
 
-	/*!
-
-	get a pointer to the particle in the bunch
-	*/
-	ChargedParticle* getParticle(int i);
-
-
 	/*
 	Track the bunch through lattice fields using the Euler algorithm 
 	interaction fields included
@@ -292,7 +285,6 @@ class Bunch
 	*/
 	vector<ChargedParticle*> b;
 
-	ChargedParticle *p;	
 
 	
    

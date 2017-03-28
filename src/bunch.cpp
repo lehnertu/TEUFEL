@@ -68,7 +68,7 @@ Bunch::Bunch(Bunch *bunch)
 	for(int i=0;i<NOP;i++)
 	{
 		//ChargedParticle *copy_particle = new ChargedParticle();
-		//*copy_particle = bunch->b.at(i);
+		// *copy_particle = bunch->b.at(i);
 		//memcpy(&copy_particle, &bunch->b[i], sizeof(bunch->b[i]));
 		b.push_back(new ChargedParticle(bunch->b[i]));
 		
@@ -338,7 +338,8 @@ int Bunch::WriteSDDSTrajectory()
 			SDDS_DefineColumn(&data,"pz\0","pz\0",NULL,"Gammabetaz\0",NULL,SDDS_DOUBLE,0) == -1 ||
 			SDDS_DefineColumn(&data,"Ax\0","ax\0","msec2\0","AccelerationInX\0",NULL,SDDS_DOUBLE,0)==-1 ||
 			SDDS_DefineColumn(&data,"Ay\0","ay\0","msec2\0","AccelerationInY\0",NULL,SDDS_DOUBLE,0)==-1 ||
-			SDDS_DefineColumn(&data,"Az\0","az\0","msec2\0","AccelerationInZ\0",NULL,SDDS_DOUBLE,0)==-1
+			SDDS_DefineColumn(&data,"Az\0","az\0","msec2\0","AccelerationInZ\0",NULL,SDDS_DOUBLE,0)==-1 ||
+			SDDS_DefineColumn(&data,"gamma\0","gamma\0",NULL,"RelativisticFactor\0",NULL,SDDS_DOUBLE,0)==-1
 	  )
 	{
 			cout<<"error in defining columns\n";
@@ -401,6 +402,7 @@ int Bunch::WriteSDDSTrajectory()
 						"Ax",(double)((b[i]->TrajAccel(k)).x),
 						"Ay",(double)((b[i]->TrajAccel(k)).y),
 						"Az",(double)((b[i]->TrajAccel(k)).z),
+						"gamma",(double)(sqrt(1+pow(b[i]->TrajMomentum(k).norm(),2))),
 						NULL)!=1
 			  )
 
