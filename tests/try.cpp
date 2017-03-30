@@ -19,14 +19,14 @@ int main()
 	double Energy = 8; //8Mev
 	double gamma = 8.511/0.511;
 	double gammabeta=sqrt(pow(gamma,2)-1);
-	ChargedParticle *e1 = new ChargedParticle(-100000,100000,Vector(0,0,-0.0000),Vector(0,0,gammabeta),0);
-	ChargedParticle *e2 = new ChargedParticle(-1,1,Vector(0,0,0.6),Vector(0,0,0),0);
+	ChargedParticle *e1 = new ChargedParticle(-1,1,Vector(0,0,0.00),Vector(0,0,0),0);
+	ChargedParticle *e2 = new ChargedParticle(-1,1,Vector(0,0,0.001),Vector(0,0,0),0);
 	BB->AddParticles(e1);
 	BB->AddParticles(e2);
-	double dt = .1e-12;
-	int NOTS = 150000;
+	double dt = 2.5e-9;
+	int NOTS = 20000;
 	Lattice *FEL=new Lattice();
-	Undulator *undu = new Undulator(0.1,0.045,10);
+	Undulator *undu = new Undulator(0.0,0.045,10);
 	FEL->addElement(undu);
 	cout<<BB->getNOP()<<endl;
 	BB->Track_Vay(NOTS, dt, FEL,1);

@@ -95,6 +95,8 @@ void Bunch::AddParticles( ChargedParticle *part)
 	
 }
 
+
+
 void Bunch::JoinBunch(Bunch *bunch)
 {
 	NOP+=bunch->NOP;
@@ -400,9 +402,9 @@ int Bunch::WriteSDDSTrajectory()
 						"px",(double)((b[i]->TrajMomentum(k)).x),
 						"py",(double)((b[i]->TrajMomentum(k)).y),
 						"pz",(double)((b[i]->TrajMomentum(k)).z),
-						"Ax",(double)((b[i]->TrajAccel(k)).x),
-						"Ay",(double)((b[i]->TrajAccel(k)).y),
-						"Az",(double)((b[i]->TrajAccel(k)).z),
+						"Ax",(double)((b[i]->TrajAccel(k)).x)*SpeedOfLight,
+						"Ay",(double)((b[i]->TrajAccel(k)).y)*SpeedOfLight,
+						"Az",(double)((b[i]->TrajAccel(k)).z)*SpeedOfLight,
 						"gamma",(double)(sqrt(1+pow(b[i]->TrajMomentum(k).norm(),2))),
 						NULL)!=1
 			  )
@@ -536,9 +538,9 @@ int
 						"px",(double)((b[k]->TrajMomentum(i)).x),
 						"py",(double)((b[k]->TrajMomentum(i)).y),
 						"pz",(double)((b[k]->TrajMomentum(i)).z),
-						"Ax",(double)((b[k]->TrajAccel(i)).x),
-						"Ay",(double)((b[k]->TrajAccel(i)).y),
-						"Az",(double)((b[k]->TrajAccel(i)).z),
+						"Ax",(double)((b[k]->TrajAccel(i)).x)*SpeedOfLight,
+						"Ay",(double)((b[k]->TrajAccel(i)).y)*SpeedOfLight,
+						"Az",(double)((b[k]->TrajAccel(i)).z)*SpeedOfLight,
 						NULL)!=1)
 			{
 				fprintf(stdout,"error in writing columns\n");
