@@ -9,6 +9,8 @@
 #include "externalfield.h"
 #include "vector.h"
 #include "bunch.h"
+#include "wave.h"
+#include "gen_grid.h"
 using namespace std;
 
 int main()
@@ -20,19 +22,38 @@ int main()
 	double gamma = 8.511/0.511;
 	double gammabeta=sqrt(pow(gamma,2)-1);
 	ChargedParticle *e1 = new ChargedParticle(-1,1,Vector(0,0,0.00),Vector(0,0,0),0);
-	ChargedParticle *e2 = new ChargedParticle(-1,1,Vector(0,0,0.001),Vector(0,0,0),0);
+	PlaneWave *Wave = new PlaneWave(0.0001,0.00001);
 	BB->AddParticles(e1);
-	BB->AddParticles(e2);
-	double dt = 2.5e-9;
+	double dt = 2.5e-15;
 	int NOTS = 20000;
 	Lattice *FEL=new Lattice();
-	Undulator *undu = new Undulator(0.0,0.045,10);
-	FEL->addElement(undu);
-	cout<<BB->getNOP()<<endl;
-	BB->Track_Vay(NOTS, dt, FEL,1);
+	FEL->addElement(Wave);
+	int numPoints=100000;
+	tuple<Vector,Vector>Field[numPoints];
+	Vector Obs[numPoints];
+	BB->Track_Vay(NOTS, dt, FEL,1);	
 	BB->WriteSDDSTrajectory();
-	double time_begin = 2.001e-9;
-	double time_end = 2.002e-9;
-	BB->WriteSDDSRadiation(Vector(0,0,0.6),time_begin,time_end,100000);
+	double time_begin = 1e-8;
+	double time_end =1.008004e-8;
+	double dt1 = (time_end-time_begin)/10000.0;
+	double Epeak1 = Wave->EPeak();
+	double Omega = Wave->Omega();
+	double a = 3.0;
+	double ExpectedEpeak = pow(ElementaryCharge,2)*Epeak1/(4.0*Pi*EpsNull*a*m_e*pow(SpeedOfLight,2));
+	cout<<ExpectedEpeak<<endl;
+	Vector Epeak = Vector(0,0,0);
+	for (int i=0;i<10000;i++)
+	{
+		tuple<Vector,Vector>Fields=BB -> RadiationField(Vector(0,0,a),time_begin+i*dt1);
+		if(Epeak.norm() < get<0>(Fields).norm())
+		{
+			Epeak = get<0>(Fields);
+		}
+	}
+
+	cout<< "Error in computation: "<<ExpectedEpeak - Epeak.x<<endl;
+	BB->WriteSDDSRadiation(Vector(0,0,a),time_begin,time_end,10000);
+	BB -> WriteSDDSTime();
+	Out.close();
 	return 1;
 }

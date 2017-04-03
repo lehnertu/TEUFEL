@@ -581,6 +581,7 @@ int Bunch::WriteSDDSRadiation(Vector Robs, double time_begin, double time_end, i
 	double nots,nop;
 	nots =(double)NOTS;
 	nop =(double)NOP;
+	cout<<"HERE....."<<endl;
 	if(Initialize!=1)
 	{
 			cout<<"Error Initializing Output\n";
