@@ -1,6 +1,10 @@
 
 #include "gen_grid.h"
 #include <math.h>
+#include "global.h"
+#include <iostream>
+using namespace std;
+
 
 GenGrid::GenGrid()
 {
@@ -33,6 +37,8 @@ void GenGrid::GenPlanarGrid(double x,double y,double z,int NumGridPoints)
     }
 
 }
+
+
 
 Vector GenGrid::GetGridPoints(int i)
 {

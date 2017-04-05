@@ -17,7 +17,7 @@ int main()
   //const char *filename= "TEUFEL-EXAMPLE.txt";
   const char *filename= "BeamProfile.txt";
   Bunch *BB;
-  int NOP=100000;
+  int NOP=2000;
   int NOTS=1700;
   double dt=3.2692307692307693e-12;
   //BB=new Bunch();
@@ -31,8 +31,8 @@ int main()
   BB->Track_Vay(NOTS,dt,field,0);
   int FT=pow(2,14);
   tuple<Vector,Vector> Field[FT];
-  double time_begin=1.331e-8;
-  double time_end=1.341e-8;
+  double time_begin=1.334e-8;
+  double time_end=1.336e-8;
   Vector Robs=Vector(0.0,0.0,4.0);
   double dt1 =(time_end-time_begin)/(double)FT;
   tuple<Vector,Vector> Field1[FT];

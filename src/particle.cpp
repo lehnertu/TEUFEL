@@ -323,7 +323,6 @@ void ChargedParticle::StepVay(
 	  p_i1 = p_h - dp_dt * 0.5 * tstep;
 	  gamma_i1 = sqrt(p_i1.abs2nd() + 1.0);
 	  beta_i1 = p_i1 / gamma_i1;
-	  counter += 1;
   }
     // velocity u^i at the integer time step i
     // has been computed in the last time step
@@ -331,8 +330,8 @@ void ChargedParticle::StepVay(
     Vector beta_i = beta_i1;
     // compute the velocity change over the integer step
     tuple<Vector,Vector>Fields = field->Field(t_h,x_h);
-    Vector E_h = get<0>(Fields);
-    Vector B_h = get<1>(Fields);
+    Vector E_h = get<0>(Fields)+EField;
+    Vector B_h = get<1>(Fields)+BField;
     Vector dp_dt = (cross(beta_i, B_h) + E_h/SpeedOfLight) * qm;
     p_h = p_i + dp_dt * t2;
     Vector p_prime = p_h + E_h/SpeedOfLight * qmt2;
@@ -345,6 +344,7 @@ void ChargedParticle::StepVay(
     Vector t = tau / gamma_i1;
     p_i1 = (p_prime + t*dot(p_prime,t) + cross(p_prime,t))/(1+t.abs2nd());
     beta_i1 = p_i1 / gamma_i1;
+    counter+=1;
     // store all half-step quantities
     Time[counter] = t_h;
     X[counter] = x_h;
@@ -354,7 +354,7 @@ void ChargedParticle::StepVay(
     // for the next step
     x_h += beta_i1*SpeedOfLight*tstep;
     t_h += tstep;
-    counter+=1;
+    
 }
 
 tuple<Vector,Vector> ChargedParticle::RetardedEField(double time, Vector ObservationPoint)
@@ -372,7 +372,7 @@ tuple<Vector,Vector> ChargedParticle::RetardedEField(double time, Vector Observa
   double R = RVec.norm();
   double t1 = Time[i1] + R / SpeedOfLight;      // retarded observation time
 
-  int i2 = NOTS-1;                                // index of the last trajectory point
+  int i2 = NOTS;                                // index of the last trajectory point
   RVec = ObservationPoint - X[i2];
   R = RVec.norm();
   double t2 = Time[i2] + R / SpeedOfLight;      // retarded observation time
@@ -426,9 +426,17 @@ tuple<Vector,Vector> ChargedParticle::RetardedEField(double time, Vector Observa
   
   else
   {
-	Vector R = -ObservationPoint + TrajPoint(counter);
+	Vector R = ObservationPoint - TrajPoint(counter);
 	Vector UnitR = R/R.norm();
-	EField = UnitR*scale/(pow(R.norm(),2));
+	if (R.norm()==0.0)
+	{
+		EField=Vector(0,0,0);
+	}
+	else
+	{
+		EField = UnitR*scale/(pow(R.norm(),2));
+		
+	}
 	BField = Vector(0,0,0);
   }
   return make_tuple(EField,BField);

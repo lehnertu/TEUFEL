@@ -68,7 +68,7 @@ Bunch::Bunch(Bunch *bunch)
 	for(int i=0;i<NOP;i++)
 	{
 		//ChargedParticle *copy_particle = new ChargedParticle();
-		//*copy_particle = bunch->b.at(i);
+		// *copy_particle = bunch->b.at(i);
 		//memcpy(&copy_particle, &bunch->b[i], sizeof(bunch->b[i]));
 		b.push_back(new ChargedParticle(bunch->b[i]));
 		
@@ -94,6 +94,8 @@ void Bunch::AddParticles( ChargedParticle *part)
 	
 	
 }
+
+
 
 void Bunch::JoinBunch(Bunch *bunch)
 {
@@ -133,6 +135,66 @@ double Bunch:: getTotalMass()
 	return Mass;
 }
 
+
+Vector Bunch:: getTrajPoint(int i, int j)
+{
+	if (i<NOP)
+	{
+		return b[i]->TrajPoint(j);
+	}
+
+	else
+	{
+		cout <<"Particle No. "<<i<<" not found in bunch"<<endl;
+		cout <<"Total Number of Particles in Bunch: "<<NOP<<endl;
+	}
+
+}
+
+Vector Bunch:: getTrajMomentum(int i, int j)
+{
+	if (i<NOP)
+	{
+		return b[i]->TrajMomentum(j);
+	}
+
+	else
+	{
+		cout <<"Particle No. "<<i<<" not found in bunch"<<endl;
+		cout <<"Total Number of Particles in Bunch: "<<NOP<<endl;
+	}
+
+}
+
+Vector Bunch:: getTrajAcceleration(int i, int j)
+{
+	if (i<NOP)
+	{
+		return b[i]->TrajAccel(j);
+	}
+
+	else
+	{
+		cout <<"Particle No. "<<i<<" not found in bunch"<<endl;
+		cout <<"Total Number of Particles in Bunch: "<<NOP<<endl;
+	}
+
+}
+
+double Bunch:: getTrajTime(int i, int j)
+{
+	if (i<NOP)
+	{
+		return b[i]->TrajTime(j);
+	}
+
+	else
+	{
+		cout <<"Particle No. "<<i<<" not found in bunch"<<endl;
+		cout <<"Total Number of Particles in Bunch: "<<NOP<<endl;
+	}
+
+}
 
 
 tuple<Vector,Vector> Bunch::MutualField(int stepnumber, int ParticleID, double t)
@@ -254,16 +316,18 @@ void Bunch::Track_Vay(int NT, double tstep, Lattice *field, int SpaceCharge)
 		}
 	}
 	else
-	{
+	{		
+		
 		for (int i=0;i<NOTS;i++)
 		{
-			
-			tuple<Vector,Vector> InteractionField[NOP];
-#pragma omp parallel for shared(InteractionField, i) 
+			tuple<Vector,Vector> InteractionField[NOP];			
+#pragma omp parallel for  
 			for (int l=0;l<NOP;l++)
 			{
-				double time = b[l]->TrajTime(0) + i* tstep;
+				
+				double time = b[l]->TrajTime(i)+tstep;
 				InteractionField[l]= MutualField(i, l, time );
+				
 			}
 #pragma parallel for 
 			for (int k=0;k<NOP;k++)
@@ -271,10 +335,9 @@ void Bunch::Track_Vay(int NT, double tstep, Lattice *field, int SpaceCharge)
 				
 				b[k]->StepVay(tstep,field, get<0>(InteractionField[k]),get<1>(InteractionField[k]));
 			}
+		
 
-			/*tuple<Vector,Vector>a = field->Field(b[100]->TrajTime(i), b[100]->TrajPoint(i));
-			Vector e = get<0>(a) + get<0>(MutualField(i,100,InitialTime[100]+i*tstep));
-			cout<<b[100]->TrajPoint(i).z<<"\t"<< e.x<<endl;*/
+
 		}
 		
 				
@@ -338,7 +401,8 @@ int Bunch::WriteSDDSTrajectory()
 			SDDS_DefineColumn(&data,"pz\0","pz\0",NULL,"Gammabetaz\0",NULL,SDDS_DOUBLE,0) == -1 ||
 			SDDS_DefineColumn(&data,"Ax\0","ax\0","msec2\0","AccelerationInX\0",NULL,SDDS_DOUBLE,0)==-1 ||
 			SDDS_DefineColumn(&data,"Ay\0","ay\0","msec2\0","AccelerationInY\0",NULL,SDDS_DOUBLE,0)==-1 ||
-			SDDS_DefineColumn(&data,"Az\0","az\0","msec2\0","AccelerationInZ\0",NULL,SDDS_DOUBLE,0)==-1
+			SDDS_DefineColumn(&data,"Az\0","az\0","msec2\0","AccelerationInZ\0",NULL,SDDS_DOUBLE,0)==-1 ||
+			SDDS_DefineColumn(&data,"gamma\0","gamma\0",NULL,"RelativisticFactor\0",NULL,SDDS_DOUBLE,0)==-1
 	  )
 	{
 			cout<<"error in defining columns\n";
@@ -398,9 +462,10 @@ int Bunch::WriteSDDSTrajectory()
 						"px",(double)((b[i]->TrajMomentum(k)).x),
 						"py",(double)((b[i]->TrajMomentum(k)).y),
 						"pz",(double)((b[i]->TrajMomentum(k)).z),
-						"Ax",(double)((b[i]->TrajAccel(k)).x),
-						"Ay",(double)((b[i]->TrajAccel(k)).y),
-						"Az",(double)((b[i]->TrajAccel(k)).z),
+						"Ax",(double)((b[i]->TrajAccel(k)).x)*SpeedOfLight,
+						"Ay",(double)((b[i]->TrajAccel(k)).y)*SpeedOfLight,
+						"Az",(double)((b[i]->TrajAccel(k)).z)*SpeedOfLight,
+						"gamma",(double)(sqrt(1+pow(b[i]->TrajMomentum(k).norm(),2))),
 						NULL)!=1
 			  )
 
@@ -533,9 +598,9 @@ int
 						"px",(double)((b[k]->TrajMomentum(i)).x),
 						"py",(double)((b[k]->TrajMomentum(i)).y),
 						"pz",(double)((b[k]->TrajMomentum(i)).z),
-						"Ax",(double)((b[k]->TrajAccel(i)).x),
-						"Ay",(double)((b[k]->TrajAccel(i)).y),
-						"Az",(double)((b[k]->TrajAccel(i)).z),
+						"Ax",(double)((b[k]->TrajAccel(i)).x)*SpeedOfLight,
+						"Ay",(double)((b[k]->TrajAccel(i)).y)*SpeedOfLight,
+						"Az",(double)((b[k]->TrajAccel(i)).z)*SpeedOfLight,
 						NULL)!=1)
 			{
 				fprintf(stdout,"error in writing columns\n");
@@ -576,6 +641,7 @@ int Bunch::WriteSDDSRadiation(Vector Robs, double time_begin, double time_end, i
 	double nots,nop;
 	nots =(double)NOTS;
 	nop =(double)NOP;
+	cout<<"HERE....."<<endl;
 	if(Initialize!=1)
 	{
 			cout<<"Error Initializing Output\n";

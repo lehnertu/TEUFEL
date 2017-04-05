@@ -60,7 +60,7 @@ TESTS = $(TESTDIR)/teufel.EcrossB \
 	$(TESTDIR)/teufel.undulator \
 	$(TESTDIR)/teufel.radiation \
 	$(TESTDIR)/trial \
-	$(TESTDIR)/try
+	$(TESTDIR)/teufel.wave-particle
 	
 
 ####### Implicit rules
@@ -106,7 +106,7 @@ tests: $(OBJ)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.undulator $(TESTDIR)/teufel.undulator.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.radiation $(TESTDIR)/teufel.radiation.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/trial $(TESTDIR)/trial.cpp $(LFLAGS) $(OBJ) $(LIBS)
-	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/try $(TESTDIR)/try.cpp $(LFLAGS) $(OBJ) $(LIBS)
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.wave-particle $(TESTDIR)/teufel.wave-particle.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	
 
 docs:

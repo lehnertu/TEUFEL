@@ -123,20 +123,6 @@ class Bunch
 	*/
 	double getTotalMass();
 
-
-	/*!
-
-	get a pointer to the particle in the bunch
-	*/
-	ChargedParticle* getParticle(int i);
-
-
-	/*
-	Track the bunch through lattice fields using the Euler algorithm 
-	interaction fields included
-	*/
-	void Track_Euler(int NT, double tstep, Lattice *field);
-
 	/*!
 
 	Track the bunch through the lattice fields using the Vay Algorithm
@@ -240,6 +226,31 @@ class Bunch
 	  Create Mirror particles and create a bunch of mirror particles
 	*/
 	void MirrorY(double Mirror);
+
+	/*!
+
+	  Get the jth trajectory point of ith particle
+	*/
+	Vector getTrajPoint(int i, int j);
+
+	/*!
+
+	  Get the mometum at jth trajectory point  of ith particle
+	*/
+	Vector getTrajMomentum(int i, int j);
+
+	/*!
+
+	  Get the Acceleration at jth trajectory point  of ith particle
+	*/
+	Vector getTrajAcceleration(int i, int j);
+
+	/*!
+
+	  Get the time value at jth trajectory point of ith particle
+	*/
+	double getTrajTime(int i, int j);
+	
   private:
 
 	//Number of Particles in the bunch
@@ -292,7 +303,6 @@ class Bunch
 	*/
 	vector<ChargedParticle*> b;
 
-	ChargedParticle *p;	
 
 	
    
