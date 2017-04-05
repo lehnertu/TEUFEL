@@ -148,7 +148,9 @@ class ChargedParticle
     */
      void StepVay(
          double tstep,         // time step size
-         Lattice *field, Vector EField=Vector(0,0,0), Vector BField=Vector(0,0,0) );
+         Lattice *field,	// calls for the lattice fields
+	 Vector EField=Vector(0,0,0),	// extra fields that can be superimposed over lattice fields--ex: ambient field
+	 Vector BField = Vector(0,0,0))	;
 
     /*! 
 

@@ -136,6 +136,66 @@ double Bunch:: getTotalMass()
 }
 
 
+Vector Bunch:: getTrajPoint(int i, int j)
+{
+	if (i<NOP)
+	{
+		return b[i]->TrajPoint(j);
+	}
+
+	else
+	{
+		cout <<"Particle No. "<<i<<" not found in bunch"<<endl;
+		cout <<"Total Number of Particles in Bunch: "<<NOP<<endl;
+	}
+
+}
+
+Vector Bunch:: getTrajMomentum(int i, int j)
+{
+	if (i<NOP)
+	{
+		return b[i]->TrajMomentum(j);
+	}
+
+	else
+	{
+		cout <<"Particle No. "<<i<<" not found in bunch"<<endl;
+		cout <<"Total Number of Particles in Bunch: "<<NOP<<endl;
+	}
+
+}
+
+Vector Bunch:: getTrajAcceleration(int i, int j)
+{
+	if (i<NOP)
+	{
+		return b[i]->TrajAccel(j);
+	}
+
+	else
+	{
+		cout <<"Particle No. "<<i<<" not found in bunch"<<endl;
+		cout <<"Total Number of Particles in Bunch: "<<NOP<<endl;
+	}
+
+}
+
+double Bunch:: getTrajTime(int i, int j)
+{
+	if (i<NOP)
+	{
+		return b[i]->TrajTime(j);
+	}
+
+	else
+	{
+		cout <<"Particle No. "<<i<<" not found in bunch"<<endl;
+		cout <<"Total Number of Particles in Bunch: "<<NOP<<endl;
+	}
+
+}
+
 
 tuple<Vector,Vector> Bunch::MutualField(int stepnumber, int ParticleID, double t)
 {
