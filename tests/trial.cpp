@@ -17,7 +17,7 @@ int main()
   //const char *filename= "TEUFEL-EXAMPLE.txt";
   const char *filename= "BeamProfile.txt";
   Bunch *BB;
-  int NOP=2000;
+  int NOP=1000;
   int NOTS=1700;
   double dt=3.2692307692307693e-12;
   //BB=new Bunch();
@@ -56,10 +56,11 @@ int main()
   cout<<"Now trying to copy a bunch"<<endl;
   Bunch *BB2= new Bunch(BB);
   BB2->MirrorY(0.012);
+
 #pragma omp parallel for 
   for (int i=0;i<Grid.GetGridSize();i++)
 	{	
-		Grid1[i]=BB->RadiationField(Grid.GetGridPoints(i),1.335428478e-8);
+		Grid1[i]=BB->RadiationField(Grid.GetGridPoints(i),1.334536561e-8);
 	}
   for (int i=0;i<Grid.GetGridSize();i++)
 	{
@@ -72,6 +73,8 @@ int main()
 	}
 
   //BB->JoinBunch(BB2);
+  Grid.GenPlanarGrid(0.004,0.004,4,32);
+  Grid.SDDSRadiationAtGrid(BB,time_begin, time_end, 1000);
   Out.close();  
   Out1.close();
   int output = BB->WriteSDDSTrajectory();
