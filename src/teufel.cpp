@@ -28,7 +28,7 @@
 
 #include "global.h"
 #include "particle.h"
-#include "externalfield.h"
+#include "fields.h"
 #include "homogeneousmagnet.h"
 
 #include "SDDS.h"

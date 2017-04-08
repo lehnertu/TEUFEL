@@ -38,15 +38,13 @@ class Vector
   public:
 
     /*!
-	Default constructor:
-
+	Default constructor: <br>
 	All components are initalized as zero.
     */
     Vector();
     
     /*!
-	Standard constructor:
-
+	Standard constructor: <br>
 	All components are initalized with given values.
     */
     Vector(double x0, double y0, double z0);

@@ -18,7 +18,7 @@ CXX          = g++
 LINK         = g++
 
 CFLAGS       = -O2 -g -Wall
-CXXFLAGS     = -O2 -g -Wall
+CXXFLAGS     = -O2 -g -Wall -std=c++11
 LFLAGS       =
 LIBS         =  -L$(SDDS) -lSDDS1 -lmdblib -lmdbcommon -llzma -lz -lm
 
@@ -28,22 +28,22 @@ OBJECTS_DIR   = ./obj
 
 ####### Files
 
-SRC = 	$(SRCDIR)/cavity.cpp \
-	$(SRCDIR)/externalfield.cpp \
+#	$(SRCDIR)/cavity.cpp
+#	$(SRCDIR)/wave.cpp
+SRC = 	$(SRCDIR)/fields.cpp \
 	$(SRCDIR)/homogeneousmagnet.cpp \
 	$(SRCDIR)/particle.cpp\
 	$(SRCDIR)/teufel.cpp\
 	$(SRCDIR)/undulator.cpp \
-	$(SRCDIR)/vector.cpp \
-	$(SRCDIR)/wave.cpp
+	$(SRCDIR)/vector.cpp
 
-OBJ = 	$(OBJDIR)/cavity.o \
-	$(OBJDIR)/externalfield.o \
+#	$(OBJDIR)/cavity.o \
+#	$(OBJDIR)/wave.o
+OBJ = 	$(OBJDIR)/fields.o \
 	$(OBJDIR)/homogeneousmagnet.o \
 	$(OBJDIR)/particle.o \
 	$(OBJDIR)/undulator.o \
-	$(OBJDIR)/vector.o \
-	$(OBJDIR)/wave.o
+	$(OBJDIR)/vector.o
 
 TARGETOBJ = $(OBJDIR)/teufel.o
 
@@ -78,14 +78,14 @@ all: $(TARGET) tests docs
 $(TARGET):  $(OBJ)  $(TARGETOBJ)  
 	$(LINK) $(LFLAGS) -o $(TARGET) $(OBJ) $(TARGETOBJ) $(LIBS)
 
+#	$(SRCDIR)/cavity.h \
+#	$(SRCDIR)/wave.h
 $(OBJ): $(SRCDIR)/global.h \
-	$(SRCDIR)/cavity.h \
-	$(SRCDIR)/externalfield.h \
+	$(SRCDIR)/fields.h \
 	$(SRCDIR)/homogeneousmagnet.h \
 	$(SRCDIR)/particle.h \
 	$(SRCDIR)/undulator.h \
-	$(SRCDIR)/vector.h \
-	$(SRCDIR)/wave.h
+	$(SRCDIR)/vector.h
 
 tests: $(OBJ) 
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.magnet $(TESTDIR)/teufel.magnet.cpp $(LFLAGS) $(OBJ) $(LIBS)

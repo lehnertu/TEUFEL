@@ -19,38 +19,57 @@
  * 
  * =========================================================================*/
 
-#ifndef PARTICLE_H
-#define PARTICLE_H
+#pragma once
 
-#include "externalfield.h"
+#include "fields.h"
 #include "vector.h"
-#include "undulator.h"
 
-using namespace std;
-
-// a class for charged particle trajectories
-
+/*!
+ * \class ElMagField
+ * \brief Particle with electric charge.
+ * @author Ulf Lehnert
+ * @date 7.4.2017
+ * 
+ * This class holds the trajectory data of a single charged particle with given mass and charge.
+ * The trajectory comprises time [s], position [m], momentum [] and acceleration [1/s] in
+ * the laboratory frame.
+ * 
+ * For tracking this class provides a number of algorithms to perform a single time-step.
+ * 
+ * All charged particles are surrounded by electromagnetic fields and
+ * accelerated particle produce radiation. The fields produced by the particle
+ * at a given time and position in laboratory frame can be computed
+ * taking into account the full retardation effect.
+ */
 class ChargedParticle
 {
 
 public:
 
-    // default constructor
-    // charge set to electron charge
+    /*! Default constructor:<br>
+     * Charge is set to electron charge, mass to electron mass.<br>
+     * No trajectory is allocated
+     */
     ChargedParticle();
 
-    // copy constructor
+    /*! Copy constructor:<br>
+     * A given particle is identically reproduced, thereby creating copies of all trajectory data
+     */
     ChargedParticle(const ChargedParticle* Part);
 
-    // destructor
+    /*! Destructor: free all memory of trajectory storage */
     ~ChargedParticle();
 
-    // return the number of points in the track
+    /*! Return the number of points in the trajectory */
     int GetNP();
 
-    // return a position from the trajectory
+    /*! Return the time [s] for one point of the trajectory */
     double TrajTime(int step);
+
+    /*! Return the position [m] for one point of the trajectory */
     Vector TrajPoint(int step);
+    
+    /*! Return the momentum \f$\beta*\gamma\f$ for one point of the trajectory */
     Vector TrajMomentum(int step);
 
     // track the particle through a given field
@@ -88,19 +107,51 @@ public:
     // electric field radiated by the particle
     // at a given observation point at time t in lab frame
     // retardation is properly accounted for
-    Vector RetardedEField(double time, Vector ObservationPoint);
+    ElMagField RetardedField(double time, Vector ObservationPoint);
 
+    /*! Write all information including the trajectory data into an SDDS file.
+     * 
+     *	 write data on a particle to particle basis
+     * 
+     *	 use sddsquery trajectory.sdds to view the format of dataset
+     *	 
+     *	 routine returns values with following meaning:
+     *	 
+     *	0  ->  Successfully Written the file\n
+     *	1  ->  Error in Initializing the Output dataset \n
+     *	2  ->  Error in Defining the parameters \n
+     *	3  ->  Error in Defining Columns describing the data to be followed \n
+     *	4  ->  Error in Writing the layout of the data structure in the sdds file \n
+     *	5  ->  Error in Starting a New Page of the file \n
+     *	5  ->  Error in setting the values of the parameters \n
+     *	6  ->  Error in setting the row values i.e. the data belonging to column \n
+     *	7  ->  Error in Writing the page that was successfully initialized \n
+     *	8  ->  Error in Terminating the data flow to the sdds file \n
+     * 
+     */
+    int WriteSDDS(char *filename);
+    
 private:
 
-    int NP;          // number of trajectory points
-    int Charge;      // charge in units of ElementaryCharge
-    int Mass;        // mass in unit of the electron rest mass
-    double* Time;    // time in lab-frame [s]
-    Vector* X;       // position in lab frame [m]
-    Vector* P;       // momentum in lab frame : c p = beta gamma mc²
-                     // dimensionless in units of mc²
-    Vector* A;       // acceleration in lab frame a = d/dt(p*c)
-                     // in unit of 1/s (scaled by mc²)
-};
+    //! number of trajectory points
+    int NP;
+    
+    //! charge in units of ElementaryCharge
+    double Charge;
+    
+    //! mass in unit of the electron rest mass
+    double Mass;
+    
+    //! time in lab frame [s]
+    double* Time;
+    
+    //! position in lab frame [m]
+    Vector* X;
+    
+    //! dimensionless momentum in lab frame : \f$\beta\gamma = \frac{c p}{mc^2}\f$
+    Vector* P;
+    
+    //! acceleration [1/s] in lab frame \f$a = \frac{d}{dt}(\beta\gamma)\f$
+    Vector* A;
 
-#endif
+};

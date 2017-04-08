@@ -23,6 +23,11 @@
 #include "global.h"
 #include <math.h>
 
+HomogeneousMagnet::HomogeneousMagnet()
+{
+    B0=Vector(0.0,0.0,0.0);
+}
+
 HomogeneousMagnet::HomogeneousMagnet(Vector B)
 {
   B0=B;
@@ -33,15 +38,8 @@ Vector HomogeneousMagnet::getB0()
   return B0;
 }
 
-Vector HomogeneousMagnet::ElementLocalEField(double t, Vector X)
+ElMagField HomogeneousMagnet::Field(double t, Vector X)
 {
-  Vector p=Vector(0.0,0.0,0.0);
-  return (p);
+  Vector E=Vector(0.0,0.0,0.0);
+  return ElMagField(E,B0);
 }
-
-Vector HomogeneousMagnet::ElementLocalBField(double t, Vector X)
-{
-  return B0;
-}
-
-

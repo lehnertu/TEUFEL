@@ -22,7 +22,9 @@
 #include "particle.h"
 #include "global.h"
 
+#include <iostream>
 #include <math.h>
+#include "SDDS.h"
 
 ChargedParticle::ChargedParticle()
 {
@@ -111,7 +113,7 @@ void ChargedParticle::TrackEuler(
     double tstep,    // time step size
     Vector X0,       // initial position
     Vector P0,       // initial momentum
-    Lattice* field)
+    Lattice* lattice)
 {
     NP = Nstep + 1;
     if (Time != 0)
@@ -138,8 +140,9 @@ void ChargedParticle::TrackEuler(
         double betagamma2 = p.abs2nd();
         double gamma = sqrt(betagamma2 + 1.0);
         Vector beta = p / gamma;
-        Vector efield = field->EField(Time[i], X[i]);
-        Vector bfield = field->BField(Time[i], X[i]);
+	ElMagField EB = lattice->Field(Time[i], X[i]);
+        Vector efield = EB.E();
+        Vector bfield = EB.B();
         Vector force = cross(beta, bfield) + efield / SpeedOfLight;
         Vector dX_dt = beta * SpeedOfLight;
         Vector dP_dt = force * qm;
@@ -157,7 +160,7 @@ void ChargedParticle::TrackLF(
     double tstep,    // time step size
     Vector X0,       // initial position
     Vector P0,       // initial momentum
-    Lattice* field)
+    Lattice* lattice)
 {
     NP = Nstep + 1;
     if (Time != 0)
@@ -181,8 +184,9 @@ void ChargedParticle::TrackLF(
     Vector p_h = P0;                            // momentum at the half-step point
     double gamma_h = sqrt(p_h.abs2nd() + 1.0);
     Vector beta_h = p_h / gamma_h;
-    Vector E_h = field->EField(t_h, x_h);
-    Vector B_h = field->BField(t_h, x_h);
+    ElMagField EB_h = lattice->Field(t_h, x_h);
+    Vector E_h = EB_h.E();
+    Vector B_h = EB_h.B();
     Vector dp_dt = (cross(beta_h, B_h) + E_h / SpeedOfLight) * qm;
     A[0] = dp_dt;
     // The leap-frog algorithm starts one half-step "before" the initial values
@@ -198,8 +202,9 @@ void ChargedParticle::TrackLF(
         Vector p_i = p_i1;
         Vector beta_i = beta_i1;
         // compute the velocity change over the integer step
-        E_h = field->EField(t_h, x_h);
-        B_h = field->BField(t_h, x_h);
+	EB_h = lattice->Field(t_h, x_h);
+	E_h = EB_h.E();
+	B_h = EB_h.B();
         // this is wrong, one should use beta at the half-step point which we don't know
         dp_dt = (cross(beta_i, B_h) + E_h / SpeedOfLight) * qm;
         p_i1 = p_i + dp_dt * tstep;
@@ -222,7 +227,7 @@ void ChargedParticle::TrackVay(
     double tstep,    // time step size
     Vector X0,       // initial position
     Vector P0,       // initial momentum
-    Lattice* field)
+    Lattice* lattice)
 {
     NP = Nstep + 1;
     if (Time != 0)
@@ -250,8 +255,9 @@ void ChargedParticle::TrackVay(
     Vector p_h = P0;     // momentum at the half-step point
     double gamma_h = sqrt(p_h.abs2nd() + 1.0);
     Vector beta_h = p_h / gamma_h;
-    Vector E_h = field->EField(t_h, x_h);
-    Vector B_h = field->BField(t_h, x_h);
+    ElMagField EB_h = lattice->Field(t_h, x_h);
+    Vector E_h = EB_h.E();
+    Vector B_h = EB_h.B();
     Vector dp_dt = (cross(beta_h, B_h) + E_h / SpeedOfLight) * qm;
     A[0] = dp_dt;
     // The leap-frog algorithm starts one half-step "before" the initial values
@@ -267,9 +273,10 @@ void ChargedParticle::TrackVay(
         Vector p_i = p_i1;
         Vector beta_i = beta_i1;
         // compute the velocity change over the integer step
-        E_h = field->EField(t_h, x_h);
-        B_h = field->BField(t_h, x_h);
-        dp_dt = (cross(beta_i, B_h) + E_h / SpeedOfLight) * qm;
+	EB_h = lattice->Field(t_h, x_h);
+	E_h = EB_h.E();
+	B_h = EB_h.B();
+	dp_dt = (cross(beta_i, B_h) + E_h / SpeedOfLight) * qm;
         p_h = p_i + dp_dt * t2;
         Vector p_prime = p_h + E_h / SpeedOfLight * qmt2;
         double gamma_prime = sqrt(p_prime.abs2nd() + 1.0);
@@ -312,7 +319,7 @@ void ChargedParticle::MirrorY(double MirrorY)
     };
 }
 
-Vector ChargedParticle::RetardedEField(double time, Vector ObservationPoint)
+ElMagField ChargedParticle::RetardedField(double time, Vector ObservationPoint)
 {
     Vector EField = Vector(0.0, 0.0, 0.0);
 
@@ -369,5 +376,98 @@ Vector ChargedParticle::RetardedEField(double time, Vector ObservationPoint)
         // acceleration term
         EField += cross(N, cross(N - SourceBeta, SourceBetaPrime)) / (R * bn3rd) / SpeedOfLight;
     }
-    return EField * Charge;
+    return ElMagField(EField * Charge,Vector(0.0,0.0,0.0));
+}
+
+int ChargedParticle::WriteSDDS(char *filename)
+{
+    cout << "writing SDDS file " << filename << endl;
+    SDDS_DATASET data;
+    if (1 != SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,filename))
+    {
+	cout << "ChargedParticle::WriteSDDS - error initializing output\n";
+	return 1;
+    }
+    if  (
+	SDDS_DefineSimpleParameter(&data,"NumberTimeSteps","", SDDS_LONG)!=1 || 
+	SDDS_DefineSimpleParameter(&data,"Charge","e", SDDS_DOUBLE)!=1 ||
+	SDDS_DefineSimpleParameter(&data,"Mass","m_e", SDDS_DOUBLE)!=1
+	)
+    {
+	cout << "ChargedParticle::WriteSDDS - error defining parameters\n";
+	return 2;
+    }
+    if  (
+	SDDS_DefineColumn(&data,"t\0","t\0","s\0","TimeInSeconds\0",NULL, SDDS_DOUBLE,0)   ==-1 || 
+	SDDS_DefineColumn(&data,"x\0","x\0","m\0","DisplacementInX\0",NULL, SDDS_DOUBLE,0) == -1 ||
+	SDDS_DefineColumn(&data,"y\0","y\0","m\0","DisplacementInY\0",NULL, SDDS_DOUBLE,0) == -1 ||
+	SDDS_DefineColumn(&data,"z\0","z\0","m\0","DisplacementInZ\0",NULL, SDDS_DOUBLE,0) == -1 || 
+	SDDS_DefineColumn(&data,"px\0","px\0",NULL,"Gammabetax\0",NULL, SDDS_DOUBLE,0)== -1 || 
+	SDDS_DefineColumn(&data,"py\0","py\0",NULL,"Gammabetay\0",NULL,SDDS_DOUBLE,0) == -1 ||
+	SDDS_DefineColumn(&data,"pz\0","pz\0",NULL,"Gammabetaz\0",NULL,SDDS_DOUBLE,0) == -1 ||
+	SDDS_DefineColumn(&data,"gamma\0","gamma\0",NULL,"RelativisticFactor\0",NULL,SDDS_DOUBLE,0)==-1
+	)
+    {
+	cout << "ChargedParticle::WriteSDDS - error defining data columns\n";
+	return 3;
+    }
+    if (SDDS_WriteLayout(&data) != 1)
+    {
+	cout << "ChargedParticle::WriteSDDS - error writing layout\n";
+	return 4;
+    }
+    // start a page with number of lines equal to the number of trajectory points
+    cout << "SDDS start page" << endl;
+    if (SDDS_StartPage(&data,(int32_t)NP) !=1 )
+    {
+	cout << "ChargedParticle::WriteSDDS - error starting page\n";
+	return 5;
+    }
+    // write the single valued variables
+    cout << "SDDS write parameters" << endl;
+    if( SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,
+	"NumberTimeSteps",NP,
+	"Charge",Charge,
+	"Mass",Mass,
+	NULL ) !=1
+	)
+    {
+	cout << "ChargedParticle::WriteSDDS - error setting parameters\n";
+	return 5;
+    }
+    // write the table of trajectory data
+    cout << "SDDS writing " << NP << " trajectory points" << endl;
+    for( int i=0; i<NP; i++)
+    {
+	if( SDDS_SetRowValues(&data,
+	    SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,i,
+	    "t",Time[i],
+	    "x",X[i].x,
+	    "y",X[i].y,
+	    "z",X[i].z,
+	    "px",P[i].x,
+	    "py",P[i].y,
+	    "pz",P[i].z,
+	    "gamma",sqrt(1.0+P[i].abs2nd()),
+	    NULL) != 1
+	    )
+	{
+	    cout << "ChargedParticle::WriteSDDS - error writing data columns\n";
+	    return 7;
+	}
+    }
+    if( SDDS_WritePage(&data) != 1)
+    {
+	cout << "ChargedParticle::WriteSDDS - error writing page\n";
+	return 8;
+    }
+    // finalize the file
+    if (SDDS_Terminate(&data) !=1 )
+    {
+	cout << "ChargedParticle::WriteSDDS - error terminating data file\n";
+	return 9;
+    }	
+    // no errors have occured if we made it 'til here
+    cout << "writing SDDS done." << endl;
+    return 0;
 }

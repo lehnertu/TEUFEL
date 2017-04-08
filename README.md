@@ -8,10 +8,11 @@ emitted by these particles using the Liénard-Wiechert formula.
 
 Functionality
 =============
-- particle tracking using different pusher algorithms (Euler, Vay)
+- particle tracking using different pusher algorithms (Euler, Vay)<br>
+  see \ref ChargedParticle
 - radiation emission towards a single observation point
 - several external field objects (homogeneous dipole, planar undulator ...)
 
 Testcases
 =========
-- circular trajectory of an electron in a homogeneous dipole magnet
+- circular trajectory of an electron in a homogeneous dipole magnet --  tests/teufel.magnet.cpp

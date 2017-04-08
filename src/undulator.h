@@ -19,11 +19,10 @@
  * 
  * =========================================================================*/
 
-#ifndef UNDULATOR_H
-#define UNDULATOR_H
+#pragma once
 
 #include "vector.h"
-#include "externalfield.h"
+#include "fields.h"
 
 using namespace std;
 
@@ -53,8 +52,7 @@ class Undulator : public ExternalField
 
   private:
 
-    Vector ElementLocalEField(double t, Vector X);
-    Vector ElementLocalBField(double t, Vector X);
+    ElMagField LocalField(double t, Vector X);
 
     double  BPeak;                              // peak field [T]
     double  LambdaU;                            // undulator period [m]
@@ -62,5 +60,3 @@ class Undulator : public ExternalField
     double  Krms;                               // undulator parameter
     double  ky, kz;                             // undulator periodicity [1/m]
 };
-
-#endif

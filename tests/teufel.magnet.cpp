@@ -62,7 +62,7 @@
 
 #include "global.h"
 #include "particle.h"
-#include "externalfield.h"
+#include "fields.h"
 
 #include "homogeneousmagnet.h"
 
@@ -75,10 +75,11 @@ int main ()
 
     Vector B=Vector(0.033166247903554,0.05,0.08);
     HomogeneousMagnet *mag = new HomogeneousMagnet(B);
-    printf("B =  %9.6g T\n",(mag->getB0()).norm());
-    printf("Bx = %9.6g T  ",(mag->getB0()).x);
-    printf("By = %9.6g T  ",(mag->getB0()).y);
-    printf("Bz = %9.6g T\n",(mag->getB0()).z);
+    Vector B0 = mag->Field(0.0,Vector(0.0,0.0,0.0)).B();
+    printf("B =  %9.6g T\n",B0.norm());
+    printf("Bx = %9.6g T  ",B0.x);
+    printf("By = %9.6g T  ",B0.y);
+    printf("Bz = %9.6g T\n",B0.z);
     
     double gamma = 10.0;
     // define a second vector which is normal to the field and the initial velocity
@@ -101,19 +102,21 @@ int main ()
     // a simple lattice with just the homogeneous dipole field
     Lattice *lattice = new Lattice;
     lattice->addElement(mag);
-
+    
     // one single electron
     ChargedParticle *electron = new ChargedParticle();
-
+    
     // initial potion at the origin
     Vector X0 = Vector(0.0, 0.0, 0.0);
     // initial momentum of the particle
     Vector P0 = p*betagamma/p.norm();
-
+    
     // track the particle for the duration of one revolution
     double deltaT = tau/NOTS;
     electron->TrackVay(NOTS, deltaT, X0, P0, lattice);
-
+    Vector XF = electron->TrajPoint(NOTS);
+    printf("final position =  (%9.6f, %9.6f, %9.6f) m\n",XF.x, XF.y, XF.z);
+    
     // count the errors
     int errors = 0;
     

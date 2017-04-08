@@ -62,7 +62,7 @@
 
 #include "global.h"
 #include "particle.h"
-#include "externalfield.h"
+#include "fields.h"
 #include "undulator.h"
 #include <iostream>
 #include <fstream>
@@ -174,7 +174,8 @@ int main ()
 		  k=i;
 		}
 	}
-double dz=0;  
+	
+    double dz=0;  
     for (int i=j;i<k;i++)
     {
         double x1=electron->TrajPoint(i+1).x;
@@ -197,6 +198,15 @@ double dz=0;
 	printf("Slippage after one period= %9.6f m - \033[1;32m OK\033[0m\n", slippage);
     }
     
-    
+    // create a trajectory dump
+    if ( 0 != electron->WriteSDDS("teufel_undulator_trajectory.sdds"))
+    {
+	errors++;
+	printf("SDDS write \033[1;31m failed!\033[0m\n");
+    }
+    else
+    {
+	printf("SDDS file written - \033[1;32m OK\033[0m\n");
+    }
     return errors;
 }

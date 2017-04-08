@@ -19,41 +19,42 @@
  * 
  * =========================================================================*/
 
-#ifndef HOMOGENEOUSMAGNET_H
-#define HOMOGENEOUSMAGNET_H
+#pragma once
 
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "externalfield.h"
+#include "fields.h"
 #include "vector.h"
 
-using namespace std;
-
-//a class for a homogenous magnetic field 
-//the field would extend everywhere
-
-class HomogeneousMagnet : public ExternalField
+/*!
+ * \class GeneralField
+ * \brief a homogeneous magnetic field extending over all space
+ * @author Ulf Lehnert
+ * @author Vipul Joshi
+ * @date 7.4.2017
+ */
+class HomogeneousMagnet : public GeneralField
 {
 
   public:
 
-    // constructor
-    HomogeneousMagnet(Vector B);        // field vector B[T]
-
-    Vector getB0();			// report the field vector
+    /*! Default constructor initalizes the field to zero. */
+    HomogeneousMagnet();
     
-  private:
+    /*! Initializing constructor<br>
+     * field Vector B [T]
+     */
+    HomogeneousMagnet(Vector B);
 
-    Vector ElementLocalEField(double t, Vector X);
+    /*! report the field vector */
+    Vector getB0();
 
-    Vector ElementLocalBField(double t, Vector X);
-
+    ElMagField Field(double t, Vector X);
+    
   private:
       
     Vector B0;				// the constant field vector
 
 };
-
-#endif
