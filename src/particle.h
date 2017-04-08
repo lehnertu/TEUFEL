@@ -25,7 +25,7 @@
 #include "vector.h"
 
 /*!
- * \class ElMagField
+ * \class ChargedParticle
  * \brief Particle with electric charge.
  * @author Ulf Lehnert
  * @date 7.4.2017

@@ -162,7 +162,7 @@ private :
 
 /*!
  * \class Lattice
- * \brief This is a container class for many objects derived from GeneralalField
+ * \brief A container class for many objects derived from GeneralField
  * @author Ulf Lehnert
  * @date 7.4.2017
  * 
