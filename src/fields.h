@@ -182,6 +182,7 @@ private :
  * interaction fields of their particles to the lattice.
  * 
  * \todo The destructor is not yet coded.
+ * \todo Check for memory leaks.
  */
 class Lattice : public GeneralField
 {

@@ -189,5 +189,10 @@ int main()
     {
         printf("SDDS file written - \033[1;32m OK\033[0m\n");
     }
+
+    // clean up
+    delete lattice;
+    delete electron;
+
     return errors;
 }

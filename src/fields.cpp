@@ -86,6 +86,12 @@ Lattice::Lattice()
 
 Lattice::~Lattice()
 {
+    // destroy all objects belonging to the lattice
+    while (!elements.empty())
+    {
+	delete elements.back();
+	elements.pop_back();
+    }
 }
 
 void Lattice::addElement(GeneralField *element)

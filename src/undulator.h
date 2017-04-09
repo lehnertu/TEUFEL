@@ -42,8 +42,6 @@
  * The edges are modeled with a linear ramp extending \f$\pm\lambda/2\f$ about
  * the z-axis values of the entrance and exit. This ensures an approximately
  * symmetric oszillation about the initial trajectory in x direction.
- * 
- * \todo The shift of origin is not yet handled.
  */
 class PlanarUndulator : public ExternalField
 {
@@ -61,7 +59,7 @@ public:
     PlanarUndulator(Vector pos);
 
     /* Specify the magnetic field.<br>
-     * This is called with values B=0, lambda=1.0, N=1 by the constructors
+     * This is called with values B=0, lambda=1.0, N=1 by the constructors.
      */
     void Setup(
 	double B,                         // peak field [T]

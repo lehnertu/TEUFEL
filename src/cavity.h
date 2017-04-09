@@ -36,6 +36,14 @@ using namespace std;
 
 // the beam direction is along the z axis starting at z=0
 
+/*!
+ * \class PillboxCavity
+ * \brief Pillbox accelerator cavity.
+ * @author Ulf Lehnert
+ * @date 7.4.2017
+ *
+ * \todo update to current field definitions 
+ */
 class PillboxCavity : public ExternalField
 {
 

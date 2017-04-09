@@ -31,6 +31,14 @@ using namespace std;
 // the wave moves along the z axis
 // the polarization direction is along the x axis
 
+/*!
+ * \class PlaneWave
+ * \brief Plane electromagnetic wave filling all space.
+ * @author Ulf Lehnert
+ * @date 7.4.2017
+ *
+ * \todo update to current field definitions 
+ */
 class PlaneWave : public ExternalField
 {
 

@@ -154,6 +154,10 @@ int main ()
 	printf("beta gamma = %9.6f - \033[1;32m OK\033[0m\n", FinalMomentum.norm());
     }	
     printf("\n");
-    
+
+    // clean up
+    delete lattice;
+    delete electron;
+
     return errors;
 }
