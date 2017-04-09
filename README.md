@@ -15,4 +15,5 @@ Functionality
 
 Testcases
 =========
-- circular trajectory of an electron in a homogeneous dipole magnet --  tests/teufel.magnet.cpp
+- circular trajectory of an electron in a homogeneous dipole magnet - tests/teufel.magnet.cpp
+- single-electron trajectory in a planar undulator - tests/teufel.undulator.cpp

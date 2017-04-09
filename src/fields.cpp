@@ -63,6 +63,11 @@ ExternalField::ExternalField()
     origin = Vector(0.0,0.0,0.0);
 }
 
+ExternalField::ExternalField(Vector pos)
+{
+    origin = pos;
+}
+
 ElMagField ExternalField::Field(double t, Vector X)
 {
     return LocalField(t,X-origin);

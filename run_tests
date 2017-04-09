@@ -5,10 +5,12 @@ red='\033[1;31m'
 green='\033[1;32m'
 nc='\033[0m'
 
-./tests/teufel.magnet; rc=$?
+cd tests
+
+./teufel.magnet; rc=$?
 num=$(($num + $rc))
 
-./tests/teufel.undulator; rc=$?
+./teufel.undulator; rc=$?
 num=$(($num + $rc))
 
 if [ $num = "0" ]

@@ -24,25 +24,50 @@
 #include "vector.h"
 #include "fields.h"
 
-using namespace std;
-
-// a class for a planar undulator
-
-// the beam direction is along the z axis starting at z=0
-// the main magnetic field component is in y direction
-// so the undulator deflects in x direction
-// the field profile is flat in x direction (no focusssing)
-
-class Undulator : public ExternalField
+/*!
+ * \class PlanarUndulator
+ * \brief A planar undulator
+ * @author Ulf Lehnert
+ * @date 7.4.2017
+ * 
+ * This planar undulator has a sinusoidal field with period \f$\lambda\f$ along the z-axis.
+ * The main field component points in y direction with the peak value given
+ * in the constructor. 
+ * The field infinitely extends along the x-axis with constant value.
+ * In y direction the field is also periodic with the same period as in z-axis but
+ * the functional dependece is cosh() so there are poles at \f$\pm\lambda/2\f$.
+ * 
+ * In its own local coordinate system the undulator ist centered about the origin
+ * extending \f$N\,\lambda/2\f$ in both directions along the z axis.
+ * The edges are modeled with a linear ramp extending \f$\pm\lambda/2\f$ about
+ * the z-axis values of the entrance and exit. This ensures an approximately
+ * symmetric oszillation about the initial trajectory in x direction.
+ * 
+ * \todo The shift of origin is not yet handled.
+ */
+class PlanarUndulator : public ExternalField
 {
 
-  public:
+public:
 
-    // constructor
-    Undulator(double B,                         // peak field [T]
-              double lambda,                    // undulator period [m]
-              int    N                          // number of undulator periods
-             );
+    /*! The default contructor just calls the default constructor of the base class
+     *  and initalizes all variables with sane values. This will not yet produce any field output.
+     */
+    PlanarUndulator();
+
+    /*! This constructor places the undulator at a given position in lab space
+     *  and initalizes all variables with sane values. This will not yet produce any field output.
+     */
+    PlanarUndulator(Vector pos);
+
+    /* Specify the magnetic field.<br>
+     * This is called with values B=0, lambda=1.0, N=1 by the constructors
+     */
+    void Setup(
+	double B,                         // peak field [T]
+        double lambda,                    // undulator period [m]
+        int    N                          // number of undulator periods
+        );
 
     double  GetBPeak();
     double  GetLambdaU();
@@ -50,7 +75,7 @@ class Undulator : public ExternalField
     double  GetKpeak();
     double  GetKrms();
 
-  private:
+private:
 
     ElMagField LocalField(double t, Vector X);
 

@@ -129,7 +129,7 @@ public:
      *	8  ->  Error in Terminating the data flow to the sdds file \n
      * 
      */
-    int WriteSDDS(char *filename);
+    int WriteSDDS(const char *filename);
     
 private:
 

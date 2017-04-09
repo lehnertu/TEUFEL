@@ -24,70 +24,81 @@
 
 #include <math.h>
 
-Undulator::Undulator(   double B,                         // peak field [T]
-                        double lambda,                    // undulator period [m]
-                        int    N                          // number of undulator periods
-             )
+PlanarUndulator::PlanarUndulator() :
+    ExternalField()
 {
-  BPeak = B;
-  LambdaU = lambda;
-  NPeriods = N;
-  Krms=LambdaU*SpeedOfLight*BPeak/(2.0*Pi*mecsquared)/sqrt(2.0);
-  ky = 2.0*Pi/LambdaU;
-  kz = 2.0*Pi/LambdaU;
+    Setup(0.0, 1.0, 1);
 }
 
-double Undulator::GetBPeak()
+PlanarUndulator::PlanarUndulator(Vector pos) :
+    ExternalField(pos)
 {
-  return BPeak;
+    Setup(0.0, 1.0, 1);
 }
 
-double Undulator::GetLambdaU()
+void PlanarUndulator::Setup(
+    double B,
+    double lambda,
+    int N
+    )
 {
-  return LambdaU;
+    BPeak = B;
+    LambdaU = lambda;
+    NPeriods = N;
+    Krms = LambdaU * SpeedOfLight * BPeak / (2.0 * Pi * mecsquared) / sqrt(2.0);
+    ky = 2.0 * Pi / LambdaU;
+    kz = 2.0 * Pi / LambdaU;
 }
 
-int Undulator::GetNPeriods()
+double PlanarUndulator::GetBPeak()
 {
-  return NPeriods;
+    return BPeak;
 }
 
-double Undulator::GetKpeak()
+double PlanarUndulator::GetLambdaU()
 {
-  return Krms*sqrt(2.0);
+    return LambdaU;
 }
 
-double Undulator::GetKrms()
+int PlanarUndulator::GetNPeriods()
 {
-  return Krms;
+    return NPeriods;
 }
 
-ElMagField Undulator::LocalField(double t, Vector X)
+double PlanarUndulator::GetKpeak()
 {
-    Vector E = Vector(0.0 ,0.0 ,0.0);
-    Vector B=Vector (0,0,0);
-    double z1=-GetLambdaU()/2;
-    double z2=GetLambdaU()/2;
-    B.x=0.0;
-    if(X.z<z1)
+    return Krms * sqrt(2.0);
+}
+
+double PlanarUndulator::GetKrms()
+{
+    return Krms;
+}
+
+ElMagField PlanarUndulator::LocalField(double t, Vector X)
+{
+    Vector E = Vector(0.0, 0.0, 0.0);
+    Vector B = Vector(0.0, 0.0, 0.0);
+    // outside the range (z1, z2) the field is zero
+    double z1 = -(NPeriods+1)*LambdaU/2.0;
+    double z2 = (NPeriods+1)*LambdaU/2.0;
+    // ramp in over one LambdaU
+    if (z1 <= X.z && X.z < z1+LambdaU)
     {
-	B.y=0;
-	B.z=0;
+	B.y = ((X.z - z1) / LambdaU) * BPeak * sin(kz * X.z) * cosh(kz * X.y);
+	B.z = ((X.z - z1) / LambdaU) * BPeak * cos(kz * X.z) * sinh(kz * X.y);
     }
-    if(z1<=X.z&&X.z<z2)
+    // central part of the field
+    if (z1+LambdaU <= X.z && X.z < z2-LambdaU)
     {
-	B.y=((X.z-z1)/(z2-z1))*BPeak*sin(kz*X.z)*cosh(kz*X.y);
-	B.z=((X.z-z1)/(z2-z1))*BPeak*cos(kz*X.z)*sin(kz*X.y);
+        B.y = BPeak * sin(kz * X.z) * cosh(kz * X.y);
+        B.z = BPeak * cos(kz * X.z) * sinh(kz * X.y);
     }
-    if(z2<=X.z&&X.z<LambdaU*NPeriods-z2)
+    // ramp out over one LambdaU
+    if (z2-LambdaU <= X.z && X.z <= z2)
     {
-	B.y=BPeak*sin(kz*X.z)*cosh(kz*X.y);
-	B.z=BPeak*cos(kz*X.z)*sinh(kz*X.y);
+	B.y = ((z2 - X.z) / LambdaU) * BPeak * sin(kz * X.z) * cosh(kz * X.y);
+	B.z = ((z2 - X.z) / LambdaU) * BPeak * cos(kz * X.z) * sinh(kz * X.y);
     }
-    if(LambdaU*NPeriods-z2<=X.z&&X.z<=LambdaU*NPeriods-z1)
-    {
-	B.y=((LambdaU*NPeriods-z1-X.z)/(z2-z1))*BPeak*sin(kz*X.z)*cosh(kz*X.y);
-	B.z=((LambdaU*NPeriods-z1-X.z)/(z2-z1))*BPeak*cos(kz*X.z)*sinh(kz*X.y);
-    }
-    return ElMagField(E,B);
+    return ElMagField(E, B);
 }

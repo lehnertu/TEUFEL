@@ -127,6 +127,12 @@ public:
     */
     ExternalField();
 
+    /*! This constructor defines a different origin
+     *	of the element local coordinate system, thus, placing the element
+     *  at a certain position in lab space
+     */
+    ExternalField(Vector pos);
+    
     /*! All derived classe must provide a destructor */
     virtual ~ExternalField() {};
     

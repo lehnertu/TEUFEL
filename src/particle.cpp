@@ -379,7 +379,7 @@ ElMagField ChargedParticle::RetardedField(double time, Vector ObservationPoint)
     return ElMagField(EField * Charge,Vector(0.0,0.0,0.0));
 }
 
-int ChargedParticle::WriteSDDS(char *filename)
+int ChargedParticle::WriteSDDS(const char *filename)
 {
     cout << "writing SDDS file " << filename << endl;
     SDDS_DATASET data;
