@@ -322,7 +322,8 @@ void ChargedParticle::MirrorY(double MirrorY)
 ElMagField ChargedParticle::RetardedField(double time, Vector ObservationPoint)
 {
     Vector EField = Vector(0.0, 0.0, 0.0);
-
+    Vector BField = Vector(0.0, 0.0, 0.0);
+    
     int i1 = 0;    // index of the first trajectory point
     Vector RVec = ObservationPoint - X[i1];
     double R = RVec.norm();
@@ -375,8 +376,10 @@ ElMagField ChargedParticle::RetardedField(double time, Vector ObservationPoint)
         EField += (N - SourceBeta) / (R * R * bn3rd) / (gamma * gamma);
         // acceleration term
         EField += cross(N, cross(N - SourceBeta, SourceBetaPrime)) / (R * bn3rd) / SpeedOfLight;
+	BField =cross(N/SpeedOfLight,EField);
     }
-    return ElMagField(EField * Charge,Vector(0.0,0.0,0.0));
+    
+    return ElMagField(EField * Charge, BField);
 }
 
 int ChargedParticle::WriteSDDS(const char *filename)
@@ -433,7 +436,7 @@ int ChargedParticle::WriteSDDS(const char *filename)
 	)
     {
 	cout << "ChargedParticle::WriteSDDS - error setting parameters\n";
-	return 5;
+	return 6;
     }
     // write the table of trajectory data
     cout << "SDDS writing " << NP << " trajectory points" << endl;

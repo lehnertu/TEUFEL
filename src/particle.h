@@ -111,22 +111,18 @@ public:
 
     /*! Write all information including the trajectory data into an SDDS file.
      * 
-     *	 write data on a particle to particle basis
-     * 
-     *	 use sddsquery trajectory.sdds to view the format of dataset
+     * returns values for error checks:
      *	 
-     *	 routine returns values with following meaning:
-     *	 
-     *	0  ->  Successfully Written the file\n
-     *	1  ->  Error in Initializing the Output dataset \n
-     *	2  ->  Error in Defining the parameters \n
-     *	3  ->  Error in Defining Columns describing the data to be followed \n
-     *	4  ->  Error in Writing the layout of the data structure in the sdds file \n
-     *	5  ->  Error in Starting a New Page of the file \n
-     *	5  ->  Error in setting the values of the parameters \n
-     *	6  ->  Error in setting the row values i.e. the data belonging to column \n
-     *	7  ->  Error in Writing the page that was successfully initialized \n
-     *	8  ->  Error in Terminating the data flow to the sdds file \n
+     *	0  -  successfully Written the file\n
+     *	1  -  error in SDDS_InitializeOutput \n
+     *	2  -  error in SDDS_DefineSimpleParameter \n
+     *	3  -  error in SDDS_DefineColumn \n
+     *	4  -  error in SDDS_WriteLayout \n
+     *	5  -  error in SDDS_StartPage \n
+     *	6  -  error in SDDS_SetParameters \n
+     *	7  -  error in SDDS_SetRowValues \n
+     *	8  -  error in SDDS_WritePage \n
+     *	9  -  error in SDDS_Terminate \n
      * 
      */
     int WriteSDDS(const char *filename);
