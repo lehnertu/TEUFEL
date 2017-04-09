@@ -32,7 +32,7 @@ px = np.array(data.getColumnData("px"))
 py = np.array(data.getColumnData("py"))
 pz = np.array(data.getColumnData("pz"))
 
-left, width = 0.20, 0.70
+left, width = 0.25, 0.70
 rect1 = [left, 0.55, width, 0.40]  #left, bottom, width, height
 rect2 = [left, 0.08, width, 0.40]
 fig = plt.figure(1,figsize=(12,9))
@@ -40,9 +40,16 @@ fig = plt.figure(1,figsize=(12,9))
 ax1 = fig.add_axes(rect1)
 ax2 = ax1.twinx()
 ax3 = ax1.twinx()
-ax1.spines['left'].set_position(('axes', -0.15))
-ax2.spines['right'].set_position(('axes', -0.10))
-ax3.spines['left'].set_position(('axes', 0.0))
+
+ax2.spines['left'].set_position(('axes', -0.12))
+ax2.spines["left"].set_visible(True)
+ax2.yaxis.set_label_position('left')
+ax2.yaxis.set_ticks_position('left')
+ax3.spines['left'].set_position(('axes', -0.24))
+ax3.spines["left"].set_visible(True)
+ax3.yaxis.set_label_position('left')
+ax3.yaxis.set_ticks_position('left')
+
 l1 = ax1.plot(t, x, "r-", label=r'x [mm]')
 l2 = ax2.plot(t, y, "b-", label=r'y [mm]')
 l3 = ax3.plot(t, z, "g-", label=r'z [mm]')
@@ -57,7 +64,7 @@ ax3.tick_params(axis='y', colors='Green')
 ax3.ticklabel_format(useOffset=False)
 lines = l1 + l2 +l3
 labels = [l.get_label() for l in lines]
-ax3.legend(lines,labels,loc='upper left')
+ax3.legend(lines,labels,loc='upper right')
 for label in ax1.get_xticklabels():
   label.set_visible(False)
 ax1.grid(True)
@@ -65,9 +72,16 @@ ax1.grid(True)
 ax4 = fig.add_axes(rect2, sharex=ax1)
 ax5 = ax4.twinx()
 ax6 = ax4.twinx()
-ax4.spines['left'].set_position(('axes', -0.15))
-ax5.spines['right'].set_position(('axes', -0.10))
-ax6.spines['left'].set_position(('axes', 0.0))
+
+ax5.spines['left'].set_position(('axes', -0.12))
+ax5.spines["left"].set_visible(True)
+ax5.yaxis.set_label_position('left')
+ax5.yaxis.set_ticks_position('left')
+ax6.spines['left'].set_position(('axes', -0.24))
+ax6.spines["left"].set_visible(True)
+ax6.yaxis.set_label_position('left')
+ax6.yaxis.set_ticks_position('left')
+
 l4 = ax4.plot(t, px, "r-", label=r'$\beta\gamma_x$')
 l5 = ax5.plot(t, py, "b-", label=r'$\beta\gamma_y$')
 l6 = ax6.plot(t, pz, "g-", label=r'$\beta\gamma_z$')
@@ -83,7 +97,7 @@ ax6.ticklabel_format(useOffset=False)
 ax4.set_xlabel(r't [ns]')
 lines = l4 + l5 +l6
 labels = [l.get_label() for l in lines]
-ax6.legend(lines,labels,loc='upper left')
+ax6.legend(lines,labels,loc='upper right')
 ax4.grid(True)
 
 plt.show()
