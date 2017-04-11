@@ -17,7 +17,7 @@ int main()
   //const char *filename= "TEUFEL-EXAMPLE.txt";
   const char *filename= "BeamProfile.txt";
   Bunch *BB;
-  int NOP=1000;
+  int NOP=100;
   int NOTS=1700;
   double dt=3.2692307692307693e-12;
   //BB=new Bunch();
@@ -73,7 +73,7 @@ int main()
 	}
 
   //BB->JoinBunch(BB2);
-  Grid.GenPlanarGrid(0.004,0.004,4,32);
+  Grid.GenPlanarGrid(0.05,0.8,4,64);
   Grid.SDDSRadiationAtGrid(BB,time_begin, time_end, 1000);
   Out.close();  
   Out1.close();
