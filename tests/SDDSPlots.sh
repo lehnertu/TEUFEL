@@ -8,4 +8,4 @@ sddsplot -columnNames=t,'(Ex,Ey,Ez,Bx,By,Bz,PoyntingVector)' -separate -graphic=
 sddsfft -column=t radiation.sdds -psdOutput  fft-radiation.sdds
 sddsplot -columnNames=f,'(FFTEx,FFTEy,FFTEz)' -separate -scales=0.5e12,12e12,1,1 fft-radiation.sdds
 sddsinteg -integrate=PSDEx -versus=f -printFinal fft-radiation.sdds Power.sdds
-sddscontour radiation@grid.sdds -xyz=x,y,Ex  -ylabel=y -shade 
+sddscontour radiation@grid.sdds -xyz=z,x,Ex -topLine=@time -shade -mapShade=0.5,1

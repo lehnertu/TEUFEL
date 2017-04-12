@@ -15,20 +15,31 @@ int main()
   std::ofstream Out("test.txt", std::ofstream::out);
   std::ofstream Out1("test1.txt", std::ofstream::out);
   //const char *filename= "TEUFEL-EXAMPLE.txt";
-  const char *filename= "BeamProfile.txt";
+  //const char *filename= "BeamProfile.txt";
   Bunch *BB;
-  int NOP=1000;
-  int NOTS=1700;
-  double dt=3.2692307692307693e-12;
-  //BB=new Bunch();
-  BB= new Bunch(filename, NOP, -12500, 12500);
-  //ChargedParticle *e = new ChargedParticle(-12500,12500,Vector(0,0,0),Vector(0,0,16),0);
+  //int NOP=200;
+  int NOTS=34000;
+  double dt=3.2692307692307693e-13/2.0;
+  BB=new Bunch();
+  //BB= new Bunch(filename, NOP, -12500, 12500);
+  ChargedParticle *e = new ChargedParticle(-12500,12500,Vector(0,0,0),Vector(0,0,16),0);
+  ChargedParticle *e2 = new ChargedParticle(-12500,12500,Vector(0,0,-0.000553/2.0),Vector(0,0,16),0);
   //cout<<"Now trying to add particles to a bunch"<<endl;
-  //BB->AddParticles(e);
-  Undulator *undu =new Undulator(0.1,0.045,34);
+  BB->AddParticles(e);
+  BB -> AddParticles(e2);
+  Undulator *undu =new Undulator(0.765,0.045,33);
   Lattice *field =new Lattice();
   field->addElement(undu);
   BB->Track_Vay(NOTS,dt,field,0);
+  Bunch *BB2 = new Bunch(BB);
+  BB2 -> MirrorY(0.0128);
+  //Bunch *BB3 = new Bunch(BB);
+  //BB3 -> MirrorY(-0.0128);
+  //BB2 -> JoinBunch(BB3);
+  //Bunch *BB4  = new Bunch(BB);
+  //BB4 -> MirrorY(0.0336);
+  //BB2 -> JoinBunch(BB4);
+  //BB -> JoinBunch(BB2);  
   int FT=pow(2,14);
   tuple<Vector,Vector> Field[FT];
   double time_begin=1.334e-8;
@@ -40,50 +51,24 @@ int main()
   Grid.GenPlanarGrid(0.006,0.006,4,150);
   double Area=Grid.GetMeshArea();
   Vector Ar=Vector(0.0,0.0,1.0)*Area;
-  //double t_max;
   tuple<Vector,Vector> Grid1[Grid.GetGridSize()];
- // Analysis an = Analysis(BB);
- // an.avg();
- // an.DumpTrajectory();
   double lambdau = undu->GetLambdaU();
   double K = 0.934*lambdau*100*(undu->GetBPeak());
   double gamma =8.511/0.511;
   double lambdar = lambdau*(1+K*K/2.0)/(2.0*gamma*gamma);
   double freq = SpeedOfLight/lambdar;
-  //cout<<freq<<endl;
-  //an.BunchFactor(lambdau,lambdar);
-  //ChargedParticle *e2 = new ChargedParticle(e);
-  cout<<"Now trying to copy a bunch"<<endl;
-  Bunch *BB2= new Bunch(BB);
-  BB2->MirrorY(0.012);
-
-#pragma omp parallel for 
-  for (int i=0;i<Grid.GetGridSize();i++)
-	{	
-		Grid1[i]=BB->RadiationField(Grid.GetGridPoints(i),1.334536561e-8);
-	}
-  for (int i=0;i<Grid.GetGridSize();i++)
-	{
-		Vector E=get<0>(Grid1[i]);
-		Vector B=get<1>(Grid1[i])/MuNull;
-		Vector Poynting = cross(E,B);
-		Vector XP=Grid.GetGridPoints(i);
-		double Power=dot(Poynting,Ar);		
-		Out1<<XP.x<<"\t"<<XP.y<<"\t"<<XP.z<<"\t"<<Poynting.norm()<<"\n";
-	}
-
-  //BB->JoinBunch(BB2);
-  Grid.GenPlanarGrid(0.004,0.004,4,32);
-  Grid.SDDSRadiationAtGrid(BB,time_begin, time_end, 1000);
+  Grid.GenXZGrid(Vector(0,0,3.993335),0.02,0.0,0.001,2048);
+  Grid.SDDSRadiationAtGrid(BB,1.335005e-8,time_end, 1, "radiation@grid.sdds");
   Out.close();  
   Out1.close();
-  int output = BB->WriteSDDSTrajectory();
-  cout<<"Write Trajectory return value: "<<output<<endl;
-  int output2= BB->WriteSDDSTime();
-  cout<<"Write Time-Trajectory return value: "<<output2<<endl;	
-  int output3 = BB->WriteSDDSRadiation(Robs, time_begin, time_end, FT);
-  cout<<"Write Radiation return value: "<<output2<<endl;
+  //int output = BB->WriteSDDSTrajectory();
+  //cout<<"Write Trajectory return value: "<<output<<endl;
+  //int output2= BB->WriteSDDSTime();
+  //cout<<"Write Time-Trajectory return value: "<<output2<<endl;	
+ // int output3 = BB->WriteSDDSRadiation(Robs, time_begin, time_end, FT);
+  //cout<<"Write Radiation return value: "<<output2<<endl;
   BB->~Bunch();
+ // BB2->~Bunch();
   //e->~ChargedParticle();	
   return 0;
 }
