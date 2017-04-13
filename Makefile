@@ -6,6 +6,7 @@ SHELL = /bin/sh
 
 SRCDIR = ./src
 TESTDIR = ./tests
+EXPLDIR = ./examples
 OBJDIR = ./obj
 LIBDIR = ./lib
 
@@ -52,6 +53,7 @@ TARGET = teufel
 TESTS = $(TESTDIR)/teufel.magnet \
 	$(TESTDIR)/teufel.undulator
 	
+EXAMPLES = $(EXPLDIR)/elbe-u300
 
 ####### Implicit rules
 
@@ -69,7 +71,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.cpp
 
 ####### Build rules
 
-.PHONY : first all tests clean
+.PHONY : first all tests examples clean
 
 first: $(TARGET)
 
@@ -90,6 +92,9 @@ $(OBJ): $(SRCDIR)/global.h \
 tests: $(OBJ) 
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.magnet $(TESTDIR)/teufel.magnet.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.undulator $(TESTDIR)/teufel.undulator.cpp $(LFLAGS) $(OBJ) $(LIBS)
+
+examples: $(OBJ) 
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(EXPLDIR)/elbe-u300 $(EXPLDIR)/elbe-u300.cpp $(LFLAGS) $(OBJ) $(LIBS)
 
 docs:
 	doxygen setup.dox

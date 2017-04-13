@@ -39,6 +39,19 @@ ChargedParticle::ChargedParticle()
     A = 0;
 }
 
+ChargedParticle::ChargedParticle(double charge, double mass)
+{
+    Charge = charge;
+    Mass = mass;
+    // no trajectory points
+    NP = 0;
+    // no memory allocated, all pointers are zero
+    Time = 0;
+    X = 0;
+    P = 0;
+    A = 0;
+}
+
 ChargedParticle::ChargedParticle(const ChargedParticle* Part)
 {
     Charge = Part->Charge;
@@ -375,11 +388,53 @@ ElMagField ChargedParticle::RetardedField(double time, Vector ObservationPoint)
         // velocity term
         EField += (N - SourceBeta) / (R * R * bn3rd) / (gamma * gamma);
         // acceleration term
-        EField += cross(N, cross(N - SourceBeta, SourceBetaPrime)) / (R * bn3rd) / SpeedOfLight;
+	EField +=  cross(N, cross(N - SourceBeta, SourceBetaPrime)) *Charge / (R * bn3rd) / SpeedOfLight;
 	BField =cross(N/SpeedOfLight,EField);
     }
     
-    return ElMagField(EField * Charge, BField);
+    return ElMagField(EField, BField);
+}
+
+int ChargedParticle::TimeDomainObservation(
+    Vector ObservationPoint,
+    std::vector<double> *ObservationTime,
+    std::vector<ElMagField> *ObservationField)
+{
+    double scale=(Charge*ElementaryCharge/(4.0*Pi*EpsNull));
+    // delete all possibly existing data
+    ObservationTime->clear();
+    ObservationField->clear();
+    for( int i=0; i<NP; i++)
+    {
+	// loop over all source points stored in the trajectory
+	Vector SourceX = X[i];
+	Vector SourceBeta = P[i];
+	Vector SourceBetaPrime = A[i];
+	double betagamma2 = SourceBeta.abs2nd();
+	double gamma2 = betagamma2 + 1.0;
+	double gamma = sqrt(gamma2);
+	SourceBeta /= gamma;
+	SourceBetaPrime /= gamma;
+	// now compute the distance and direction to the observer
+	Vector RVec = ObservationPoint - SourceX;
+	double R = RVec.norm();
+	Vector N = RVec;
+	N.normalize();
+	// compute the retarded time
+	double rtime = Time[i] + R/SpeedOfLight;
+	// now compute the radiated field
+	double bn3rd = pow(1.0 - dot(SourceBeta, N), 3.0);
+	// velocity term
+	Vector EField = (N - SourceBeta) / (R*R*bn3rd*gamma2);
+	// acceleration term
+	EField += cross(N, cross(N - SourceBeta, SourceBetaPrime)) / (R*bn3rd*SpeedOfLight);
+	EField *= scale;
+	Vector BField = cross(N,EField) / SpeedOfLight;
+	// store the data
+	ObservationTime->push_back(rtime);
+	ObservationField->push_back(ElMagField(EField, BField));
+    }
+    return NP;
 }
 
 int ChargedParticle::WriteSDDS(const char *filename)

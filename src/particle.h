@@ -52,6 +52,12 @@ public:
      */
     ChargedParticle();
 
+    /*! Standard constructor:<br>
+     * Charge is is given in units of elementary charge, mass im units of electron mass.<br>
+     * No trajectory is allocated.
+     */
+    ChargedParticle(double charge, double mass);
+    
     /*! Copy constructor:<br>
      * A given particle is identically reproduced, thereby creating copies of all trajectory data
      */
@@ -109,6 +115,26 @@ public:
     // retardation is properly accounted for
     ElMagField RetardedField(double time, Vector ObservationPoint);
 
+    /*! Compute the electromagnetic field radiated by a particle
+     * seen from a given observation point. The field is given in time domain
+     * at a number of time steps corresponding to the time steps of
+     * the trajectory of the particle. The sample points at the observation
+     * position, thus, are not predefined and not equi-distant. The samples
+     * are delayed by the retardation corresponding to the observation distance.
+     * 
+     * \return
+     * Observation time and field are stored into given vectors.
+     * The number of samples is returned.
+     * 
+     * \param[in] ObservationPoint Position of the observer in space.
+     * \param[out] ObservationTime Sample time at the observation point.
+     * \param[out] ObservationField Electromagnetic field samples at the observation point.
+     */
+    int TimeDomainObservation(
+	    Vector ObservationPoint,
+	    std::vector<double> *ObservationTime,
+	    std::vector<ElMagField> *ObservationField);
+    
     /*! Write all information including the trajectory data into an SDDS file.
      * 
      * returns values for error checks:
