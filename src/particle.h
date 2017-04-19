@@ -235,7 +235,7 @@ class ChargedParticle
 
   private:
 
-    int NOTS;			// number of trajectory points
+    int NOTS=0;			// number of trajectory points
     int Charge;			// charge in units of ElementaryCharge
     int Mass;			// mass in unit of the electron rest mass
     double *Time;		// time in lab-frame [s]

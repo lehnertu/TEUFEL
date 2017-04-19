@@ -227,6 +227,13 @@ class Bunch
 	*/
 	void MirrorY(double Mirror);
 
+	/*
+
+	Translate all particles in the bunch by Vector R
+	*/
+	void Translate(Vector R);
+
+
 	/*!
 
 	  Get the jth trajectory point of ith particle
@@ -250,6 +257,12 @@ class Bunch
 	  Get the time value at jth trajectory point of ith particle
 	*/
 	double getTrajTime(int i, int j);
+
+	/*
+	
+	  Get Pointer to a particle at position i in the vector
+	*/
+	ChargedParticle* PointerToParticle(int i);
 	
   private:
 
@@ -294,6 +307,8 @@ class Bunch
 	vector<Vector>InitialPosition;
 	vector<double>InitialTime;
 	vector<Vector>InitialMomentum;
+
+	
 	
   protected:
 	/*!

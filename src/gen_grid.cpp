@@ -39,6 +39,31 @@ void GenGrid::GenPlanarGrid(double x,double y,double z,int NumGridPoints)
 
 }
 
+void GenGrid::GenXZGrid(Vector position,double x,double y,double z,int NumGridPoints)
+{
+    Numpoints=NumGridPoints;
+    TruePoints=NumGridPoints*NumGridPoints;
+    double dx=x/((double)Numpoints);
+    double dz=z/((double)Numpoints);
+    MeshArea=dx*dz;
+    int counter=0;
+    r=new Vector[TruePoints];
+    double xx= position.x - x/2.0;
+    for (int i=0;i<Numpoints;i++)
+    {
+        xx=xx+dx;
+        double zz= position.z -z/2.0;
+//#pragma omp parallel for private(yy,xx,zz)
+        for (int j=0;j<Numpoints;j++)
+        {
+            zz=zz+dz;
+            r[counter]=Vector(xx,position.y,zz);
+            counter=counter+1;
+
+        }
+    }
+
+}
 
 
 Vector GenGrid::GetGridPoints(int i)
@@ -63,12 +88,12 @@ Vector GenGrid::GetNormalVector()
 }
 
 
-int GenGrid::SDDSRadiationAtGrid(Bunch *bunch, double time_begin, double time_end, int NumberOfPoints )
+int GenGrid::SDDSRadiationAtGrid(Bunch *bunch, double time_begin, double time_end, int NumberOfPoints, const char* filename )
 {
 	double dt = (time_end-time_begin)/(double)NumberOfPoints;
 	SDDS_DATASET data;
 	char buffer[100];
-	int Initialize = SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,"radiation@grid.sdds");
+	int Initialize = SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,filename);
 	if(Initialize!=1)
 	{
 			cout<<"Error Initializing Output\n";
@@ -96,6 +121,7 @@ int GenGrid::SDDSRadiationAtGrid(Bunch *bunch, double time_begin, double time_en
 	if(
 			SDDS_DefineColumn(&data,"x\0","x\0","m","Xposition\0",NULL, SDDS_DOUBLE,0) ==-1 ||
  			SDDS_DefineColumn(&data,"y\0","y\0","m\0","Yposition\0",NULL, SDDS_DOUBLE,0)   ==-1 || 
+			SDDS_DefineColumn(&data,"z\0","z\0","m\0","Zposition\0",NULL, SDDS_DOUBLE,0)   ==-1 || 
 			SDDS_DefineColumn(&data,"Ex\0","Ex\0","V/m\0","ElectricFieldInX\0",NULL, SDDS_DOUBLE,0) == -1 ||
 			SDDS_DefineColumn(&data,"Ey\0","Ey\0","V/m\0","ElectricFieldInY\0",NULL, SDDS_DOUBLE,0) == -1 ||
 			SDDS_DefineColumn(&data,"Ez\0","Ez\0","V/m\0","ElectricFieldInZ\0",NULL, SDDS_DOUBLE,0) == -1 || 
@@ -166,6 +192,7 @@ int GenGrid::SDDSRadiationAtGrid(Bunch *bunch, double time_begin, double time_en
 			if(SDDS_SetRowValues(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,tim,
 				"x",(double)(Robs.x),
 				"y",(double)(Robs.y),
+				"z", (double)(Robs.z),
 				"Ex",(double)(E.x),
 				"Ey",(double)(E.y),
 				"Ez",(double)(E.z),

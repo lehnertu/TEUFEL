@@ -99,16 +99,21 @@ void Bunch::AddParticles( ChargedParticle *part)
 
 void Bunch::JoinBunch(Bunch *bunch)
 {
-	NOP+=bunch->NOP;
+	
 	Charge += bunch->Charge;
 	Mass += bunch ->Mass;
-	for(int i=0; i<NOP;i++)
+	for(int i=0; i<=bunch->getNOP()-1;i++)
 	{
-		b.push_back(bunch->b[i]);
+		b.push_back(bunch->PointerToParticle(i));
 	}
+	NOP+=bunch->getNOP();
 
 }
 
+ChargedParticle* Bunch::PointerToParticle(int i)
+{
+	return b[i];
+}
 int Bunch::getNOP()
 {
 	return NOP;
@@ -302,7 +307,10 @@ void Bunch::Track_Vay(int NT, double tstep, Lattice *field, int SpaceCharge)
 #pragma omp parallel for 
 	for (int i=0;i<NOP;i++)
 	{
-		b[i]->init(NOTS);		
+		
+		b[i]->init(NOTS);
+		
+				
 	}
 	if(SpaceCharge==0)
 	{
@@ -356,9 +364,18 @@ void Bunch::MirrorY(double Mirror)
 	}
 }
 
-
+void Bunch::Translate(Vector R)
+{
+	for(int i=0;i<NOP;i++)
+	{	
+		b[i]->Translate(R);
+		
+	}
+}
 int Bunch::WriteSDDSTrajectory()
 {
+
+	cout << "Dumping each particle's Trajectory Data to file: trajectory.sdds"<<endl;
 	SDDS_DATASET data;
 	char buffer[100];
 	int Initialize = SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,"trajectory.sdds");
@@ -498,6 +515,8 @@ int Bunch::WriteSDDSTrajectory()
 int
  Bunch::WriteSDDSTime()
 {
+
+	cout<<"Dumping Data for each time step for every particle to file: time-trajectory.sdds"<<endl;
 	SDDS_DATASET data;
 	char buffer[100];
 	int Initialize = SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,"time-trajectory.sdds");
@@ -627,6 +646,8 @@ int
 
 int Bunch::WriteSDDSRadiation(Vector Robs, double time_begin, double time_end, int NumberOfPoints )
 {
+
+	cout<<"Dumping Radiation Field data for the given time window to file : radiation.sdds"<<endl;
 	double dt = (time_end-time_begin)/(double)NumberOfPoints;
 	tuple<Vector,Vector>Field[NumberOfPoints];
 #pragma omp parallel for shared(time_begin, dt, Robs) 
@@ -641,7 +662,6 @@ int Bunch::WriteSDDSRadiation(Vector Robs, double time_begin, double time_end, i
 	double nots,nop;
 	nots =(double)NOTS;
 	nop =(double)NOP;
-	cout<<"HERE....."<<endl;
 	if(Initialize!=1)
 	{
 			cout<<"Error Initializing Output\n";

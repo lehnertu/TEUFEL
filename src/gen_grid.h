@@ -20,6 +20,8 @@ public:
      //creates the grid extending from -x/2,-y/2 to +x/2,+y/2 and located at z
     void GenPlanarGrid(double x, double y, double z,int NumGridpoints);
 
+    void GenXZGrid(Vector position,double x, double y, double z, int NumGridpoints);
+
     //Gets the position vector of the ith tile in the grid.
     // The origin point is at the beginning of undulator.
     Vector GetGridPoints(int i);
@@ -62,7 +64,7 @@ public:
 	8  ->  Error in Terminating the data flow to the sdds file \n
 
 	*/
-    int SDDSRadiationAtGrid(Bunch *bunch, double time_begin, double time_end, int NumberOfPoints );
+    int SDDSRadiationAtGrid(Bunch *bunch, double time_begin, double time_end, int NumberOfPoints, const char* filename );
 
 
 

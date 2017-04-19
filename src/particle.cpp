@@ -56,25 +56,23 @@ ChargedParticle::ChargedParticle(const ChargedParticle *Part)
   	Charge = Part->Charge;
   	Mass = Part->Mass;
   	NOTS = Part->NOTS;
-  	if (NOTS > 0)
-    	{
-     	 	Time = new double[NOTS];
-      		X = new Vector[NOTS];
-      		P = new Vector[NOTS];
-      		A = new Vector[NOTS];
-      		for (int i=0; i<NOTS; i++)
-        	{
-          		Time[i] = Part->Time[i];
-         		X[i] = Part->X[i];
-         		P[i] = Part->P[i];
-          		A[i] = Part->A[i];
-        	};
-    } else {
-      Time = 0;
-      X = 0;
-      P = 0;
-      A = 0;
-    }
+	t0 = Part->t0;
+      	x0 = Part->x0;
+      	p0= Part->p0;
+      	A = 0;
+  	Time = new double[NOTS];
+        X = new Vector[NOTS];
+      	P = new Vector[NOTS];
+      	A = new Vector[NOTS];
+      	for (int i=0; i<NOTS; i++)
+        {
+         Time[i] = Part->Time[i];
+         X[i] = Part->X[i];
+         P[i] = Part->P[i];
+         A[i] = Part->A[i];
+        };
+   
+      
 }
 
 ChargedParticle::~ChargedParticle()
@@ -87,8 +85,8 @@ ChargedParticle::~ChargedParticle()
 
 void ChargedParticle :: init( int TrajLength)
 {
-			
 	NOTS = TrajLength+1;		// set the number of time steps equal to trajectory length
+	
 	if(X!=0)
 	{
 		delete[] X;
@@ -113,6 +111,7 @@ void ChargedParticle :: init( int TrajLength)
 	X[0] = x0;
 	P[0] = p0;
 	Time[0] = t0;
+	
 	
 }
 
@@ -444,10 +443,20 @@ tuple<Vector,Vector> ChargedParticle::RetardedEField(double time, Vector Observa
 
 void ChargedParticle::Translate(Vector R)
 {
-  for (int i=0; i<NOTS; i++)
-    {
-      X[i] = X[i] + R;
-    };
+  if(NOTS !=0)
+  {
+  	for (int i=0; i<NOTS; i++)
+    	{
+      		X[i] = X[i] + R;
+		
+    	};
+  }
+
+  else
+  {
+	x0 = x0+R;
+	
+  }
 }
 
 
@@ -465,22 +474,57 @@ void ChargedParticle::MirrorY(double MirrorY)
 
 double ChargedParticle::TrajTime(int i)
 {
-	return Time[i];
+	if(counter != 0)
+	{
+		return Time[i];
+	}
+
+	else
+	{
+		return t0;
+	}
 }
 
 Vector ChargedParticle::TrajPoint(int i)
 {
-	return X[i];
+	if(counter != 0)
+	{
+		return X[i];
+	}
+
+	else
+	{
+		return x0;
+	}
+	
 }
 
 
 Vector ChargedParticle::TrajAccel(int i)
 {
-	return A[i];
+	if(counter != 0)
+	{
+		return A[i];
+	}
+
+	else
+	{
+		return Vector(0,0,0);
+	}
+	
 }
 Vector ChargedParticle::TrajMomentum(int  i)
 {
-	return P[i];
+	if(counter != 0)
+	{
+		return P[i];
+	}
+
+	else
+	{
+		return p0;
+	}
+	
 }
 int ChargedParticle::getNOTS() const
 {
