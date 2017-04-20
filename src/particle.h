@@ -43,15 +43,15 @@
  */
 class ChargedParticle
 {
-
+    
 public:
-
+    
     /*! Default constructor:<br>
      * Charge is set to electron charge, mass to electron mass.<br>
      * No trajectory is allocated
      */
     ChargedParticle();
-
+    
     /*! Standard constructor:<br>
      * Charge is is given in units of elementary charge, mass im units of electron mass.<br>
      * No trajectory is allocated.
@@ -62,38 +62,30 @@ public:
      * A given particle is identically reproduced, thereby creating copies of all trajectory data
      */
     ChargedParticle(const ChargedParticle* Part);
-
+    
     /*! Destructor: free all memory of trajectory storage */
     ~ChargedParticle();
-
+    
     /*! Return the number of points in the trajectory */
     int GetNP();
-
+    
     /*! Return the time [s] for one point of the trajectory */
     double TrajTime(int step);
-
+    
     /*! Return the position [m] for one point of the trajectory */
     Vector TrajPoint(int step);
     
     /*! Return the momentum \f$\beta*\gamma\f$ for one point of the trajectory */
     Vector TrajMomentum(int step);
-
+    
     // track the particle through a given field
     // use the most simple Euler algorithm
     void TrackEuler(int Nstep,       // number of timesteps
-                    double tstep,    // time step size
-                    Vector X0,       // initial position
-                    Vector P0,       // initial momentum
-                    Lattice* field);
-
-    // track the particle through a given field
-    // using a leap-frog algorithm
-    void TrackLF(int Nstep,       // number of timesteps
-                 double tstep,    // time step size
-                 Vector X0,       // initial position
-                 Vector P0,       // initial momentum
-                 Lattice* field);
-
+		    double tstep,    // time step size
+		    Vector X0,       // initial position
+		    Vector P0,       // initial momentum
+		    Lattice* field);
+    
     /*! @brief Track the particle through a given field.
      * 
      * The algorithm follows J.-L.Vay PHYSICS OF PLASMAS 15, 056701 (2008).
@@ -105,23 +97,25 @@ public:
      * @param field the field through which the particle is tracked
      */
     void TrackVay(int Nstep,       // number of timesteps
-                  double tstep,    // time step size
-                  Vector X0,       // initial position
-                  Vector P0,       // initial momentum
-                  Lattice* field);
-
+		  double tstep,    // time step size
+		  Vector X0,       // initial position
+		  Vector P0,       // initial momentum
+		  Lattice* field);
+    
     /*! @brief Setup for tracking the particle using the Vay algorithm.
      * 
      * The algorithm follows J.-L.Vay PHYSICS OF PLASMAS 15, 056701 (2008).
      * 
-     * @param tstep the length of the time step.
+     * @param t0 the start time
      * @param X0 the start position of the particle
      * @param P0 the start momentum \f$\beta \gamma\f$ of the particle
+     * @param tstep the length of the time step.
      * @param field the field through which the particle is tracked
      */
-    void InitVay(double tstep,
+    void InitVay(double t0,
 		 Vector X0,
 		 Vector P0,
+		 double tstep,
 		 Lattice* field);
     
     /*! @brief Perform one tracking step using the Vay algorithm.
@@ -134,17 +128,17 @@ public:
     
     // translate a given particle trajectory
     void Translate(Vector R);
-
+    
     // mirroring a given particle trajectory
     // on a plane y=MirrorY
     // (this also reverses the charge)
     void MirrorY(double MirrorY);
-
+    
     // electric field radiated by the particle
     // at a given observation point at time t in lab frame
     // retardation is properly accounted for
     ElMagField RetardedField(double time, Vector ObservationPoint);
-
+    
     /*! Compute the electromagnetic field radiated by a particle
      * seen from a given observation point. The field is given in time domain
      * at a number of time steps corresponding to the time steps of
@@ -161,9 +155,9 @@ public:
      * \param[out] ObservationField Electromagnetic field samples at the observation point.
      */
     int TimeDomainObservation(
-	    Vector ObservationPoint,
-	    std::vector<double> *ObservationTime,
-	    std::vector<ElMagField> *ObservationField);
+	Vector ObservationPoint,
+	std::vector<double> *ObservationTime,
+	std::vector<ElMagField> *ObservationField);
     
     /*! Write all information including the trajectory data into an SDDS file.
      * 
@@ -184,7 +178,7 @@ public:
     int WriteSDDS(const char *filename);
     
 private:
-
+    
     //! number of trajectory points
     int NP;
     
@@ -195,15 +189,31 @@ private:
     double Mass;
     
     //! time in lab frame [s]
-    double* Time;
+    std::vector<double> Time;
     
     //! position in lab frame [m]
-    Vector* X;
+    std::vector<Vector> X;
     
     //! dimensionless momentum in lab frame : \f$\beta\gamma = \frac{c p}{mc^2}\f$
-    Vector* P;
+    std::vector<Vector> P;
     
     //! acceleration [1/s] in lab frame \f$a = \frac{d}{dt}(\beta\gamma)\f$
-    Vector* A;
+    std::vector<Vector> A;
+    
+    //! time step for tracking - this will remain constant after being set at the start of tracking
+    double dt;
+    
+    //! charge over mass ratio - this will remain constant during tracking
+    double qm;
 
-};
+    //! charge over mass divided by the double time step - this will remain constant during tracking
+    double qmt2;
+    
+    //! \f$u^{i+1}/c\f$ of the Vay algorithm
+    Vector VY_p_i1;
+    
+    //! \f$\gamma^{i+1}/c\f$ of the Vay algorithm
+    double VY_gamma_i1;
+    
+    };
+    

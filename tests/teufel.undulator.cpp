@@ -123,8 +123,11 @@ int main()
     double tau = (double)N * (lambda + lambdar) / SpeedOfLight + (3.0 - (double)N * lambda) / (beta * SpeedOfLight);
     // double tau=06.8e-9;
     double deltaT = tau / NOTS;
-    electron->TrackVay(NOTS, deltaT, X0, P0, lattice);
-
+    // electron->TrackVay(NOTS, deltaT, X0, P0, lattice);
+    electron->InitVay(0.0, X0, P0, deltaT, lattice);
+    for (int i=0; i<NOTS; i++)
+	electron->StepVay(lattice);
+    
     // count the errors
     int errors = 0;
 

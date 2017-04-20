@@ -114,8 +114,11 @@ int main ()
     
     // track for the time it takes to complete one circle 
     double deltaT = tau / NOTS;
-    electron->TrackVay(NOTS, deltaT, X0, P0, lattice);
-
+    // electron->TrackVay(NOTS, deltaT, X0, P0, lattice);
+    electron->InitVay(0.0, X0, P0, deltaT, lattice);
+    for (int i=0; i<NOTS; i++)
+	electron->StepVay(lattice);
+    
     // count the errors
     int errors = 0;
   
