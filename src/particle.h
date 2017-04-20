@@ -94,14 +94,44 @@ public:
                  Vector P0,       // initial momentum
                  Lattice* field);
 
-    // track the particle through a given field
-    // using the Vay algorithm
+    /*! @brief Track the particle through a given field.
+     * 
+     * The algorithm follows J.-L.Vay PHYSICS OF PLASMAS 15, 056701 (2008).
+     * 
+     * @param Nstep the number of tracking steps to be performed.
+     * @param tstep the length of the time step.
+     * @param X0 the start position of the particle
+     * @param P0 the start momentum \f$\beta \gamma\f$ of the particle
+     * @param field the field through which the particle is tracked
+     */
     void TrackVay(int Nstep,       // number of timesteps
                   double tstep,    // time step size
                   Vector X0,       // initial position
                   Vector P0,       // initial momentum
                   Lattice* field);
 
+    /*! @brief Setup for tracking the particle using the Vay algorithm.
+     * 
+     * The algorithm follows J.-L.Vay PHYSICS OF PLASMAS 15, 056701 (2008).
+     * 
+     * @param tstep the length of the time step.
+     * @param X0 the start position of the particle
+     * @param P0 the start momentum \f$\beta \gamma\f$ of the particle
+     * @param field the field through which the particle is tracked
+     */
+    void InitVay(double tstep,
+		 Vector X0,
+		 Vector P0,
+		 Lattice* field);
+    
+    /*! @brief Perform one tracking step using the Vay algorithm.
+     * 
+     * The algorithm follows J.-L.Vay PHYSICS OF PLASMAS 15, 056701 (2008).
+     * 
+     * @param field the field through which the particle is tracked
+     */
+    void StepVay(Lattice* field);
+    
     // translate a given particle trajectory
     void Translate(Vector R);
 

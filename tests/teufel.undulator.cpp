@@ -89,8 +89,8 @@ int main()
     Undu->Setup(B, lambda, N);
 
     printf("B =  %9.6g T\n", B);
-    printf("Undulator Period = %9.6g T\n ", lambda);
-    printf("N = %9.6g T\n ", (double)N);
+    printf("Undulator Period = %9.6g m\n", lambda);
+    printf("N = %9.6g\n", (double)N);
     double gamma = 30.35823388162631;
     double beta = sqrt(1.0 - 1.0 / (gamma * gamma));
     double betagamma = sqrt(gamma * gamma - 1.0);
@@ -99,7 +99,7 @@ int main()
     printf("beta =  %12.9g\n", beta);
     printf("gamma =  %12.9g\n", gamma);
     printf("c*p =  %12.9g MeV\n", 1e-6 * mecsquared * betagamma);
-    double xdis = ElementaryCharge * B * SpeedOfLight / (gamma * beta * 9.1e-31 * SpeedOfLight * SpeedOfLight * ku * ku);
+    double xdis = ElementaryCharge * B * SpeedOfLight / (betagamma * 9.1e-31 * SpeedOfLight * SpeedOfLight * ku * ku);
     printf("X-Displacement =  %9.6fg mm\n", xdis*1.0e3);
     printf("Radiation Wavelength =  %6.3f µm\n", lambdar * 1.0e6);
 

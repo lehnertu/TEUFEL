@@ -51,7 +51,8 @@ TARGETOBJ = $(OBJDIR)/teufel.o
 TARGET = teufel
 
 TESTS = $(TESTDIR)/teufel.magnet \
-	$(TESTDIR)/teufel.undulator
+	$(TESTDIR)/teufel.undulator \
+	$(TESTDIR)/teufel.loop
 	
 EXAMPLES = $(EXPLDIR)/elbe-u300
 
@@ -92,6 +93,7 @@ $(OBJ): $(SRCDIR)/global.h \
 tests: $(OBJ) 
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.magnet $(TESTDIR)/teufel.magnet.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.undulator $(TESTDIR)/teufel.undulator.cpp $(LFLAGS) $(OBJ) $(LIBS)
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.loop $(TESTDIR)/teufel.loop.cpp $(LFLAGS) $(OBJ) $(LIBS)
 
 examples: $(OBJ) 
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(EXPLDIR)/elbe-u300 $(EXPLDIR)/elbe-u300.cpp $(LFLAGS) $(OBJ) $(LIBS)

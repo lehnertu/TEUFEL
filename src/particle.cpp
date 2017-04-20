@@ -236,10 +236,10 @@ void ChargedParticle::TrackLF(
 }
 
 void ChargedParticle::TrackVay(
-    int Nstep,       // number of timesteps
-    double tstep,    // time step size
-    Vector X0,       // initial position
-    Vector P0,       // initial momentum
+    int Nstep,
+    double tstep,
+    Vector X0,
+    Vector P0,
     Lattice* lattice)
 {
     NP = Nstep + 1;
@@ -297,8 +297,10 @@ void ChargedParticle::TrackVay(
         double u_star = dot(p_prime, tau);
         double tau2nd = tau.abs2nd();
         double sigma = gamma_prime * gamma_prime - tau2nd;
+	// eq. (11)
         gamma_i1 = sqrt(0.5 * (sigma + sqrt(sigma * sigma + 4.0 * (tau2nd + u_star * u_star))));
         Vector t = tau / gamma_i1;
+	// eq. (12)
         p_i1 = (p_prime + t * dot(p_prime, t) + cross(p_prime, t)) / (1 + t.abs2nd());
         beta_i1 = p_i1 / gamma_i1;
         // store all half-step quantities
@@ -311,6 +313,24 @@ void ChargedParticle::TrackVay(
         x_h += beta_i1 * SpeedOfLight * tstep;
         t_h += tstep;
     };
+}
+
+/*!
+ * Implementation details:
+ * ----------------------
+ * 
+ * The trajectory data is stored for the half-integer
+ */
+void ChargedParticle::InitVay(
+	    double tstep,
+	    Vector X0,
+	    Vector P0,
+	    Lattice* field)
+{
+}
+
+void ChargedParticle::StepVay(Lattice* field)
+{
 }
 
 void ChargedParticle::Translate(Vector R)
@@ -375,7 +395,8 @@ ElMagField ChargedParticle::RetardedField(double time, Vector ObservationPoint)
         Vector SourceX = X[i1] * (1.0 - frac) + X[i2] * frac;
         Vector SourceBeta = P[i1] * (1.0 - frac) + P[i2] * frac;
         double betagamma2 = SourceBeta.abs2nd();
-        double gamma = sqrt(betagamma2 + 1.0);
+	double gammasqr = betagamma2 + 1.0;
+	double gamma = sqrt(gammasqr);
         SourceBeta /= gamma;
         Vector SourceBetaPrime = A[i1] * (1.0 - frac) + A[i2] * frac;
         SourceBetaPrime /= gamma;
@@ -384,12 +405,14 @@ ElMagField ChargedParticle::RetardedField(double time, Vector ObservationPoint)
         R = RVec.norm();
         Vector N = RVec;
         N.normalize();
-        double bn3rd = pow(1.0 - dot(SourceBeta, N), 3.0);
+	double scale = Charge*ElementaryCharge/(4.0*Pi*EpsNull);
+	double bn3rd = pow(1.0 - dot(SourceBeta, N), 3.0);
         // velocity term
-        EField += (N - SourceBeta) / (R * R * bn3rd) / (gamma * gamma);
+        EField += (N - SourceBeta) / (R * R * bn3rd) / (gammasqr);
         // acceleration term
-	EField +=  cross(N, cross(N - SourceBeta, SourceBetaPrime)) *Charge / (R * bn3rd) / SpeedOfLight;
-	BField =cross(N/SpeedOfLight,EField);
+	EField += cross(N, cross(N - SourceBeta, SourceBetaPrime)) / (R*bn3rd*SpeedOfLight);
+	EField *= scale;
+	BField = cross(N,EField)/SpeedOfLight;
     }
     
     return ElMagField(EField, BField);
