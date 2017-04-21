@@ -29,7 +29,6 @@
 #include "global.h"
 #include "particle.h"
 #include "fields.h"
-#include "homogeneousmagnet.h"
 
 #include "SDDS.h"
 
@@ -46,17 +45,17 @@ int main ()
   printf("homogeneous magnet testcase\n\n");
 
   Vector B=Vector(0.033166247903554,0.05,0.08);
-  HomogeneousMagnet *mag = new HomogeneousMagnet(B);
-  printf("B =  %9.6g T\n",(mag->getB0()).norm());
-  printf("Bx = %9.6g T  ",(mag->getB0()).x);
-  printf("By = %9.6g T  ",(mag->getB0()).y);
-  printf("Bz = %9.6g T\n",(mag->getB0()).z);
+  HomogeneousField *mag = new HomogeneousField(Vector(0.0,0.0,0.0),B);
+  printf("B =  %9.6g T\n",(B.norm()));
+  printf("Bx = %9.6g T  ",(B.x));
+  printf("By = %9.6g T  ",(B.y));
+  printf("Bz = %9.6g T\n",(B.z));
   
   double cp = 10.0e6;   // 10 MeV
   printf("c*p =  %9.6g MeV\n",1e-6*cp);
   double betagamma= cp / mecsquared;
   printf("gamma =  %9.6g\n",sqrt(1.0+betagamma*betagamma));
-  double Rgyro = betagamma * mecsquared / SpeedOfLight / mag->getB0().norm();
+  double Rgyro = betagamma * mecsquared / SpeedOfLight / B.norm();
   printf("R =  %9.6g m\n",Rgyro);
 
   Lattice *lattice = new Lattice;
@@ -182,7 +181,7 @@ int main ()
        0 on failure 
   */
   if (SDDS_SetParameters(&SDDS_dataset, SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, 
-			 "B", mag->getB0().norm(), 
+			 "B", B.norm(), 
                          "cp",  cp, 
                          "gamma", sqrt(1.0+betagamma*betagamma), 
                          "R",  Rgyro,
