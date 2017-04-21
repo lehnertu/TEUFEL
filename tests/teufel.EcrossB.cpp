@@ -52,11 +52,10 @@
 
 #include "global.h"
 #include "particle.h"
-#include "externalfield.h"
-#include "HomogeneousEField.h"
-#include "HomogeneousMagnet.h"
+#include "fields.h"
 #include <iostream>
 #include <fstream>
+
 int NOTS = 3000;                // number of time steps
 
 int main ()
@@ -66,7 +65,6 @@ int main ()
     double By=0.52;
     double Bz=0.45;
     Vector B=Vector(Bx,By,Bz);
-    HomogeneousMagnet *mag = new HomogeneousMagnet(B);
     printf("B =  %9.6g T\n",B.norm());
     printf("Bx =  %9.6g T\t",B.x);
     printf("By =  %9.6g T\t",B.y);
@@ -89,16 +87,13 @@ int main ()
 
     //compute a crossed electric field
     Vector E=cross(B,Vel);
-    HomogeneousEField *ef = new HomogeneousEField(E);
     printf("E =  %9.6g V/m\n",E.norm());
     printf("Ex =  %9.6g V/m\t",E.x);
     printf("Ey =  %9.6g V/m\t",E.y);
     printf("Ez =  %9.6g V/m\n",E.z);
 
     // a simple lattice with just the E and B fields
-    Lattice *lattice = new Lattice;
-    lattice->addElement(mag);
-    lattice->addElement(ef);
+    HomogeneousField *lattice = new HomogeneousField(E,B);
     // one single electron
     ChargedParticle *electron = new ChargedParticle();
 
@@ -153,6 +148,10 @@ int main ()
 	printf("Final Momentum = %9.6f - \033[1;31m test failed!\033[0m\n", FinalMomentum.norm());
     } else {
 	printf("Final Momentum = %9.6f - \033[1;32m OK\033[0m\n",FinalMomentum.norm());}
+
+    // clean up
+    delete lattice;
+    delete electron;
 
     return errors;
     

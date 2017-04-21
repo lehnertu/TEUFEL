@@ -100,6 +100,37 @@ public:
 };
 
 /*!
+ * \class HomogeneousField
+ * \brief A homogeneous electric/magnetic field extending over all space.
+ * @author Ulf Lehnert
+ * @author Vipul Joshi
+ * @date 7.4.2017
+ */
+class HomogeneousField : public GeneralField
+{
+    
+public:
+    
+    /*! Default constructor initalizes the fields to zero. */
+    HomogeneousField();
+    
+    /*! Initializing constructor
+     * 
+     * @param E the electric field strength in V/m
+     * @param B the magnetic field in T
+     */
+    HomogeneousField(Vector E, Vector B);
+    
+    //! Field report routine
+    ElMagField Field(double t, Vector X);
+    
+private:
+    
+    ElMagField EB;			// the constant field value
+    
+};
+
+/*!
  * \class ExternalField
  * \brief An external field (lattice element) through which to track particles.
  * @author Ulf Lehnert

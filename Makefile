@@ -32,7 +32,6 @@ OBJECTS_DIR   = ./obj
 #	$(SRCDIR)/cavity.cpp
 #	$(SRCDIR)/wave.cpp
 SRC = 	$(SRCDIR)/fields.cpp \
-	$(SRCDIR)/homogeneousmagnet.cpp \
 	$(SRCDIR)/particle.cpp\
 	$(SRCDIR)/teufel.cpp\
 	$(SRCDIR)/undulator.cpp \
@@ -41,7 +40,6 @@ SRC = 	$(SRCDIR)/fields.cpp \
 #	$(OBJDIR)/cavity.o \
 #	$(OBJDIR)/wave.o
 OBJ = 	$(OBJDIR)/fields.o \
-	$(OBJDIR)/homogeneousmagnet.o \
 	$(OBJDIR)/particle.o \
 	$(OBJDIR)/undulator.o \
 	$(OBJDIR)/vector.o
@@ -52,7 +50,8 @@ TARGET = teufel
 
 TESTS = $(TESTDIR)/teufel.magnet \
 	$(TESTDIR)/teufel.undulator \
-	$(TESTDIR)/teufel.loop
+	$(TESTDIR)/teufel.loop \
+	$(TESTDIR)/teufel.EcrossB
 	
 EXAMPLES = $(EXPLDIR)/elbe-u300
 
@@ -85,7 +84,6 @@ $(TARGET):  $(OBJ)  $(TARGETOBJ)
 #	$(SRCDIR)/wave.h
 $(OBJ): $(SRCDIR)/global.h \
 	$(SRCDIR)/fields.h \
-	$(SRCDIR)/homogeneousmagnet.h \
 	$(SRCDIR)/particle.h \
 	$(SRCDIR)/undulator.h \
 	$(SRCDIR)/vector.h
@@ -94,6 +92,7 @@ tests: $(OBJ)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.magnet $(TESTDIR)/teufel.magnet.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.undulator $(TESTDIR)/teufel.undulator.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.loop $(TESTDIR)/teufel.loop.cpp $(LFLAGS) $(OBJ) $(LIBS)
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.EcrossB $(TESTDIR)/teufel.EcrossB.cpp $(LFLAGS) $(OBJ) $(LIBS)
 
 examples: $(OBJ) 
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(EXPLDIR)/elbe-u300 $(EXPLDIR)/elbe-u300.cpp $(LFLAGS) $(OBJ) $(LIBS)

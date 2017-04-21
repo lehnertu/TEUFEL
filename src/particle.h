@@ -84,7 +84,7 @@ public:
 		    double tstep,    // time step size
 		    Vector X0,       // initial position
 		    Vector P0,       // initial momentum
-		    Lattice* field);
+		    GeneralField* field);
     
     /*! @brief Track the particle through a given field.
      * 
@@ -100,7 +100,7 @@ public:
 		  double tstep,    // time step size
 		  Vector X0,       // initial position
 		  Vector P0,       // initial momentum
-		  Lattice* field);
+		  GeneralField* field);
     
     /*! @brief Setup for tracking the particle using the Vay algorithm.
      * 
@@ -116,7 +116,7 @@ public:
 		 Vector X0,
 		 Vector P0,
 		 double tstep,
-		 Lattice* field);
+		 GeneralField* field);
     
     /*! @brief Perform one tracking step using the Vay algorithm.
      * 
@@ -124,7 +124,7 @@ public:
      * 
      * @param field the field through which the particle is tracked
      */
-    void StepVay(Lattice* field);
+    void StepVay(GeneralField* field);
     
     // translate a given particle trajectory
     void Translate(Vector R);

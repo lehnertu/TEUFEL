@@ -56,6 +56,23 @@ ElMagField& ElMagField::operator+= (ElMagField other)
 
 // ********** GeneralField **********
 
+// ********** HomogeneousField **********
+
+HomogeneousField::HomogeneousField()
+{
+    EB = ElMagField(Vector(0.0,0.0,0.0),Vector(0.0,0.0,0.0));
+}
+
+HomogeneousField::HomogeneousField(Vector E, Vector B)
+{
+    EB = ElMagField(E,B);
+}
+
+ElMagField HomogeneousField::Field(double t, Vector X)
+{
+    return EB;
+}
+
 // ********** ExternalField **********
 
 ExternalField::ExternalField()

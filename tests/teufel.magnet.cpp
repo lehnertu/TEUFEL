@@ -64,8 +64,6 @@
 #include "particle.h"
 #include "fields.h"
 
-#include "homogeneousmagnet.h"
-
 int NOTS = 1000;                // number of time steps
 
 int main ()
@@ -74,7 +72,7 @@ int main ()
     printf("\nTEUFEL - homogeneous magnet testcase\n");
 
     Vector B=Vector(0.033166247903554,0.05,0.08);
-    HomogeneousMagnet *mag = new HomogeneousMagnet(B);
+    HomogeneousField *mag = new HomogeneousField(Vector(0.0,0.0,0.0),B);
     Vector B0 = mag->Field(0.0,Vector(0.0,0.0,0.0)).B();
     printf("B =  %9.6g T\n",B0.norm());
     printf("Bx = %9.6g T  ",B0.x);

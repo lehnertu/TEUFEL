@@ -71,7 +71,6 @@
 #include "global.h"
 #include "particle.h"
 #include "fields.h"
-#include "homogeneousmagnet.h"
 
 int NOTS = 5000;                // number of time steps
 
@@ -79,7 +78,7 @@ int main ()
 {
     printf("\nTEUFEL - Radiation at the centre of a circular loop\n");
     Vector B=Vector(0.0, 0.5, 0.0);
-    HomogeneousMagnet *mag = new HomogeneousMagnet(B);
+    HomogeneousField *mag = new HomogeneousField(Vector(0.0, 0.0, 0.0),B);
     printf("B0 =  %10.3g T\n",B.norm());
     double gamma = 10.0;
     double betagamma= sqrt(gamma*gamma-1.0);
@@ -161,6 +160,10 @@ int main ()
 	printf("Field observed = %12.5g T- \033[1;32m OK\033[0m\n",Obs.B().norm());
     }
 
+    // clean up
+    delete lattice;
+    delete electron;
+    
     return errors;
     
 }

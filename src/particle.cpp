@@ -94,7 +94,7 @@ void ChargedParticle::TrackEuler(
     double tstep,    // time step size
     Vector X0,       // initial position
     Vector P0,       // initial momentum
-    Lattice* lattice)
+    GeneralField* lattice)
 {
     NP = Nstep + 1;
     Time.clear();
@@ -142,7 +142,7 @@ void ChargedParticle::TrackVay(
     double tstep,
     Vector X0,
     Vector P0,
-    Lattice* lattice)
+    GeneralField* lattice)
 {
     NP = Nstep + 1;
     Time.clear();
@@ -234,7 +234,7 @@ void ChargedParticle::InitVay(
 	   Vector X0,		// position at the half-step point
 	   Vector P0,		// momentum at the half-step point
 	   double tstep,
-	   Lattice* field)
+	   GeneralField* field)
 {
     // clear all old data
     Time.clear();
@@ -290,7 +290,7 @@ void ChargedParticle::InitVay(
  * The time step and particle properties can not change during the tracking. Only the field
  * is allowed to change. Therefore, the field reference is given for every tracking step.
  */
-void ChargedParticle::StepVay(Lattice* field)
+void ChargedParticle::StepVay(GeneralField* field)
 {
     // the momentum vector at the beginning of the step is known from the previous step
     Vector p_i = VY_p_i1;

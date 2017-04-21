@@ -16,6 +16,9 @@ num=$(($num + $rc))
 ./teufel.loop; rc=$?
 num=$(($num + $rc))
 
+./teufel.EcrossB; rc=$?
+num=$(($num + $rc))
+
 if [ $num = "0" ]
 then
     echo -e "$green no errors - all tests passed.$nc"
