@@ -47,10 +47,10 @@
 #include <string.h>
 
 #include "global.h"
+#include "observer.h"
 #include "particle.h"
 #include "fields.h"
 #include "undulator.h"
-#include "SDDS.h"
 #include <iostream>
 #include <fstream>
 
@@ -109,98 +109,18 @@ int main()
     }
 
     // compute the radiation on axis
-    std::vector<double> time;
-    std::vector<ElMagField> rad;
-    int nObs = electron->TimeDomainObservation(Vector(0.0, 0.0, 10.0), &time, &rad);
-    
-    printf("Radiation %d steps\n",nObs);
-    // for(int i=0; i<nObs; i++)
-    //		printf("t = %f ns  E = (%9.3g, %9.3g, %9.3g)\n", 1e9*time[i], rad[i].E().x, rad[i].E().y, rad[i].E().z);
-    
-    // write observed fields to file
-    cout << "writing SDDS file elbe-u300_RadTrace.sdds" << endl;
-    SDDS_DATASET data;
-    if (1 != SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,"ELBE_U300_RadTrace.sdds"))
+    PointObserver Obs = PointObserver(Vector(0.0, 0.0, 10.0));
+    Obs.GetTimeDomainTrace(electron);
+    // dump it to a file
+    if (0 != Obs.WriteTimeTraceSDDS("elbe-u300_RadTrace.sdds"))
     {
-	cout << "WriteSDDS - error initializing output\n";
-	return 1;
+	printf("SDDS write \033[1;31m failed!\033[0m\n");
     }
-    if  (SDDS_DefineSimpleParameter(&data,"NumberTimeSteps","", SDDS_LONG)!=1)
+    else
     {
-	cout << "WriteSDDS - error defining parameters\n";
-	return 2;
+	printf("SDDS file written - \033[1;32m OK\033[0m\n");
     }
-    if  (
-	SDDS_DefineColumn(&data,"t\0","t\0","s\0","TimeInSeconds\0",NULL, SDDS_DOUBLE,0)   ==-1 || 
-	SDDS_DefineColumn(&data,"Ex\0","Ex\0","V/m\0","electric field\0",NULL, SDDS_DOUBLE,0) == -1 ||
-	SDDS_DefineColumn(&data,"Ey\0","Ey\0","V/m\0","electric field\0",NULL, SDDS_DOUBLE,0) == -1 ||
-	SDDS_DefineColumn(&data,"Ez\0","Ez\0","V/m\0","electric field\0",NULL, SDDS_DOUBLE,0) == -1 || 
-	SDDS_DefineColumn(&data,"Bx\0","Bx\0","T\0","magnetic field\0",NULL, SDDS_DOUBLE,0)== -1 || 
-	SDDS_DefineColumn(&data,"By\0","By\0","T\0","magnetic field\0",NULL,SDDS_DOUBLE,0) == -1 ||
-	SDDS_DefineColumn(&data,"Bz\0","Bz\0","T\0","magnetic field\0",NULL,SDDS_DOUBLE,0) == -1
-	)
-    {
-	cout << "WriteSDDS - error defining data columns\n";
-	return 3;
-    }
-    if (SDDS_WriteLayout(&data) != 1)
-    {
-	cout << "WriteSDDS - error writing layout\n";
-	return 4;
-    }
-    // start a page with number of lines equal to the number of trajectory points
-    cout << "SDDS start page" << endl;
-    if (SDDS_StartPage(&data,(int32_t)nObs) !=1 )
-    {
-	cout << "WriteSDDS - error starting page\n";
-	return 5;
-    }
-    // write the single valued variables
-    cout << "SDDS write parameters" << endl;
-    if  (SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,
-	"NumberTimeSteps",nObs,
-	NULL ) !=1
-	)
-    {
-	cout << "ChargedParticle::WriteSDDS - error setting parameters\n";
-	return 6;
-    }
-    // write the table of trajectory data
-    cout << "SDDS writing " << nObs << " field values" << endl;
-    for( int i=0; i<nObs; i++)
-    {
-	if( SDDS_SetRowValues(&data,
-	    SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,i,
-	    "t",time[i],
-	    "Ex",rad[i].E().x,
-	    "Ey",rad[i].E().y,
-	    "Ez",rad[i].E().z,
-	    "Bx",rad[i].B().x,
-	    "By",rad[i].B().y,
-	    "Bz",rad[i].B().z,
-	    NULL) != 1
-	)
-	{
-	    cout << "WriteSDDS - error writing data columns\n";
-	    return 7;
-	}
-    }
-    if( SDDS_WritePage(&data) != 1)
-    {
-	cout << "WriteSDDS - error writing page\n";
-	return 8;
-    }
-    // finalize the file
-    if (SDDS_Terminate(&data) !=1 )
-    {
-	cout << "WriteSDDS - error terminating data file\n";
-	return 9;
-    }	
-    // no errors have occured if we made it 'til here
-    cout << "writing SDDS done." << endl;
-    
-    
-    
+
     // clean up
     delete lattice;
     delete electron;

@@ -215,5 +215,4 @@ private:
     //! \f$\gamma^{i+1}/c\f$ of the Vay algorithm
     double VY_gamma_i1;
     
-    };
-    
+};
