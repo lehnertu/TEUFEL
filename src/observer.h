@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <complex>
 #include "vector.h"
 #include "particle.h"
 
@@ -56,9 +57,30 @@ public:
 	ChargedParticle *source
     );
     
+    /*! Complex amplitude of the observation for a given frequency [Hz].
+     * 
+     * The 3 components of the electric field are analyzed.
+     * 
+     * This method requires that the a trace of observed field values has been
+     * collected before and stored in PointObserver::ObservationTime
+     * and PointObserver::ObservationField. Such a trace can be used for multiple
+     * calls of the method in sequence - it is not altered.
+     */
+    void FrequencyObservation(
+	double freq,
+	std::complex<double> *Ex,
+	std::complex<double> *Ey,
+	std::complex<double> *Ez
+    );
+    
     /*! Write a time-domain field trace into an SDDS file.
      * 
-     * returns values for error checks:
+     * The file contains one table with 7 columns
+     * - observation time [s]
+     * - 3 componenets of the electric field [V/m]
+     * - 3 componenets of the magnetic field [T]
+     * 
+     * @return values for error checks:
      *	 
      *	0  -  successfully Written the file\n
      *	1  -  error in SDDS_InitializeOutput \n
@@ -74,6 +96,39 @@ public:
      */
     int WriteTimeTraceSDDS(const char *filename);
     
+    /*! Write a frequency spectrum into an SDDS file.
+     * 
+     * The file contains one table with 7 columns
+     * - observation Frequency f [Hz]
+     * - Amplitude Ax and phase Px of the x component of the electric field
+     * - Amplitude Ay and phase Py of the y component of the electric field
+     * - Amplitude Az and phase Pz of the z component of the electric field
+     * 
+     * @param filename name of the SDDS file to be created
+     * @param fstart first frequency [Hz] to write into the file
+     * @param fstop last frequency [Hz] to write into the file
+     * @param fstep frequency step [Hz] of the list
+     * 
+     * @return values for error checks:
+     *	 
+     *	0  -  successfully Written the file\n
+     *	1  -  error in SDDS_InitializeOutput \n
+     *	2  -  error in SDDS_DefineSimpleParameter \n
+     *	3  -  error in SDDS_DefineColumn \n
+     *	4  -  error in SDDS_WriteLayout \n
+     *	5  -  error in SDDS_StartPage \n
+     *	6  -  error in SDDS_SetParameters \n
+     *	7  -  error in SDDS_SetRowValues \n
+     *	8  -  error in SDDS_WritePage \n
+     *	9  -  error in SDDS_Terminate \n
+     * 
+     */
+    int WriteSpectrumSDDS(
+	const char *filename,
+	double fstart,
+	double fstop,
+	double fstep);
+ 
 private:
     
     //! the position of the observer

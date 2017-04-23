@@ -45,6 +45,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <complex>
 
 #include "global.h"
 #include "observer.h"
@@ -65,8 +66,8 @@ int main()
     Undu->Setup(B, lambda, N);
 
     printf("B =  %9.6g T\n", B);
-    printf("Undulator Period = %9.6g m\n ", lambda);
-    printf("N = %9.6g\n ", (double)N);
+    printf("Undulator Period = %9.6g m\n", lambda);
+    printf("N = %9.6g\n", (double)N);
     double gamma = 48;
     double beta = sqrt(1.0 - 1.0 / (gamma * gamma));
     double betagamma = sqrt(gamma * gamma - 1.0);
@@ -76,7 +77,8 @@ int main()
     printf("gamma =  %12.9g\n", gamma);
     printf("c*p =  %12.9g MeV\n", 1e-6 * mecsquared * betagamma);
     printf("Radiation Wavelength =  %6.3f mm\n", lambdar * 1.0e3);
-
+    printf("Radiation Frequency =  %6.3g THz\n", SpeedOfLight/lambdar*1.0e-12);
+    
     // a simple lattice with just the Undulator Field
     Lattice* lattice = new Lattice;
     lattice->addElement(Undu);
@@ -99,9 +101,10 @@ int main()
     electron->TrackVay(NOTS, deltaT, X0, P0, lattice);
 
     // create a trajectory dump
-    if (0 != electron->WriteSDDS("elbe-u300_Trajectory.sdds"))
+    int retval = electron->WriteSDDS("elbe-u300_Trajectory.sdds");
+    if (0 != retval)
     {
-        printf("SDDS write \033[1;31m failed!\033[0m\n");
+	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
     }
     else
     {
@@ -112,15 +115,29 @@ int main()
     PointObserver Obs = PointObserver(Vector(0.0, 0.0, 10.0));
     Obs.GetTimeDomainTrace(electron);
     // dump it to a file
-    if (0 != Obs.WriteTimeTraceSDDS("elbe-u300_RadTrace.sdds"))
+    retval = Obs.WriteTimeTraceSDDS("elbe-u300_RadTrace.sdds");
+    if (0 != retval)
     {
-	printf("SDDS write \033[1;31m failed!\033[0m\n");
+	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
     }
     else
     {
 	printf("SDDS file written - \033[1;32m OK\033[0m\n");
     }
 
+    // write frequency spectrum to file
+    retval = Obs.WriteSpectrumSDDS(
+	"elbe-u300_RadSpectrum.sdds",
+	0.0, 5.0e12, 0.01e12);
+    if (0 != retval)
+    {
+	printf("SDDS spectrum write \033[1;31m failed! - error %d\033[0m\n", retval);
+    }
+    else
+    {
+	printf("SDDS spectrum file written - \033[1;32m OK\033[0m\n");
+    }
+    
     // clean up
     delete lattice;
     delete electron;
