@@ -51,6 +51,10 @@ public:
      *  It follows from the retardation of the tracking time steps of the
      *  observed particle.
      * 
+     * The arrays PointObserver::ObservationTime and PointObserver::ObservationField
+     * are erased and filled with new values. PointObserver::NOTS is set accordingly
+     * to the length of the new trace.
+     * 
      *  @return the number of observations in time
      */
     int GetTimeDomainTrace(
@@ -75,6 +79,10 @@ public:
     
     /*! Write a time-domain field trace into an SDDS file.
      * 
+     * This method requiresnthat a trace of observed field values has been
+     * collected before and stored in PointObserver::ObservationTime
+     * and PointObserver::ObservationField.
+     * 
      * The file contains one table with 7 columns
      * - observation time [s]
      * - 3 componenets of the electric field [V/m]
@@ -97,6 +105,11 @@ public:
     int WriteTimeTraceSDDS(const char *filename);
     
     /*! Write a frequency spectrum into an SDDS file.
+     * 
+     * This method calls FrequencyObservation() and therefore requires
+     * that the a trace of observed field values has been
+     * collected before and stored in PointObserver::ObservationTime
+     * and PointObserver::ObservationField.
      * 
      * The file contains one table with 7 columns
      * - observation Frequency f [Hz]
