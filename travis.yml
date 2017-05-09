@@ -1,0 +1,5 @@
+language: C++
+rvm:
+ -gcc
+ -clang
+ OMP_NUM_THREADS(4)
