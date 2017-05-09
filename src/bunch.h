@@ -139,7 +139,7 @@ class Bunch
 	at some observation point defined by the Vector Robs
 	for the complete bunch
 	*/
-	tuple<Vector,Vector>RadiationField(Vector Robs, double t);
+	pair<Vector,Vector>RadiationField(Vector Robs, double t);
 
 
 	/*!
@@ -294,7 +294,7 @@ class Bunch
 	//fields are calculated with Observation Point==ParticleID
 	//time = Laboratory Time or the iteration time
 	//stepnumber will always be one less than the iteration number
-	tuple<Vector,Vector>MutualField(int stepnumber, int ParticleID, double t);
+	pair<Vector,Vector>MutualField(int stepnumber, int ParticleID, double t);
 
 	//allocate memory to the every particle for stroing the trajectory points
 	//arrays will have size NOTS

@@ -66,6 +66,8 @@ public:
 	*/
     int SDDSRadiationAtGrid(Bunch *bunch, double time_begin, double time_end, int NumberOfPoints, const char* filename );
 
+	int SDDSFilteredRadiationAtGrid(double RequiredFrequency, const char* filename, Bunch *bunch, double time_begin, double time_end, int NumberOfPoints );
+
 
 
 private:
@@ -74,6 +76,8 @@ private:
     int TruePoints;
     double MeshArea;
     Vector MeshNormal;
+    double GridLength;
+    double GridWidth;
 };
 
 #endif // GENGRID_H
