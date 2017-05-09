@@ -81,7 +81,7 @@ Vector Undulator::ElementLocalBField(double t, Vector X)
     if(z1<=X.z&&X.z<z2)
     {
         B.y=((X.z-z1)/(z2-z1))*BPeak*sin(kz*X.z)*cosh(kz*X.y);
-        B.z=((X.z-z1)/(z2-z1))*BPeak*cos(kz*X.z)*sin(kz*X.y);
+        B.z=((X.z-z1)/(z2-z1))*BPeak*cos(kz*X.z)*sinh(kz*X.y);
     }
     if(z2<=X.z&&X.z<LambdaU*NPeriods-z2)
     {

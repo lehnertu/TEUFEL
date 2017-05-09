@@ -32,6 +32,7 @@
 #include "omp.h"
 #include "SDDS.h"
 #include <string.h>
+#include <utility>
 Bunch::Bunch()
 {
 	
@@ -99,16 +100,21 @@ void Bunch::AddParticles( ChargedParticle *part)
 
 void Bunch::JoinBunch(Bunch *bunch)
 {
-	NOP+=bunch->NOP;
+	
 	Charge += bunch->Charge;
 	Mass += bunch ->Mass;
-	for(int i=0; i<NOP;i++)
+	for(int i=0; i<=bunch->getNOP()-1;i++)
 	{
-		b.push_back(bunch->b[i]);
+		b.push_back(bunch->PointerToParticle(i));
 	}
+	NOP+=bunch->getNOP();
 
 }
 
+ChargedParticle* Bunch::PointerToParticle(int i)
+{
+	return b[i];
+}
 int Bunch::getNOP()
 {
 	return NOP;
@@ -197,97 +203,63 @@ double Bunch:: getTrajTime(int i, int j)
 }
 
 
-tuple<Vector,Vector> Bunch::MutualField(int stepnumber, int ParticleID, double t)
+pair<Vector,Vector> Bunch::MutualField(int stepnumber, int ParticleID, double t)
 {
-	Vector Ef = Vector(0.0,0.0,0.0);
-	Vector Bf = Vector(0.0,0.0,0.0);
+	
 	int j=ParticleID;
 	Vector Robs=b[j]->TrajPoint(stepnumber);
-	tuple<Vector,Vector>FF[NOP];
-	FF[j] = make_tuple(Ef,Bf);
-#pragma omp parallel for shared(j,stepnumber,t,Robs)
+	pair<Vector,Vector>FF[NOP];
+	double Ex=0.0;
+	double Ey=0.0;
+	double Ez=0.0;
+	double Bx=0.0;
+	double By=0.0;
+	double Bz=0.0;
+	
+#pragma omp parallel for shared(j,stepnumber,t,Robs) reduction(+:Ex,Ey,Ez,Bx,By,Bz)
 	for (int i=0; i<NOP;i++)
 	{
-
-		if(i!=j)
-		{
-			FF[i]= b[i]->RetardedEField(t, Robs);
+		FF[i]= b[i]->RetardedEField(t, Robs);
+		Ex+=(FF[i].first).x;
+		Ey+=(FF[i].first).y;
+		Ez+=(FF[i].first).z;
+		Bx+=(FF[i].second).x;
+		By+=(FF[i].second).y;
+		Bz+=(FF[i].second).z;
 		
-		}
-	
-		
-	}
-	
-	double Ex,Ey,Ez,Bx,By,Bz;
-	Ex=0.0;
-	Ey=0.0;
-	Ez=0.0;
-	Bx=0.0;
-	By=0.0;
-	Bz=0.0;
-#pragma omp parallel for reduction(+:Ex,Ey,Ez)
-	for(int i=0;i<NOP;i++)
-	{
-		Ex+=get<0>(FF[i]).x;
-		Ey+=get<0>(FF[i]).y;
-		Ez+=get<0>(FF[i]).z;
-	}
-#pragma omp parallel for reduction(+:Bx,By,Bz)
-	for(int i=0;i<NOP;i++)
-	{
-		Bx+=get<1>(FF[i]).x;
-		By+=get<1>(FF[i]).y;
-		Bz+=get<1>(FF[i]).z;
 	}
 
-	Ef=Vector(Ex,Ey,Ez);
-	Bf=Vector(Bx,By,Bz);
-	return make_tuple(Ef,Bf);
+	return make_pair(Vector(Ex,Ey,Ez),Vector(Bx,By,Bz));
 }
 
 
 
-tuple<Vector,Vector> Bunch::RadiationField(Vector Robs, double t)
+pair<Vector,Vector> Bunch::RadiationField(Vector Robs, double t)
 {
 	Vector Ef = Vector(0.0,0.0,0.0);
 	Vector Bf = Vector(0.0,0.0,0.0);
-	tuple<Vector,Vector>FF[NOP];
-#pragma omp parallel for shared(t,Robs)
+	pair<Vector,Vector>FF[NOP];
+	double Ex=0.0;
+	double Ey=0.0;
+	double Ez=0.0;
+	double Bx=0.0;
+	double By=0.0;
+	double Bz=0.0;
+#pragma omp parallel for shared(t,Robs) reduction(+:Ex,Ey,Ez,Bx,By,Bz)
 	for (int i=0; i<NOP;i++)
 	{
 		// for i == j; i.e. field due to particle i on its position is zero
 		//implemented in the InteractionField routine of particles
 		FF[i]= b[i]->RetardedEField(t, Robs);
-	}
-	// tuple of electric and magnetic fields have been obtained
-	//add all of them together
-	
-	double Ex,Ey,Ez,Bx,By,Bz;
-	Ex=0.0;
-	Ey=0.0;
-	Ez=0.0;
-	Bx=0.0;
-	By=0.0;
-	Bz=0.0;
-#pragma omp parallel for reduction(+:Ex,Ey,Ez)
-	for(int i=0;i<NOP;i++)
-	{
-		Ex+=get<0>(FF[i]).x;
-		Ey+=get<0>(FF[i]).y;
-		Ez+=get<0>(FF[i]).z;
-	}
-#pragma omp parallel for reduction(+:Bx,By,Bz)
-	for(int i=0;i<NOP;i++)
-	{
-		Bx+=get<1>(FF[i]).x;
-		By+=get<1>(FF[i]).y;
-		Bz+=get<1>(FF[i]).z;
+		Ex+=(FF[i].first).x;
+		Ey+=(FF[i].first).y;
+		Ez+=(FF[i].first).z;
+		Bx+=(FF[i].second).x;
+		By+=(FF[i].second).y;
+		Bz+=(FF[i].second).z;
 	}
 
-	Ef=Vector(Ex,Ey,Ez);
-	Bf=Vector(Bx,By,Bz);
-
-	return make_tuple(Ef,Bf);
+	return make_pair(Vector(Ex,Ey,Ez),Vector(Bx,By,Bz));
 }
 
 
@@ -296,47 +268,50 @@ void Bunch::Track_Vay(int NT, double tstep, Lattice *field, int SpaceCharge)
 	NOTS = NT;
 	TIMESTEP=tstep;
 	TotalTime = tstep*NOTS;
-	tuple<Vector,Vector> F[NOP];
 	double start=omp_get_wtime();
-	
+	pair<Vector,Vector> InteractionField[NOP];
 #pragma omp parallel for 
 	for (int i=0;i<NOP;i++)
 	{
-		b[i]->init(NOTS);		
+		
+		b[i]->init(NOTS);
+		b[i]->InitVay(tstep,field);
+		InteractionField[i] = make_pair(Vector(0,0,0),Vector(0,0,0));
+				
 	}
 	if(SpaceCharge==0)
 	{
-		for (int i=0;i<NOTS;i++)
+		for (int i=0;i<NOTS-1;i++)
 		{
-#pragma parallel for 
+#pragma omp parallel for 
 			for (int k=0;k<NOP;k++)
 			{
-				b[k]->StepVay(tstep,field);
+				b[k]->StepVay();
 			}
 		}
 	}
 	else
 	{		
 		
-		for (int i=0;i<NOTS;i++)
+		for (int i=0;i<NOTS-1;i++)
 		{
-			tuple<Vector,Vector> InteractionField[NOP];			
+						
+
+#pragma omp parallel for 
+			for (int k=0;k<NOP;k++)
+			{	
+				
+				b[k]->StepVay((InteractionField[k].first),(InteractionField[k].second));
+			}
+		
 #pragma omp parallel for  
 			for (int l=0;l<NOP;l++)
 			{
 				
-				double time = b[l]->TrajTime(i)+tstep;
+				double time = b[l]->TrajTime(0)+i*tstep;
 				InteractionField[l]= MutualField(i, l, time );
 				
 			}
-#pragma parallel for 
-			for (int k=0;k<NOP;k++)
-			{	
-				
-				b[k]->StepVay(tstep,field, get<0>(InteractionField[k]),get<1>(InteractionField[k]));
-			}
-		
-
 
 		}
 		
@@ -356,15 +331,25 @@ void Bunch::MirrorY(double Mirror)
 	}
 }
 
-
+void Bunch::Translate(Vector R)
+{
+	for(int i=0;i<NOP;i++)
+	{	
+		b[i]->Translate(R);
+		
+	}
+}
 int Bunch::WriteSDDSTrajectory()
 {
+
+	cout << "Dumping each particle's Trajectory Data to file: trajectory.sdds"<<endl;
 	SDDS_DATASET data;
 	char buffer[100];
 	int Initialize = SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,"trajectory.sdds");
 	double nots,nop;
 	nots =(double)NOTS;
 	nop =(double)NOP;
+	cout <<NOP<<endl;
 	if(Initialize!=1)
 	{
 			cout<<"Error Initializing Output\n";
@@ -465,7 +450,7 @@ int Bunch::WriteSDDSTrajectory()
 						"Ax",(double)((b[i]->TrajAccel(k)).x)*SpeedOfLight,
 						"Ay",(double)((b[i]->TrajAccel(k)).y)*SpeedOfLight,
 						"Az",(double)((b[i]->TrajAccel(k)).z)*SpeedOfLight,
-						"gamma",(double)(sqrt(1+pow(b[i]->TrajMomentum(k).norm(),2))),
+						"gamma",(double)(sqrt(1.0+b[i]->TrajMomentum(k).abs2nd())),
 						NULL)!=1
 			  )
 
@@ -498,6 +483,8 @@ int Bunch::WriteSDDSTrajectory()
 int
  Bunch::WriteSDDSTime()
 {
+
+	cout<<"Dumping Data for each time step for every particle to file: time-trajectory.sdds"<<endl;
 	SDDS_DATASET data;
 	char buffer[100];
 	int Initialize = SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,"time-trajectory.sdds");
@@ -627,8 +614,10 @@ int
 
 int Bunch::WriteSDDSRadiation(Vector Robs, double time_begin, double time_end, int NumberOfPoints )
 {
+
+	cout<<"Dumping Radiation Field data for the given time window to file : radiation.sdds"<<endl;
 	double dt = (time_end-time_begin)/(double)NumberOfPoints;
-	tuple<Vector,Vector>Field[NumberOfPoints];
+	pair<Vector,Vector>Field[NumberOfPoints];
 #pragma omp parallel for shared(time_begin, dt, Robs) 
 	for (int i=0;i<NumberOfPoints;i++)
 	{
@@ -641,7 +630,6 @@ int Bunch::WriteSDDSRadiation(Vector Robs, double time_begin, double time_end, i
 	double nots,nop;
 	nots =(double)NOTS;
 	nop =(double)NOP;
-	cout<<"HERE....."<<endl;
 	if(Initialize!=1)
 	{
 			cout<<"Error Initializing Output\n";
@@ -707,8 +695,8 @@ int Bunch::WriteSDDSRadiation(Vector Robs, double time_begin, double time_end, i
 	for (int32_t i = 0;i<(int32_t)NumberOfPoints;i++)
 	{
 
-		Vector E = get<0>(Field[i]);
-		Vector B = get<1>(Field[i]);
+		Vector E = (Field[i].first);
+		Vector B = (Field[i].second);
 		Vector Poynting = cross(E,B);
 		
 
@@ -792,7 +780,7 @@ void Bunch::LoadBeamProfile(const char *filename)
 			
 			
 		}
-		printf("\033[7;31m Beam Profile Loaded....\n\033[0m\n");
+		
 		BeamProfile.close();
 	}
 	else

@@ -56,7 +56,7 @@ void Lattice::addElement(ExternalField *element)
   elements.push_back(element);
 }
 
-tuple<Vector,Vector> Lattice::Field(double t, Vector X)
+pair<Vector,Vector> Lattice::Field(double t, Vector X)
 {
   Vector E = Vector(0.0, 0.0, 0.0);
   Vector B = Vector(0.0, 0.0, 0.0);
@@ -65,7 +65,7 @@ tuple<Vector,Vector> Lattice::Field(double t, Vector X)
     E += elements.at(i)->EField(t, X);
     B += elements.at(i)->BField(t, X);
   };
-  return(make_tuple(E,B));
+  return(make_pair(E,B));
 }
 
 

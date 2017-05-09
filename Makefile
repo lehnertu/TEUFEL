@@ -17,7 +17,7 @@ CC           = gcc -fopenmp
 CXX          = g++ -fopenmp
 LINK         = g++ -fopenmp
 
-CFLAGS       = -O2 -g -Wall
+CFLAGS       = -O2 -g -Wall -Wextra
 CXXFLAGS     = -std=c++11
 LFLAGS       =
 LIBS         =  -L$(SDDS) -lSDDS1 -lmdblib -lmdbcommon -llzma -lz -lm

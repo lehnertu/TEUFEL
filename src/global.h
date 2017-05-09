@@ -27,3 +27,4 @@
 #define MuNull 4*Pi*1e-7                        // magnetic field constant [Vs/Am]
 #define InvRestMass 1.758820025e11              // 1 / m = c² / mc² [m²/s²/eV]
 #define m_e 9.10938356e-31			// electron mass [kg]
+#define Coulomb 1.4399645351950263e-09		//Coulomb's constant

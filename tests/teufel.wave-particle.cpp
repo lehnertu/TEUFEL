@@ -91,8 +91,8 @@ int main()
 
 	//define the obervation point (Robs), time window (to observe radiation) and the number of points in the time window
 	double a = 3.0;
-	double time_begin = 1e-8;
-	double time_end =1.008004e-8;
+	double time_begin = 1.0005988e-8;
+	double time_end =1.0058711004e-8;
 	int numPoints=10000;
 	double dt1 = (time_end-time_begin)/10000.0;
 	
@@ -133,7 +133,7 @@ int main()
 	double E_Axial = get<0>(Fields).norm();
 	double CoulombField = scale/pow(3.0,2);
 	int errors=0;
-	if (fabs(ExpectedEpeak-Epeak.x) > ExpectedEpeak*0.01)
+	if (fabs(ExpectedEpeak-fabs(Epeak.x)) > ExpectedEpeak*0.01)
 	{
 	errors++;
 	printf("Epeak= %12.9g V/m - \033[1;31m test failed!\033[0m\n", Epeak.x);

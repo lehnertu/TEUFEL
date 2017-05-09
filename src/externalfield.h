@@ -98,7 +98,7 @@ class Lattice
 
     // total electric field [MV/m] and Magnetic of all lattice elements combined
     // default value of interaction fields is defined as InteractionField = 0
-    tuple<Vector,Vector> Field(double t, Vector X);
+    pair<Vector,Vector> Field(double t, Vector X);
 
 
 private:

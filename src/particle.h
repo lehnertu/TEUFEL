@@ -24,8 +24,8 @@
 #include "externalfield.h"
 #include "vector.h"
 #include <tuple>
-
-
+#include "global.h"
+#include <vector.h>
 
 using namespace std;
 
@@ -146,11 +146,14 @@ class ChargedParticle
 	11 -> gamma_i1 ("previous half step" relativistic factor)\n
 	 
     */
-     void StepVay(
-         double tstep,         // time step size
-         Lattice *field,	// calls for the lattice fields
+     void InitVay(
+	 double tstep,         // time step size
+         Lattice *Elfield	// calls for the lattice fields
+	);
+     void StepVay(         
 	 Vector EField=Vector(0,0,0),	// extra fields that can be superimposed over lattice fields--ex: ambient field
-	 Vector BField = Vector(0,0,0))	;
+	 Vector BField = Vector(0,0,0)
+	);
 
     /*! 
 
@@ -158,7 +161,7 @@ class ChargedParticle
         at a given observation point at time t in lab frame.
         retardation is properly accounted for
     */
-    tuple<Vector,Vector> RetardedEField(double time, Vector ObservationPoint);
+    pair<Vector,Vector> RetardedEField(double time, Vector ObservationPoint);
 
 
     /*!
@@ -212,14 +215,14 @@ class ChargedParticle
 
 	return the integer value of the Charge
     */
-    int getCharge() const;
+    int getCharge();
 
 
     /*!
 
 	get the particle's mass in terms of electron's mass
     */
-    int getMass() const;
+    int getMass();
 
  
     /*!
@@ -227,7 +230,7 @@ class ChargedParticle
 	Return the number of points in the track
 
     */
-     int getNOTS() const;
+     int getNOTS();
    
 
     
@@ -235,20 +238,22 @@ class ChargedParticle
 
   private:
 
-    int NOTS;			// number of trajectory points
+    int NOTS=0;			// number of trajectory points
     int Charge;			// charge in units of ElementaryCharge
     int Mass;			// mass in unit of the electron rest mass
-    double *Time;		// time in lab-frame [s]
-    Vector *X;			// position in lab frame [m]
-    Vector *P;                  // momentum in lab frame : c p = beta gamma mc²
+    vector<double>Time;		// time in lab-frame [s]
+    vector<Vector>X;			// position in lab frame [m]
+    vector<Vector>P;                  // momentum in lab frame : c p = beta gamma mc²
                                 // dimensionless in units of mc²
-    Vector *A;                  // acceleration in lab frame a = d/dt(p*c)
+    vector<Vector> A;                  // acceleration in lab frame a = d/dt(p*c)
 				// in unit of 1/s (scaled by mc²)
-
+    double Tstep;
+    Lattice *field;
     int counter = 0;		// if counter = 0; then it initializes trajector for the particle
     double qm,t2,qmt2,t_h,gamma_h,gamma_i1;
     Vector x_h,p_h,beta_h, dp_dt,beta_i,p_i1,beta_i1;
     Vector x0, p0;
     double t0;
+    double scale;
 };
 
