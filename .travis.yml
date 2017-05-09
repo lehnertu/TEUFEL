@@ -3,3 +3,6 @@ rvm:
  -gcc
  -clang
  OMP_NUM_THREADS(4)
+script:
+-make
+-make tests
