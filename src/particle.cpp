@@ -60,9 +60,14 @@ ChargedParticle::~ChargedParticle()
 {
 }
 
-int ChargedParticle::GetNP()
+int ChargedParticle::getNP()
 {
     return NP;
+}
+
+int ChargedParticle::getCharge()
+{
+    return Charge;
 }
 
 double ChargedParticle::TrajTime(int step)

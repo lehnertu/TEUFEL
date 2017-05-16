@@ -67,7 +67,10 @@ public:
     ~ChargedParticle();
     
     /*! Return the number of points in the trajectory */
-    int GetNP();
+    int getNP();
+    
+    /*! Return the charge of the particle */
+    int getCharge();
     
     /*! Return the time [s] for one point of the trajectory */
     double TrajTime(int step);
