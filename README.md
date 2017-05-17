@@ -6,15 +6,25 @@ This is a C++ project to support tracking of charged particles in
 arbitrary external fields and to compute the electromagnetic radiation
 emitted by these particles using the Liénard-Wiechert formula.
 
+Documentation
+-------------
+
+We aim at fully documenting the code for easy reuse and maintenance.
+The documentation can be buil using doxygen.
+
+```make docs```
+
+The documentation can then be accessed with a browser starting from `doc/html/index.html`.
+
 Functionality
-=============
+-------------
 - particle tracking using different pusher algorithms (Euler, Vay)<br>
   see \ref ChargedParticle
 - radiation emission towards a single observation point
 - several external field objects (homogeneous dipole, planar undulator ...)
 
 Testcases
-=========
+---------
 
 A number of test cases is provided which serve both for code benchmarking
 against known results and a coding examples. All tests can be built from
