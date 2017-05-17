@@ -22,6 +22,24 @@
 #include "bunch.h"
 #include "particle.h"
 #include "global.h"
+#include <random>
+
+Distribution::Distribution(int dim, int nop)
+{
+    DIM = dim;
+    NOP = nop;
+    A = new double[DIM*NOP];
+    std::random_device rd;
+    std::mt19937 mt(rd());
+    std::uniform_real_distribution<double> dist(0.0, 1.0);
+    for (int i=0; i<DIM*NOP; i++)
+	A[i] = dist(mt);
+}
+
+Distribution::~Distribution()
+{
+    delete[] A;
+}
 
 Bunch::Bunch()
 {

@@ -52,7 +52,8 @@ TARGETOBJ = $(OBJDIR)/teufel.o
 
 TARGET = teufel
 
-TESTS = $(TESTDIR)/teufel.magnet \
+TESTS = $(TESTDIR)/teufel.bunch \
+	$(TESTDIR)/teufel.magnet \
 	$(TESTDIR)/teufel.undulator \
 	$(TESTDIR)/teufel.loop \
 	$(TESTDIR)/teufel.EcrossB
@@ -95,6 +96,7 @@ $(OBJ): $(SRCDIR)/bunch.h \
 	$(SRCDIR)/vector.h
 
 tests: $(OBJ) 
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.bunch $(TESTDIR)/teufel.bunch.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.magnet $(TESTDIR)/teufel.magnet.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.undulator $(TESTDIR)/teufel.undulator.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.loop $(TESTDIR)/teufel.loop.cpp $(LFLAGS) $(OBJ) $(LIBS)

@@ -29,6 +29,44 @@
 using namespace std;
 
 /*!
+ *    \class Distribution
+ *    \brief Generate arrays of particle coordinates.
+ * 
+ *    @author Ulf Lehnert
+ *    @date 17.5.2017
+ *    
+ *    This class provides means to create certain distributions of particles
+ *    in phase space.
+ */
+class Distribution
+{
+
+public:
+    
+    /*! By default the distribution is initalized with particles
+     *  uniformly distributed over the range [0.0, 1.0) in all coordinates.
+     *  The number of dimensions of the phase space and the number of particles
+     *  to be created must be given.
+     */
+    Distribution(int dim, int nop);
+    
+    //! Destructor only used to free the memory
+    ~Distribution();
+    
+private:
+    
+    //! the number of dimensions
+    int DIM;
+    
+    //! the number of particles
+    int NOP;
+    
+    //! the array of coordinates
+    double* A;
+    
+};
+
+    /*!
     \class Bunch
     \brief Ensemble of particles
  
@@ -38,8 +76,6 @@ using namespace std;
     This is a container holding a number of particles. Tracking particles
     and computation of radiated fields are provided for all particles together.
  */
-
-
 class Bunch
 {
 
