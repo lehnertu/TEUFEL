@@ -7,6 +7,9 @@ nc='\033[0m'
 
 cd tests
 
+./teufel.bunch; rc=$?
+num=$(($num + $rc))
+
 ./teufel.magnet; rc=$?
 num=$(($num + $rc))
 

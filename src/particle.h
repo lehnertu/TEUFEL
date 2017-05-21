@@ -40,6 +40,9 @@
  * accelerated particle produce radiation. The fields produced by the particle
  * at a given time and position in laboratory frame can be computed
  * taking into account the full retardation effect.
+ * 
+ * \todo Introduce particle ID
+ * 
  */
 class ChargedParticle
 {
@@ -120,7 +123,7 @@ public:
 		 Vector P0,
 		 double tstep,
 		 GeneralField* field);
-    
+
     /*! @brief Perform one tracking step using the Vay algorithm.
      * 
      * The algorithm follows J.-L.Vay PHYSICS OF PLASMAS 15, 056701 (2008).
@@ -129,17 +132,30 @@ public:
      */
     void StepVay(GeneralField* field);
     
-    // translate a given particle trajectory
+    //! translate a given particle trajectory
     void Translate(Vector R);
     
-    // mirroring a given particle trajectory
-    // on a plane y=MirrorY
-    // (this also reverses the charge)
+    /*! mirroring a given particle trajectory
+     *  on a plane y=MirrorY
+     *  (this also reverses the charge)
+     */
     void MirrorY(double MirrorY);
     
-    // electric field radiated by the particle
-    // at a given observation point at time t in lab frame
-    // retardation is properly accounted for
+    /*! Particle phase space position at a given time.
+     *  Interpolates between time steps after tracking.
+     *  Can also be used when the tracking is only initalized to
+     *  retreive the inital particle position at t=0
+     */
+    void CoordinatesAtTime(double time, Vector *position, Vector *momentum);
+    
+    /*! electric field radiated by the particle
+     * at a given observation point at time t in lab frame
+     * retardation is properly accounted for
+     * 
+     * \param[in] time absolute time in s.
+     * \param[out] X particle position.
+     * \param[out] P particle normalized momentum.
+     */
     ElMagField RetardedField(double time, Vector ObservationPoint);
     
     /*! Compute the electromagnetic field radiated by a particle

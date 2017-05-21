@@ -53,6 +53,21 @@ public:
     //! Destructor only used to free the memory
     ~Distribution();
     
+    //! report number of dimensions
+    int getDIM();
+    
+    //! report number of points
+    int getNOP();
+    
+    /*! generate a gaussian distribution for one of the dimensions
+     */
+    void generateGaussian(double mean, double sigma, int dim);
+    
+    /*! Get one coordinate of one particle with given index.
+     *  Out of range indices will not lead to errors, just return zero
+     */
+    double getCoordinate(int index, int dim);
+    
 private:
     
     //! the number of dimensions
@@ -84,7 +99,12 @@ public:
     /*! default constructor: creates an empty bunch .
     */	
     Bunch();
-
+    
+    /*! create a bunch of given number of particles each having
+     * given charge and mass
+     */
+    Bunch(int N, double charge, double mass);
+    
     /*!
      * copy constructor:
      * Create a copy of an existing bunch, thereby, creating copies of all particles
@@ -113,6 +133,47 @@ public:
     //! Get a pointer to a particle from its index within the bunch
     ChargedParticle* getParticle(int i);
 
+    /*! @brief Setup for tracking the whole bunch using the Vay algorithm.
+     * 
+     * See ChargedParticle::InitVay for details
+     * 
+     * The given distribution contains 3 position coordinates [m],
+     * 3 momentum coordinates [] and the start tim [s].
+     * If the given distribution has less than 7 dimensions the missing
+     * coordinates are initalized as 0 which can be used to start all
+     * particles at zero time.
+     * 
+     * @todo Tracking particles which do not start all at the same time
+     * is not yet supported.
+     * 
+     * @param dist the inital coordinates of all particles
+     * @param tstep the length of the time step.
+     * @param field the field through which the particle is tracked
+     */
+    void InitVay(Distribution *dist,
+		 double tstep,
+		 GeneralField *field);
+
+    /*! Dump all particle information belonging to a given observation time
+     *  into an SDDS file.
+     * 
+     * returns values for error checks:
+     *	 
+     *	0  -  successfully Written the file\n
+     *	1  -  error in SDDS_InitializeOutput \n
+     *	2  -  error in SDDS_DefineSimpleParameter \n
+     *	3  -  error in SDDS_DefineColumn \n
+     *	4  -  error in SDDS_WriteLayout \n
+     *	5  -  error in SDDS_StartPage \n
+     *	6  -  error in SDDS_SetParameters \n
+     *	7  -  error in SDDS_SetRowValues \n
+     *	8  -  error in SDDS_WritePage \n
+     *	9  -  error in SDDS_Terminate \n
+     * 
+     */
+    int WriteWatchPointSDDS(double time,
+			    const char *filename);
+    
 private:
 
     //! Number of Particles in the bunch

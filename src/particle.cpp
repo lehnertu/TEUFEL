@@ -274,7 +274,7 @@ void ChargedParticle::InitVay(
     double gamma_h = sqrt(P0.abs2nd() + 1.0);
     Vector beta_h = P0 / gamma_h;
     A.push_back((cross(beta_h, B_h) + E_h / SpeedOfLight) * qm);
-    // after this stepp exactly one trajectory point exists
+    // after this step exactly one trajectory point exists
     NP = 1;
 }
 
@@ -353,11 +353,63 @@ void ChargedParticle::MirrorY(double MirrorY)
     };
 }
 
+void ChargedParticle::CoordinatesAtTime(double time, Vector *position, Vector *momentum)
+{
+    // return zero if there is no trajectory
+    if (NP<1)
+    {
+	*position = Vector(1.0, 1.0, 1.0);
+	*momentum = Vector(0.0, 0.0, 0.0);
+	return;
+    };
+    int i1 = 0;    // index of the first trajectory point
+    double t1 = Time[i1];
+    int i2 = NP - 1;    // index of the last trajectory point
+    double t2 = Time[i2];
+    if (time>=t1 && time<=t2)
+    {
+	// reduce the interval until the trajectory segment is found
+	while (i2 - i1 > 1)
+	{
+	    int i = (i2 + i1) / 2;
+	    double t = Time[i];
+	    if (t < time)
+	    {
+		i1 = i;
+		t1 = t;
+	    } else {
+		i2 = i;
+		t2 = t;
+	    }
+	};
+	if (i2==i1)
+	{
+	    *position = X[i1];
+	    *momentum = P[i1];
+	} else {
+	    // interpolate the coordinates within the interval
+	    // interpolation could be improved using higher-order terms
+	    double frac = (time - t1) / (t2 - t1);
+	    *position = X[i1] * (1.0 - frac) + X[i2] * frac;
+	    *momentum = P[i1] * (1.0 - frac) + P[i2] * frac;
+	};
+    } else {
+	*position = Vector(2.0, 2.0, 2.0);
+	*momentum = Vector(0.0, 0.0, 0.0);
+    }
+}
+
 ElMagField ChargedParticle::RetardedField(double time, Vector ObservationPoint)
 {
     Vector EField = Vector(0.0, 0.0, 0.0);
     Vector BField = Vector(0.0, 0.0, 0.0);
     
+    // return zero if there is no trajectory
+    if (NP<1)
+    {
+	return ElMagField(EField, BField);
+    };
+
     int i1 = 0;    // index of the first trajectory point
     Vector RVec = ObservationPoint - X[i1];
     double R = RVec.norm();
