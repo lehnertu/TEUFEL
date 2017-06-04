@@ -38,26 +38,35 @@ class ElMagField
 {
 
 public:
-    
+
     /*! Default constructor:<br>
-     * initialized both components to zero
+     * initializes both components to zero
      */
     ElMagField();
-    
+
     /*! Initializing constructor: */
     ElMagField(Vector E, Vector B);
-    
+
+    /*! Set all components to zero */
+    void Zero();
+
     /*! Electric field report */
     Vector E();
-    
+
     /*! Magnetic field report */
     Vector B();
 
     /*! Sum of two fields */
     ElMagField operator+ (ElMagField other);
-    
+
     /*! Accumulating sum of two fields */
     ElMagField& operator+= (ElMagField other);
+
+    /*! Difference of two fields */
+    ElMagField operator- (ElMagField other);
+
+    /*! Multiplication of the field with a real factor */
+    ElMagField operator* (double factor);
 
 private:
 
@@ -212,8 +221,6 @@ private :
  * ExternalField. However, particle bunches may also add the mutual
  * interaction fields of their particles to the lattice.
  * 
- * \todo The destructor is not yet coded.
- * \todo Check for memory leaks.
  */
 class Lattice : public GeneralField
 {

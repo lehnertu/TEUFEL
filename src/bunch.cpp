@@ -134,6 +134,7 @@ void Bunch::InitVay(Distribution *dist,
 		    double tstep,
 		    GeneralField* field)
 {
+    dt = tstep;
     for(int i=0; i<NOP; i++)
     {
 	Vector X0 = Vector(dist->getCoordinate(i,0),
@@ -144,6 +145,14 @@ void Bunch::InitVay(Distribution *dist,
 			   dist->getCoordinate(i,5));
 	double t0 = dist->getCoordinate(i,6);
 	P[i]->InitVay(t0, X0, P0, tstep, field);
+    }
+}
+
+void Bunch::StepVay(GeneralField* field)
+{
+    for(int i=0; i<NOP; i++)
+    {
+	P[i]->StepVay(field);
     }
 }
 

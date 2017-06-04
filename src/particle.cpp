@@ -471,7 +471,7 @@ ElMagField ChargedParticle::RetardedField(double time, Vector ObservationPoint)
     return ElMagField(EField, BField);
 }
 
-int ChargedParticle::TimeDomainObservation(
+int ChargedParticle::TimeDomainField(
     Vector ObservationPoint,
     std::vector<double> *ObservationTime,
     std::vector<ElMagField> *ObservationField)

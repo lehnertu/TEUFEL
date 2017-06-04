@@ -36,14 +36,14 @@
  */
 class PointObserver
 {
-    
+
 public:
-    
+
     /*! Standard constructor:<br>
      * The observer is placed at a given point in space.
      */
     PointObserver(Vector position);
-    
+
     /*! Collect the time-domain field data of a single particle.
      *  This includes both "static" and "radiative" fields.
      * 
@@ -60,7 +60,34 @@ public:
     int GetTimeDomainTrace(
 	ChargedParticle *source
     );
-    
+
+    /*! Compute the electromagnetic field radiated by a particle
+     * seen at the observation point. The field is given in time domain
+     * starting at t0 with NOTS equidistant time steps of dt length.
+     * A step-wise linear funtion is used to interpolate from the non-equidistant
+     * time steps stored in the particle trajectory, thus, exactly preserving
+     * the (first order) \f$\int E dt\f$ integral. The first time step
+     * starts at \f$t0\f$ and ends at \f$t0+dt\f$.
+     * The total timespan covererd ends at \f$t0+n*dt\f$.
+     * 
+     * This method first calls PointObserver::GetTimeDomainTrace().
+     * The arrays PointObserver::ObservationTime and PointObserver::ObservationField
+     * are erased and filled with new values corresponding to the non-equidistant trace.
+     * 
+     * The array PointObserver::InterpolatedField is cleared
+     * and filled with the new values for the interpolated output field data.
+     * 
+     * \param[in] source The particle generating the field.
+     * \param[in] t0 Start time of the trace.
+     * \param[in] dt Time step of the observation trace.
+     * \param[in] nots Number of time steps.
+     */
+    void ComputeTimeDomainField(
+	ChargedParticle *source,
+	double t0,
+	double dt,
+	int nots);
+
     /*! Complex amplitude of the observation for a given frequency [Hz].
      * 
      * The 3 components of the electric field are analyzed.
@@ -76,7 +103,7 @@ public:
 	std::complex<double> *Ey,
 	std::complex<double> *Ez
     );
-    
+
     /*! Write a time-domain field trace into an SDDS file.
      * 
      * This method requiresnthat a trace of observed field values has been
@@ -143,17 +170,29 @@ public:
 	double fstep);
  
 private:
-    
+
     //! the position of the observer
     Vector Pos;
-    
-    //! number of time steps in the observed trace
-    int NOTS;
-    
+
+    //! number of points in the recorded non-equidistant trace
+    int NPT;
+
     //! the times at which observed fields are reported
     std::vector<double> ObservationTime;
-    
+
     //! the observed electromagnetic field
     std::vector<ElMagField> ObservationField;
-    
+
+    //! number of time steps in the interpolated trace
+    int NOTS;
+
+    //! the start of the interpolated trace
+    double t0_int;
+
+    //! the step of the interpolated trace
+    double dt_int;
+
+    //! the interpolated electromagnetic field
+    std::vector<ElMagField> InterpolatedField;
+
 };

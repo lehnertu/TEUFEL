@@ -75,7 +75,7 @@ p = np.array(data.getColumnData("p"))
 z = np.array(data.getColumnData("z"))
 
 zmean = np.mean(z)
-dt = (z-zmean) / 3.0e8
+dt = -(z-zmean) / 3.0e8
 
 Np = len(x)
 betagamma = np.mean(p)

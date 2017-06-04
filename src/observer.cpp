@@ -30,7 +30,7 @@
 PointObserver::PointObserver(Vector position)
 {
     Pos = position;
-    NOTS = 0;
+    NPT = 0;
 }
 
 int PointObserver::GetTimeDomainTrace(
@@ -38,8 +38,83 @@ int PointObserver::GetTimeDomainTrace(
 {
     ObservationTime.clear();
     ObservationField.clear();
-    NOTS = source->TimeDomainObservation(Pos, &ObservationTime, &ObservationField);
-    return NOTS;
+    NPT = source->TimeDomainField(Pos, &ObservationTime, &ObservationField);
+    return NPT;
+}
+
+//! \todo untested code
+void PointObserver::ComputeTimeDomainField(
+    ChargedParticle *source,
+    double t0,
+    double dt,
+    int nots)
+{
+    t0_int = t0;
+    dt_int = dt;
+    NOTS = nots;
+    double t_max = t0+NOTS*dt;
+    // the observed field during the time step (initialized zero)
+    ElMagField field;
+    // make the interpolated field an empty trace of the requested length
+    InterpolatedField.clear();
+    for (int i=0; i<NOTS; i++)
+	InterpolatedField.push_back(field);
+    
+    GetTimeDomainTrace(source);
+    // (source_t1, source_t2) is the current segment of the (source) trace
+    // source_f1, source_f2 are the corresponding field values;
+    double source_t1=0.0;
+    double source_t2=0.0;
+    ElMagField source_f1, source_f2;
+    if (NPT>0)
+    {
+	source_t2=ObservationTime[0];
+	source_f2=ObservationField[0];
+    };
+    // the index of the time/field point
+    // where the current segment ends, that is the index ot ts2
+    // must be smaller than (not equal) NPT
+    int is2=0;
+
+    // now we process the non-equidistant time trace segment by segment
+    while ((is2+1<NPT) && (source_t2<t_max))
+    {
+	source_t1 = source_t2;
+	source_f1 = source_f2;
+	is2++;
+	source_t2 = ObservationTime[is2];
+	source_f2 = ObservationField[is2];
+	// the indices of the steps in which the current segment ends lay
+	int idx1 = floor((source_t1-t0)/dt);
+	int idx2 = floor((source_t2-t0)/dt);
+	if (idx1==idx2)
+	{
+	    // if the segment is fully contained in one time step
+	    field = InterpolatedField[idx1];
+	    field += (source_f1+source_f2)*(0.5*(source_t2-source_t1)/dt);
+	    InterpolatedField[idx1] = field;
+	} else {
+	    // the segment is spanning more than one time step
+	    // handle the first time step
+	    field = InterpolatedField[idx1];
+	    double dt_i1 = t0+(idx1+1)*dt - source_t1;
+	    field += source_f1*(dt_i1/dt) + (source_f2-source_f1)*(0.5*dt_i1/(source_t2-source_t1));
+	    InterpolatedField[idx1] = field;
+	    // handle the intermediate time steps
+	    for (int idx=idx1+1; idx<idx2; idx++)
+	    {
+		field = InterpolatedField[idx];
+		double t_center = t0 + (idx+0.5)*dt;
+		field += source_f1*((source_t2-t_center)/dt) + source_f2*((t_center-source_t1)/dt);
+		InterpolatedField[idx] = field;
+	    };
+	    // handle the last time step
+	    field = InterpolatedField[idx2];
+	    double dt_i2 = source_t2 - (t0+idx2*dt);
+	    field += source_f2*(dt_i2/dt) + (source_f1-source_f2)*(0.5*dt_i2/(source_t2-source_t1));
+	    InterpolatedField[idx2] = field;
+	}
+    };
 }
 
 void PointObserver::FrequencyObservation(
@@ -52,7 +127,7 @@ void PointObserver::FrequencyObservation(
     *Ey = {0.0, 0.0};
     *Ez = {0.0, 0.0};
     double scale=0.5/sqrt(2.0*Pi);
-    for (int i=1; i<NOTS; i++)
+    for (int i=1; i<NPT; i++)
     {
 	double cost1=cos(2.0*Pi*freq*ObservationTime[i-1]);
 	double cost2=cos(2.0*Pi*freq*ObservationTime[i]);
@@ -104,7 +179,7 @@ int PointObserver::WriteTimeTraceSDDS(const char *filename)
     }
     // start a page with number of lines equal to the number of trajectory points
     cout << "SDDS start page" << endl;
-    if (SDDS_StartPage(&data,(int32_t)NOTS) !=1 )
+    if (SDDS_StartPage(&data,(int32_t)NPT) !=1 )
     {
 	cout << "WriteSDDS - error starting page\n";
 	return 5;
@@ -112,7 +187,7 @@ int PointObserver::WriteTimeTraceSDDS(const char *filename)
     // write the single valued variables
     cout << "SDDS write parameters" << endl;
     if  (SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,
-	"NumberTimeSteps",NOTS,
+	"NumberTimeSteps",NPT,
 	NULL ) !=1
     )
     {
@@ -120,8 +195,8 @@ int PointObserver::WriteTimeTraceSDDS(const char *filename)
 	return 6;
     }
     // write the table of trajectory data
-    cout << "SDDS writing " << NOTS << " field values" << endl;
-    for( int i=0; i<NOTS; i++)
+    cout << "SDDS writing " << NPT << " field values" << endl;
+    for( int i=0; i<NPT; i++)
     {
 	if (SDDS_SetRowValues(&data,
 	    SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,i,
@@ -193,7 +268,7 @@ int PointObserver::WriteSpectrumSDDS(
     }
     // start a page with number of lines equal to the number of trajectory points
     cout << "SDDS start page" << endl;
-    if (SDDS_StartPage(&data,(int32_t)NOTS) !=1 )
+    if (SDDS_StartPage(&data,(int32_t)NPT) !=1 )
     {
 	cout << "WriteSDDS - error starting page\n";
 	return 5;
@@ -201,7 +276,7 @@ int PointObserver::WriteSpectrumSDDS(
     // write the single valued variables
     cout << "SDDS write parameters" << endl;
     if  (SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,
-	"NumberTimeSteps",NOTS,
+	"NumberTimeSteps",NPT,
 	NULL ) !=1
     )
     {

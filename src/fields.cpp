@@ -25,14 +25,19 @@
 
 ElMagField::ElMagField()
 {
-    vecE=Vector(0.0,0.0,0.0);
-    vecB=Vector(0.0,0.0,0.0);
+    Zero();
 }
 
 ElMagField::ElMagField(Vector E, Vector B)
 {
     vecE=E;
     vecB=B;
+}
+
+void ElMagField::Zero()
+{
+    vecE=Vector(0.0,0.0,0.0);
+    vecB=Vector(0.0,0.0,0.0);
 }
 
 Vector ElMagField::E() { return vecE; }
@@ -52,6 +57,22 @@ ElMagField& ElMagField::operator+= (ElMagField other)
     vecE += other.vecE;
     vecB += other.vecB;
     return (*this);
+}
+
+ElMagField ElMagField::operator- (ElMagField other)
+{
+    ElMagField temp;
+    temp.vecE = vecE - other.vecE;
+    temp.vecB = vecB - other.vecB;
+    return (temp);
+}
+
+ElMagField ElMagField::operator* (double factor)
+{
+    ElMagField temp;
+    temp.vecE = vecE*factor;
+    temp.vecB = vecB*factor;
+    return (temp);
 }
 
 // ********** GeneralField **********

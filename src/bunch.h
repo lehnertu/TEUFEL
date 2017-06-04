@@ -154,6 +154,14 @@ public:
 		 double tstep,
 		 GeneralField *field);
 
+    /*! @brief Perform one tracking step using the Vay algorithm.
+     * 
+     * See ChargedParticle::InitVay for details
+     * 
+     * @param field the field through which the particle is tracked
+     */
+    void StepVay(GeneralField* field);
+
     /*! Dump all particle information belonging to a given observation time
      *  into an SDDS file.
      * 
@@ -178,6 +186,9 @@ private:
 
     //! Number of Particles in the bunch
     int NOP;
+
+    //! time step for tracking - this will remain constant after being set at the start of tracking
+    double dt;
 
     //! we store references to all particles
     vector<ChargedParticle*> P;

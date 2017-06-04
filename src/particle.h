@@ -173,16 +173,16 @@ public:
      * \param[out] ObservationTime Sample time at the observation point.
      * \param[out] ObservationField Electromagnetic field samples at the observation point.
      */
-    int TimeDomainObservation(
+    int TimeDomainField(
 	Vector ObservationPoint,
 	std::vector<double> *ObservationTime,
 	std::vector<ElMagField> *ObservationField);
     
-    /*! Write all information including the trajectory data into an SDDS file.
+    /*! Write all information in particular the trajectory data into an SDDS file.
      * 
      * returns values for error checks:
      *	 
-     *	0  -  successfully Written the file\n
+     *	0  -  file successfully written \n
      *	1  -  error in SDDS_InitializeOutput \n
      *	2  -  error in SDDS_DefineSimpleParameter \n
      *	3  -  error in SDDS_DefineColumn \n

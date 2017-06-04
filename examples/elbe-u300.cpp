@@ -47,6 +47,7 @@
 #include <string.h>
 #include <complex>
 
+#include "bunch.h"
 #include "global.h"
 #include "observer.h"
 #include "particle.h"
@@ -55,6 +56,7 @@
 #include <iostream>
 #include <fstream>
 
+int NOP = 1e4;
 int NOTS = 4000;    // number of time steps
 
 int main()
@@ -83,8 +85,24 @@ int main()
     Lattice* lattice = new Lattice;
     lattice->addElement(Undu);
 
-    // one single particle corresponding to 4.37e8 electrons
+    // one single particle corresponding to 4.37e8 electrons (70pC)
     ChargedParticle* electron = new ChargedParticle(-4.37e8,4.37e8);
+    
+    // an electron bunch of 70pC total charge modeled with NOP particles
+    // the initial bunch length is 150fs
+    double ch = 70.0e-12 / ElementaryCharge / NOP;
+    double sigma_t = 150.0e-15;
+    double sigma_z = SpeedOfLight * beta * sigma_t;
+    printf("sigma_t =  %9.3g ps\n", 1e12*sigma_t);
+    printf("sigma_z =  %9.3g mm\n", 1e3*sigma_z);
+    Bunch *bunch = new Bunch(NOP, -ch, ch);
+    Distribution *dist = new Distribution(6, NOP);
+    dist->generateGaussian(0.000, 0.001, 0);	// x gaussian with sigma=1mm
+    dist->generateGaussian(0.000, 0.0005, 1);	// y gaussian with sigma=0.5mm
+    dist->generateGaussian(0.000, sigma_z, 2);	// z gaussian with sigma_z
+    dist->generateGaussian(0.000, 0.001, 3);	// px gaussian 1mrad
+    dist->generateGaussian(0.000, 0.001, 4);	// py gaussian 1mradS
+    dist->generateGaussian(betagamma, 0.01*betagamma, 5);	// pz gaussian 1% energy spread
 
     // initial position at the origin
     Vector X0 = Vector(0.0, 0.0, 0.0);
@@ -98,9 +116,25 @@ int main()
     // beta*SpeedOfLight
     double tau = (double)N * (lambda + lambdar) / SpeedOfLight + (4.0 - (double)N * lambda) / (beta * SpeedOfLight);
     double deltaT = tau / NOTS;
-    electron->TrackVay(NOTS, deltaT, X0, P0, lattice);
 
-    // create a trajectory dump
+    bunch->InitVay(dist, deltaT, lattice);
+    
+    // create a particle dump of the inital distribution
+    if (0 != bunch->WriteWatchPointSDDS(0.0, "elbe-u300_start.sdds"))
+    {
+	printf("SDDS write \033[1;31m failed!\033[0m\n");
+    }
+    else
+    {
+	printf("SDDS file written - \033[1;32m OK\033[0m\n");
+    }
+    
+    // do the tracking
+    electron->TrackVay(NOTS, deltaT, X0, P0, lattice);
+    for (int step=0; step<NOTS; step++)
+	bunch->StepVay(lattice);
+
+    // create a trajectory dump fo the single electron
     int retval = electron->WriteSDDS("elbe-u300_Trajectory.sdds");
     if (0 != retval)
     {
@@ -111,7 +145,17 @@ int main()
         printf("SDDS file written - \033[1;32m OK\033[0m\n");
     }
 
-    // compute the radiation on axis
+    // create a particle dump of the final distribution
+    if (0 != bunch->WriteWatchPointSDDS(tau, "elbe-u300_final.sdds"))
+    {
+	printf("SDDS write \033[1;31m failed!\033[0m\n");
+    }
+    else
+    {
+	printf("SDDS file written - \033[1;32m OK\033[0m\n");
+    }
+    
+    // compute the radiation of the single electron on axis
     PointObserver Obs = PointObserver(Vector(0.0, 0.0, 10.0));
     Obs.GetTimeDomainTrace(electron);
     // dump it to a file
@@ -141,6 +185,7 @@ int main()
     // clean up
     delete lattice;
     delete electron;
+    delete bunch;
 
     return 0;
 }
