@@ -104,7 +104,7 @@ public:
 	std::complex<double> *Ez
     );
 
-    /*! Write a time-domain field trace into an SDDS file.
+    /*! Write an interolated time-domain field trace into an SDDS file.
      * 
      * This method requiresnthat a trace of observed field values has been
      * collected before and stored in PointObserver::ObservationTime
@@ -130,6 +130,32 @@ public:
      * 
      */
     int WriteTimeTraceSDDS(const char *filename);
+    
+    /*! Write a time-domain field trace into an SDDS file.
+     * 
+     * This method requiresnthat a trace of observed field values has been
+     * collected before and stored in PointObserver::InterpolatedField.
+     * 
+     * The file contains one table with 7 columns
+     * - observation time [s]
+     * - 3 componenets of the electric field [V/m]
+     * - 3 componenets of the magnetic field [T]
+     * 
+     * @return values for error checks:
+     *	 
+     *	0  -  successfully Written the file\n
+     *	1  -  error in SDDS_InitializeOutput \n
+     *	2  -  error in SDDS_DefineSimpleParameter \n
+     *	3  -  error in SDDS_DefineColumn \n
+     *	4  -  error in SDDS_WriteLayout \n
+     *	5  -  error in SDDS_StartPage \n
+     *	6  -  error in SDDS_SetParameters \n
+     *	7  -  error in SDDS_SetRowValues \n
+     *	8  -  error in SDDS_WritePage \n
+     *	9  -  error in SDDS_Terminate \n
+     * 
+     */
+    int WriteTimeFieldSDDS(const char *filename);
     
     /*! Write a frequency spectrum into an SDDS file.
      * 

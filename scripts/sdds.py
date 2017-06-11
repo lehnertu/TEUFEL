@@ -127,6 +127,14 @@ class SDDS:
         data = self.columnData[index]
         return data[0]
 
+     def getParameterValue(self, name):
+        """get the value of a named parameter in an SDDS file."""
+        # see if we can find that parameter
+        index = self.parameterName.index(name)
+        # print "index = ", index
+        data = self.parameterData[index]
+        return data[0]
+	 
      def save(self, output):
           """Save an SDDS class to an SDDS file."""
 

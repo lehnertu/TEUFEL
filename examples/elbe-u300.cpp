@@ -56,7 +56,7 @@
 #include <iostream>
 #include <fstream>
 
-int NOP = 1e4;
+int NOP = 1e3;
 int NOTS = 4000;    // number of time steps
 
 int main()
@@ -168,7 +168,19 @@ int main()
     {
 	printf("SDDS file written - \033[1;32m OK\033[0m\n");
     }
-
+    // write interpolated time trace
+    double t0 = 10.0/SpeedOfLight;
+    Obs.ComputeTimeDomainField(electron, t0, 0.05e-13, 4000);
+    retval = Obs.WriteTimeFieldSDDS("elbe-u300_RadField.sdds");
+    if (0 != retval)
+    {
+	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
+    }
+    else
+    {
+	printf("SDDS file written - \033[1;32m OK\033[0m\n");
+    }
+    
     // write frequency spectrum to file
     retval = Obs.WriteSpectrumSDDS(
 	"elbe-u300_RadSpectrum.sdds",
