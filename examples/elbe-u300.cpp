@@ -39,7 +39,9 @@
     The program generates a trajectory dump elbe-u300_trajectory.sdds which
     can be used to plot the elctron trajectory.
     
- */
+    At c*t=2.0m a snapshot of the particle distribution and the local fields is generated.
+
+*/
 
 #include <math.h>
 #include <stdio.h>

@@ -35,8 +35,10 @@ using namespace std;
  *    @author Ulf Lehnert
  *    @date 17.5.2017
  *    
- *    This class provides means to create certain distributions of particles
- *    in phase space.
+ *    This class provides means to create and handle certain distributions
+ *    of particles in phase space. It is meant for the creation of 6D
+ *    coordinate distributions which can be used by the bunch class
+ *    to initialize particles for tracking.
  */
 class Distribution
 {
