@@ -58,7 +58,7 @@
 #include <iostream>
 #include <fstream>
 
-int NOP = 1e3;
+int NOP = 1e4;
 int NOTS = 4000;    // number of time steps
 
 int main()
@@ -103,7 +103,7 @@ int main()
     dist->generateGaussian(0.000, 0.0005, 1);	// y gaussian with sigma=0.5mm
     dist->generateGaussian(0.000, sigma_z, 2);	// z gaussian with sigma_z
     dist->generateGaussian(0.000, 0.001, 3);	// px gaussian 1mrad
-    dist->generateGaussian(0.000, 0.001, 4);	// py gaussian 1mradS
+    dist->generateGaussian(0.000, 0.001, 4);	// py gaussian 1mrad
     dist->generateGaussian(betagamma, 0.01*betagamma, 5);	// pz gaussian 1% energy spread
 
     // initial position at the origin
@@ -119,6 +119,8 @@ int main()
     double tau = (double)N * (lambda + lambdar) / SpeedOfLight + (4.0 - (double)N * lambda) / (beta * SpeedOfLight);
     double deltaT = tau / NOTS;
 
+    // set the initial positions and momenta of the particles
+    // and setup for the tracking procedure
     bunch->InitVay(dist, deltaT, lattice);
     
     // create a particle dump of the inital distribution
@@ -131,11 +133,13 @@ int main()
 	printf("SDDS file written - \033[1;32m OK\033[0m\n");
     }
     
-    // do the tracking
+    // do the tracking of the single electron
     electron->TrackVay(NOTS, deltaT, X0, P0, lattice);
+    
+    // do the tracking of the bunch
     for (int step=0; step<NOTS; step++)
 	bunch->StepVay(lattice);
-
+    
     // create a trajectory dump fo the single electron
     int retval = electron->WriteSDDS("elbe-u300_Trajectory.sdds");
     if (0 != retval)
@@ -147,6 +151,15 @@ int main()
         printf("SDDS file written - \033[1;32m OK\033[0m\n");
     }
 
+    // create a particle dump of the half-way distribution
+    if (0 != bunch->WriteWatchPointSDDS(tau/2, "elbe-u300_half-way.sdds"))
+    {
+	printf("SDDS write \033[1;31m failed!\033[0m\n");
+    }
+    else
+    {
+	printf("SDDS file written - \033[1;32m OK\033[0m\n");
+    }
     // create a particle dump of the final distribution
     if (0 != bunch->WriteWatchPointSDDS(tau, "elbe-u300_final.sdds"))
     {
@@ -155,6 +168,14 @@ int main()
     else
     {
 	printf("SDDS file written - \033[1;32m OK\033[0m\n");
+    }
+    if (0 != bunch->WriteWatchPointHDF5(tau, "elbe-u300_final.h5"))
+    {
+	printf("HDF5 write \033[1;31m failed!\033[0m\n");
+    }
+    else
+    {
+	printf("HDF5 file written - \033[1;32m OK\033[0m\n");
     }
     
     // compute the radiation of the single electron on axis

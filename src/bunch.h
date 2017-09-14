@@ -65,6 +65,12 @@ public:
      */
     void generateGaussian(double mean, double sigma, int dim);
     
+    /*! Add a correlation between two axis.
+     *  The value of the independent coordinate multiplied with a factor
+     *  is added to the dependent axis coordinate value.
+     */
+    void addCorrelation(int independent, int dependent, double factor);
+    
     /*! Get one coordinate of one particle with given index.
      *  Out of range indices will not lead to errors, just return zero
      */
@@ -83,7 +89,7 @@ private:
     
 };
 
-    /*!
+/*!
     \class Bunch
     \brief Ensemble of particles
  
@@ -92,6 +98,9 @@ private:
     
     This is a container holding a number of particles. Tracking particles
     and computation of radiated fields are provided for all particles together.
+    
+    Creating a bunch does not define inital coordinates of the particles.
+    This is done when initalizing the tracking algorithm (e.g. InitVay() ).
  */
 class Bunch
 {
@@ -103,7 +112,9 @@ public:
     Bunch();
     
     /*! create a bunch of given number of particles each having
-     * given charge and mass
+     * given charge and mass.
+     * 
+     * The particles have no trajectory data, therefore, also no initial coordinates
      */
     Bunch(int N, double charge, double mass);
     
@@ -137,6 +148,8 @@ public:
 
     /*! @brief Setup for tracking the whole bunch using the Vay algorithm.
      * 
+     * The inital coordinates of all particles are defined by the given distribution.
+     * 
      * See ChargedParticle::InitVay for details
      * 
      * The given distribution contains 3 position coordinates [m],
@@ -150,7 +163,7 @@ public:
      * 
      * @param dist the inital coordinates of all particles
      * @param tstep the length of the time step.
-     * @param field the field through which the particle is tracked
+     * @param field the field through which the particle will be tracked
      */
     void InitVay(Distribution *dist,
 		 double tstep,
@@ -183,7 +196,14 @@ public:
      */
     int WriteWatchPointSDDS(double time,
 			    const char *filename);
-    
+
+    /*! Dump all particle information belonging to a given observation time
+     *  into an HDF5 file.
+     */
+    int WriteWatchPointHDF5(double time,
+			    const char *filename);
+
+
 private:
 
     //! Number of Particles in the bunch

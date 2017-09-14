@@ -12,7 +12,11 @@ LIBDIR = ./lib
 
 SDDS = ./lib/SDDSToolKit-devel-3.4
 
-INCPATH      = -I $(SDDS) -I $(SRCDIR)
+HDF5 = $(HOME)/lib/hdf5-1.8.19
+HDF5INC= $(HDF5)/include
+HDF5LIB= $(HDF5)/lib
+
+INCPATH      = -I $(SDDS) -I $(SRCDIR) -I $(HDF5INC)
 
 CC           = gcc
 CXX          = g++
@@ -20,8 +24,8 @@ LINK         = g++
 
 CFLAGS       = -O2 -g -Wall
 CXXFLAGS     = -O2 -g -Wall -std=c++11
-LFLAGS       =
-LIBS         =  -L$(SDDS) -lSDDS1 -lmdblib -lmdbcommon -llzma -lz -lm
+LFLAGS       = -Wl,-rpath,$(HDF5LIB)
+LIBS         = -L$(SDDS) -lSDDS1 -L$(HDF5LIB) -lhdf5 -lmdblib -lmdbcommon -llzma -lz -lm
 
 ####### Output directory
 
@@ -35,6 +39,7 @@ SRC = 	$(SRCDIR)/bunch.cpp \
 	$(SRCDIR)/fields.cpp \
 	$(SRCDIR)/observer.cpp\
 	$(SRCDIR)/particle.cpp\
+	$(SRCDIR)/simulation.cpp\
 	$(SRCDIR)/teufel.cpp\
 	$(SRCDIR)/undulator.cpp \
 	$(SRCDIR)/vector.cpp
@@ -45,6 +50,7 @@ OBJ = 	$(OBJDIR)/bunch.o \
 	$(OBJDIR)/fields.o \
 	$(OBJDIR)/observer.o \
 	$(OBJDIR)/particle.o \
+	$(OBJDIR)/simulation.o \
 	$(OBJDIR)/undulator.o \
 	$(OBJDIR)/vector.o
 
@@ -92,6 +98,7 @@ $(OBJ): $(SRCDIR)/bunch.h \
 	$(SRCDIR)/fields.h \
 	$(SRCDIR)/observer.h \
 	$(SRCDIR)/particle.h \
+	$(SRCDIR)/simulation.h \
 	$(SRCDIR)/undulator.h \
 	$(SRCDIR)/vector.h
 

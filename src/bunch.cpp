@@ -25,6 +25,7 @@
 #include <random>
 #include <iostream>
 #include "SDDS.h"
+#include "hdf5.h"
 
 
 Distribution::Distribution(int dim, int nop)
@@ -66,6 +67,16 @@ void Distribution::generateGaussian(double mean, double sigma, int dim)
 	std::normal_distribution<double> dist(mean, sigma);
 	for (int i=0; i<NOP; i++)
 	    A[i*DIM+dim] = dist(mt);
+    }
+}
+
+void Distribution::addCorrelation(int independent, int dependent, double factor)
+{
+    if (independent>=0 && independent<DIM &&
+	dependent>=0 && dependent<DIM && dependent!=independent)
+    {
+	for (int i=0; i<NOP; i++)
+	    A[i*DIM+dependent] += factor * A[i*DIM+independent];
     }
 }
 
@@ -253,28 +264,100 @@ int Bunch::WriteWatchPointSDDS(double time,
     return 0;
 }
 
-/*
-parameters:
-Step                    1         [] Simulation step
-pCentral        45.0362579837  [m$be$nc] Reference beta*gamma
-Charge                1e-11        [C] Beam charge
-Particles               100000         [] Number of particles
-Pass                    0         [] 
-PassLength          67.57160816        [m] 
-PassCentralTime                  0.0        [s] 
-ElapsedTime                265.0        [s] 
-ElapsedCoreTime                265.0        [s] 
-s          66.81372816        [m] 
-Description                   IP         [] 
-PreviousElementName             D_FFS4IP         [] 
-
-columns:
-x        [m] 
-xp         [] 
-y        [m] 
-yp         [] 
-t        [s] 
-p  [m$be$nc] 
-dt        [s] 
-particleID         [] 
-*/
+int Bunch::WriteWatchPointHDF5(double time,
+			const char *filename)
+{
+    herr_t status;
+    cout << "writing HDF5 file " << filename << endl;
+    // Create a new file using the default properties.
+    hid_t file = H5Fcreate (filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    if (file < 0 )
+    {
+	cout << "Bunch::WriteWatchPointHDF5 - error crating file\n";
+	return 1;
+    };
+    // Create dataspace. Setting maximum size to NULL sets the maximum
+    // size to be the current size.
+    hsize_t dims[2];
+    dims[0] = NOP;
+    dims[1] = 6;
+    hid_t space = H5Screate_simple (2, dims, NULL);
+    if (space < 0 )
+    {
+	cout << "Bunch::WriteWatchPointHDF5 - error crating dataspace\n";
+	return 2;
+    };
+    // buffer the data
+    double *buffer = new double[NOP*6];
+    double *bp = buffer;
+    for( int i=0; i<NOP; i++)
+    {
+	Vector X, BG;
+	// query the particle for its coordinates at the given time
+	P[i]->CoordinatesAtTime(time, &X, &BG);
+	*bp++ = X.x;
+	*bp++ = X.y;
+	*bp++ = X.z;
+	*bp++ = BG.x;
+	*bp++ = BG.y;
+	*bp++ = BG.z;
+    };
+    // Create the dataset creation property list
+    hid_t dcpl = H5Pcreate (H5P_DATASET_CREATE);
+    if (dcpl < 0 )
+    {
+	cout << "Bunch::WriteWatchPointHDF5 - error crating property list\n";
+	return 3;
+    };
+    // Create the dataset.
+    hid_t dset = H5Dcreate (file,
+	"electrons", 			// dataset name
+	H5T_NATIVE_DOUBLE,		// data type
+	space, H5P_DEFAULT,
+	dcpl, H5P_DEFAULT);
+    if (dset < 0 )
+    {
+	cout << "Bunch::WriteWatchPointHDF5 - error crating dataset\n";
+	return 4;
+    };
+    // Write the data to the dataset
+    status = H5Dwrite (dset,
+	H5T_NATIVE_DOUBLE, 		// mem type id
+	H5S_ALL, 			// mem space id
+	space,
+	H5P_DEFAULT,			// data transfer properties
+	buffer);
+    if (status < 0 )
+    {
+	cout << "Bunch::WriteWatchPointHDF5 - error writing dataset\n";
+	return 5;
+    }	
+    // Close and release resources.
+    status = H5Pclose (dcpl);
+    if (status < 0 )
+    {
+	cout << "Bunch::WriteWatchPointHDF5 - error releasing property list\n";
+	return 6;
+    }	
+    status = H5Dclose (dset);
+    if (status < 0 )
+    {
+	cout << "Bunch::WriteWatchPointHDF5 - error releasing dataset\n";
+	return 7;
+    }	
+    status = H5Sclose (space);
+    if (status < 0 )
+    {
+	cout << "Bunch::WriteWatchPointHDF5 - error releasing dataspace\n";
+	return 8;
+    }	
+    status = H5Fclose (file);
+    if (status < 0 )
+    {
+	cout << "Bunch::WriteWatchPointHDF5 - error closing file\n";
+	return 9;
+    }	
+    // no errors have occured if we made it 'til here
+    cout << "writing HDF5 done." << endl;
+    return 0;
+}
