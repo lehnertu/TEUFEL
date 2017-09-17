@@ -97,7 +97,7 @@ private:
 };
 
 /*!
-    \class Bunch
+    \class BunchedBeam
     \brief Ensemble of particles
  
     @author Ulf Lehnert, Vipul Joshi
@@ -109,34 +109,34 @@ private:
     Creating a bunch does not define inital coordinates of the particles.
     This is done when initalizing the tracking algorithm (e.g. InitVay() ).
  */
-class Bunch
+class BunchedBeam
 {
 
 public:
 
     /*! default constructor: creates an empty bunch .
     */	
-    Bunch();
+    BunchedBeam();
     
     /*! create a bunch of given number of particles each having
      * given charge and mass.
      * 
      * The particles have no trajectory data, therefore, also no initial coordinates
      */
-    Bunch(int N, double charge, double mass);
+    BunchedBeam(int N, double charge, double mass);
     
     /*!
      * copy constructor:
      * Create a copy of an existing bunch, thereby, creating copies of all particles
      * of the original bunch. The original bunch is not altered.
      */
-    Bunch(Bunch* origin);
+    BunchedBeam(BunchedBeam* origin);
 
     /*!
      * Destructor:
      * Deleting the bunch also deletes all contained particles
      */
-    ~Bunch();
+    ~BunchedBeam();
 
     /*!
      * Add a particle to the bunch.

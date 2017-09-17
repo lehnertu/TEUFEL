@@ -22,7 +22,7 @@
 #pragma once
 
 #include "pugixml.hpp"
-#include "bunch.h"
+#include "beam.h"
 
 using namespace std;
 

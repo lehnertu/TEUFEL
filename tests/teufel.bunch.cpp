@@ -43,7 +43,7 @@
 
 #include "global.h"
 #include "particle.h"
-#include "bunch.h"
+#include "beam.h"
 
 int main ()
 {
@@ -59,7 +59,7 @@ int main ()
     // create an empty lattice
     Lattice* lattice = new Lattice;
 
-    Bunch *B = new Bunch(NOP, -1.0, 1.0);
+    BunchedBeam *B = new BunchedBeam(NOP, -1.0, 1.0);
 
     double gamma = 50.0;
     double betagamma = sqrt(gamma * gamma - 1.0);

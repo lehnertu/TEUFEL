@@ -35,7 +35,7 @@ OBJECTS_DIR   = ./obj
 
 #	$(SRCDIR)/cavity.cpp
 #	$(SRCDIR)/wave.cpp
-SRC = 	$(SRCDIR)/bunch.cpp \
+SRC = 	$(SRCDIR)/beam.cpp \
 	$(SRCDIR)/fields.cpp \
 	$(SRCDIR)/observer.cpp\
 	$(SRCDIR)/particle.cpp\
@@ -46,7 +46,7 @@ SRC = 	$(SRCDIR)/bunch.cpp \
 
 #	$(OBJDIR)/cavity.o \
 #	$(OBJDIR)/wave.o
-OBJ = 	$(OBJDIR)/bunch.o \
+OBJ = 	$(OBJDIR)/beam.o \
 	$(OBJDIR)/fields.o \
 	$(OBJDIR)/observer.o \
 	$(OBJDIR)/particle.o \
@@ -93,7 +93,7 @@ $(TARGET):  $(OBJ)  $(TARGETOBJ)
 
 #	$(SRCDIR)/cavity.h \
 #	$(SRCDIR)/wave.h
-$(OBJ): $(SRCDIR)/bunch.h \
+$(OBJ): $(SRCDIR)/beam.h \
 	$(SRCDIR)/global.h \
 	$(SRCDIR)/fields.h \
 	$(SRCDIR)/observer.h \

@@ -49,7 +49,7 @@
 #include <string.h>
 #include <complex>
 
-#include "bunch.h"
+#include "beam.h"
 #include "global.h"
 #include "observer.h"
 #include "particle.h"
@@ -97,7 +97,7 @@ int main()
     double sigma_z = SpeedOfLight * beta * sigma_t;
     printf("sigma_t =  %9.3g ps\n", 1e12*sigma_t);
     printf("sigma_z =  %9.3g mm\n", 1e3*sigma_z);
-    Bunch *bunch = new Bunch(NOP, -ch, ch);
+    BunchedBeam *bunch = new BunchedBeam(NOP, -ch, ch);
     Distribution *dist = new Distribution(6, NOP);
     dist->generateGaussian(0.000, 0.001, 0);	// x gaussian with sigma=1mm
     dist->generateGaussian(0.000, 0.0005, 1);	// y gaussian with sigma=0.5mm

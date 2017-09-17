@@ -19,7 +19,7 @@
  * 
  * =========================================================================*/
 
-#include "bunch.h"
+#include "beam.h"
 #include "particle.h"
 #include "global.h"
 #include <random>
@@ -88,12 +88,12 @@ double Distribution::getCoordinate(int index, int dim)
 	return 0.0;
 }
 
-Bunch::Bunch()
+BunchedBeam::BunchedBeam()
 {
     NOP = 0;
 }
 
-Bunch::Bunch(int N, double charge, double mass)
+BunchedBeam::BunchedBeam(int N, double charge, double mass)
 {
     NOP = N;
     for(int i=0; i<NOP; i++)
@@ -102,7 +102,7 @@ Bunch::Bunch(int N, double charge, double mass)
     }
 }
 
-Bunch::Bunch(Bunch* origin)
+BunchedBeam::BunchedBeam(BunchedBeam* origin)
 {
     NOP = origin->getNOP();
     for(int i=0; i<NOP; i++)
@@ -111,22 +111,22 @@ Bunch::Bunch(Bunch* origin)
     }
 }
 
-Bunch::~Bunch()
+BunchedBeam::~BunchedBeam()
 {
 }
 
-void Bunch::Add(ChargedParticle *part)
+void BunchedBeam::Add(ChargedParticle *part)
 {
     NOP++;
     P.push_back(part);
 }
 
-int Bunch::getNOP()
+int BunchedBeam::getNOP()
 {
     return NOP;
 }
 
-double Bunch::getTotalCharge()
+double BunchedBeam::getTotalCharge()
 {
     double charge = 0.0;
     for(int i=0; i<NOP; i++)
@@ -136,12 +136,12 @@ double Bunch::getTotalCharge()
     return charge;
 }
 
-ChargedParticle* Bunch::getParticle(int i)
+ChargedParticle* BunchedBeam::getParticle(int i)
 {
     return P[i];
 }
 
-void Bunch::InitVay(Distribution *dist,
+void BunchedBeam::InitVay(Distribution *dist,
 		    double tstep,
 		    GeneralField* field)
 {
@@ -159,7 +159,7 @@ void Bunch::InitVay(Distribution *dist,
     }
 }
 
-void Bunch::StepVay(GeneralField* field)
+void BunchedBeam::StepVay(GeneralField* field)
 {
     for(int i=0; i<NOP; i++)
     {
@@ -167,19 +167,19 @@ void Bunch::StepVay(GeneralField* field)
     }
 }
 
-int Bunch::WriteWatchPointSDDS(double time,
+int BunchedBeam::WriteWatchPointSDDS(double time,
 			       const char *filename)
 {
     cout << "writing SDDS file " << filename << endl;
     SDDS_DATASET data;
     if (1 != SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,filename))
     {
-	cout << "Bunch::WriteWatchPointSDDS - error initializing output\n";
+	cout << "BunchedBeam::WriteWatchPointSDDS - error initializing output\n";
 	return 1;
     }
     if  (SDDS_DefineSimpleParameter(&data,"NumberOfParticles","", SDDS_LONG)!=1)
     {
-	cout << "Bunch::WriteWatchPointSDDS - error defining parameters\n";
+	cout << "BunchedBeam::WriteWatchPointSDDS - error defining parameters\n";
 	return 2;
     }
     if  (
@@ -196,19 +196,19 @@ int Bunch::WriteWatchPointSDDS(double time,
 	SDDS_DefineColumn(&data,"gamma\0","gamma\0",NULL,"RelativisticFactor\0",NULL,SDDS_DOUBLE,0)==-1
 	)
     {
-	cout << "Bunch::WriteWatchPointSDDS - error defining data columns\n";
+	cout << "BunchedBeam::WriteWatchPointSDDS - error defining data columns\n";
 	return 3;
     }
     if (SDDS_WriteLayout(&data) != 1)
     {
-	cout << "Bunch::WriteWatchPointSDDS - error writing layout\n";
+	cout << "BunchedBeam::WriteWatchPointSDDS - error writing layout\n";
 	return 4;
     }
     // start a page with number of lines equal to the number of trajectory points
     cout << "SDDS start page" << endl;
     if (SDDS_StartPage(&data,(int32_t)NOP) !=1 )
     {
-	cout << "Bunch::WriteWatchPointSDDS - error starting page\n";
+	cout << "BunchedBeam::WriteWatchPointSDDS - error starting page\n";
 	return 5;
     }
     // write the single valued variables
@@ -218,7 +218,7 @@ int Bunch::WriteWatchPointSDDS(double time,
 	NULL ) !=1
 	)
     {
-	cout << "Bunch::WriteWatchPointSDDS - error setting parameters\n";
+	cout << "BunchedBeam::WriteWatchPointSDDS - error setting parameters\n";
 	return 6;
     }
     // write the table of particle data
@@ -244,19 +244,19 @@ int Bunch::WriteWatchPointSDDS(double time,
 	    NULL) != 1
 	    )
 	{
-	    cout << "Bunch::WriteWatchPointSDDS - error writing data columns\n";
+	    cout << "BunchedBeam::WriteWatchPointSDDS - error writing data columns\n";
 	    return 7;
 	}
     }
     if( SDDS_WritePage(&data) != 1)
     {
-	cout << "Bunch::WriteWatchPointSDDS - error writing page\n";
+	cout << "BunchedBeam::WriteWatchPointSDDS - error writing page\n";
 	return 8;
     }
     // finalize the file
     if (SDDS_Terminate(&data) !=1 )
     {
-	cout << "Bunch::WriteWatchPointSDDS - error terminating data file\n";
+	cout << "BunchedBeam::WriteWatchPointSDDS - error terminating data file\n";
 	return 9;
     }	
     // no errors have occured if we made it 'til here
@@ -264,7 +264,7 @@ int Bunch::WriteWatchPointSDDS(double time,
     return 0;
 }
 
-int Bunch::WriteWatchPointHDF5(double time,
+int BunchedBeam::WriteWatchPointHDF5(double time,
 			const char *filename)
 {
     herr_t status;
@@ -273,7 +273,7 @@ int Bunch::WriteWatchPointHDF5(double time,
     hid_t file = H5Fcreate (filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
     if (file < 0 )
     {
-	cout << "Bunch::WriteWatchPointHDF5 - error crating file\n";
+	cout << "BunchedBeam::WriteWatchPointHDF5 - error crating file\n";
 	return 1;
     };
     // Create dataspace. Setting maximum size to NULL sets the maximum
@@ -284,7 +284,7 @@ int Bunch::WriteWatchPointHDF5(double time,
     hid_t space = H5Screate_simple (2, dims, NULL);
     if (space < 0 )
     {
-	cout << "Bunch::WriteWatchPointHDF5 - error crating dataspace\n";
+	cout << "BunchedBeam::WriteWatchPointHDF5 - error crating dataspace\n";
 	return 2;
     };
     // buffer the data
@@ -306,7 +306,7 @@ int Bunch::WriteWatchPointHDF5(double time,
     hid_t dcpl = H5Pcreate (H5P_DATASET_CREATE);
     if (dcpl < 0 )
     {
-	cout << "Bunch::WriteWatchPointHDF5 - error crating property list\n";
+	cout << "BunchedBeam::WriteWatchPointHDF5 - error crating property list\n";
 	return 3;
     };
     // Create the dataset.
@@ -317,7 +317,7 @@ int Bunch::WriteWatchPointHDF5(double time,
 	dcpl, H5P_DEFAULT);
     if (dset < 0 )
     {
-	cout << "Bunch::WriteWatchPointHDF5 - error crating dataset\n";
+	cout << "BunchedBeam::WriteWatchPointHDF5 - error crating dataset\n";
 	return 4;
     };
     // Write the data to the dataset
@@ -329,32 +329,32 @@ int Bunch::WriteWatchPointHDF5(double time,
 	buffer);
     if (status < 0 )
     {
-	cout << "Bunch::WriteWatchPointHDF5 - error writing dataset\n";
+	cout << "BunchedBeam::WriteWatchPointHDF5 - error writing dataset\n";
 	return 5;
     }	
     // Close and release resources.
     status = H5Pclose (dcpl);
     if (status < 0 )
     {
-	cout << "Bunch::WriteWatchPointHDF5 - error releasing property list\n";
+	cout << "BunchedBeam::WriteWatchPointHDF5 - error releasing property list\n";
 	return 6;
     }	
     status = H5Dclose (dset);
     if (status < 0 )
     {
-	cout << "Bunch::WriteWatchPointHDF5 - error releasing dataset\n";
+	cout << "BunchedBeam::WriteWatchPointHDF5 - error releasing dataset\n";
 	return 7;
     }	
     status = H5Sclose (space);
     if (status < 0 )
     {
-	cout << "Bunch::WriteWatchPointHDF5 - error releasing dataspace\n";
+	cout << "BunchedBeam::WriteWatchPointHDF5 - error releasing dataspace\n";
 	return 8;
     }	
     status = H5Fclose (file);
     if (status < 0 )
     {
-	cout << "Bunch::WriteWatchPointHDF5 - error closing file\n";
+	cout << "BunchedBeam::WriteWatchPointHDF5 - error closing file\n";
 	return 9;
     }	
     // no errors have occured if we made it 'til here
