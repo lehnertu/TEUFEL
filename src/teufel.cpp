@@ -21,196 +21,49 @@
 
 =========================================================================*/
 
-#include <math.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+#include "pugixml.hpp"
+#include <iostream>
 
 #include "global.h"
-#include "particle.h"
-#include "fields.h"
+#include "simulation.h"
 
-#include "SDDS.h"
-
-// <bunch> parameters
-int NOP = 1;                    // number of (real) particles
-int NOTS = 3000;                // number of time steps
-
-int main ()
+int main ( int argc, char *argv[] )
 {
-  FILE *dump;
-  int d;                // integer buffer used for file writing
+    std::cout << std::endl;
+    std::cout << "TEUFEL - THz Emission from Undulators and Free-Electron Lasers" << std::endl;
+    std::cout << "Ulf Lehnert 9/2017" << std::endl;
+    std::cout << std::endl;
 
-  printf("\nTEUFEL Version 0.01 U.Lehnert 12/2016\n");
-  printf("homogeneous magnet testcase\n\n");
-
-  Vector B=Vector(0.033166247903554,0.05,0.08);
-  HomogeneousField *mag = new HomogeneousField(Vector(0.0,0.0,0.0),B);
-  printf("B =  %9.6g T\n",(B.norm()));
-  printf("Bx = %9.6g T  ",(B.x));
-  printf("By = %9.6g T  ",(B.y));
-  printf("Bz = %9.6g T\n",(B.z));
-  
-  double cp = 10.0e6;   // 10 MeV
-  printf("c*p =  %9.6g MeV\n",1e-6*cp);
-  double betagamma= cp / mecsquared;
-  printf("gamma =  %9.6g\n",sqrt(1.0+betagamma*betagamma));
-  double Rgyro = betagamma * mecsquared / SpeedOfLight / B.norm();
-  printf("R =  %9.6g m\n",Rgyro);
-
-  Lattice *lattice = new Lattice;
-  lattice->addElement(mag);
-
-  ChargedParticle *bunch = new ChargedParticle[NOP];
-
-  for (int i=0; i<NOP; i++)
+    // we should have exactly one argument - the input file name
+    if ( argc != 2 )
     {
-      // initial position of the particle
-      // amplitude of fig-8 oscillation is a0/k
-      Vector X0 = Vector(0.0, 0.0, Rgyro);
-      // initial momentum of the particle
-      Vector P0 = Vector(betagamma, 0.0, 0.0);
-      // bunch[i].TrackLF(NOTS, 5.0e-12, X0, P0, lattice);
-      bunch[i].TrackVay(NOTS, 5.0e-12, X0, P0, lattice);
-    }
+	cout<<"usage: "<< argv[0] <<" <filename>\n";
+	exit(-1);
+    };
+    
+    pugi::xml_document doc;
+    if (!doc.load_file(argv[1]))
+    {
+	std::cout << "input file read error" << std::endl;
+	exit(-1);
+    };
 
-  // dump the particle trajectories into a binary file
-  dump = fopen("particles.bin","wb");
-  // first write the number of particles
-  d = NOP;
-  fwrite(&d, sizeof(int), 1, dump);
-  // write the number of time steps
-  d = NOTS;
-  fwrite(&d, sizeof(int), 1, dump);
-  // write the traces
-  // it is transposed while writing because z (the 1-step index)
-  // ist used as the outer loop index
-  for (int ip=0; ip<NOP; ip++)
-    for (int it=0; it<NOTS; it++)
-      {
-        Vector XP = bunch[ip].TrajPoint(it);
-        // fwrite expects a pointer to the value to be written
-        fwrite(&(XP.x), sizeof(double), 1, dump);
-        fwrite(&(XP.y), sizeof(double), 1, dump);
-        fwrite(&(XP.z), sizeof(double), 1, dump);
-         // write the momentum in addition
-        XP = bunch[ip].TrajMomentum(it);
-        fwrite(&(XP.x), sizeof(double), 1, dump);
-        fwrite(&(XP.y), sizeof(double), 1, dump);
-        fwrite(&(XP.z), sizeof(double), 1, dump);
-     };
-  fclose(dump);
+    pugi::xml_node root = doc.child("teufel");
+    if (!root)
+    {
+	std::cout << "fatal error : root node <teufel> not found" << std::endl;
+	exit(-1);
+    };
 
-  // write trajectories to SDDS file
-  SDDS_DATASET SDDS_dataset;
-
-  /* SDDS_InitializeOutput
-      arguments:
-       1) *SDDS_DATASET
-       2) data mode = SDDS_ASCII or SDDS_BINARY
-       3) lines per row of ascii data
-       4) description string
-       5) contents string
-       6) output file name
-      return:
-       1 on success
-       0 on failure 
-  */
-  if (SDDS_InitializeOutput(&SDDS_dataset, SDDS_BINARY, 1,
-                            NULL, NULL, "traj.sdds" ) != 1) {
-    return(1);
-  }
-  fprintf(stdout, "output initialized\n");
-
-  /* SDDS_DefineSimpleParameter
-      arguments:
-       1) *SDDS_DATASET
-       2) parameter name
-       3) parameter units
-       4) SDDS datatype
-      return:
-       1 on success
-       0 on failure 
-  */
-  if (SDDS_DefineSimpleParameter(&SDDS_dataset, "B", "T", SDDS_DOUBLE)!=1 ||
-      SDDS_DefineSimpleParameter(&SDDS_dataset, "cp",  "eV", SDDS_DOUBLE)!=1 ||
-      SDDS_DefineSimpleParameter(&SDDS_dataset, "gamma", NULL, SDDS_DOUBLE)!=1 ||
-      SDDS_DefineSimpleParameter(&SDDS_dataset, "R", "m", SDDS_DOUBLE)!=1) {
-    return(1);
-  }
-  fprintf(stdout, "parameters defined\n");
-
-  /* SDDS_WriteLayout
-      arguments:
-       1) *SDDS_DATASET
-      return:
-       1 on success
-       0 on failure 
-  */
-  if (SDDS_WriteLayout(&SDDS_dataset)!=1) {
-    return(1);
-  }
-  fprintf(stdout, "layout written\n");
-
-  /* SDDS_StartPage
-      arguments:
-       1) *SDDS_DATASET
-       2) expected number of rows
-      return:
-       1 on success
-       0 on failure 
-  */
-  if (SDDS_StartPage(&SDDS_dataset, 5)!=1) {
-    return(1);
-  }
-  fprintf(stdout, "started page\n");
-
-  /* SDDS_SetParameters
-      arguments:
-       1) *SDDS_DATASET
-       2) mode = SDDS_SET_BY_NAME | SDDS_PASS_BY_VALUE
-        3) char *name1, value1, char *name2, value2, ..., NULL
-       2) mode = SDDS_SET_BY_NAME | SDDS_PASS_BY_REFERENCE
-        3) char *name1, void *data1, char *name2, void *data2, ..., NULL
-       2) mode = SDDS_SET_BY_INDEX | SDDS_PASS_BY_VALUE
-        3) long index1, value1, long index2, value2, ..., -1
-       2) mode = SDDS_SET_BY_INDEX | SDDS_PASS_BY_REFERENCE
-        3) long index1, void *data1, long index2, void *data2, ..., -1
-      return:
-       1 on success
-       0 on failure 
-  */
-  if (SDDS_SetParameters(&SDDS_dataset, SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, 
-			 "B", B.norm(), 
-                         "cp",  cp, 
-                         "gamma", sqrt(1.0+betagamma*betagamma), 
-                         "R",  Rgyro,
-                         NULL)!=1) {
-    return(1);
-  }
-  fprintf(stdout, "parameters set\n");
-
-  /* SDDS_WritePage
-      arguments:
-       1) *SDDS_DATASET
-      return:
-       1 on success
-       0 on failure 
-  */
-  if (SDDS_WritePage(&SDDS_dataset)!=1) {
-    return(1);
-  }
-  fprintf(stdout,"page written out\n");
-
-  /* SDDS_Terminate
-      arguments:
-       1) *SDDS_DATASET
-      return:
-       1 on success
-       0 on failure 
-  */
-  if (SDDS_Terminate(&SDDS_dataset)!=1) {
-    return(1);
-  }
-
+    std::cout << root.attribute("description").value() << std::endl;
+    std::cout << root.attribute("author").value() << std::endl;
+    std::cout << std::endl;
+    
+    Simulation *sim = new Simulation(root);
+    int num = sim->parseLattice();
+    std::cout << "parsed " << num << " lattice elements" << std::endl;
+    num = sim->parseBeam();
+    
+    delete sim;
 }
+

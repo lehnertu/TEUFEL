@@ -25,7 +25,7 @@ LINK         = g++
 CFLAGS       = -O2 -g -Wall
 CXXFLAGS     = -O2 -g -Wall -std=c++11
 LFLAGS       = -Wl,-rpath,$(HDF5LIB)
-LIBS         = -L$(SDDS) -lSDDS1 -L$(HDF5LIB) -lhdf5 -lmdblib -lmdbcommon -llzma -lz -lm
+LIBS         = -L$(SDDS) -lSDDS1 -L$(HDF5LIB) -lhdf5 -lpugixml -lmdblib -lmdbcommon -llzma -lz -lm
 
 ####### Output directory
 

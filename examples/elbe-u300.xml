@@ -1,0 +1,16 @@
+<?xml version="1.0"?>
+<teufel description="Superradiant emission from the ELBE U300 undulator"
+	author="Ulf Lehnert 14.9.2017">
+    <lattice>
+	<undulator name="U300" type="planar">
+	    <field B="0.100" period="0.300" N="8" />
+	    <position x="0.0" y="0.0" z="2.0"/>
+	</undulator>
+    </lattice>
+    <beam>
+    </beam>
+    <tracking method="Vay">
+    </tracking>
+    <output>
+    </output>
+</teufel>

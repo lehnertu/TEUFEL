@@ -55,6 +55,11 @@ public:
     //! Destructor only used to free the memory
     ~Distribution();
     
+    /*! Join in another distribution.
+     *  This only works if both have the same number of dimensions.
+     */
+    void join(const Distribution *other);
+    
     //! report number of dimensions
     int getDIM();
     
@@ -62,6 +67,8 @@ public:
     int getNOP();
     
     /*! generate a gaussian distribution for one of the dimensions
+     *  @todo: This should generate a strictly sequential Gaussian.
+     *  The present code shoud be renamed generateNormalDist()
      */
     void generateGaussian(double mean, double sigma, int dim);
     

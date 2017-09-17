@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include "pugixml.hpp"
 #include "bunch.h"
 
 using namespace std;
@@ -40,15 +41,28 @@ class Simulation
 
 public:
     
-    /*! The constructor of the simulation.
+    /*! The constructor of the simulation gets the top node of
+     *  an open XML file. This will be the root node from which
+     *  all necessary information will be parsed.
      */
-    Simulation(const char *filename);
+    Simulation(const pugi::xml_node node);
     
     //! Destructor only used to free the memory
     ~Simulation();
     
-    //! parse the input file and create all described objects
-    void parseInput();
+    /* Parse the input file and create all described objects.
+     * If there is no child <lattice> under the root node
+     * the whole program is aborted.
+     * 
+     * @return the number of processed items
+     */
+    int parseLattice();
+
+    /* Parse the input file and create the beam.
+     * If there is no child <beam> under the root node
+     * the whole program is aborted.
+     */
+    int parseBeam();
     
     //! run the simulation
     void run();
@@ -58,8 +72,10 @@ public:
 
 private:
     
-    //! the input file name
-    char input[256];
+    //! the root node of the input file
+    pugi::xml_node root;
 
+    Lattice* lattice;
+    
 };
 
