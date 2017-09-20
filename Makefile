@@ -12,9 +12,12 @@ LIBDIR = ./lib
 
 SDDS = ./lib/SDDSToolKit-devel-3.4
 
-HDF5 = $(HOME)/lib/hdf5-1.8.19
-HDF5INC= $(HDF5)/include
-HDF5LIB= $(HDF5)/lib
+HDF5INC = /usr/include/hdf5/serial
+HDF5LIB = /usr/lib/x86_64-linux-gnu/hdf5/serial
+
+# HDF5 = $(HOME)/lib/hdf5-1.8.19
+# HDF5INC= $(HDF5)/include
+# HDF5LIB= $(HDF5)/lib
 
 INCPATH      = -I $(SDDS) -I $(SRCDIR) -I $(HDF5INC)
 

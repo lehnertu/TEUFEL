@@ -97,7 +97,7 @@ private:
 };
 
 /*!
-    \class BunchedBeam
+    \class Bunch
     \brief Ensemble of particles
  
     @author Ulf Lehnert, Vipul Joshi
@@ -109,34 +109,34 @@ private:
     Creating a bunch does not define inital coordinates of the particles.
     This is done when initalizing the tracking algorithm (e.g. InitVay() ).
  */
-class BunchedBeam
+class Bunch
 {
 
 public:
 
     /*! default constructor: creates an empty bunch .
     */	
-    BunchedBeam();
+    Bunch();
     
     /*! create a bunch of given number of particles each having
      * given charge and mass.
      * 
      * The particles have no trajectory data, therefore, also no initial coordinates
      */
-    BunchedBeam(int N, double charge, double mass);
+    Bunch(int N, double charge, double mass);
     
     /*!
      * copy constructor:
      * Create a copy of an existing bunch, thereby, creating copies of all particles
      * of the original bunch. The original bunch is not altered.
      */
-    BunchedBeam(BunchedBeam* origin);
+    Bunch(Bunch* origin);
 
     /*!
      * Destructor:
      * Deleting the bunch also deletes all contained particles
      */
-    ~BunchedBeam();
+    ~Bunch();
 
     /*!
      * Add a particle to the bunch.
@@ -221,5 +221,32 @@ private:
 
     //! we store references to all particles
     vector<ChargedParticle*> P;
+
+};
+
+/*!
+    \class Beam
+    \brief Ensemble of bunches
+ 
+    @author Ulf Lehnert
+    @date 19.9.2017
+    
+    This is a container holding a number of bunches.
+    The main purpose is to parallelize the tracking of several buches but
+    also tracking of several distinct fractions of a bunch is possible.
+    The interface almost exactly resembles that of a single bunch.
+ */
+class Beam
+{
+
+public:
+
+private:
+
+    //! Number of bunches in the beam.
+    int NOB;
+
+    //! we store references to all bunches
+    vector<Bunch*> B;
 
 };

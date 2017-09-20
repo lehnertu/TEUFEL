@@ -59,7 +59,7 @@ int main ()
     // create an empty lattice
     Lattice* lattice = new Lattice;
 
-    BunchedBeam *B = new BunchedBeam(NOP, -1.0, 1.0);
+    Bunch *B = new Bunch(NOP, -1.0, 1.0);
 
     double gamma = 50.0;
     double betagamma = sqrt(gamma * gamma - 1.0);

@@ -97,7 +97,7 @@ int main()
     double sigma_z = SpeedOfLight * beta * sigma_t;
     printf("sigma_t =  %9.3g ps\n", 1e12*sigma_t);
     printf("sigma_z =  %9.3g mm\n", 1e3*sigma_z);
-    BunchedBeam *bunch = new BunchedBeam(NOP, -ch, ch);
+    Bunch *bunch = new Bunch(NOP, -ch, ch);
     Distribution *dist = new Distribution(6, NOP);
     dist->generateGaussian(0.000, 0.001, 0);	// x gaussian with sigma=1mm
     dist->generateGaussian(0.000, 0.0005, 1);	// y gaussian with sigma=0.5mm
@@ -137,8 +137,10 @@ int main()
     electron->TrackVay(NOTS, deltaT, X0, P0, lattice);
     
     // do the tracking of the bunch
+    printf("tracking particles ... ");
     for (int step=0; step<NOTS; step++)
 	bunch->StepVay(lattice);
+    printf("done.\n");
     
     // create a trajectory dump fo the single electron
     int retval = electron->WriteSDDS("elbe-u300_Trajectory.sdds");
