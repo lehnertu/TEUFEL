@@ -17,7 +17,7 @@ Documentation
 -------------
 
 We aim at fully documenting the code for easy reuse and maintenance.
-The documentation can be buil using doxygen.
+The documentation can be built using doxygen.
 
 ```make docs```
 

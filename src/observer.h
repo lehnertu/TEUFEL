@@ -222,3 +222,29 @@ private:
     std::vector<ElMagField> InterpolatedField;
 
 };
+
+/*!
+ * \class ScreenObserver
+ * \brief Observer of emitted radiation on a rectangular planar grid.
+ * @author Ulf Lehnert
+ * @date 17.9.2017
+ * 
+ * This class handles the computation and storage of emitted electromagnetic
+ * radiation from particles or ensembles of particles.
+ */
+class ScreenObserver
+{
+};
+
+/*!
+ * \class VolumeObserver
+ * \brief Observer of emitted radiation on a rectangular volume grid.
+ * @author Ulf Lehnert
+ * @date 17.9.2017
+ * 
+ * This class handles the computation and storage of emitted electromagnetic
+ * radiation from particles or ensembles of particles.
+ */
+class VolumeObserver
+{
+};

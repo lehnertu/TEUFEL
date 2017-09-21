@@ -106,7 +106,7 @@ private:
     This is a container holding a number of particles. Tracking particles
     and computation of radiated fields are provided for all particles together.
     
-    Creating a bunch does not define inital coordinates of the particles.
+    Creating a beam does not define inital coordinates of the particles.
     This is done when initalizing the tracking algorithm (e.g. InitVay() ).
  */
 class Bunch
