@@ -148,7 +148,7 @@ public:
      */
     void CoordinatesAtTime(double time, Vector *position, Vector *momentum);
     
-    /*! electric field radiated by the particle
+    /*! Electromagnetic field radiated by the particle
      * at a given observation point at time t in lab frame
      * retardation is properly accounted for
      * 
@@ -158,26 +158,31 @@ public:
      */
     ElMagField RetardedField(double time, Vector ObservationPoint);
     
-    /*! Compute the electromagnetic field radiated by a particle
-     * seen from a given observation point. The field is given in time domain
-     * at a number of time steps corresponding to the time steps of
-     * the trajectory of the particle. The sample points at the observation
-     * position, thus, are not predefined and not equi-distant. The samples
-     * are delayed by the retardation corresponding to the observation distance.
+    /*! Compute the electromagnetic field radiated by the particle
+     * seen at the observation point. The field is given in time domain
+     * starting at t0 with NOTS equidistant time steps of dt length.
+     * The first time step starts at \f$t0\f$ and ends at \f$t0+dt\f$.
+     * The total timespan covererd ends at \f$t0+n*dt\f$.
      * 
-     * \return
-     * Observation time and field are stored into given vectors.
-     * The number of samples is returned.
+     * This method first uses ChargedParticle::FieldTrace()
+     * to obtain the non-interpolated data covering the requested range.
+     * A step-wise linear funtion is used to interpolate from the non-equidistant
+     * time steps stored in the particle trajectory, thus, exactly preserving
+     * the (first order) \f$\int E dt\f$ integral.
      * 
-     * \param[in] ObservationPoint Position of the observer in space.
-     * \param[out] ObservationTime Sample time at the observation point.
+     * \param[in] ObservationPoint The position [m] of the observer.
+     * \param[in] t0 Start time [s] of the trace (at the observer).
+     * \param[in] dt Time step [s] of the observation trace.
+     * \param[in] nots Number of time steps.
      * \param[out] ObservationField Electromagnetic field samples at the observation point.
      */
-    int TimeDomainField(
+    void getTimeDomainField(
 	Vector ObservationPoint,
-	std::vector<double> *ObservationTime,
+	double t0,
+	double dt,
+	int nots,
 	std::vector<ElMagField> *ObservationField);
-    
+
     /*! Write all information in particular the trajectory data into an SDDS file.
      * 
      * returns values for error checks:
@@ -234,4 +239,53 @@ private:
     //! \f$\gamma^{i+1}/c\f$ of the Vay algorithm
     double VY_gamma_i1;
     
-};
+    /*! Compute the time when a signal emiited from the trajectory point
+     * with given index is observed at the ObservationPoint.
+     * 
+     * watch out! - validity of the index is not checked
+     */
+    double RetardedTime(int index,
+	Vector ObservationPoint);
+	
+    /*! Compute the field emiited from the trajectory point
+     * with given index observed at the ObservationPoint.
+     * 
+     * watch out! - validity of the index is not checked
+     * 
+     * This method is private - no methods with direct indexing of
+     * the trajectory points should be outside-visible. For the outside
+     * world there exists a method with the same name but the
+     * observation time as a parameter.
+     */
+    ElMagField RetardedField(int index,
+	Vector ObservationPoint);
+    
+    /*! Compute the electromagnetic field radiated by a particle
+     * seen from a given observation point. The field is given in time domain
+     * at a number of time steps corresponding to the time steps of
+     * the trajectory of the particle. The sample points at the observation
+     * position, thus, are not predefined and not equi-distant. The samples
+     * are delayed by the retardation corresponding to the observation distance.
+     * Only those samples spanning (t1, t2) in time are delivered
+     * including one sample before t1 and one sample after t2 if available.
+     * It is not guarantied, that the whole span is covered in case of
+     * time mismatches also 0 samples can be returned.
+     * 
+     * \return
+     * Observation time and field are stored into given vectors.
+     * The number of samples is returned.
+     * 
+     * \param[in] ObservationPoint Position [m] of the observer in space.
+     * \param[in] t1 Start [s] of the range of interest in time.
+     * \param[in] t2 End [s] of the range of interest in time.
+     * \param[out] ObservationTime Sample time at the observation point.
+     * \param[out] ObservationField Electromagnetic field samples at the observation point.
+     */
+    int FieldTrace(
+	Vector ObservationPoint,
+	double t1,
+	double t2,
+	std::vector<double> *ObservationTime,
+	std::vector<ElMagField> *ObservationField);
+    
+    };

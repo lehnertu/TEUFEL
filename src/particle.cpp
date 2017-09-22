@@ -399,6 +399,42 @@ void ChargedParticle::CoordinatesAtTime(double time, Vector *position, Vector *m
     }
 }
 
+double ChargedParticle::RetardedTime(int index,
+    Vector ObservationPoint)
+{
+    Vector RVec = ObservationPoint - X[index];
+    double R = RVec.norm();
+    return(Time[index] + R / SpeedOfLight);
+}
+
+ElMagField ChargedParticle::RetardedField(int index,
+    Vector ObservationPoint)
+{
+    Vector SourceX = X[index];
+    Vector SourceBeta = P[index];
+    Vector SourceBetaPrime = A[index];
+    double betagamma2 = SourceBeta.abs2nd();
+    double gamma2 = betagamma2 + 1.0;
+    double gamma = sqrt(gamma2);
+    SourceBeta /= gamma;
+    SourceBetaPrime /= gamma;
+    // now compute the distance and direction to the observer
+    Vector RVec = ObservationPoint - SourceX;
+    double R = RVec.norm();
+    Vector N = RVec;
+    N.normalize();
+    // now compute the radiated field
+    double scale = Charge*ElementaryCharge/(4.0*Pi*EpsNull);
+    double bn3rd = pow(1.0 - dot(SourceBeta, N), 3.0);
+    // velocity term
+    Vector EField = (N - SourceBeta) / (R*R*bn3rd*gamma2);
+    // acceleration term
+    EField += cross(N, cross(N - SourceBeta, SourceBetaPrime)) / (R*bn3rd*SpeedOfLight);
+    EField *= scale;
+    Vector BField = cross(N,EField) / SpeedOfLight;
+    return ElMagField(EField, BField);
+}
+
 ElMagField ChargedParticle::RetardedField(double time, Vector ObservationPoint)
 {
     Vector EField = Vector(0.0, 0.0, 0.0);
@@ -411,15 +447,10 @@ ElMagField ChargedParticle::RetardedField(double time, Vector ObservationPoint)
     };
 
     int i1 = 0;    // index of the first trajectory point
-    Vector RVec = ObservationPoint - X[i1];
-    double R = RVec.norm();
-    double t1 = Time[i1] + R / SpeedOfLight;    // retarded observation time
-    
+    double t1 = RetardedTime(i1,ObservationPoint);
     int i2 = NP - 1;    // index of the last trajectory point
-    RVec = ObservationPoint - X[i2];
-    R = RVec.norm();
-    double t2 = Time[i2] + R / SpeedOfLight;    // retarded observation time
-    
+    double t2 = RetardedTime(i2,ObservationPoint);
+
     // the field is different from zero only if the observation
     // time is within the possible retarded time interval
     if ((time >= t1) && (time <= t2))
@@ -428,9 +459,7 @@ ElMagField ChargedParticle::RetardedField(double time, Vector ObservationPoint)
 	while (i2 - i1 > 1)
 	{
 	    int i = (i2 + i1) / 2;
-	    RVec = ObservationPoint - X[i];
-	    R = RVec.norm();
-	    double t = Time[i] + R / SpeedOfLight;    // retarded observation time
+	    double t = RetardedTime(i,ObservationPoint);
 	    if (t < time)
 	    {
 		i1 = i;
@@ -454,8 +483,8 @@ ElMagField ChargedParticle::RetardedField(double time, Vector ObservationPoint)
 	Vector SourceBetaPrime = A[i1] * (1.0 - frac) + A[i2] * frac;
 	SourceBetaPrime /= gamma;
 	// now compute the field emitted from an interpolated source point
-	RVec = ObservationPoint - SourceX;
-	R = RVec.norm();
+	Vector RVec = ObservationPoint - SourceX;
+	double R = RVec.norm();
 	Vector N = RVec;
 	N.normalize();
 	double scale = Charge*ElementaryCharge/(4.0*Pi*EpsNull);
@@ -471,46 +500,106 @@ ElMagField ChargedParticle::RetardedField(double time, Vector ObservationPoint)
     return ElMagField(EField, BField);
 }
 
-int ChargedParticle::TimeDomainField(
+int ChargedParticle::FieldTrace(
     Vector ObservationPoint,
+    double t1,
+    double t2,
     std::vector<double> *ObservationTime,
     std::vector<ElMagField> *ObservationField)
 {
-    double scale=(Charge*ElementaryCharge/(4.0*Pi*EpsNull));
     // delete all possibly existing data
     ObservationTime->clear();
     ObservationField->clear();
-    for( int i=0; i<NP; i++)
+    // find the first point to be stored
+    int i1 = 0;
+    while ((RetardedTime(i1,ObservationPoint)<t1) && (i1<=NP)) i1++;
+    if (i1>0) --i1;
+    // find the last point to be stored
+    int i2 = NP;
+    while ((RetardedTime(i2-1,ObservationPoint)>t2) && (i2>=0)) i2--;
+    if (i2<NP) i2++;
+    // now compute the field data
+    for( int i=i1; i<i2; i++)
     {
-	// loop over all source points stored in the trajectory
-	Vector SourceX = X[i];
-	Vector SourceBeta = P[i];
-	Vector SourceBetaPrime = A[i];
-	double betagamma2 = SourceBeta.abs2nd();
-	double gamma2 = betagamma2 + 1.0;
-	double gamma = sqrt(gamma2);
-	SourceBeta /= gamma;
-	SourceBetaPrime /= gamma;
-	// now compute the distance and direction to the observer
-	Vector RVec = ObservationPoint - SourceX;
-	double R = RVec.norm();
-	Vector N = RVec;
-	N.normalize();
-	// compute the retarded time
-	double rtime = Time[i] + R/SpeedOfLight;
-	// now compute the radiated field
-	double bn3rd = pow(1.0 - dot(SourceBeta, N), 3.0);
-	// velocity term
-	Vector EField = (N - SourceBeta) / (R*R*bn3rd*gamma2);
-	// acceleration term
-	EField += cross(N, cross(N - SourceBeta, SourceBetaPrime)) / (R*bn3rd*SpeedOfLight);
-	EField *= scale;
-	Vector BField = cross(N,EField) / SpeedOfLight;
-	// store the data
-	ObservationTime->push_back(rtime);
-	ObservationField->push_back(ElMagField(EField, BField));
+	ObservationTime->push_back(RetardedTime(i,ObservationPoint));
+	ObservationField->push_back(RetardedField(i,ObservationPoint));
     }
-    return NP;
+    return i2-i1;
+}
+
+void ChargedParticle::getTimeDomainField(
+    Vector ObservationPoint,
+    double t0,
+    double dt,
+    int nots,
+    std::vector<ElMagField> *ObservationField)
+{
+    std::vector<double> TraceTime;
+    std::vector<ElMagField> TraceField;
+    double t_max = t0+nots*dt;
+    // preset the return field with an empty trace
+    ElMagField field; // automatically initalized to zero
+    ObservationField->clear();
+    for (int i=0; i<nots; i++)
+	ObservationField->push_back(field);
+    // obtain the raw, non-equidistant trace
+    int NS = FieldTrace(ObservationPoint, t0, t_max, &TraceTime, &TraceField);
+    if (NS<=0)
+    {
+	printf("ChargedParticle::getTimeDomainField : warning - empty source trace\n");
+	return;
+    };
+    if ((TraceTime[0]>t0) || (TraceTime[NS-1]<t_max))
+	printf("ChargedParticle::getTimeDomainField : warning - source trace does not cover full span\n");
+    // Now we process the non-equidistant time trace segment by segment.
+    // The source segment spans (source_t1, source_t2).
+    // source_f1, source_f2 are the corresponding field values;
+    double source_t1, source_t2;
+    ElMagField source_f1, source_f2;
+    source_t2=TraceTime[0];
+    source_f2=TraceField[0];
+    // is2 is the index belonging to source_t2.
+    // is2 must be smaller than (not equal) NS
+    int is2=0;
+    while ((is2+1<NS) && (source_t2<t_max))
+    {
+	// select the next source segment
+	source_t1 = source_t2;
+	source_f1 = source_f2;
+	is2++;
+	source_t2 = TraceTime[is2];
+	source_f2 = TraceField[is2];
+	// the indices of the steps in which the current segment ends lay
+	int idx1 = floor((source_t1-t0)/dt);
+	int idx2 = floor((source_t2-t0)/dt);
+	if (idx1==idx2)
+	{
+	    // if the source segment is fully contained in one time step
+	    field = ObservationField->at(idx1);
+	    field += (source_f1+source_f2)*(0.5*(source_t2-source_t1)/dt);
+	    ObservationField->at(idx1) = field;
+	} else {
+	    // the source segment is spanning more than one time step
+	    // handle the first time step
+	    field = ObservationField->at(idx1);
+	    double dt_i1 = t0+(idx1+1)*dt - source_t1;
+	    field += source_f1*(dt_i1/dt) + (source_f2-source_f1)*(0.5*dt_i1/(source_t2-source_t1));
+	    ObservationField->at(idx1) = field;
+	    // handle the intermediate time steps
+	    for (int idx=idx1+1; idx<idx2; idx++)
+	    {
+		field = ObservationField->at(idx);
+		double t_center = t0 + (idx+0.5)*dt;
+		field += source_f1*((source_t2-t_center)/dt) + source_f2*((t_center-source_t1)/dt);
+		ObservationField->at(idx) = field;
+	    };
+	    // handle the last time step
+	    field = ObservationField->at(idx2);
+	    double dt_i2 = source_t2 - (t0+idx2*dt);
+	    field += source_f2*(dt_i2/dt) + (source_f1-source_f2)*(0.5*dt_i2/(source_t2-source_t1));
+	    ObservationField->at(idx2) = field;
+	}
+    };
 }
 
 int ChargedParticle::WriteSDDS(const char *filename)
