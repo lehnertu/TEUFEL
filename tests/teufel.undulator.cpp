@@ -183,7 +183,7 @@ int main()
     }
 
     // create a trajectory dump
-    if (0 != electron->WriteSDDS("teufel_undulator_trajectory.sdds"))
+    if (0 != electron->WriteTrajectorySDDS("teufel_undulator_trajectory.sdds"))
     {
         errors++;
         printf("SDDS write \033[1;31m failed!\033[0m\n");

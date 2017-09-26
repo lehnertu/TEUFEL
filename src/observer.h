@@ -25,6 +25,18 @@
 #include "vector.h"
 #include "particle.h"
 
+/*
+ * \class Observation
+ * \brief Abstract class defining an observation of the electromagnetic
+ * field created by an object (particle, bunch or beam).
+ * @author Ulf Lehnert
+ * @date 21.9.2017
+ * 
+ * template<class Obj> class Observation
+ * {
+ * }
+ */
+
 /*!
  * \class PointObserver
  * \brief Observer of emitted radiation at a single point in space.
@@ -44,24 +56,7 @@ public:
      */
     PointObserver(Vector position);
 
-    /*! Collect the time-domain field data of a single particle.
-     *  This includes both "static" and "radiative" fields.
-     * 
-     *  The spacing of the observation times is non-equidistant.
-     *  It follows from the retardation of the tracking time steps of the
-     *  observed particle.
-     * 
-     * The arrays PointObserver::ObservationTime and PointObserver::ObservationField
-     * are erased and filled with new values. PointObserver::NOTS is set accordingly
-     * to the length of the new trace.
-     * 
-     *  @return the number of observations in time
-     */
-    int GetTimeDomainTrace(
-	ChargedParticle *source
-    );
-
-    /*! Compute the electromagnetic field radiated by a particle
+    /*! Compute the electromagnetic field radiated by a source
      * seen at the observation point. The field is given in time domain
      * starting at t0 with NOTS equidistant time steps of dt length.
      * A step-wise linear funtion is used to interpolate from the non-equidistant
@@ -70,11 +65,10 @@ public:
      * starts at \f$t0\f$ and ends at \f$t0+dt\f$.
      * The total timespan covererd ends at \f$t0+n*dt\f$.
      * 
-     * This method first calls PointObserver::GetTimeDomainTrace().
-     * The arrays PointObserver::ObservationTime and PointObserver::ObservationField
-     * are erased and filled with new values corresponding to the non-equidistant trace.
+     * This method is templated and spezialized for ChargedParticle()
+     * Bunch() or Beam() being the field source.
      * 
-     * The array PointObserver::InterpolatedField is cleared
+     * The array PointObserver::TimeDomainField is cleared
      * and filled with the new values for the interpolated output field data.
      * 
      * \param[in] source The particle generating the field.
@@ -82,8 +76,9 @@ public:
      * \param[in] dt Time step of the observation trace.
      * \param[in] nots Number of time steps.
      */
+    template <class Src>
     void ComputeTimeDomainField(
-	ChargedParticle *source,
+	Src *source,
 	double t0,
 	double dt,
 	int nots);
@@ -93,8 +88,8 @@ public:
      * The 3 components of the electric field are analyzed.
      * 
      * This method requires that the a trace of observed field values has been
-     * collected before and stored in PointObserver::ObservationTime
-     * and PointObserver::ObservationField. Such a trace can be used for multiple
+     * collected before and stored in PointObserver::TimeDomainField
+     * Such a trace can be used for multiple
      * calls of the method in sequence - it is not altered.
      */
     void FrequencyObservation(
@@ -104,37 +99,10 @@ public:
 	std::complex<double> *Ez
     );
 
-    /*! Write an interolated time-domain field trace into an SDDS file.
+    /*! Write the time-domain field trace into an SDDS file.
      * 
-     * This method requiresnthat a trace of observed field values has been
-     * collected before and stored in PointObserver::ObservationTime
-     * and PointObserver::ObservationField.
-     * 
-     * The file contains one table with 7 columns
-     * - observation time [s]
-     * - 3 componenets of the electric field [V/m]
-     * - 3 componenets of the magnetic field [T]
-     * 
-     * @return values for error checks:
-     *	 
-     *	0  -  successfully Written the file\n
-     *	1  -  error in SDDS_InitializeOutput \n
-     *	2  -  error in SDDS_DefineSimpleParameter \n
-     *	3  -  error in SDDS_DefineColumn \n
-     *	4  -  error in SDDS_WriteLayout \n
-     *	5  -  error in SDDS_StartPage \n
-     *	6  -  error in SDDS_SetParameters \n
-     *	7  -  error in SDDS_SetRowValues \n
-     *	8  -  error in SDDS_WritePage \n
-     *	9  -  error in SDDS_Terminate \n
-     * 
-     */
-    int WriteTimeTraceSDDS(const char *filename);
-    
-    /*! Write a time-domain field trace into an SDDS file.
-     * 
-     * This method requiresnthat a trace of observed field values has been
-     * collected before and stored in PointObserver::InterpolatedField.
+     * This method requires that a trace of observed field values has been
+     * collected before and stored in PointObserver::TimeDomainField.
      * 
      * The file contains one table with 7 columns
      * - observation time [s]
@@ -155,14 +123,13 @@ public:
      *	9  -  error in SDDS_Terminate \n
      * 
      */
-    int WriteTimeFieldSDDS(const char *filename);
+    int WriteTimeDomainFieldSDDS(const char *filename);
     
     /*! Write a frequency spectrum into an SDDS file.
      * 
      * This method calls FrequencyObservation() and therefore requires
      * that the a trace of observed field values has been
-     * collected before and stored in PointObserver::ObservationTime
-     * and PointObserver::ObservationField.
+     * collected before and stored in PointObserver::TimeDomainField
      * 
      * The file contains one table with 7 columns
      * - observation Frequency f [Hz]
@@ -200,26 +167,17 @@ private:
     //! the position of the observer
     Vector Pos;
 
-    //! number of points in the recorded non-equidistant trace
-    int NPT;
-
-    //! the times at which observed fields are reported
-    std::vector<double> ObservationTime;
-
-    //! the observed electromagnetic field
-    std::vector<ElMagField> ObservationField;
-
     //! number of time steps in the interpolated trace
     int NOTS;
 
-    //! the start of the interpolated trace
-    double t0_int;
+    //! the start of the field trace
+    double t0_obs;
 
-    //! the step of the interpolated trace
-    double dt_int;
+    //! the step of the field trace
+    double dt_obs;
 
     //! the interpolated electromagnetic field
-    std::vector<ElMagField> InterpolatedField;
+    std::vector<ElMagField> TimeDomainField;
 
 };
 
@@ -234,6 +192,23 @@ private:
  */
 class ScreenObserver
 {
+    
+public:
+    
+    /*! Standard constructor:<br>
+     * The center of the screen is placed at a given origin in space.
+     * From this center a grid is constructed spaning the given length
+     * in two directions. (The two directions need not to be perpendicular
+     * to each other.) The two span directions are subdivided by
+     * nx/ny grid points (minimum 2). Only if both subdivisions are
+     * odd numbers the origin also is one of the observation grid points.
+     */
+    ScreenObserver(
+	Vector origin,
+	Vector span_x,
+	Vector span_y,
+	unsigned int nx,
+	unsigned int ny);
 };
 
 /*!

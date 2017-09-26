@@ -138,12 +138,13 @@ int main()
     
     // do the tracking of the bunch
     printf("tracking particles ... ");
+    fflush(stdout);
     for (int step=0; step<NOTS; step++)
 	bunch->StepVay(lattice);
     printf("done.\n");
     
     // create a trajectory dump fo the single electron
-    int retval = electron->WriteSDDS("elbe-u300_Trajectory.sdds");
+    int retval = electron->WriteTrajectorySDDS("elbe-u300_Trajectory.sdds");
     if (0 != retval)
     {
 	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
@@ -182,28 +183,29 @@ int main()
     
     // compute the radiation of the single electron on axis
     PointObserver Obs = PointObserver(Vector(0.0, 0.0, 10.0));
-    Obs.GetTimeDomainTrace(electron);
-    // dump it to a file
-    retval = Obs.WriteTimeTraceSDDS("elbe-u300_RadTrace.sdds");
+    // write raw time trace
+    retval = electron->WriteFieldTraceSDDS(
+	Vector(0.0, 0.0, 10.0),
+	"elbe-u300_RadTrace.sdds");
     if (0 != retval)
     {
 	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
     }
     else
     {
-	printf("SDDS file written - \033[1;32m OK\033[0m\n");
+	printf("SDDS field trace written - \033[1;32m OK\033[0m\n");
     }
-    // write interpolated time trace
     double t0 = 10.0/SpeedOfLight;
     Obs.ComputeTimeDomainField(electron, t0, 0.05e-13, 4000);
-    retval = Obs.WriteTimeFieldSDDS("elbe-u300_RadField.sdds");
+    // write interpolated time trace
+    retval = Obs.WriteTimeDomainFieldSDDS("elbe-u300_ObsRadField.sdds");
     if (0 != retval)
     {
 	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
     }
     else
     {
-	printf("SDDS file written - \033[1;32m OK\033[0m\n");
+	printf("SDDS time domain field written - \033[1;32m OK\033[0m\n");
     }
     
     // write frequency spectrum to file

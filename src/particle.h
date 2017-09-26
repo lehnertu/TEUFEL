@@ -158,23 +158,52 @@ public:
      */
     ElMagField RetardedField(double time, Vector ObservationPoint);
     
+    /*! Compute the electromagnetic field radiated by a particle
+     * seen from a given observation point. The field is given in time domain
+     * at a number of time steps corresponding to the time steps of
+     * the trajectory of the particle. The sample points at the observation
+     * position, thus, are not predefined and not equi-distant. The samples
+     * are delayed by the retardation corresponding to the observation distance.
+     * Only those samples spanning (t1, t2) in time are delivered
+     * including one sample before t1 and one sample after t2 if available.
+     * It is not guarantied, that the whole span is covered in case of
+     * time mismatches also 0 samples can be returned.
+     * 
+     * \return
+     * Observation time and field are stored into given vectors.
+     * The number of samples is returned.
+     * 
+     * \param[in] ObservationPoint Position [m] of the observer in space.
+     * \param[in] t1 Start [s] of the range of interest in time.
+     * \param[in] t2 End [s] of the range of interest in time.
+     * \param[out] ObservationTime Sample time at the observation point.
+     * \param[out] ObservationField Electromagnetic field samples at the observation point.
+     */
+    int FieldTrace(
+	Vector ObservationPoint,
+	double t1,
+	double t2,
+	std::vector<double> *ObservationTime,
+	std::vector<ElMagField> *ObservationField);
+
     /*! Compute the electromagnetic field radiated by the particle
      * seen at the observation point. The field is given in time domain
      * starting at t0 with NOTS equidistant time steps of dt length.
      * The first time step starts at \f$t0\f$ and ends at \f$t0+dt\f$.
+     * So the center (reference) time for the first sample is \f$t0+dt/2\f$.
      * The total timespan covererd ends at \f$t0+n*dt\f$.
      * 
      * This method first uses ChargedParticle::FieldTrace()
      * to obtain the non-interpolated data covering the requested range.
      * A step-wise linear funtion is used to interpolate from the non-equidistant
-     * time steps stored in the particle trajectory, thus, exactly preserving
+     * time steps stored in the particle trajectory, thereby, exactly preserving
      * the (first order) \f$\int E dt\f$ integral.
      * 
      * \param[in] ObservationPoint The position [m] of the observer.
      * \param[in] t0 Start time [s] of the trace (at the observer).
-     * \param[in] dt Time step [s] of the observation trace.
-     * \param[in] nots Number of time steps.
-     * \param[out] ObservationField Electromagnetic field samples at the observation point.
+     * \param[in] dt Duration of one time segment [s] of the observation trace.
+     * \param[in] nots Number of time segments.
+     * \param[out] ObservationField Electromagnetic field integrals at the observation point.
      */
     void getTimeDomainField(
 	Vector ObservationPoint,
@@ -199,8 +228,43 @@ public:
      *	9  -  error in SDDS_Terminate \n
      * 
      */
-    int WriteSDDS(const char *filename);
+    int WriteTrajectorySDDS(
+	const char *filename);
     
+    /*! Write the time-domain field trace into an SDDS file.
+     * 
+     * All file writing methods should normally be implemented
+     * for an observer. This one is an exception because the
+     * single (indexed) field traces should not be public.
+     * 
+     * This method first computes the observation times and fields
+     * for the given observation point.
+     * These are written to an SDDS file with given name.
+     * 
+     * The file contains one table with 7 columns
+     * - observation time [s]
+     * - 3 componenets of the electric field [V/m]
+     * - 3 componenets of the magnetic field [T]
+     * 
+     * @return values for error checks:
+     *	
+     * 10  -  no data
+     *	0  -  successfully Written the file\n
+     *	1  -  error in SDDS_InitializeOutput \n
+     *	2  -  error in SDDS_DefineSimpleParameter \n
+     *	3  -  error in SDDS_DefineColumn \n
+     *	4  -  error in SDDS_WriteLayout \n
+     *	5  -  error in SDDS_StartPage \n
+     *	6  -  error in SDDS_SetParameters \n
+     *	7  -  error in SDDS_SetRowValues \n
+     *	8  -  error in SDDS_WritePage \n
+     *	9  -  error in SDDS_Terminate \n
+     * 
+     */
+    int WriteFieldTraceSDDS(
+	Vector ObservationPoint,
+	const char *filename);
+
 private:
     
     //! number of trajectory points
@@ -259,33 +323,5 @@ private:
      */
     ElMagField RetardedField(int index,
 	Vector ObservationPoint);
-    
-    /*! Compute the electromagnetic field radiated by a particle
-     * seen from a given observation point. The field is given in time domain
-     * at a number of time steps corresponding to the time steps of
-     * the trajectory of the particle. The sample points at the observation
-     * position, thus, are not predefined and not equi-distant. The samples
-     * are delayed by the retardation corresponding to the observation distance.
-     * Only those samples spanning (t1, t2) in time are delivered
-     * including one sample before t1 and one sample after t2 if available.
-     * It is not guarantied, that the whole span is covered in case of
-     * time mismatches also 0 samples can be returned.
-     * 
-     * \return
-     * Observation time and field are stored into given vectors.
-     * The number of samples is returned.
-     * 
-     * \param[in] ObservationPoint Position [m] of the observer in space.
-     * \param[in] t1 Start [s] of the range of interest in time.
-     * \param[in] t2 End [s] of the range of interest in time.
-     * \param[out] ObservationTime Sample time at the observation point.
-     * \param[out] ObservationField Electromagnetic field samples at the observation point.
-     */
-    int FieldTrace(
-	Vector ObservationPoint,
-	double t1,
-	double t2,
-	std::vector<double> *ObservationTime,
-	std::vector<ElMagField> *ObservationField);
-    
+
     };
