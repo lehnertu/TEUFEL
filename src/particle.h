@@ -220,8 +220,8 @@ public:
      * 
      * @return values for error checks:
      *	
-     * 10  -  no data
-     *	0  -  successfully Written the file\n
+     * 10  -  no data \n
+     *	0  -  successfully Written the file \n
      *	1  -  error in SDDS_InitializeOutput \n
      *	2  -  error in SDDS_DefineSimpleParameter \n
      *	3  -  error in SDDS_DefineColumn \n
