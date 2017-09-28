@@ -47,11 +47,9 @@ void PointObserver::ComputeTimeDomainField(
 }
 
 // we have to specialize the templated function for all possibles types
-template <> void PointObserver::ComputeTimeDomainField<>(
-    ChargedParticle *source, double t0, double dt, int nots);
-template <> void PointObserver::ComputeTimeDomainField<>(
-    Bunch *source, double t0, double dt, int nots);
-/* not yet implemented
+template void PointObserver::ComputeTimeDomainField<>(ChargedParticle *source, double t0, double dt, int nots);
+template void PointObserver::ComputeTimeDomainField<>(Bunch *source, double t0, double dt, int nots);
+/* getTimeDomainField() not yet implemented for Beam
 template void PointObserver::ComputeTimeDomainField<>(Beam *source, double t0, double dt, int nots);
 */
 
