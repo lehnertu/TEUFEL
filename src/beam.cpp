@@ -167,6 +167,27 @@ void Bunch::StepVay(GeneralField* field)
     }
 }
 
+void Bunch::getTimeDomainField(
+    Vector ObservationPoint,
+    double t0,
+    double dt,
+    int nots,
+    std::vector<ElMagField> *ObservationField)
+{
+    std::vector<ElMagField> ParticleField;
+    // preset the return field with an empty trace
+    ElMagField field; // automatically initalized to zero
+    ObservationField->clear();
+    for (int i=0; i<nots; i++)
+	ObservationField->push_back(field);
+    // sum up the fields of all particles
+    for(int i=0; i<NOP; i++)
+    {
+	P[i]->getTimeDomainField(ObservationPoint, t0, dt, nots, &ParticleField);
+	for (int i=0; i<nots; i++) ObservationField->at(i) += ParticleField[i];
+    }
+}
+
 int Bunch::WriteWatchPointSDDS(double time,
 			       const char *filename)
 {

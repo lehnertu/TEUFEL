@@ -184,8 +184,39 @@ public:
      */
     void StepVay(GeneralField* field);
 
+    /*! Compute the electromagnetic field radiated by the particle
+     * seen at the observation point. The field is given in time domain
+     * starting at t0 with NOTS equidistant time steps of dt length.
+     * The first time step starts at \f$t0\f$ and ends at \f$t0+dt\f$.
+     * So the center (reference) time for the first sample is \f$t0+dt/2\f$.
+     * The total timespan covererd ends at \f$t0+n*dt\f$.
+     * 
+     * This method first uses ChargedParticle::FieldTrace()
+     * to obtain the non-interpolated data covering the requested range.
+     * A step-wise linear funtion is used to interpolate from the non-equidistant
+     * time steps stored in the particle trajectory, thereby, exactly preserving
+     * the (first order) \f$\int E dt\f$ integral.
+     * 
+     * \param[in] ObservationPoint The position [m] of the observer.
+     * \param[in] t0 Start time [s] of the trace (at the observer).
+     * \param[in] dt Duration of one time segment [s] of the observation trace.
+     * \param[in] nots Number of time segments.
+     * \param[out] ObservationField Electromagnetic field integrals at the observation point.
+     */
+    void getTimeDomainField(
+	Vector ObservationPoint,
+	double t0,
+	double dt,
+	int nots,
+	std::vector<ElMagField> *ObservationField);
+
     /*! Dump all particle information belonging to a given observation time
-     *  into an SDDS file.
+     *  into an SDDS file. The written quantities include:
+     *  - time t
+     *  - position x,y,z
+     *  - momentum px,py,pz,p (beta*gamma)
+     *  - angles xp,yp (px/pz, py/pz)
+     *  - gamma
      * 
      * returns values for error checks:
      *	 
