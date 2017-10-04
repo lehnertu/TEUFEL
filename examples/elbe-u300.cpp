@@ -91,9 +91,9 @@ int main()
     ChargedParticle* electron = new ChargedParticle(-4.37e8,4.37e8);
     
     // an electron bunch of 70pC total charge modeled with NOP particles
-    // the initial bunch length is 150fs
+    // the initial bunch length is 50fs
     double ch = 70.0e-12 / ElementaryCharge / NOP;
-    double sigma_t = 150.0e-15;
+    double sigma_t = 50.0e-15;
     double sigma_z = SpeedOfLight * beta * sigma_t;
     printf("sigma_t =  %9.3g ps\n", 1e12*sigma_t);
     printf("sigma_z =  %9.3g mm\n", 1e3*sigma_z);
@@ -104,7 +104,7 @@ int main()
     dist->generateGaussian(0.000, sigma_z, 2);	// z gaussian with sigma_z
     dist->generateGaussian(0.000, 0.001, 3);	// px gaussian 1mrad
     dist->generateGaussian(0.000, 0.001, 4);	// py gaussian 1mrad
-    dist->generateGaussian(betagamma, 0.01*betagamma, 5);	// pz gaussian 1% energy spread
+    dist->generateGaussian(betagamma, 0.001*betagamma, 5);	// pz gaussian 0.1% energy spread
 
     // initial position at the origin
     Vector X0 = Vector(0.0, 0.0, 0.0);
@@ -195,10 +195,10 @@ int main()
     {
 	printf("SDDS field trace written - \033[1;32m OK\033[0m\n");
     }
-    double t0 = 10.0/SpeedOfLight;
-    Obs.ComputeTimeDomainField(electron, t0, 0.05e-13, 4000);
+    double t0 = 10.0/SpeedOfLight - 1.0e-12;
+    Obs.ComputeTimeDomainField(electron, t0, 0.05e-13, 3000);
     // write interpolated time trace
-    retval = Obs.WriteTimeDomainFieldSDDS("elbe-u300_ObsRadField.sdds");
+    retval = Obs.WriteTimeDomainFieldSDDS("elbe-u300_SingleEl_ObsRadField.sdds");
     if (0 != retval)
     {
 	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
@@ -207,7 +207,22 @@ int main()
     {
 	printf("SDDS time domain field written - \033[1;32m OK\033[0m\n");
     }
-    
+
+    // compute the radiation of the whole bunch on axis
+    printf("computing fields ... ");
+    fflush(stdout);
+    Obs.ComputeTimeDomainField(bunch, t0, 0.05e-13, 3000);
+    printf("done.\n");
+    retval = Obs.WriteTimeDomainFieldSDDS("elbe-u300_Bunch_ObsRadField.sdds");
+    if (0 != retval)
+    {
+	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
+    }
+    else
+    {
+	printf("SDDS time domain field written - \033[1;32m OK\033[0m\n");
+    }
+
     // write frequency spectrum to file
     retval = Obs.WriteSpectrumSDDS(
 	"elbe-u300_RadSpectrum.sdds",

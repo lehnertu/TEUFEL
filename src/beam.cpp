@@ -167,6 +167,15 @@ void Bunch::StepVay(GeneralField* field)
     }
 }
 
+ElMagField Bunch::RetardedField(double time, Vector ObservationPoint)
+{
+    ElMagField field; // automatically initalized to zero
+    // sum up the fields of all particles
+    for(int i=0; i<NOP; i++)
+	field += P[i]->RetardedField(time, ObservationPoint);
+    return field;
+}
+
 void Bunch::getTimeDomainField(
     Vector ObservationPoint,
     double t0,

@@ -544,13 +544,8 @@ void ChargedParticle::getTimeDomainField(
 	ObservationField->push_back(field);
     // obtain the raw, non-equidistant trace
     int NS = FieldTrace(ObservationPoint, t0, t_max, &TraceTime, &TraceField);
-    if (NS<=0)
-    {
-	printf("ChargedParticle::getTimeDomainField : warning - empty source trace\n");
-	return;
-    };
-    if ((TraceTime[0]>t0) || (TraceTime[NS-1]<t_max))
-	printf("ChargedParticle::getTimeDomainField : warning - source trace does not cover full span\n");
+    // if source trace is empty
+    if (NS<=0) return;
     // Now we process the non-equidistant time trace segment by segment.
     // The source segment spans (source_t1, source_t2).
     // source_f1, source_f2 are the corresponding field values;
@@ -572,7 +567,7 @@ void ChargedParticle::getTimeDomainField(
 	// the indices of the steps in which the current segment ends lay
 	int idx1 = floor((source_t1-t0)/dt);
 	int idx2 = floor((source_t2-t0)/dt);
-	if (idx1==idx2)
+	if ((idx1==idx2) && (idx1>=0) && (idx1<nots))
 	{
 	    // if the source segment is fully contained in one time step
 	    field = ObservationField->at(idx1);
@@ -581,23 +576,32 @@ void ChargedParticle::getTimeDomainField(
 	} else {
 	    // the source segment is spanning more than one time step
 	    // handle the first time step
-	    field = ObservationField->at(idx1);
-	    double dt_i1 = t0+(idx1+1)*dt - source_t1;
-	    field += source_f1*(dt_i1/dt) + (source_f2-source_f1)*(0.5*dt_i1/(source_t2-source_t1));
-	    ObservationField->at(idx1) = field;
+	    if ((idx1>=0) && (idx1<nots))
+	    {
+		field = ObservationField->at(idx1);
+		double dt_i1 = t0+(idx1+1)*dt - source_t1;
+		field += source_f1*(dt_i1/dt) + (source_f2-source_f1)*(0.5*dt_i1/(source_t2-source_t1));
+		ObservationField->at(idx1) = field;
+	    };
 	    // handle the intermediate time steps
 	    for (int idx=idx1+1; idx<idx2; idx++)
 	    {
-		field = ObservationField->at(idx);
-		double t_center = t0 + (idx+0.5)*dt;
-		field += source_f1*((source_t2-t_center)/dt) + source_f2*((t_center-source_t1)/dt);
-		ObservationField->at(idx) = field;
+		if ((idx>=0) && (idx<nots))
+		{
+		    field = ObservationField->at(idx);
+		    double t_center = t0 + (idx+0.5)*dt;
+		    field += source_f1*((source_t2-t_center)/dt) + source_f2*((t_center-source_t1)/dt);
+		    ObservationField->at(idx) = field;
+		};
 	    };
 	    // handle the last time step
-	    field = ObservationField->at(idx2);
-	    double dt_i2 = source_t2 - (t0+idx2*dt);
-	    field += source_f2*(dt_i2/dt) + (source_f1-source_f2)*(0.5*dt_i2/(source_t2-source_t1));
-	    ObservationField->at(idx2) = field;
+	    if ((idx2>=0) && (idx2<nots))
+	    {
+		field = ObservationField->at(idx2);
+		double dt_i2 = source_t2 - (t0+idx2*dt);
+		field += source_f2*(dt_i2/dt) + (source_f1-source_f2)*(0.5*dt_i2/(source_t2-source_t1));
+		ObservationField->at(idx2) = field;
+	    };
 	}
     };
 }

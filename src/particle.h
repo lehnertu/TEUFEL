@@ -153,8 +153,7 @@ public:
      * retardation is properly accounted for
      * 
      * \param[in] time absolute time in s.
-     * \param[out] X particle position.
-     * \param[out] P particle normalized momentum.
+     * \param[in] ObservationPoint The position [m] of the observer.
      */
     ElMagField RetardedField(double time, Vector ObservationPoint);
     
