@@ -45,12 +45,91 @@ class Beam
 
 public:
 
+    /*! default constructor: creates an empty Beam.
+     */	
+    Beam();
+    
+    /*!
+     * Destructor:
+     * Deleting the bunch also deletes all contained bunches.
+     * This in turn deletes all particles belonging to the bunches.
+     * So, normally the beam is the only object that needs to be deleted.
+     */
+    ~Beam();
+    
+    /*!
+     * Add a bunch to the beam.
+     * The beam then "owns" the bunch and will delete it when destructed.
+     */
+    void Add(Bunch *bunch);
+    
+    //! Report the number of bunches in the beam.
+    int getNOB();	
+    
+    //! Report the total charge of the particles contained in the beam.
+    double getTotalCharge();
+    
+    /*! @brief Setup for tracking the whole beam using the Vay algorithm.
+     * 
+     * See ChargedParticle::InitVay for details
+     * 
+     * @todo Tracking particles which do not start all at the same time
+     * is not yet supported.
+     * 
+     * @param tstep the length of the time step.
+     * @param field the field through which the beam will be tracked
+     */
+    void InitVay(double tstep,
+		 GeneralField *field);
+    
+    /*! @brief Perform one tracking step using the Vay algorithm.
+     * 
+     * See ChargedParticle::StepVay for details
+     * 
+     * @param field the field through which the beam is tracked
+     */
+    void StepVay(GeneralField *field);
+    
+    /*! Dump all particle information into an SDDS file.
+     *  The written quantities include:
+     *  - time t
+     *  - position x,y,z
+     *  - momentum px,py,pz,p (beta*gamma)
+     *  - angles xp,yp (px/pz, py/pz)
+     *  - gamma
+     * 
+     * returns values for error checks:
+     *	 
+     *	0  -  successfully Written the file\n
+     *	1  -  error in SDDS_InitializeOutput \n
+     *	2  -  error in SDDS_DefineSimpleParameter \n
+     *	3  -  error in SDDS_DefineColumn \n
+     *	4  -  error in SDDS_WriteLayout \n
+     *	5  -  error in SDDS_StartPage \n
+     *	6  -  error in SDDS_SetParameters \n
+     *	7  -  error in SDDS_SetRowValues \n
+     *	8  -  error in SDDS_WritePage \n
+     *	9  -  error in SDDS_Terminate \n
+     * 
+     */
+    int WriteWatchPointSDDS(const char *filename);
+    
+    /*! Dump all particle information into an HDF5 file.
+     *  The written quantities include:
+     *  - time t
+     *  - position x,y,z
+     *  - momentum px,py,pz,p (beta*gamma)
+     *  - angles xp,yp (px/pz, py/pz)
+     *  - gamma
+     */
+    int WriteWatchPointHDF5(const char *filename);
+    
 private:
 
     //! Number of bunches in the beam.
     int NOB;
 
-    //! we store references to all bunches
+    //! we store references (pointers) to all bunches
     vector<Bunch*> B;
 
 };

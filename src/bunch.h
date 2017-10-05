@@ -174,7 +174,6 @@ public:
      * @todo Tracking particles which do not start all at the same time
      * is not yet supported.
      * 
-     * @param dist the inital coordinates of all particles
      * @param tstep the length of the time step.
      * @param field the field through which the particle will be tracked
      */
@@ -183,9 +182,9 @@ public:
 
     /*! @brief Perform one tracking step using the Vay algorithm.
      * 
-     * See ChargedParticle::InitVay for details
+     * See ChargedParticle::StepVay for details
      * 
-     * @param field the field through which the particle is tracked
+     * @param field the field through which the bunch is tracked
      */
     void StepVay(GeneralField *field);
 

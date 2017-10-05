@@ -24,3 +24,15 @@
 #include "particle.h"
 #include "global.h"
 #include <iostream>
+
+Beam::Beam()
+{
+    NOB = 0;
+}
+
+Beam::~Beam()
+{
+    for(int i=0; i<NOB; i++)
+	delete B[i];
+}
+
