@@ -111,8 +111,29 @@ Bunch::Bunch(Bunch* origin)
     }
 }
 
+Bunch::Bunch(Distribution *dist, double charge, double mass)
+{
+    NOP = dist->getNOP();
+    for(int i=0; i<NOP; i++)
+    {
+	ChargedParticle *p = new ChargedParticle(charge,mass);
+	p->setTime( dist->getCoordinate(i,6) );
+	Vector X0 = Vector(dist->getCoordinate(i,0),
+			   dist->getCoordinate(i,1),
+			   dist->getCoordinate(i,2));
+	p->setPosition( X0 );
+	Vector P0 = Vector(dist->getCoordinate(i,3),
+			   dist->getCoordinate(i,4),
+			   dist->getCoordinate(i,5));
+	p->setMomentum( P0 );
+	P.push_back(p);
+    }
+}
+
 Bunch::~Bunch()
 {
+    for(int i=0; i<NOP; i++)
+	delete P[i];
 }
 
 void Bunch::Add(ChargedParticle *part)
@@ -141,25 +162,17 @@ ChargedParticle* Bunch::getParticle(int i)
     return P[i];
 }
 
-void Bunch::InitVay(Distribution *dist,
-		    double tstep,
-		    GeneralField* field)
+void Bunch::InitVay(double tstep,
+		    GeneralField *field)
 {
     dt = tstep;
     for(int i=0; i<NOP; i++)
     {
-	Vector X0 = Vector(dist->getCoordinate(i,0),
-			   dist->getCoordinate(i,1),
-			   dist->getCoordinate(i,2));
-	Vector P0 = Vector(dist->getCoordinate(i,3),
-			   dist->getCoordinate(i,4),
-			   dist->getCoordinate(i,5));
-	double t0 = dist->getCoordinate(i,6);
-	P[i]->InitVay(t0, X0, P0, tstep, field);
+	P[i]->InitVay(tstep, field);
     }
 }
 
-void Bunch::StepVay(GeneralField* field)
+void Bunch::StepVay(GeneralField *field)
 {
     for(int i=0; i<NOP; i++)
     {
@@ -167,38 +180,7 @@ void Bunch::StepVay(GeneralField* field)
     }
 }
 
-ElMagField Bunch::RetardedField(double time, Vector ObservationPoint)
-{
-    ElMagField field; // automatically initalized to zero
-    // sum up the fields of all particles
-    for(int i=0; i<NOP; i++)
-	field += P[i]->RetardedField(time, ObservationPoint);
-    return field;
-}
-
-void Bunch::getTimeDomainField(
-    Vector ObservationPoint,
-    double t0,
-    double dt,
-    int nots,
-    std::vector<ElMagField> *ObservationField)
-{
-    std::vector<ElMagField> ParticleField;
-    // preset the return field with an empty trace
-    ElMagField field; // automatically initalized to zero
-    ObservationField->clear();
-    for (int i=0; i<nots; i++)
-	ObservationField->push_back(field);
-    // sum up the fields of all particles
-    for(int i=0; i<NOP; i++)
-    {
-	P[i]->getTimeDomainField(ObservationPoint, t0, dt, nots, &ParticleField);
-	for (int i=0; i<nots; i++) ObservationField->at(i) += ParticleField[i];
-    }
-}
-
-int Bunch::WriteWatchPointSDDS(double time,
-			       const char *filename)
+int Bunch::WriteWatchPointSDDS(const char *filename)
 {
     cout << "writing SDDS file " << filename << endl;
     SDDS_DATASET data;
@@ -255,12 +237,12 @@ int Bunch::WriteWatchPointSDDS(double time,
     cout << "SDDS writing " << NOP << " particles" << endl;
     for( int i=0; i<NOP; i++)
     {
-	Vector X, BG;
-	// query the particle for its coordinates at the given time
-	P[i]->CoordinatesAtTime(time, &X, &BG);
+	double t = P[i]->getTime();
+	Vector X = P[i]->getPosition();
+	Vector BG = P[i]->getMomentum();
 	if( SDDS_SetRowValues(&data,
 	    SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,i,
-	    "t",time,
+	    "t",t,
 	    "x",X.x,
 	    "y",X.y,
 	    "z",X.z,
@@ -294,8 +276,7 @@ int Bunch::WriteWatchPointSDDS(double time,
     return 0;
 }
 
-int Bunch::WriteWatchPointHDF5(double time,
-			const char *filename)
+int Bunch::WriteWatchPointHDF5(const char *filename)
 {
     herr_t status;
     cout << "writing HDF5 file " << filename << endl;
@@ -322,9 +303,8 @@ int Bunch::WriteWatchPointHDF5(double time,
     double *bp = buffer;
     for( int i=0; i<NOP; i++)
     {
-	Vector X, BG;
-	// query the particle for its coordinates at the given time
-	P[i]->CoordinatesAtTime(time, &X, &BG);
+	Vector X = P[i]->getPosition();
+	Vector BG = P[i]->getMomentum();
 	*bp++ = X.x;
 	*bp++ = X.y;
 	*bp++ = X.z;

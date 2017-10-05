@@ -21,7 +21,7 @@
 
 #include "fields.h"
 
-// ********** GeneralField **********
+// ********** ElMagField **********
 
 ElMagField::ElMagField()
 {
@@ -73,6 +73,42 @@ ElMagField ElMagField::operator* (double factor)
     temp.vecE = vecE*factor;
     temp.vecB = vecB*factor;
     return (temp);
+}
+
+// ********** ElMagObs **********
+
+ElMagObs::ElMagObs()
+{
+    t = 0.0;
+    vecE = Vector(0.0,0.0,0.0);
+    vecB = Vector(0.0,0.0,0.0);
+}
+
+ElMagObs::ElMagObs(double time, Vector E, Vector B)
+{
+    t = time;
+    vecE = E;
+    vecB = B;
+}
+
+double ElMagObs::Time()
+{
+    return t;
+}
+
+Vector ElMagObs::E()
+{ 
+    return vecE;
+}
+
+Vector ElMagObs::B()
+{ 
+    return vecB;
+}
+
+ElMagField ElMagObs::EB()
+{ 
+    return ElMagField(vecE,vecB);
 }
 
 // ********** GeneralField **********

@@ -76,6 +76,50 @@ private:
 };
 
 /*!
+ * \class ElMagObs
+ * \brief Type for electromagnetic field observations.
+ * @author Ulf Lehnert
+ * @date 7.4.2017
+ * 
+ * This class holds the two Vectors E [V/m] and B [T] of the electromagnetic field
+ * and in addition the time [s] at which both were observed. This class was created
+ * to allow a compact return value of field observations that include the retarded
+ * time at which the field arrives at the observation point.
+ */
+class ElMagObs
+{
+
+public:
+
+    /*! Default constructor:<br>
+     * initializes both components to zero
+     */
+    ElMagObs();
+
+    /*! Initializing constructor: */
+    ElMagObs(double time, Vector E, Vector B);
+
+    /*! time report */
+    double Time();
+
+    /*! Electric field report */
+    Vector E();
+
+    /*! Magnetic field report */
+    Vector B();
+
+    /*! Electromagnetic field report */
+    ElMagField EB();
+
+private:
+
+    double t;
+    Vector vecE;
+    Vector vecB;
+
+};
+
+/*!
  * \class GeneralField
  * \brief An general field through which particles can be tracked.
  * @author Ulf Lehnert
