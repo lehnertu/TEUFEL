@@ -49,7 +49,7 @@
 #include <string.h>
 #include <complex>
 
-#include "beam.h"
+#include "bunch.h"
 #include "global.h"
 #include "observer.h"
 #include "particle.h"
@@ -58,7 +58,7 @@
 #include <iostream>
 #include <fstream>
 
-int NOP = 1e4;
+int NOP = 1e3;
 int NOTS = 4000;    // number of time steps
 
 int main()

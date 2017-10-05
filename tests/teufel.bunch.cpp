@@ -43,7 +43,7 @@
 
 #include "global.h"
 #include "particle.h"
-#include "beam.h"
+#include "bunch.h"
 
 int main ()
 {
