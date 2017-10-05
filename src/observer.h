@@ -22,6 +22,7 @@
 #pragma once
 
 #include <complex>
+#include "beam.h"
 #include "vector.h"
 #include "particle.h"
 
