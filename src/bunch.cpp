@@ -22,6 +22,7 @@
 #include "bunch.h"
 #include "particle.h"
 #include "global.h"
+#include <math.h>
 #include <random>
 #include <iostream>
 #include "SDDS.h"
@@ -370,4 +371,53 @@ int Bunch::WriteWatchPointHDF5(const char *filename)
     // no errors have occured if we made it 'til here
     cout << "writing HDF5 done." << endl;
     return 0;
+}
+
+void Bunch::integrateFieldTrace(
+	Vector ObservationPoint,
+	double t0,
+	double dt,
+	int nots,
+	std::vector<ElMagField> *ObservationField)
+{
+    double tmax=t0+dt*nots;
+    for (int i=0; i<NOP; i++)
+    {
+	double ts1 = P[i]->PreviousRetardedTime(ObservationPoint);
+	double ts2 = P[i]->RetardedTime(ObservationPoint);
+	double dts = ts2-ts1;
+	if ((ts2>t0) && (ts1<tmax))
+	// else - time step is completely outside observation range
+	{
+	    ElMagField f1 = P[i]->PreviousRetardedField(ObservationPoint);
+	    ElMagField f2 = P[i]->RetardedField(ObservationPoint);
+	    if (ts1<t0)
+	    {	// time step is entering the observation range
+		// observation bucket in which the step end falls
+		int idx2 = floor((ts2-t0)/dt);
+		if (idx2>nots) idx2=nots;
+		// handle all fully covered buckets
+		for (int idx=0; idx<idx2; idx++)
+		{
+		    double t_center = t0 + (idx+0.5)*dt;
+		    ElMagField field = f1*((ts2-t_center)/dts) + f2*((t_center-ts1)/dts);
+		    ObservationField->at(idx) += field;
+		};
+		// handle the last (partially covered) bucket
+		if (idx2<nots)
+		{
+		    double t_start = t0+idx2*dt;
+		    ElMagField f_start = f1*((ts2-t_start)/dts) + f2*((t_start-ts1)/dts);
+		    ElMagField field = (f_start+f2)*0.5*((ts2-t_start)/dt);
+		    ObservationField->at(idx2) += field;
+		};
+	    }
+	    else if (ts2>tmax)
+	    {	// time step is leaving the observation range
+	    }
+	    else
+	    {	// time step is fully inside observation range
+	    };
+	};
+    };
 }

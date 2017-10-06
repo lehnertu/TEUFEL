@@ -109,11 +109,12 @@ $(OBJ): $(SRCDIR)/beam.h \
 	$(SRCDIR)/vector.h
 
 tests: $(OBJ) 
-	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.bunch $(TESTDIR)/teufel.bunch.cpp $(LFLAGS) $(OBJ) $(LIBS)
-	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.magnet $(TESTDIR)/teufel.magnet.cpp $(LFLAGS) $(OBJ) $(LIBS)
-	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.undulator $(TESTDIR)/teufel.undulator.cpp $(LFLAGS) $(OBJ) $(LIBS)
-	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.loop $(TESTDIR)/teufel.loop.cpp $(LFLAGS) $(OBJ) $(LIBS)
-	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.EcrossB $(TESTDIR)/teufel.EcrossB.cpp $(LFLAGS) $(OBJ) $(LIBS)
+#	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.bunch $(TESTDIR)/teufel.bunch.cpp $(LFLAGS) $(OBJ) $(LIBS)
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.integrate_field $(TESTDIR)/teufel.integrate_field.cpp $(LFLAGS) $(OBJ) $(LIBS)
+#	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.magnet $(TESTDIR)/teufel.magnet.cpp $(LFLAGS) $(OBJ) $(LIBS)
+#	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.undulator $(TESTDIR)/teufel.undulator.cpp $(LFLAGS) $(OBJ) $(LIBS)
+#	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.loop $(TESTDIR)/teufel.loop.cpp $(LFLAGS) $(OBJ) $(LIBS)
+#	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.EcrossB $(TESTDIR)/teufel.EcrossB.cpp $(LFLAGS) $(OBJ) $(LIBS)
 
 examples: $(OBJ) 
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(EXPLDIR)/elbe-u300 $(EXPLDIR)/elbe-u300.cpp $(LFLAGS) $(OBJ) $(LIBS)

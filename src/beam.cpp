@@ -36,3 +36,47 @@ Beam::~Beam()
 	delete B[i];
 }
 
+void Beam::Add(Bunch *bunch)
+{
+    NOB++;
+    B.push_back(bunch);
+}
+
+int Beam::getNOB()
+{
+    return NOB;
+}
+
+double Beam::getTotalCharge()
+{
+    double charge = 0.0;
+    for(int i=0; i<NOB; i++)
+    {
+	charge += B[i]->getTotalCharge();
+    }
+    return charge;
+}
+
+void Beam::InitVay(double tstep,
+		GeneralField *field)
+{
+    dt = tstep;
+    for(int i=0; i<NOB; i++)
+    {
+	B[i]->InitVay(tstep, field);
+    }
+}
+
+void Beam::StepVay(GeneralField *field)
+{
+    for(int i=0; i<NOB; i++)
+    {
+	B[i]->StepVay(field);
+    }
+}
+
+//! @todo not yet coded - how to store several bunches hierarchically ?
+int Beam::WriteWatchPointHDF5(const char *filename)
+{
+    return 0;
+}

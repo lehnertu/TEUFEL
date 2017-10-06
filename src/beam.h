@@ -90,30 +90,6 @@ public:
      */
     void StepVay(GeneralField *field);
     
-    /*! Dump all particle information into an SDDS file.
-     *  The written quantities include:
-     *  - time t
-     *  - position x,y,z
-     *  - momentum px,py,pz,p (beta*gamma)
-     *  - angles xp,yp (px/pz, py/pz)
-     *  - gamma
-     * 
-     * returns values for error checks:
-     *	 
-     *	0  -  successfully Written the file\n
-     *	1  -  error in SDDS_InitializeOutput \n
-     *	2  -  error in SDDS_DefineSimpleParameter \n
-     *	3  -  error in SDDS_DefineColumn \n
-     *	4  -  error in SDDS_WriteLayout \n
-     *	5  -  error in SDDS_StartPage \n
-     *	6  -  error in SDDS_SetParameters \n
-     *	7  -  error in SDDS_SetRowValues \n
-     *	8  -  error in SDDS_WritePage \n
-     *	9  -  error in SDDS_Terminate \n
-     * 
-     */
-    int WriteWatchPointSDDS(const char *filename);
-    
     /*! Dump all particle information into an HDF5 file.
      *  The written quantities include:
      *  - time t
@@ -131,5 +107,11 @@ private:
 
     //! we store references (pointers) to all bunches
     vector<Bunch*> B;
+
+    /*! Time step for tracking - this will remain constant
+     * after being set at the start of tracking.
+     * @todo do we actually need it?
+     */
+    double dt;
 
 };
