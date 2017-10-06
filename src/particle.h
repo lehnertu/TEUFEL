@@ -61,7 +61,7 @@ public:
     ChargedParticle(const ChargedParticle *origin);
     
     /*! Destructor: free all memory. */
-    ~ChargedParticle();
+    virtual ~ChargedParticle();
     
     /*! Return the charge of the particle */
     int getCharge();
@@ -102,20 +102,20 @@ public:
     /*! Compute the time when a signal emitted from the particle
      * is observed at the ObservationPoint.
      */
-    double PreviousRetardedTime(Vector ObservationPoint);
-    double RetardedTime(Vector ObservationPoint);
+    virtual double PreviousRetardedTime(Vector ObservationPoint);
+    virtual double RetardedTime(Vector ObservationPoint);
 	
     /*! Compute the field emitted from the particle
      * observed at the ObservationPoint.
      */
-    ElMagField PreviousRetardedField(Vector ObservationPoint);
-    ElMagField RetardedField(Vector ObservationPoint);
+    virtual ElMagField PreviousRetardedField(Vector ObservationPoint);
+    virtual ElMagField RetardedField(Vector ObservationPoint);
 
     /*! Compute the time and field generated the particle
      * at an ObservationPoint.
      */
-    ElMagObs PreviousObservation(Vector ObservationPoint);
-    ElMagObs Observation(Vector ObservationPoint);
+    virtual ElMagObs PreviousObservation(Vector ObservationPoint);
+    virtual ElMagObs Observation(Vector ObservationPoint);
 
 private:
     

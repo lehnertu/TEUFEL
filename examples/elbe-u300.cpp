@@ -129,24 +129,19 @@ int main()
 	printf("SDDS file written - \033[1;32m OK\033[0m\n");
     }
     
-    // do the tracking of the single electron
-    /*
-    Vector X0 = Vector(0.0, 0.0, 0.0);
-    Vector P0 = Vector(0.0, 0.0, betagamma);
-    electron->TrackVay(NOTS, deltaT, X0, P0, lattice);
-    */
-    
     // track a beam consisting of two bunches
     // one containing only the single (reference) electron
     Beam *beam = new Beam();
+    beam->Add(single);
+    beam->Add(bunch);
     
     // and setup for the tracking procedure
-    bunch->InitVay(deltaT, lattice);
-    // do the tracking of the bunch
+    beam->InitVay(deltaT, lattice);
+    // do the tracking of the beam
     printf("tracking particles ... ");
     fflush(stdout);
     for (int step=0; step<NOTS; step++)
-	bunch->StepVay(lattice);
+	beam->StepVay(lattice);
     printf("done.\n");
     
     // create a trajectory dump fo the single electron
@@ -241,9 +236,9 @@ int main()
     
     // clean up
     delete lattice;
+    // deleting the beam automatically
+    // deletes all bunches and particles belonging to it
     delete beam;
-    delete single; // this automatically deletes the electron
-    delete bunch;
 
     return 0;
 }

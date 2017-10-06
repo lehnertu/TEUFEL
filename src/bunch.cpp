@@ -386,13 +386,17 @@ void Bunch::integrateFieldTrace(
 	double ts1 = P[i]->PreviousRetardedTime(ObservationPoint);
 	double ts2 = P[i]->RetardedTime(ObservationPoint);
 	double dts = ts2-ts1;
+	ElMagField field;
 	if ((ts2>t0) && (ts1<tmax))
 	// else - time step is completely outside observation range
 	{
 	    ElMagField f1 = P[i]->PreviousRetardedField(ObservationPoint);
 	    ElMagField f2 = P[i]->RetardedField(ObservationPoint);
-	    if (ts1<t0)
-	    {	// time step is entering the observation range
+	    if (ts1<=t0)
+	    // if (ts2<=tmax) time step is entering the observation range
+	    // else time step is covering the entire observation range
+	    // both cases are handled with the same code
+	    {
 		// observation bucket in which the step end falls
 		int idx2 = floor((ts2-t0)/dt);
 		if (idx2>nots) idx2=nots;
@@ -400,7 +404,7 @@ void Bunch::integrateFieldTrace(
 		for (int idx=0; idx<idx2; idx++)
 		{
 		    double t_center = t0 + (idx+0.5)*dt;
-		    ElMagField field = f1*((ts2-t_center)/dts) + f2*((t_center-ts1)/dts);
+		    field = f1*((ts2-t_center)/dts) + f2*((t_center-ts1)/dts);
 		    ObservationField->at(idx) += field;
 		};
 		// handle the last (partially covered) bucket
@@ -408,15 +412,48 @@ void Bunch::integrateFieldTrace(
 		{
 		    double t_start = t0+idx2*dt;
 		    ElMagField f_start = f1*((ts2-t_start)/dts) + f2*((t_start-ts1)/dts);
-		    ElMagField field = (f_start+f2)*0.5*((ts2-t_start)/dt);
+		    field = (f_start+f2)*0.5*((ts2-t_start)/dt);
 		    ObservationField->at(idx2) += field;
 		};
 	    }
-	    else if (ts2>tmax)
-	    {	// time step is leaving the observation range
-	    }
 	    else
-	    {	// time step is fully inside observation range
+	    // if (ts2<=tmax) time step is fully inside observation range
+	    // else time step is leaving the observation range
+	    // both cases are handled with the same code
+	    {
+		// observation bucket in which the step start falls
+		int idx1 = floor((ts1-t0)/dt);
+		// observation bucket in which the step end falls
+		int idx2 = floor((ts2-t0)/dt);
+		if (idx2>nots) idx2=nots;
+		if (idx1==idx2)
+		// time step if fully within one bucket
+		{
+		    field = (f1+f2)*0.5*(dts/dt);
+		}
+		else
+		{
+		    // handle the first (partially covered) bucket
+		    double t_end = t0+(idx1+1)*dt;
+		    ElMagField f_end = f1*((ts2-t_end)/dts) + f2*((t_end-ts1)/dts);
+		    field = (f1+f_end)*0.5*((t_end-ts1)/dt);
+		    ObservationField->at(idx1) += field;
+		    // handle all fully covered buckets
+		    for (int idx=idx1+1; idx<idx2; idx++)
+		    {
+			double t_center = t0 + (idx+0.5)*dt;
+			field = f1*((ts2-t_center)/dts) + f2*((t_center-ts1)/dts);
+			ObservationField->at(idx) += field;
+		    };
+		    // handle the last (partially covered) bucket
+		    if (idx2<nots)
+		    {
+			double t_start = t0+idx2*dt;
+			ElMagField f_start = f1*((ts2-t_start)/dts) + f2*((t_start-ts1)/dts);
+			field = (f_start+f2)*0.5*((ts2-t_start)/dt);
+			ObservationField->at(idx2) += field;
+		    };
+		}
 	    };
 	};
     };
