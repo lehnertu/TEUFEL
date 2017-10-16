@@ -56,15 +56,12 @@ public:
 	time1=t1; time2=t2;
 	f1=ElMagField(Vector(Ex1,0.0,0.0),Vector(0.0,0.0,0.0));
 	f2=ElMagField(Vector(Ex2,0.0,0.0),Vector(0.0,0.0,0.0));
+	printf("E(%6.3f)=%6.3f  E(%6.3f)=%6.3f\n",t1,f1.E().x,t2,f2.E().x);
     };
-    double PreviousRetardedTime(Vector ObservationPoint)
-	{printf("PreviousRetardedTime %6.3f\n",time1); return time1;};
-    double RetardedTime(Vector ObservationPoint)
-	{printf("RetardedTime %6.3f\n",time2);return time2;};
-    ElMagField PreviousRetardedField(Vector ObservationPoint)
-	{printf("PreviousRetardedField %9.6f\n",f1.E().x); return f1;};
-    ElMagField RetardedField(Vector ObservationPoint)
-	{printf("RetardedField %9.6f\n",f2.E().x); return f2;};
+    double PreviousRetardedTime(Vector ObservationPoint) {return time1;};
+    double RetardedTime(Vector ObservationPoint) {return time2;};
+    ElMagField PreviousRetardedField(Vector ObservationPoint){return f1;};
+    ElMagField RetardedField(Vector ObservationPoint){return f2;};
 };
 
 int main ()
@@ -96,6 +93,7 @@ int main ()
     if (fabs(F1[5].E().x -0.0)>1e-6) errors++;
     if (fabs(F1[6].E().x -0.0)>1e-6) errors++;
     if (fabs(F1[7].E().x -0.0)>1e-6) errors++;
+    printf("\n");
 
     t0=-0.1;
     dt=0.2;
@@ -113,7 +111,8 @@ int main ()
     if (fabs(F2[5].E().x -0.275)>1e-6) errors++;
     if (fabs(F2[6].E().x -0.0)>1e-6) errors++;
     if (fabs(F2[7].E().x -0.0)>1e-6) errors++;
-
+    printf("\n");
+    
     t0=-0.7;
     dt=0.2;
     std::vector<ElMagField> F3(nots);
@@ -130,9 +129,40 @@ int main ()
     if (fabs(F3[5].E().x -1.1)>1e-6) errors++;
     if (fabs(F3[6].E().x -0.9)>1e-6) errors++;
     if (fabs(F3[7].E().x -0.7)>1e-6) errors++;
-
+    printf("\n");
+    
     delete B;
 
+    Bunch *B2 = new Bunch();
+    B2->Add(new Special(1.0, 2.0, 1.0, 1.0));
+    B2->Add(new Special(2.0, 2.2, 1.0, 1.0));
+    B2->Add(new Special(2.2, 2.4, 1.0, 0.0));
+    B2->Add(new Special(2.2, 2.4, 0.0, 1.0));
+    B2->Add(new Special(2.4, 3.0, 1.0, 1.0));
+    
+    printf("Bunch NOP=%d\n", B2->getNOP());
+    
+    nots=8;
+    t0=0.0;
+    dt=0.5;
+    std::vector<ElMagField> F4(nots);
+    B2->integrateFieldTrace(Vector(0.0,0.0,0.0),t0,dt,nots,&F4);
+    for (int i=0; i<nots; i++)
+    {
+	printf("t=%6.2f : Ex=%9.6f\n",t0+(i+0.5)*dt,F4[i].E().x);
+    }
+    if (fabs(F4[0].E().x -0.0)>1e-6) errors++;
+    if (fabs(F4[1].E().x -0.0)>1e-6) errors++;
+    if (fabs(F4[2].E().x -1.0)>1e-6) errors++;
+    if (fabs(F4[3].E().x -1.0)>1e-6) errors++;
+    if (fabs(F4[4].E().x -1.0)>1e-6) errors++;
+    if (fabs(F4[5].E().x -1.0)>1e-6) errors++;
+    if (fabs(F4[6].E().x -0.0)>1e-6) errors++;
+    if (fabs(F4[7].E().x -0.0)>1e-6) errors++;
+    printf("\n");
+    
+    delete B2;
+    
     printf("errors %d\n",errors);
     return errors;
 }

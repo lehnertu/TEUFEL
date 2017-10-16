@@ -91,13 +91,15 @@ int main()
     // setup a bunch with 
     // one single particle corresponding to 4.37e8 electrons (70pC)
     // positioned at the origin (by default)
-    ChargedParticle *electron = new ChargedParticle(-4.37e8,4.37e8);
+    double ch = 70.0e-12 / ElementaryCharge;
+    ChargedParticle *electron = new ChargedParticle(-ch,ch);
+    electron->setMomentum(Vector(0.0,0.0,betagamma));
     Bunch *single = new Bunch();
     single->Add(electron);
     
     // an electron bunch of 70pC total charge modeled with NOP particles
     // the initial bunch length is 50fs
-    double ch = 70.0e-12 / ElementaryCharge / NOP;
+    ch = 70.0e-12 / ElementaryCharge / NOP;
     double sigma_t = 50.0e-15;
     double sigma_z = SpeedOfLight * beta * sigma_t;
     printf("sigma_t =  %9.3g ps\n", 1e12*sigma_t);
@@ -135,13 +137,31 @@ int main()
     beam->Add(single);
     beam->Add(bunch);
     
-    // and setup for the tracking procedure
+    // setup for the tracking procedure
     beam->InitVay(deltaT, lattice);
+    // compute the radiation of the single electron, the bunch and the whole beam on axis
+    double t0 = 10.0/SpeedOfLight - 1.0e-12;
+    PointObserver<Bunch> singleObs = PointObserver<Bunch>(
+	single, Vector(0.0, 0.0, 10.0), t0, 0.05e-13, 3000);
+    PointObserver<Bunch> bunchObs = PointObserver<Bunch>(
+	bunch, Vector(0.0, 0.0, 10.0), t0, 0.05e-13, 3000);
+    // PointObserver<Beam> beamObs = PointObserver<Beam>(beam, Vector(0.0, 0.0, 10.0), t0, 0.05e-13, 3000);
     // do the tracking of the beam
     printf("tracking particles ... ");
     fflush(stdout);
     for (int step=0; step<NOTS; step++)
+    {
 	beam->StepVay(lattice);
+	// update the observers every step
+	// printf("single ... ");
+	// printf(" z(avg.)= %6.3f ", single->avgPosition().z);
+	singleObs.integrate();
+	// printf("bunch ... ");
+	// printf(" z(avg.)= %6.3f ", bunch->avgPosition().z);
+	bunchObs.integrate();
+	// beamObs->integrate();
+	// printf("\n");
+    }
     printf("done.\n");
     
     // create a trajectory dump fo the single electron
@@ -177,49 +197,27 @@ int main()
     }
     */
     
+    // write field time traces
+    int retval = singleObs.WriteTimeDomainFieldSDDS("elbe-u300_SingleEl_ObsRadField.sdds");
+    if (0 != retval)
+    {
+	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
+    }
+    else
+    {
+	printf("SDDS time domain field written - \033[1;32m OK\033[0m\n");
+    }
+    retval = bunchObs.WriteTimeDomainFieldSDDS("elbe-u300_Bunch_ObsRadField.sdds");
+    if (0 != retval)
+    {
+	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
+    }
+    else
+    {
+	printf("SDDS time domain field written - \033[1;32m OK\033[0m\n");
+    }
+
     /*
-    // compute the radiation of the single electron on axis
-    PointObserver Obs = PointObserver(Vector(0.0, 0.0, 10.0));
-    // write raw time trace
-    retval = electron->WriteFieldTraceSDDS(
-	Vector(0.0, 0.0, 10.0),
-	"elbe-u300_RadTrace.sdds");
-    if (0 != retval)
-    {
-	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
-    }
-    else
-    {
-	printf("SDDS field trace written - \033[1;32m OK\033[0m\n");
-    }
-    double t0 = 10.0/SpeedOfLight - 1.0e-12;
-    Obs.ComputeTimeDomainField(electron, t0, 0.05e-13, 3000);
-    // write interpolated time trace
-    retval = Obs.WriteTimeDomainFieldSDDS("elbe-u300_SingleEl_ObsRadField.sdds");
-    if (0 != retval)
-    {
-	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
-    }
-    else
-    {
-	printf("SDDS time domain field written - \033[1;32m OK\033[0m\n");
-    }
-
-    // compute the radiation of the whole bunch on axis
-    printf("computing fields ... ");
-    fflush(stdout);
-    Obs.ComputeTimeDomainField(bunch, t0, 0.05e-13, 3000);
-    printf("done.\n");
-    retval = Obs.WriteTimeDomainFieldSDDS("elbe-u300_Bunch_ObsRadField.sdds");
-    if (0 != retval)
-    {
-	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
-    }
-    else
-    {
-	printf("SDDS time domain field written - \033[1;32m OK\033[0m\n");
-    }
-
     // write frequency spectrum to file
     retval = Obs.WriteSpectrumSDDS(
 	"elbe-u300_RadSpectrum.sdds",

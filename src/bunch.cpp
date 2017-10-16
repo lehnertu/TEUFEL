@@ -92,11 +92,13 @@ double Distribution::getCoordinate(int index, int dim)
 Bunch::Bunch()
 {
     NOP = 0;
+    time = 0.0;
 }
 
 Bunch::Bunch(int N, double charge, double mass)
 {
     NOP = N;
+    time = 0.0;
     for(int i=0; i<NOP; i++)
     {
 	P.push_back(new ChargedParticle(charge,mass));
@@ -106,6 +108,7 @@ Bunch::Bunch(int N, double charge, double mass)
 Bunch::Bunch(Bunch* origin)
 {
     NOP = origin->getNOP();
+    time = origin->getTime();
     for(int i=0; i<NOP; i++)
     {
 	P.push_back(new ChargedParticle(origin->getParticle(i)));
@@ -115,6 +118,7 @@ Bunch::Bunch(Bunch* origin)
 Bunch::Bunch(Distribution *dist, double charge, double mass)
 {
     NOP = dist->getNOP();
+    time = 0.0;
     for(int i=0; i<NOP; i++)
     {
 	ChargedParticle *p = new ChargedParticle(charge,mass);
@@ -167,6 +171,7 @@ void Bunch::InitVay(double tstep,
 		    GeneralField *field)
 {
     dt = tstep;
+    time = 0.0;
     for(int i=0; i<NOP; i++)
     {
 	P[i]->InitVay(tstep, field);
@@ -175,10 +180,30 @@ void Bunch::InitVay(double tstep,
 
 void Bunch::StepVay(GeneralField *field)
 {
+    time += dt;
     for(int i=0; i<NOP; i++)
     {
 	P[i]->StepVay(field);
     }
+}
+
+double Bunch::getTime()
+{
+    return time;
+}
+
+Vector Bunch::avgPosition()
+{
+    Vector pos;
+    for(int i=0; i<NOP; i++) pos += P[i]->getPosition();
+    return pos*(1.0/NOP);
+}
+
+Vector Bunch::avgMomentum()
+{
+    Vector mom;
+    for(int i=0; i<NOP; i++) mom += P[i]->getMomentum();
+    return mom*(1.0/NOP);
 }
 
 int Bunch::WriteWatchPointSDDS(const char *filename)
@@ -380,6 +405,7 @@ void Bunch::integrateFieldTrace(
 	int nots,
 	std::vector<ElMagField> *ObservationField)
 {
+    // cout << "Bunch::integrateFieldTrace() NOP=" << NOP << endl;
     double tmax=t0+dt*nots;
     for (int i=0; i<NOP; i++)
     {
@@ -406,6 +432,7 @@ void Bunch::integrateFieldTrace(
 		    double t_center = t0 + (idx+0.5)*dt;
 		    field = f1*((ts2-t_center)/dts) + f2*((t_center-ts1)/dts);
 		    ObservationField->at(idx) += field;
+		    // cout << " idx=" << idx;
 		};
 		// handle the last (partially covered) bucket
 		if (idx2<nots)
@@ -414,6 +441,7 @@ void Bunch::integrateFieldTrace(
 		    ElMagField f_start = f1*((ts2-t_start)/dts) + f2*((t_start-ts1)/dts);
 		    field = (f_start+f2)*0.5*((ts2-t_start)/dt);
 		    ObservationField->at(idx2) += field;
+		    // cout << " idx2=" << idx2;
 		};
 	    }
 	    else
@@ -430,6 +458,8 @@ void Bunch::integrateFieldTrace(
 		// time step if fully within one bucket
 		{
 		    field = (f1+f2)*0.5*(dts/dt);
+		    ObservationField->at(idx1) += field;
+		    // cout << " idx12=" << idx1;
 		}
 		else
 		{
@@ -438,12 +468,14 @@ void Bunch::integrateFieldTrace(
 		    ElMagField f_end = f1*((ts2-t_end)/dts) + f2*((t_end-ts1)/dts);
 		    field = (f1+f_end)*0.5*((t_end-ts1)/dt);
 		    ObservationField->at(idx1) += field;
+		    // cout << " idx1=" << idx1;
 		    // handle all fully covered buckets
 		    for (int idx=idx1+1; idx<idx2; idx++)
 		    {
 			double t_center = t0 + (idx+0.5)*dt;
 			field = f1*((ts2-t_center)/dts) + f2*((t_center-ts1)/dts);
 			ObservationField->at(idx) += field;
+			// cout << " idx=" << idx;
 		    };
 		    // handle the last (partially covered) bucket
 		    if (idx2<nots)
@@ -452,9 +484,11 @@ void Bunch::integrateFieldTrace(
 			ElMagField f_start = f1*((ts2-t_start)/dts) + f2*((t_start-ts1)/dts);
 			field = (f_start+f2)*0.5*((ts2-t_start)/dt);
 			ObservationField->at(idx2) += field;
+			// cout << " idx2=" << idx2;
 		    };
 		}
 	    };
 	};
+	// cout << endl;
     };
 }

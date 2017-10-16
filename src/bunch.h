@@ -188,6 +188,15 @@ public:
      */
     void StepVay(GeneralField *field);
 
+    //! @brief Current time of the bunch
+    double getTime();
+    
+    //! @brief Average position of all particles
+    Vector avgPosition();
+    
+    //! @brief Average momentum of all particles
+    Vector avgMomentum();
+
     /*! Dump all particle information into an SDDS file.
      *  The written quantities include:
      *  - time t
@@ -261,6 +270,9 @@ private:
     //! time step for tracking - this will remain constant after being set at the start of tracking
     double dt;
 
+    //! current time of the bunch (during tracking)
+    double time;
+    
     //! we store references to all particles
     vector<ChargedParticle*> P;
 
