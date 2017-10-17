@@ -99,14 +99,15 @@ int main ()
 
     // initial position at the origin
     Vector X0 = Vector(0.0, 0.0, 0.0);
-    // initial momentum of the particle
+    electron->setPosition(X0);
+    // initial momentum of the particle - arbitrary direction
     Vector P0 = RandVector*betagamma;
+    electron->setMomentum(P0);
     
     // track the particle 
     double tau=10e-9;
     double deltaT = tau/NOTS;
-    // electron->TrackVay(NOTS, deltaT, X0, P0, lattice);
-    electron->InitVay(0.0, X0, P0, deltaT, lattice);
+    electron->InitVay(deltaT, lattice);
     for (int i=0; i<NOTS; i++)
 	electron->StepVay(lattice);
     
@@ -120,7 +121,7 @@ int main ()
     printf("z =  %9.6g m\n",ExpectedPosition.z);
     
     // time of the last timestep should be equal to tau
-    double FinalTime = electron->TrajTime(NOTS);
+    double FinalTime = electron->getTime();
     if (fabs(FinalTime-tau) > deltaT) {
 	errors++;
 	printf("error in final time = %12.9g s - \033[1;31m test failed!\033[0m\n", FinalTime-tau);
@@ -128,8 +129,8 @@ int main ()
 	printf("final time = %12.9g s - \033[1;32m OK\033[0m\n", FinalTime);
     }
 
-    
-    Vector FinalPosition=electron->TrajPoint(NOTS);
+    // check final position
+    Vector FinalPosition=electron->getPosition();
     if (fabs(FinalPosition.x-ExpectedPosition.x) >2e-6 && fabs(FinalPosition.y-ExpectedPosition.y) >2e-6 && fabs(FinalPosition.z-ExpectedPosition.z) >2e-6) {
 	errors++;
 	printf("final x position = %12.9g m - \033[1;31m test failed!\033[0m\n", FinalPosition.x); 
@@ -140,9 +141,10 @@ int main ()
 	printf("final y position = %12.9g m - \033[1;32m OK\033[0m\n",FinalPosition.y);
 	printf("final z position = %12.9g m - \033[1;32m OK\033[0m\n",FinalPosition.z);
     }
+    
     // look for the momentum changes
     Vector ExpectedMomentum=P0;
-    Vector FinalMomentum=electron->TrajMomentum(NOTS);
+    Vector FinalMomentum=electron->getMomentum();
     if (ExpectedMomentum.norm()-FinalMomentum.norm() > 1.5e-3) {
 	errors++;
 	printf("Final Momentum = %9.6f - \033[1;31m test failed!\033[0m\n", FinalMomentum.norm());

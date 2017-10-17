@@ -54,6 +54,14 @@ void PointObserver<sourceT>::integrate()
 }
 
 template <class sourceT>
+ElMagField PointObserver<sourceT>::getField(int idx)
+{
+    ElMagField field;
+    if ( idx>=0 && idx<NOTS) field=TimeDomainField[idx];
+    return field;
+}
+
+template <class sourceT>
 int PointObserver<sourceT>::WriteTimeDomainFieldSDDS(const char *filename)
 {
     cout << "writing SDDS file " << filename << endl;

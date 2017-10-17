@@ -64,7 +64,7 @@
 #include "particle.h"
 #include "fields.h"
 
-int NOTS = 1000;                // number of time steps
+int NOTS = 500;                // number of time steps
 
 int main ()
 {
@@ -106,32 +106,22 @@ int main ()
     
     // initial potion at the origin
     Vector X0 = Vector(0.0, 0.0, 0.0);
+    electron->setPosition(X0);
     // initial momentum of the particle
     Vector P0 = p*betagamma/p.norm();
-    
-    // track the particle for the duration of one revolution
-    double deltaT = tau/NOTS;
-    // electron->TrackVay(NOTS, deltaT, X0, P0, lattice);
-    electron->InitVay(0.0, X0, P0, deltaT, lattice);
-    for (int i=0; i<NOTS; i++)
-	electron->StepVay(lattice);
-    
-    Vector XF = electron->TrajPoint(NOTS);
-    printf("final position =  (%9.6f, %9.6f, %9.6f) m\n",XF.x, XF.y, XF.z);
+    electron->setMomentum(P0);
     
     // count the errors
     int errors = 0;
     
-    // time of the last timestep should be equal to tau
-    double FinalTime = electron->TrajTime(NOTS);
-    if (1e12*fabs(FinalTime-tau) > 0.01) {
-	errors++;
-	printf("final time = %12.9g s - \033[1;31m test failed!\033[0m\n", FinalTime);
-    } else {
-	printf("final time = %12.9g s - \033[1;32m OK\033[0m\n", FinalTime);
-    }
+    // track the particle for the duration of one half revolution
+    double deltaT = 0.5*tau/NOTS;
+    electron->InitVay(deltaT, lattice);
+    for (int i=0; i<NOTS; i++)
+	electron->StepVay(lattice);
+    
     // the position after half the time steps is the farthest from origin - twice the radius
-    Vector MiddlePosition = electron->TrajPoint(NOTS/2);
+    Vector MiddlePosition = electron->getPosition();
     double dist = MiddlePosition.norm();
     if (fabs(0.5*dist-Rgyro) > 1e-5) {
 	errors++;
@@ -139,8 +129,24 @@ int main ()
     } else {
 	printf("trajectory radius = %9.6f m - \033[1;32m OK\033[0m\n", 0.5*dist);
     }
+
+    // track the particle for the second half revolution
+    for (int i=0; i<NOTS; i++)
+	electron->StepVay(lattice);
+    
+    Vector XF = electron->getPosition();
+    printf("final position =  (%9.6f, %9.6f, %9.6f) m\n",XF.x, XF.y, XF.z);
+    
+    // time of the last timestep should be equal to tau
+    double FinalTime = electron->getTime();
+    if (1e12*fabs(FinalTime-tau) > 0.01) {
+	errors++;
+	printf("final time = %12.9g s - \033[1;31m test failed!\033[0m\n", FinalTime);
+    } else {
+	printf("final time = %12.9g s - \033[1;32m OK\033[0m\n", FinalTime);
+    }
     // the position after the last timestep should be at the origin again
-    Vector FinalPosition = electron->TrajPoint(NOTS);
+    Vector FinalPosition = electron->getPosition();
     if (FinalPosition.norm() > 1e-5) {
 	errors++;
 	printf("final position error = %6.2f µm - \033[1;31m test failed!\033[0m\n", 1e6*FinalPosition.norm());
@@ -148,7 +154,7 @@ int main ()
 	printf("final position error = %6.2f µm - \033[1;32m OK\033[0m\n", 1e6*FinalPosition.norm());
     }
     // final momentum should be the same as at start
-    Vector FinalMomentum = electron->TrajMomentum(NOTS);
+    Vector FinalMomentum = electron->getMomentum();
     if (fabs(FinalMomentum.norm()-betagamma) > 1e-4) {
 	errors++;
 	printf("beta gamma = %9.6f - \033[1;31m test failed!\033[0m\n", FinalMomentum.norm());

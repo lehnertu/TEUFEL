@@ -76,11 +76,15 @@ public:
 	double dt,
 	int nots);
 
-    /* The source has advanced one time step. Integrate the
+    /*! The source has advanced one time step. Integrate the
      * fields emitted by the source during this latest step.
      */
     void integrate();
 
+    /*! Return the field value stored in one time slice
+     */
+    ElMagField getField(int idx);
+    
     /*! Write the time-domain field trace into an SDDS file.
      * 
      * This method requires that a trace of observed field values has been

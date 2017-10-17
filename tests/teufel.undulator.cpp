@@ -112,8 +112,10 @@ int main()
 
     // initial position at the origin
     Vector X0 = Vector(0.0, 0.0, 0.0);
+    electron->setPosition(X0);
     // initial momentum of the particle
     Vector P0 = Vector(0.0, 0.0, betagamma);
+    electron->setMomentum(P0);
 
     // Track the particle for 3.0 m in lab space.
     // Inside the undulator we have an additional pathlength of one radiation
@@ -123,18 +125,23 @@ int main()
     double tau = (double)N * (lambda + lambdar) / SpeedOfLight + (3.0 - (double)N * lambda) / (beta * SpeedOfLight);
     // double tau=06.8e-9;
     double deltaT = tau / NOTS;
-    // electron->TrackVay(NOTS, deltaT, X0, P0, lattice);
-    electron->InitVay(0.0, X0, P0, deltaT, lattice);
+    electron->InitVay(deltaT, lattice);
+    double xdisp = 0;    //maximum displacement in + direction
     for (int i=0; i<NOTS; i++)
+    {
 	electron->StepVay(lattice);
+	// look for the maximum displacement
+        Vector XP = electron->getPosition();
+        if (XP.z > lambda && XP.z < N * lambda - lambda && xdisp < XP.x) xdisp = XP.x;
+    };
     
     // count the errors
     int errors = 0;
 
     // time of the last timestep should be equal to tau
-    double FinalTime = electron->TrajTime(NOTS);
-    Vector FinalPosition = electron->TrajPoint(NOTS);
-    double xdisp = 0;    //maximum displacement in + direction
+    double FinalTime = electron->getTime();
+    Vector FinalPosition = electron->getPosition();
+
     if (fabs(FinalPosition.z - 3.0) > 1.0e-5)
     {
         errors++;
@@ -144,15 +151,8 @@ int main()
     {
         printf("final position z= %12.9g m - \033[1;32m OK\033[0m\n", FinalPosition.z);
     }
-    // look for the maximum displacement
-    for (int i = 0; i < NOTS; i++)
-    {
-        Vector XP = electron->TrajPoint(i);
-        if (XP.z > lambda && XP.z < N * lambda - lambda && xdisp < XP.x)    //check for the maximum displacement after the endpieces
-        {
-            xdisp = XP.x;
-        }
-    }
+    
+    // check the maximum displacement
     if (fabs(xdisp - xdis) > 1e-5)
     {
         errors++;
@@ -162,6 +162,7 @@ int main()
     {
 	printf("X-displacement = %9.6f mm - \033[1;32m OK\033[0m\n", xdisp*1.0e3);
     }
+
     if (fabs(FinalTime - tau) > deltaT)
     {
         errors++;
@@ -172,25 +173,14 @@ int main()
         printf("final time = %12.9g s - \033[1;32m OK\033[0m\n", FinalTime);
     }
 
-    if (fabs(electron->TrajPoint(NOTS).x) > 1.0e-5)
+    if (fabs(FinalPosition.x) > 1.0e-5)
     {
         errors++;
-	printf("Final X-displacement = %9.6f mm - \033[1;31m test failed!\033[0m\n", electron->TrajPoint(NOTS).x*1.0e3);
+	printf("Final X-displacement = %9.6f mm - \033[1;31m test failed!\033[0m\n", FinalPosition.x*1.0e3);
     }
     else
     {
-	printf("Final X-displacement = %9.6f mm - \033[1;32m OK\033[0m\n", electron->TrajPoint(NOTS).x*1.0e3);
-    }
-
-    // create a trajectory dump
-    if (0 != electron->WriteTrajectorySDDS("teufel_undulator_trajectory.sdds"))
-    {
-        errors++;
-        printf("SDDS write \033[1;31m failed!\033[0m\n");
-    }
-    else
-    {
-        printf("SDDS file written - \033[1;32m OK\033[0m\n");
+	printf("Final X-displacement = %9.6f mm - \033[1;32m OK\033[0m\n", FinalPosition.x*1.0e3);
     }
 
     // clean up
