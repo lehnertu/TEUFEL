@@ -57,10 +57,6 @@
     
     @return The number of errors encountered in the above list of checks is reported.
     
-    @todo A rather large number of time steps is required in order to obtain a
-    reasonable accuracy of the compued field. Most likely, the interpolation of the trajectory
-    data needs some improvement.
-    
  */
 
 #include <math.h>
@@ -74,7 +70,7 @@
 #include "fields.h"
 #include "observer.h"
 
-int NOTS = 5000;                // number of time steps
+int NOTS = 100;                // number of time steps
 
 int main ()
 {
@@ -179,7 +175,7 @@ int main ()
 	errors++;
 	printf("Field observed = %12.5g T \033[1;31m test failed!\033[0m\n", field.B().norm());
     } else {
-	printf("Field observed = %12.5g T- \033[1;32m OK\033[0m\n",field.B().norm());
+	printf("Field observed = %12.5g T - \033[1;32m OK\033[0m\n",field.B().norm());
     }
 
     // clean up
