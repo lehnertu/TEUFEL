@@ -34,7 +34,7 @@ PointObserver<sourceT>::PointObserver(
     Vector position,
     double t0,
     double dt,
-    int nots)
+    unsigned int nots)
 {
     Source = src;
     Pos = position;
@@ -154,3 +154,41 @@ int PointObserver<sourceT>::WriteTimeDomainFieldSDDS(const char *filename)
 // we have to instantiate the class for every possible source type
 template class PointObserver<Bunch>;
 template class PointObserver<Beam>;
+
+template <class sourceT>
+ScreenObserver<sourceT>::ScreenObserver(
+    sourceT *src,
+    Vector position,
+    Vector dx,
+    Vector dy,
+    unsigned int nx,
+    unsigned int ny,
+    double t0,
+    double dt,
+    unsigned int nots)
+{
+    Source = src;
+    O = position;
+    dX = dx;
+    dY = dy;
+    Nx = nx;
+    Ny = ny;
+    t0_obs = t0;
+    dt_obs = dt;
+    NOTS = nots;
+    // set the field sizes and fill the field with zeros
+    ElMagField field;
+    TimeDomainField.resize(Nx);
+    for (unsigned int ix = 0; ix < Nx; ix++) {
+	TimeDomainField[ix].resize(Ny);
+	for (unsigned int iy = 0; iy < Ny; iy++)
+	{
+	    TimeDomainField[ix][iy].clear();
+	    for (unsigned int i=0; i<NOTS; i++) TimeDomainField[ix][iy].push_back(field);
+	};
+    }
+}
+
+// we have to instantiate the class for every possible source type
+template class ScreenObserver<Bunch>;
+template class ScreenObserver<Beam>;

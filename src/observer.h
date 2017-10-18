@@ -21,21 +21,8 @@
 
 #pragma once
 
-#include <complex>
 #include "fields.h"
 #include "vector.h"
-
-/*
- * \class Observation
- * \brief Abstract class defining an observation of the electromagnetic
- * field created by an object (particle, bunch or beam).
- * @author Ulf Lehnert
- * @date 21.9.2017
- * 
- * template<class Obj> class Observation
- * {
- * }
- */
 
 /*!
  * \class PointObserver
@@ -56,7 +43,7 @@ public:
      * Compute the electromagnetic field radiated by a given source.
      * 
      * The observer is placed at a given position in space.
-     * The field is given in time domain
+     * The field is recorded in time domain
      * starting at t0 with nots equidistant time steps of dt length.
      * The first time step starts at \f$t0\f$ and ends at \f$t0+dt\f$.
      * The total timespan covererd ends at \f$t0+n*dt\f$.
@@ -74,7 +61,7 @@ public:
 	Vector position,
 	double t0,
 	double dt,
-	int nots);
+	unsigned int nots);
 
     /*! The source has advanced one time step. Integrate the
      * fields emitted by the source during this latest step.
@@ -130,5 +117,127 @@ private:
 
     //! the interpolated electromagnetic field
     std::vector<ElMagField> TimeDomainField;
+
+};
+
+/*!
+ * \class ScreenObserver
+ * \brief Observer of emitted radiation on a gridded screen.
+ * @author Ulf Lehnert
+ * @date 18.10.2017
+ * 
+ * This class handles the computation and storage of emitted electromagnetic
+ * radiation from different sources (bunches and beams).
+ */
+template <class sourceT>
+class ScreenObserver
+{
+    
+public:
+    
+    /*! Standard constructor:<br>
+     * Compute the electromagnetic field radiated by a given source.
+     * 
+     * The screen is placed at a given position in space.
+     * From there a grid of size (nx,ny) is created
+     * extending along the dx and dy vectors.
+     * These vectors define the size of one single grid cell.
+     * They need not neccessarily be orthogonal to each other.
+     * The screen normal is perpendicular to both oriented such
+     * that (x,y,n) form a right-handed coordinate system.
+     * If nxy are odd then the (nxy-1)/2 indexed grid cell
+     * (index running 0...nxy-1) will have its center exactly at position.
+     * 
+     * The field is recorded in time domain
+     * starting at t0 with nots equidistant time steps of dt length.
+     * The first time step starts at \f$t0\f$ and ends at \f$t0+dt\f$.
+     * The total timespan covererd ends at \f$t0+n*dt\f$.
+     * The field is computed for the center point of the grid cells only
+     * and assumed constant over the whole area of the cell for
+     * power flow calculation.
+     * 
+     * This class is templated and spezialized for
+     * Bunch() or Beam() being the field source.
+     * 
+     * \param[in] src The source generating the field.
+     * \param[in] position The center of the screen.
+     * \param[in] dx The x direction/spacing of the grid.
+     * \param[in] dy The y direction/spacing of the grid.
+     * \param[in] nx The number of grid cells in x direction.
+     * \param[in] ny The number of grid cells in y direction.
+     * \param[in] t0 Start time of the trace.
+     * \param[in] dt Time step of the observation trace.
+     * \param[in] nots Number of time steps.
+     */
+    ScreenObserver(
+	sourceT *src,
+	Vector position,
+	Vector dx,
+	Vector dy,
+	unsigned int nx,
+	unsigned int ny,
+	double t0,
+	double dt,
+	unsigned int nots);
+    
+    /*! The source has advanced one time step. Integrate the
+     * fields emitted by the source during this latest step.
+     */
+    void integrate();
+    
+    /*! Return the field value stored in one time slice
+     *  with index it from the grid cell with indices ix, iy
+     */
+    ElMagField getField(
+	unsigned int ix,
+	unsigned int iy,
+	unsigned int it);
+
+private:
+    
+    /*! Compute the center position of the grid cell
+     *  from its indeces
+     */
+    Vector CellPosition(int ix, int iy);
+    
+private:
+    
+    //! the field source
+    sourceT *Source;
+    
+    //! the origin of the grid
+    Vector O;
+    
+    //! the x-direction vector of the grid
+    Vector dX;
+    
+    //! the y-direction vector of the grid
+    Vector dY;
+
+    //! the normal direction vector of the screen
+    Vector normal;
+    
+    //! the number of grid cells in x direction
+    unsigned int Nx;
+    
+    //! the number of grid cells in x direction
+    unsigned int Ny;
+    
+    //! number of time steps in the interpolated trace
+    unsigned int NOTS;
+    
+    //! the start of the field trace
+    double t0_obs;
+    
+    //! the step of the field trace
+    double dt_obs;
+    
+    /*! the interpolated electromagnetic field is stored in
+     *  a 3-dimensional vector.
+     *  The first (outermost) index is ix.
+     *  The second index is iy.
+     *  The third (innermost) index is the time index.
+     */ 
+    std::vector<std::vector<std::vector<ElMagField>>> TimeDomainField;
 
 };
