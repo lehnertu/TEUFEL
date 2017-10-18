@@ -58,6 +58,7 @@
 #include "undulator.h"
 #include <iostream>
 #include <fstream>
+#include <time.h>
 
 int NOP = 1e3;
 int NOTS = 4000;    // number of time steps
@@ -145,10 +146,13 @@ int main()
 	single, Vector(0.0, 0.0, 10.0), t0, 0.05e-13, 3000);
     PointObserver<Bunch> bunchObs = PointObserver<Bunch>(
 	bunch, Vector(0.0, 0.0, 10.0), t0, 0.05e-13, 3000);
-    // PointObserver<Beam> beamObs = PointObserver<Beam>(beam, Vector(0.0, 0.0, 10.0), t0, 0.05e-13, 3000);
+
     // do the tracking of the beam
     printf("tracking particles ... ");
     fflush(stdout);
+    // record the start time
+    timespec start_time;
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
     for (int step=0; step<NOTS; step++)
     {
 	beam->StepVay(lattice);
@@ -159,11 +163,16 @@ int main()
 	// printf("bunch ... ");
 	// printf(" z(avg.)= %6.3f ", bunch->avgPosition().z);
 	bunchObs.integrate();
-	// beamObs->integrate();
 	// printf("\n");
     }
+    // record the finish time
+    timespec stop_time;
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop_time);
     printf("done.\n");
-    
+    double elapsed = stop_time.tv_sec-start_time.tv_sec +
+	1e-9*(stop_time.tv_nsec-start_time.tv_nsec);
+    printf("time elapsed during tracking : %9.3f s\n",elapsed);
+	
     // create a trajectory dump fo the single electron
     /*
     int retval = electron->WriteTrajectorySDDS("elbe-u300_Trajectory.sdds");

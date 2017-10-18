@@ -99,14 +99,14 @@ int PointObserver<sourceT>::WriteTimeDomainFieldSDDS(const char *filename)
 	return 4;
     }
     // start a page with number of lines equal to the number of trajectory points
-    cout << "SDDS start page" << endl;
+    // cout << "SDDS start page" << endl;
     if (SDDS_StartPage(&data,(int32_t)NOTS) !=1 )
     {
 	cout << "WriteSDDS - error starting page\n";
 	return 5;
     }
     // write the single valued variables
-    cout << "SDDS write parameters" << endl;
+    // cout << "SDDS write parameters" << endl;
     if  ( SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, "NumberTimeSteps",NOTS, NULL ) != 1 || 
 	SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, "t0",t0_obs, NULL ) != 1 ||
 	SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, "dt",dt_obs, NULL ) != 1
@@ -116,7 +116,7 @@ int PointObserver<sourceT>::WriteTimeDomainFieldSDDS(const char *filename)
 	return 6;
     }
     // write the table of trajectory data
-    cout << "SDDS writing " << NOTS << " field values" << endl;
+    // cout << "SDDS writing " << NOTS << " field values" << endl;
     for( int i=0; i<NOTS; i++)
     {
 	if (SDDS_SetRowValues(&data,
@@ -147,10 +147,10 @@ int PointObserver<sourceT>::WriteTimeDomainFieldSDDS(const char *filename)
 	return 9;
     }	
     // no errors have occured if we made it 'til here
-    cout << "writing SDDS done." << endl;
+    // cout << "writing SDDS done." << endl;
     return 0;
 }
 
 // we have to instantiate the class for every possible source type
 template class PointObserver<Bunch>;
-// template class PointObserver<Beam>;
+template class PointObserver<Beam>;

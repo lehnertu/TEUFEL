@@ -80,3 +80,17 @@ int Beam::WriteWatchPointHDF5(const char *filename)
 {
     return 0;
 }
+
+void Beam::integrateFieldTrace(
+    Vector ObservationPoint,
+    double t0,
+    double dt,
+    int nots,
+    std::vector<ElMagField> *ObservationField)
+{
+    // just do the summation over all te bunches
+    for(int i=0; i<NOB; i++)
+    {
+	B[i]->integrateFieldTrace(ObservationPoint,t0,dt,nots,ObservationField);
+    }
+}

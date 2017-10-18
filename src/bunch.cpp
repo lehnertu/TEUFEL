@@ -243,14 +243,14 @@ int Bunch::WriteWatchPointSDDS(const char *filename)
 	return 4;
     }
     // start a page with number of lines equal to the number of trajectory points
-    cout << "SDDS start page" << endl;
+    // cout << "SDDS start page" << endl;
     if (SDDS_StartPage(&data,(int32_t)NOP) !=1 )
     {
 	cout << "Bunch::WriteWatchPointSDDS - error starting page\n";
 	return 5;
     }
     // write the single valued variables
-    cout << "SDDS write parameters" << endl;
+    // cout << "SDDS write parameters" << endl;
     if( SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,
 	"NumberOfParticles",NOP,
 	NULL ) !=1
@@ -260,7 +260,7 @@ int Bunch::WriteWatchPointSDDS(const char *filename)
 	return 6;
     }
     // write the table of particle data
-    cout << "SDDS writing " << NOP << " particles" << endl;
+    // cout << "SDDS writing " << NOP << " particles" << endl;
     for( int i=0; i<NOP; i++)
     {
 	double t = P[i]->getTime();
@@ -298,7 +298,7 @@ int Bunch::WriteWatchPointSDDS(const char *filename)
 	return 9;
     }	
     // no errors have occured if we made it 'til here
-    cout << "writing SDDS done." << endl;
+    // cout << "writing SDDS done." << endl;
     return 0;
 }
 
