@@ -147,7 +147,8 @@ public:
      * The screen normal is perpendicular to both oriented such
      * that (x,y,n) form a right-handed coordinate system.
      * If nxy are odd then the (nxy-1)/2 indexed grid cell
-     * (index running 0...nxy-1) will have its center exactly at position.
+     * (index running 0...nxy-1) will have its center exactly
+     * at the screen center position.
      * 
      * The field is recorded in time domain
      * starting at t0 with nots equidistant time steps of dt length.
@@ -193,6 +194,27 @@ public:
 	unsigned int ix,
 	unsigned int iy,
 	unsigned int it);
+
+    /*! Write all the time-domain field traces into an HDF5 file.
+     * 
+     * - 3 componenets of the electric field [V/m]
+     * - 3 componenets of the magnetic field [T]
+     * 
+     * @return values for error checks:
+     *	 
+     *	0  -  successfully Written the file\n
+     *	1  -  error creating HDF5 file\n
+     *	2  -  error crating HDF5 dataspace\n
+     *	3  -  error creating HDF5 property list\n
+     *	4  -  error creating HDF5 dataset\n
+     *	5  -  error writing HDF5 dataset\n
+     *	6  -  error error releasing HDF5 property list\n
+     *	7  -  error releasing HDF5 dataset\n
+     *	8  -  error releasing HDF5 dataspace\n
+     *	9  -  error closing HDF5 file\n
+     * 
+     */
+    int WriteTimeDomainFieldHDF5(const char *filename);
 
 private:
     

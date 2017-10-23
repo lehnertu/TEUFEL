@@ -61,8 +61,8 @@
 #include <fstream>
 #include <time.h>
 
-int NOP = 1e3;
-int NOTS = 4000;    // number of time steps
+int NOP = 1e2;
+int NOTS = 2000;    // number of time steps
 
 int main()
 {
@@ -147,6 +147,17 @@ int main()
 	single, Vector(0.0, 0.0, 10.0), t0, 0.05e-13, 3000);
     PointObserver<Bunch> bunchObs = PointObserver<Bunch>(
 	bunch, Vector(0.0, 0.0, 10.0), t0, 0.05e-13, 3000);
+    ScreenObserver<Bunch> screenObs = ScreenObserver<Bunch>(
+	bunch,
+	Vector(0.0, 0.0, 10.0),		// position
+	Vector(0.01, 0.0, 0.0),		// dx
+	Vector(0.0, 0.01, 0.0),		// dy
+	11,				// unsigned int nx,
+	7,				// unsigned int ny,
+	t0,
+	0.05e-13,			// double dt,
+	3000);				// NOTS
+
     // log the Parameters of the bunch
     TrackingLogger<Bunch> *bunchLog = new TrackingLogger<Bunch>(bunch);
     
@@ -166,6 +177,7 @@ int main()
 	// printf("bunch ... ");
 	// printf(" z(avg.)= %6.3f ", bunch->avgPosition().z);
 	bunchObs.integrate();
+	screenObs.integrate();
 	// printf("\n");
 	// log every 10th step
 	if (step % 10 == 0) bunchLog->update();
@@ -198,16 +210,6 @@ int main()
     {
 	printf("SDDS file written - \033[1;32m OK\033[0m\n");
     }
-    /*
-    if (0 != bunch->WriteWatchPointHDF5(tau, "elbe-u300_final.h5"))
-    {
-	printf("HDF5 write \033[1;31m failed!\033[0m\n");
-    }
-    else
-    {
-	printf("HDF5 file written - \033[1;32m OK\033[0m\n");
-    }
-    */
     
     // write field time traces
     retval = singleObs.WriteTimeDomainFieldSDDS("elbe-u300_SingleEl_ObsRadField.sdds");
@@ -227,6 +229,15 @@ int main()
     else
     {
 	printf("SDDS time domain field written - \033[1;32m OK\033[0m\n");
+    }
+    retval = screenObs.WriteTimeDomainFieldHDF5("elbe-u300_Screen_ObsRadField.h5");
+    if (0 != retval)
+    {
+	printf("HDF5 write \033[1;31m failed! - error %d\033[0m\n", retval);
+    }
+    else
+    {
+	printf("Screen observer time domain field written - \033[1;32m OK\033[0m\n");
     }
 
     /*
@@ -248,7 +259,10 @@ int main()
     delete lattice;
     // deleting the beam automatically
     // deletes all bunches and particles belonging to it
+    delete dist;
     delete beam;
-
+    // delete observers and loggers
+    delete bunchLog;
+    
     return 0;
 }
