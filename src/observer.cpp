@@ -112,7 +112,7 @@ int PointObserver<sourceT>::WriteTimeDomainFieldSDDS(const char *filename)
 	SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, "dt",dt_obs, NULL ) != 1
     )
     {
-	cout << "ChargedParticle::WriteSDDS - error setting parameters\n";
+	cout << "WriteSDDS - error setting parameters\n";
 	return 6;
     }
     // write the table of trajectory data

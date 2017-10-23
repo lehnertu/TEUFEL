@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include <vector>
 #include "fields.h"
 #include "vector.h"
 

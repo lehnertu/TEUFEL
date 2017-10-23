@@ -41,6 +41,7 @@ OBJECTS_DIR   = ./obj
 SRC = 	$(SRCDIR)/beam.cpp \
 	$(SRCDIR)/bunch.cpp \
 	$(SRCDIR)/fields.cpp \
+	$(SRCDIR)/logger.cpp\
 	$(SRCDIR)/observer.cpp\
 	$(SRCDIR)/particle.cpp\
 	$(SRCDIR)/simulation.cpp\
@@ -53,6 +54,7 @@ SRC = 	$(SRCDIR)/beam.cpp \
 OBJ = 	$(OBJDIR)/beam.o \
 	$(OBJDIR)/bunch.o \
 	$(OBJDIR)/fields.o \
+	$(OBJDIR)/logger.o \
 	$(OBJDIR)/observer.o \
 	$(OBJDIR)/particle.o \
 	$(OBJDIR)/simulation.o \
@@ -102,6 +104,7 @@ $(OBJ): $(SRCDIR)/beam.h \
 	$(SRCDIR)/bunch.h \
 	$(SRCDIR)/global.h \
 	$(SRCDIR)/fields.h \
+	$(SRCDIR)/logger.h \
 	$(SRCDIR)/observer.h \
 	$(SRCDIR)/particle.h \
 	$(SRCDIR)/simulation.h \

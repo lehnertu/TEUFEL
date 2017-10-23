@@ -52,6 +52,7 @@
 #include "bunch.h"
 #include "beam.h"
 #include "global.h"
+#include "logger.h"
 #include "observer.h"
 #include "particle.h"
 #include "fields.h"
@@ -146,7 +147,9 @@ int main()
 	single, Vector(0.0, 0.0, 10.0), t0, 0.05e-13, 3000);
     PointObserver<Bunch> bunchObs = PointObserver<Bunch>(
 	bunch, Vector(0.0, 0.0, 10.0), t0, 0.05e-13, 3000);
-
+    // log the Parameters of the bunch
+    TrackingLogger<Bunch> *bunchLog = new TrackingLogger<Bunch>(bunch);
+    
     // do the tracking of the beam
     printf("tracking particles ... ");
     fflush(stdout);
@@ -164,6 +167,8 @@ int main()
 	// printf(" z(avg.)= %6.3f ", bunch->avgPosition().z);
 	bunchObs.integrate();
 	// printf("\n");
+	// log every 10th step
+	if (step % 10 == 0) bunchLog->update();
     }
     // record the finish time
     timespec stop_time;
@@ -173,9 +178,8 @@ int main()
 	1e-9*(stop_time.tv_nsec-start_time.tv_nsec);
     printf("time elapsed during tracking : %9.3f s\n",elapsed);
 	
-    // create a trajectory dump fo the single electron
-    /*
-    int retval = electron->WriteTrajectorySDDS("elbe-u300_Trajectory.sdds");
+    // create a tracking parameter dump fo the bunch
+    int retval = bunchLog->WriteBeamParametersSDDS("elbe-u300_BeamParam.sdds");
     if (0 != retval)
     {
 	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
@@ -184,7 +188,6 @@ int main()
     {
         printf("SDDS file written - \033[1;32m OK\033[0m\n");
     }
-    */
 
     // create a particle dump of the final distribution
     if (0 != bunch->WriteWatchPointSDDS("elbe-u300_final.sdds"))
@@ -207,7 +210,7 @@ int main()
     */
     
     // write field time traces
-    int retval = singleObs.WriteTimeDomainFieldSDDS("elbe-u300_SingleEl_ObsRadField.sdds");
+    retval = singleObs.WriteTimeDomainFieldSDDS("elbe-u300_SingleEl_ObsRadField.sdds");
     if (0 != retval)
     {
 	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);

@@ -191,10 +191,14 @@ public:
     //! @brief Current time of the bunch
     double getTime();
     
-    //! @brief Average position of all particles
+    /*! @brief Average position of all particles
+     *  The averiging gives equal weight to all particles
+     */
     Vector avgPosition();
     
-    //! @brief Average momentum of all particles
+    /*! @brief Average momentum of all particles
+     *  The averiging gives equal weight to all particles
+     */
     Vector avgMomentum();
 
     /*! Dump all particle information into an SDDS file.
