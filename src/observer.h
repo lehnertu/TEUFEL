@@ -22,6 +22,7 @@
 #pragma once
 
 #include <vector>
+#include "global.h"
 #include "fields.h"
 #include "vector.h"
 
@@ -196,23 +197,20 @@ public:
 	unsigned int it);
 
     /*! Write all the time-domain field traces into an HDF5 file.
+     *  Data is divided into 2 data sets
      * 
-     * - 3 componenets of the electric field [V/m]
-     * - 3 componenets of the magnetic field [T]
+     *  "ObservationPosition" :
+     *  - 2D array of cell center position (Vector) [m]
+     *  - Attributes : Nx, Ny
      * 
-     * @return values for error checks:
-     *	 
-     *	0  -  successfully Written the file\n
-     *	1  -  error creating HDF5 file\n
-     *	2  -  error crating HDF5 dataspace\n
-     *	3  -  error creating HDF5 property list\n
-     *	4  -  error creating HDF5 dataset\n
-     *	5  -  error writing HDF5 dataset\n
-     *	6  -  error error releasing HDF5 property list\n
-     *	7  -  error releasing HDF5 dataset\n
-     *	8  -  error releasing HDF5 dataspace\n
-     *	9  -  error closing HDF5 file\n
+     *  "ElMagField" :
+     *  - 2D array [Nx,Ny] of field traces
+     *    - [NOTS] array of ElMagField
+     *      - 3 componenets of the electric field [V/m]
+     *      - 3 componenets of the magnetic field [T]
+     *  - Atributes : t0_obs, dt_obs, NOTS
      * 
+     * @throws IOexception
      */
     int WriteTimeDomainFieldHDF5(const char *filename);
 
@@ -249,10 +247,10 @@ private:
     //! number of time steps in the interpolated trace
     unsigned int NOTS;
     
-    //! the start of the field trace
+    //! the start time of the field trace
     double t0_obs;
     
-    //! the step of the field trace
+    //! the time step of the field trace
     double dt_obs;
     
     /*! the interpolated electromagnetic field is stored in

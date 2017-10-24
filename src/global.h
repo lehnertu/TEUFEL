@@ -27,6 +27,10 @@
  * @file global.h
  */
 
+#pragma once
+
+#include <exception>
+
 #define ElementaryCharge 1.6021766208e-19       // [As]
 #define mecsquared 0.5109989461e6               // electron mass [eV]
 #define SpeedOfLight 2.99792458e8               // [m/s]
@@ -37,3 +41,17 @@
 
 // the electron rest mass in kg can be obtained as
 // mecsquared*ElementaryCharge/SpeedOfLight^2
+
+/*! 
+ * \class IOexception
+ * \brief Class for exceptions returning a user-defined message.
+ * @author Ulf Lehnert
+ * @date 24.10.2017
+ */
+class IOexception: public std::exception
+{
+public:
+    IOexception(const char* message) {m=message;}
+    virtual const char* what() const throw() {return m;};
+    const char* m;
+};

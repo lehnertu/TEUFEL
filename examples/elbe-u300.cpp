@@ -230,15 +230,12 @@ int main()
     {
 	printf("SDDS time domain field written - \033[1;32m OK\033[0m\n");
     }
-    retval = screenObs.WriteTimeDomainFieldHDF5("elbe-u300_Screen_ObsRadField.h5");
-    if (0 != retval)
-    {
-	printf("HDF5 write \033[1;31m failed! - error %d\033[0m\n", retval);
-    }
-    else
-    {
+    try
+    { 
+	screenObs.WriteTimeDomainFieldHDF5("elbe-u300_Screen_ObsRadField.h5");
 	printf("Screen observer time domain field written - \033[1;32m OK\033[0m\n");
     }
+    catch (exception& e) { cout << e.what() << endl;}
 
     /*
     // write frequency spectrum to file
