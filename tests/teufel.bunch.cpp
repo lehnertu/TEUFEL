@@ -56,11 +56,6 @@ int main ()
     // count the errors
     int errors = 0;
 
-    // create an empty lattice
-    Lattice* lattice = new Lattice;
-
-    Bunch *B = new Bunch(NOP, -1.0, 1.0);
-
     double gamma = 50.0;
     double betagamma = sqrt(gamma * gamma - 1.0);
     Distribution *dist = new Distribution(6, NOP);
@@ -70,25 +65,21 @@ int main ()
     dist->generateGaussian(0.000, 0.001, 3);	// px gaussian
     dist->generateGaussian(0.000, 0.001, 4);	// py gaussian
     dist->generateGaussian(betagamma, 0.001, 5);	// pz gaussian
-
-    B->InitVay(dist, 1e-12, lattice);
+    Bunch *B = new Bunch(dist, -1.0, 1.0);
 
     for (int i=0; i<6; i++)
     {
-	Vector X = Vector(3.0,2.0,1.0);
 	ChargedParticle *P = B->getParticle(i);
-	X = P->TrajPoint(0);
+	Vector X = P->getPosition();
 	printf("(%d): x=%g",i,X.x);
 	printf(" z=%g\n",X.z);
-	X = Vector(3.0,2.0,1.0);
-	Vector BG;
-	P->CoordinatesAtTime(0.0, &X, &BG);
-	printf("(%d): x=%g",i,X.x);
-	printf(" z=%g\n",X.z);
+	Vector BG = P->getMomentum();
+	printf("(%d): bg.x=%g",i,BG.x);
+	printf(" bg.z=%g\n",BG.z);
     }
     
     // create a particle dump
-    if (0 != B->WriteWatchPointSDDS(0.0, "teufel_bunch_start.sdds"))
+    if (0 != B->WriteWatchPointSDDS("teufel_bunch_start.sdds"))
     {
 	errors++;
 	printf("SDDS write \033[1;31m failed!\033[0m\n");

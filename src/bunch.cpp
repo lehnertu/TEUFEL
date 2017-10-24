@@ -22,6 +22,7 @@
 #include "bunch.h"
 #include "particle.h"
 #include "global.h"
+#include <math.h>
 #include <random>
 #include <iostream>
 #include "SDDS.h"
@@ -91,11 +92,13 @@ double Distribution::getCoordinate(int index, int dim)
 Bunch::Bunch()
 {
     NOP = 0;
+    time = 0.0;
 }
 
 Bunch::Bunch(int N, double charge, double mass)
 {
     NOP = N;
+    time = 0.0;
     for(int i=0; i<NOP; i++)
     {
 	P.push_back(new ChargedParticle(charge,mass));
@@ -105,14 +108,37 @@ Bunch::Bunch(int N, double charge, double mass)
 Bunch::Bunch(Bunch* origin)
 {
     NOP = origin->getNOP();
+    time = origin->getTime();
     for(int i=0; i<NOP; i++)
     {
 	P.push_back(new ChargedParticle(origin->getParticle(i)));
     }
 }
 
+Bunch::Bunch(Distribution *dist, double charge, double mass)
+{
+    NOP = dist->getNOP();
+    time = 0.0;
+    for(int i=0; i<NOP; i++)
+    {
+	ChargedParticle *p = new ChargedParticle(charge,mass);
+	p->setTime( dist->getCoordinate(i,6) );
+	Vector X0 = Vector(dist->getCoordinate(i,0),
+			   dist->getCoordinate(i,1),
+			   dist->getCoordinate(i,2));
+	p->setPosition( X0 );
+	Vector P0 = Vector(dist->getCoordinate(i,3),
+			   dist->getCoordinate(i,4),
+			   dist->getCoordinate(i,5));
+	p->setMomentum( P0 );
+	P.push_back(p);
+    }
+}
+
 Bunch::~Bunch()
 {
+    for(int i=0; i<NOP; i++)
+	delete P[i];
 }
 
 void Bunch::Add(ChargedParticle *part)
@@ -141,64 +167,46 @@ ChargedParticle* Bunch::getParticle(int i)
     return P[i];
 }
 
-void Bunch::InitVay(Distribution *dist,
-		    double tstep,
-		    GeneralField* field)
+void Bunch::InitVay(double tstep,
+		    GeneralField *field)
 {
     dt = tstep;
+    time = 0.0;
     for(int i=0; i<NOP; i++)
     {
-	Vector X0 = Vector(dist->getCoordinate(i,0),
-			   dist->getCoordinate(i,1),
-			   dist->getCoordinate(i,2));
-	Vector P0 = Vector(dist->getCoordinate(i,3),
-			   dist->getCoordinate(i,4),
-			   dist->getCoordinate(i,5));
-	double t0 = dist->getCoordinate(i,6);
-	P[i]->InitVay(t0, X0, P0, tstep, field);
+	P[i]->InitVay(tstep, field);
     }
 }
 
-void Bunch::StepVay(GeneralField* field)
+void Bunch::StepVay(GeneralField *field)
 {
+    time += dt;
     for(int i=0; i<NOP; i++)
     {
 	P[i]->StepVay(field);
     }
 }
 
-ElMagField Bunch::RetardedField(double time, Vector ObservationPoint)
+double Bunch::getTime()
 {
-    ElMagField field; // automatically initalized to zero
-    // sum up the fields of all particles
-    for(int i=0; i<NOP; i++)
-	field += P[i]->RetardedField(time, ObservationPoint);
-    return field;
+    return time;
 }
 
-void Bunch::getTimeDomainField(
-    Vector ObservationPoint,
-    double t0,
-    double dt,
-    int nots,
-    std::vector<ElMagField> *ObservationField)
+Vector Bunch::avgPosition()
 {
-    std::vector<ElMagField> ParticleField;
-    // preset the return field with an empty trace
-    ElMagField field; // automatically initalized to zero
-    ObservationField->clear();
-    for (int i=0; i<nots; i++)
-	ObservationField->push_back(field);
-    // sum up the fields of all particles
-    for(int i=0; i<NOP; i++)
-    {
-	P[i]->getTimeDomainField(ObservationPoint, t0, dt, nots, &ParticleField);
-	for (int i=0; i<nots; i++) ObservationField->at(i) += ParticleField[i];
-    }
+    Vector pos;
+    for(int i=0; i<NOP; i++) pos += P[i]->getPosition();
+    return pos*(1.0/NOP);
 }
 
-int Bunch::WriteWatchPointSDDS(double time,
-			       const char *filename)
+Vector Bunch::avgMomentum()
+{
+    Vector mom;
+    for(int i=0; i<NOP; i++) mom += P[i]->getMomentum();
+    return mom*(1.0/NOP);
+}
+
+int Bunch::WriteWatchPointSDDS(const char *filename)
 {
     cout << "writing SDDS file " << filename << endl;
     SDDS_DATASET data;
@@ -235,14 +243,14 @@ int Bunch::WriteWatchPointSDDS(double time,
 	return 4;
     }
     // start a page with number of lines equal to the number of trajectory points
-    cout << "SDDS start page" << endl;
+    // cout << "SDDS start page" << endl;
     if (SDDS_StartPage(&data,(int32_t)NOP) !=1 )
     {
 	cout << "Bunch::WriteWatchPointSDDS - error starting page\n";
 	return 5;
     }
     // write the single valued variables
-    cout << "SDDS write parameters" << endl;
+    // cout << "SDDS write parameters" << endl;
     if( SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,
 	"NumberOfParticles",NOP,
 	NULL ) !=1
@@ -252,15 +260,15 @@ int Bunch::WriteWatchPointSDDS(double time,
 	return 6;
     }
     // write the table of particle data
-    cout << "SDDS writing " << NOP << " particles" << endl;
+    // cout << "SDDS writing " << NOP << " particles" << endl;
     for( int i=0; i<NOP; i++)
     {
-	Vector X, BG;
-	// query the particle for its coordinates at the given time
-	P[i]->CoordinatesAtTime(time, &X, &BG);
+	double t = P[i]->getTime();
+	Vector X = P[i]->getPosition();
+	Vector BG = P[i]->getMomentum();
 	if( SDDS_SetRowValues(&data,
 	    SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,i,
-	    "t",time,
+	    "t",t,
 	    "x",X.x,
 	    "y",X.y,
 	    "z",X.z,
@@ -290,12 +298,11 @@ int Bunch::WriteWatchPointSDDS(double time,
 	return 9;
     }	
     // no errors have occured if we made it 'til here
-    cout << "writing SDDS done." << endl;
+    // cout << "writing SDDS done." << endl;
     return 0;
 }
 
-int Bunch::WriteWatchPointHDF5(double time,
-			const char *filename)
+int Bunch::WriteWatchPointHDF5(const char *filename)
 {
     herr_t status;
     cout << "writing HDF5 file " << filename << endl;
@@ -322,9 +329,8 @@ int Bunch::WriteWatchPointHDF5(double time,
     double *bp = buffer;
     for( int i=0; i<NOP; i++)
     {
-	Vector X, BG;
-	// query the particle for its coordinates at the given time
-	P[i]->CoordinatesAtTime(time, &X, &BG);
+	Vector X = P[i]->getPosition();
+	Vector BG = P[i]->getMomentum();
 	*bp++ = X.x;
 	*bp++ = X.y;
 	*bp++ = X.z;
@@ -390,4 +396,99 @@ int Bunch::WriteWatchPointHDF5(double time,
     // no errors have occured if we made it 'til here
     cout << "writing HDF5 done." << endl;
     return 0;
+}
+
+void Bunch::integrateFieldTrace(
+	Vector ObservationPoint,
+	double t0,
+	double dt,
+	int nots,
+	std::vector<ElMagField> *ObservationField)
+{
+    // cout << "Bunch::integrateFieldTrace() NOP=" << NOP << endl;
+    double tmax=t0+dt*nots;
+    for (int i=0; i<NOP; i++)
+    {
+	double ts1 = P[i]->PreviousRetardedTime(ObservationPoint);
+	double ts2 = P[i]->RetardedTime(ObservationPoint);
+	double dts = ts2-ts1;
+	ElMagField field;
+	if ((ts2>t0) && (ts1<tmax))
+	// else - time step is completely outside observation range
+	{
+	    ElMagField f1 = P[i]->PreviousRetardedField(ObservationPoint);
+	    ElMagField f2 = P[i]->RetardedField(ObservationPoint);
+	    if (ts1<=t0)
+	    // if (ts2<=tmax) time step is entering the observation range
+	    // else time step is covering the entire observation range
+	    // both cases are handled with the same code
+	    {
+		// observation bucket in which the step end falls
+		int idx2 = floor((ts2-t0)/dt);
+		if (idx2>nots) idx2=nots;
+		// handle all fully covered buckets
+		for (int idx=0; idx<idx2; idx++)
+		{
+		    double t_center = t0 + (idx+0.5)*dt;
+		    field = f1*((ts2-t_center)/dts) + f2*((t_center-ts1)/dts);
+		    ObservationField->at(idx) += field;
+		    // cout << " idx=" << idx;
+		};
+		// handle the last (partially covered) bucket
+		if (idx2<nots)
+		{
+		    double t_start = t0+idx2*dt;
+		    ElMagField f_start = f1*((ts2-t_start)/dts) + f2*((t_start-ts1)/dts);
+		    field = (f_start+f2)*0.5*((ts2-t_start)/dt);
+		    ObservationField->at(idx2) += field;
+		    // cout << " idx2=" << idx2;
+		};
+	    }
+	    else
+	    // if (ts2<=tmax) time step is fully inside observation range
+	    // else time step is leaving the observation range
+	    // both cases are handled with the same code
+	    {
+		// observation bucket in which the step start falls
+		int idx1 = floor((ts1-t0)/dt);
+		// observation bucket in which the step end falls
+		int idx2 = floor((ts2-t0)/dt);
+		if (idx2>nots) idx2=nots;
+		if (idx1==idx2)
+		// time step if fully within one bucket
+		{
+		    field = (f1+f2)*0.5*(dts/dt);
+		    ObservationField->at(idx1) += field;
+		    // cout << " idx12=" << idx1;
+		}
+		else
+		{
+		    // handle the first (partially covered) bucket
+		    double t_end = t0+(idx1+1)*dt;
+		    ElMagField f_end = f1*((ts2-t_end)/dts) + f2*((t_end-ts1)/dts);
+		    field = (f1+f_end)*0.5*((t_end-ts1)/dt);
+		    ObservationField->at(idx1) += field;
+		    // cout << " idx1=" << idx1;
+		    // handle all fully covered buckets
+		    for (int idx=idx1+1; idx<idx2; idx++)
+		    {
+			double t_center = t0 + (idx+0.5)*dt;
+			field = f1*((ts2-t_center)/dts) + f2*((t_center-ts1)/dts);
+			ObservationField->at(idx) += field;
+			// cout << " idx=" << idx;
+		    };
+		    // handle the last (partially covered) bucket
+		    if (idx2<nots)
+		    {
+			double t_start = t0+idx2*dt;
+			ElMagField f_start = f1*((ts2-t_start)/dts) + f2*((t_start-ts1)/dts);
+			field = (f_start+f2)*0.5*((ts2-t_start)/dt);
+			ObservationField->at(idx2) += field;
+			// cout << " idx2=" << idx2;
+		    };
+		}
+	    };
+	};
+	// cout << endl;
+    };
 }

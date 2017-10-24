@@ -57,10 +57,6 @@
     
     @return The number of errors encountered in the above list of checks is reported.
     
-    @todo A rather large number of time steps is required in order to obtain a
-    reasonable accuracy of the compued field. Most likely, the interpolation of the trajectory
-    data needs some improvement.
-    
  */
 
 #include <math.h>
@@ -70,9 +66,11 @@
 
 #include "global.h"
 #include "particle.h"
+#include "bunch.h"
 #include "fields.h"
+#include "observer.h"
 
-int NOTS = 5000;                // number of time steps
+int NOTS = 100;                // number of time steps
 
 int main ()
 {
@@ -108,20 +106,34 @@ int main ()
 
     // initial position at the origin
     Vector X0 = Vector(0.0, 0.0, 0.0);
+    electron->setPosition(X0);
     // initial momentum of the particle
     Vector P0 = Vector(0.0,0.0,betagamma);
-    
-    // track for the time it takes to complete one circle 
-    double deltaT = tau / NOTS;
-    // electron->TrackVay(NOTS, deltaT, X0, P0, lattice);
-    electron->InitVay(0.0, X0, P0, deltaT, lattice);
-    for (int i=0; i<NOTS; i++)
-	electron->StepVay(lattice);
+    electron->setMomentum(P0);
+
+    // create a bunch that can be observed containing just this one electron
+    Bunch *bunch = new Bunch();
+    bunch->Add(electron);
+
+    // calculate the radiation fields at the time the electron finishes the loop
+    // the radiation field is observed at the centre of the loop at (R,0,0)
+    // define the observer at the center of the circle
+    // just one time slice of (essentially) zero duration at t=tau
+    PointObserver<Bunch> Obs = PointObserver<Bunch>(bunch, Vector(-Radius,0.0,0.0), tau, 1.0e-15, 1);
     
     // count the errors
     int errors = 0;
   
-    Vector MPos=electron->TrajPoint(NOTS/2);
+    // track for the time it takes to complete one half circle 
+    double deltaT = 0.5*tau / NOTS;
+    electron->InitVay(deltaT, lattice);
+    for (int i=0; i<NOTS; i++)
+    {
+	electron->StepVay(lattice);
+	Obs.integrate();
+    };
+    
+    Vector MPos=electron->getPosition();
     printf("half-loop position = (%10.3g, %10.3g %10.3g) m  ", MPos.x, MPos.y, MPos.z);
     if ((MPos-Vector(-2.0*Radius, 0.0, 0.0)).norm()>1.0e-3)
     {
@@ -131,7 +143,14 @@ int main ()
 	printf(" - \033[1;32m OK\033[0m\n");
     }
     
-    Vector FPos=electron->TrajPoint(NOTS);
+    // track for the second half circle 
+    for (int i=0; i<NOTS; i++)
+    {
+	electron->StepVay(lattice);
+	Obs.integrate();
+    };
+    
+    Vector FPos=electron->getPosition();
     printf("final position = (%10.3g, %10.3g %10.3g) m  ", FPos.x, FPos.y, FPos.z);
     if ((FPos-X0).norm()>1.0e-4)
     {
@@ -142,22 +161,21 @@ int main ()
     }
     
     // look for the momentum changes
-    Vector FMom=electron->TrajMomentum(NOTS);
+    Vector FMom=electron->getMomentum();
     if (fabs(FMom.norm()-P0.norm()) > 1.0e-3) {
 	errors++;
 	printf("Final Momentum = %12.5f - \033[1;31m test failed!\033[0m\n", FMom.norm());
     } else {
 	printf("Final Momentum = %12.5f - \033[1;32m OK\033[0m\n",FMom.norm());}
 
-    // calculate the radiation fields at the time the electron finishes the loop
-    // the radiation field is observed at the centre of the loop at (R,0,0)
-    ElMagField Obs = electron->RetardedField(tau,Vector(-Radius,0.0,0.0));
+    // check the field value
+    ElMagField field = Obs.getField(0);
     
-    if (fabs(Obs.B().norm()-RadBField)/RadBField > 1.0e-3) {
+    if (fabs(field.B().norm()-RadBField)/RadBField > 1.0e-3) {
 	errors++;
-	printf("Field observed = %12.5g T \033[1;31m test failed!\033[0m\n", Obs.B().norm());
+	printf("Field observed = %12.5g T \033[1;31m test failed!\033[0m\n", field.B().norm());
     } else {
-	printf("Field observed = %12.5g T- \033[1;32m OK\033[0m\n",Obs.B().norm());
+	printf("Field observed = %12.5g T - \033[1;32m OK\033[0m\n",field.B().norm());
     }
 
     // clean up

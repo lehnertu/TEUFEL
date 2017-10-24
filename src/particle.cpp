@@ -24,45 +24,58 @@
 
 #include <iostream>
 #include <math.h>
-#include "SDDS.h"
 
 ChargedParticle::ChargedParticle()
 {
     Charge = -1.0;
     Mass = 1.0;
-    // no trajectory points
-    NP = 0;
+    PreviousTime = 0.0;
+    Time = 0.0;
+    PreviousX = Vector(0.0,0.0,0.0);
+    X = Vector(0.0,0.0,0.0);
+    PreviousP = Vector(0.0,0.0,0.0);
+    P = Vector(0.0,0.0,0.0);
+    PreviousA = Vector(0.0,0.0,0.0);
+    A = Vector(0.0,0.0,0.0);
+    dt = 0.0;
 }
 
 ChargedParticle::ChargedParticle(double charge, double mass)
 {
     Charge = charge;
     Mass = mass;
-    // no trajectory points
-    NP = 0;
+    PreviousTime = 0.0;
+    Time = 0.0;
+    PreviousX = Vector(0.0,0.0,0.0);
+    X = Vector(0.0,0.0,0.0);
+    PreviousP = Vector(0.0,0.0,0.0);
+    P = Vector(0.0,0.0,0.0);
+    PreviousA = Vector(0.0,0.0,0.0);
+    A = Vector(0.0,0.0,0.0);
+    dt = 0.0;
 }
 
-ChargedParticle::ChargedParticle(const ChargedParticle* Part)
+ChargedParticle::ChargedParticle(const ChargedParticle *origin)
 {
-    Charge = Part->Charge;
-    Mass = Part->Mass;
-    NP = Part->NP;
-    if (NP > 0)
-    {
-        Time = Part->Time;
-	X = Part->X;
-        P = Part->P;
-        A = Part->A;
-    }
+    Charge = origin->Charge;
+    Mass = origin->Mass;
+    PreviousTime = origin->PreviousTime;
+    Time = origin->Time;
+    PreviousX = origin->PreviousX;
+    X = origin->X;
+    PreviousP = origin->PreviousP;
+    P = origin->P;
+    PreviousA = origin->PreviousA;
+    A = origin->A;
+    dt = origin->dt;
+    qm = origin->qm;
+    qmt2 = origin->qmt2;
+    VY_p_i1 = origin->VY_p_i1;
+    VY_gamma_i1 = origin->VY_gamma_i1;
 }
 
 ChargedParticle::~ChargedParticle()
 {
-}
-
-int ChargedParticle::getNP()
-{
-    return NP;
 }
 
 int ChargedParticle::getCharge()
@@ -70,193 +83,74 @@ int ChargedParticle::getCharge()
     return Charge;
 }
 
-double ChargedParticle::TrajTime(int step)
+double ChargedParticle::getTime()
 {
-    double t = 0.0;
-    if (step >= 0 && step < NP)
-        t = Time[step];
-    return t;
+    return Time;
 }
 
-Vector ChargedParticle::TrajPoint(int step)
+void ChargedParticle::setTime(double t)
 {
-    Vector p = Vector(0.0, 0.0, 0.0);
-    if (step >= 0 && step < NP)
-        p = X[step];
-    return p;
+    Time = t;
+}
+    
+Vector ChargedParticle::getPosition()
+{
+    return X;
 }
 
-Vector ChargedParticle::TrajMomentum(int step)
+void ChargedParticle::setPosition(Vector x)
 {
-    Vector p = Vector(0.0, 0.0, 0.0);
-    if (step >= 0 && step < NP)
-        p = P[step];
-    return p;
+    X = x;
 }
 
-void ChargedParticle::TrackEuler(
-    int Nstep,       // number of timesteps
-    double tstep,    // time step size
-    Vector X0,       // initial position
-    Vector P0,       // initial momentum
-    GeneralField* lattice)
+Vector ChargedParticle::getMomentum()
 {
-    NP = Nstep + 1;
-    Time.clear();
-    X.clear();
-    P.clear();
-    A.clear();
-    Time.push_back(0.0);
-    X.push_back(X0);
-    P.push_back(P0);
-    double qm = Charge/Mass * InvRestMass ;    // charge over mass
-    double betagamma2 = P0.abs2nd();
-    double gamma = sqrt(betagamma2 + 1.0);
-    Vector beta = P0 / gamma;
-    ElMagField EB = lattice->Field(0.0, X0);
-    Vector efield = EB.E();
-    Vector bfield = EB.B();
-    Vector force = cross(beta, bfield) + efield / SpeedOfLight;
-    Vector dP_dt = force * qm;
-    // store acceleration
-    A.push_back(dP_dt);
-    for (int i = 0; i < NP - 1; i++)
-    {
-	// compute derivatives of the particle motion
-	// used to solve the equation of motion inside an undulator
-	Vector p = P[i];
-	betagamma2 = p.abs2nd();
-	gamma = sqrt(betagamma2 + 1.0);
-	beta = p / gamma;
-	EB = lattice->Field(Time[i], X[i]);
-	efield = EB.E();
-	bfield = EB.B();
-	force = cross(beta, bfield) + efield / SpeedOfLight;
-	Vector dX_dt = beta * SpeedOfLight;
-	dP_dt = force * qm;
-	// store the next trajectory point
-	Time.push_back(Time[i] + tstep);
-	X.push_back(X[i] + dX_dt * tstep);
-	P.push_back(P[i] + dP_dt * tstep);
-	A.push_back(dP_dt);
-    };
+    return P;
 }
 
-void ChargedParticle::TrackVay(
-    int Nstep,
-    double tstep,
-    Vector X0,
-    Vector P0,
-    GeneralField* lattice)
+void ChargedParticle::setMomentum(Vector p)
 {
-    NP = Nstep + 1;
-    Time.clear();
-    Time.resize(NP);
-    X.clear();
-    X.resize(NP);
-    P.clear();
-    P.resize(NP);
-    A.clear();
-    A.resize(NP);
-    // The Vay algorithm defines velocities (momenta) at integer time steps
-    // positions and field are computed at half-step points.
-    // We store all quantities at the half-step points.
-    // The stored velocity is beta_h * gamma_h = u_h / c
-    // u_h := u^(i+1/2)
-    double qm = Charge/Mass * InvRestMass;      // charge over mass
-    double t2 = 0.5 * tstep;                    // half time step
-    double qmt2 = qm * t2;
-    double t_h = 0.0;    // time at the half-step point
-    Vector x_h = X0;     // position at the half-step point
-    Vector p_h = P0;     // momentum at the half-step point
-    double gamma_h = sqrt(p_h.abs2nd() + 1.0);
-    Vector beta_h = p_h / gamma_h;
-    ElMagField EB_h = lattice->Field(t_h, x_h);
-    Vector E_h = EB_h.E();
-    Vector B_h = EB_h.B();
-    Vector dp_dt = (cross(beta_h, B_h) + E_h / SpeedOfLight) * qm;
-    A[0] = dp_dt;
-    // The leap-frog algorithm starts one half-step "before" the initial values
-    // velocity p^(i+1) to be computed at the integer time step i+1
-    // we store this initial velocity in p_i1 which is copied into p_i when we actually do the time step
-    Vector p_i1 = p_h - dp_dt * 0.5 * tstep;
-    double gamma_i1 = sqrt(p_i1.abs2nd() + 1.0);
-    Vector beta_i1 = p_i1 / gamma_i1;
-    for (int i = 0; i < NP; i++)
-    {
-	// velocity u^i at the integer time step i
-	// has been computed in the last time step
-	Vector p_i = p_i1;
-	Vector beta_i = beta_i1;
-	// compute the velocity change over the integer step
-	EB_h = lattice->Field(t_h, x_h);
-	E_h = EB_h.E();
-	B_h = EB_h.B();
-	dp_dt = (cross(beta_i, B_h) + E_h / SpeedOfLight) * qm;
-	p_h = p_i + dp_dt * t2;
-	Vector p_prime = p_h + E_h / SpeedOfLight * qmt2;
-	double gamma_prime = sqrt(p_prime.abs2nd() + 1.0);
-	Vector tau = B_h * qmt2;
-	double u_star = dot(p_prime, tau);
-	double tau2nd = tau.abs2nd();
-	double sigma = gamma_prime * gamma_prime - tau2nd;
-	// eq. (11)
-	gamma_i1 = sqrt(0.5 * (sigma + sqrt(sigma * sigma + 4.0 * (tau2nd + u_star * u_star))));
-	Vector t = tau / gamma_i1;
-	// eq. (12)
-	p_i1 = (p_prime + t * dot(p_prime, t) + cross(p_prime, t)) / (1 + t.abs2nd());
-	beta_i1 = p_i1 / gamma_i1;
-	// store all half-step quantities
-	Time[i] = t_h;
-	X[i] = x_h;
-	P[i] = p_h;
-	A[i] = dp_dt;
-	// compute the change in position and time
-	// for the next step
-	x_h += beta_i1 * SpeedOfLight * tstep;
-	t_h += tstep;
-    };
+    P = p;
 }
 
 /*!
  * Implementation details:
  * ----------------------
  * 
- * The trajectory data is stored for the half-integer time steps of the algorithm.
+ * The trajectory data (position, momentum, acceleration)
+ * is stored for the half-integer time steps of the algorithm.
  * 
- * This initialization routine sets the position and velocity of the first storage
+ * This initialization routine sets the position and velocity of the first
  * point to the given start values and computes the velocity at the end of the
  * time step (half way to the next storage point). The given inital momentum is
  * treated as \f$\mathbf{u}^{i+1/2}\f$ of the algorithm. The computed momentum at the end of
  * the time step is stored in the ChargedParticle::VY_p_i1 variable for use in subsequent time steps.
- * (Note, that instead of \f$\mathbf{u}\f$ we are using \f$\mathbf{p}=\mathbf{u}/c\f$). In addition, we store the relativistic
- * factor belonging to this momentum ChargedParticle::VY_gamma_i1, the charge over mass ratio ChargedParticle::qm
- * and charge over mass divided by the double time step ChargedParticle::qmt2. These values as well
- * as the time step ChargedParticle::dt are constant during the tracking.
+ * (Note, that instead of \f$\mathbf{u}\f$ we are using \f$\mathbf{p}=\mathbf{u}/c\f$).
+ * In addition, we store the relativistic factor belonging to this momentum ChargedParticle::VY_gamma_i1,
+ * the charge over mass ratio ChargedParticle::qm
+ * and charge over mass divided by the double time step ChargedParticle::qmt2.
+ * These values as well as the time step ChargedParticle::dt are constant during the tracking.
  */
 void ChargedParticle::InitVay(
-    double t0,			// time at the half-step point
-	   Vector X0,		// position at the half-step point
-	   Vector P0,		// momentum at the half-step point
 	   double tstep,
 	   GeneralField* field)
 {
-    // clear all old data
-    Time.clear();
-    X.clear();
-    P.clear();
-    A.clear();
+    // clear the one-before trajectory information
+    PreviousTime = Time;
+    PreviousX = X;
+    PreviousP = P;
+    PreviousA = A;
     // preset the fixed values
     dt = tstep;
     qm = Charge/Mass * InvRestMass;
     qmt2 = qm * 0.5 * dt;
     // compute the fields at the center position of the step (which is given)
-    ElMagField EB_h = field->Field(t0, X0);
+    ElMagField EB_h = field->Field(Time, X);
     Vector E_h = EB_h.E();
     Vector B_h = EB_h.B();
     // perform the second half-step to compute the
     // velocity at the end of the time step
-    Vector p_prime = P0 + E_h / SpeedOfLight * qmt2;
+    Vector p_prime = P + E_h / SpeedOfLight * qmt2;
     double gamma2_prime = p_prime.abs2nd() + 1.0;
     Vector tau = B_h * qmt2;
     double u_star = dot(p_prime, tau);
@@ -267,15 +161,9 @@ void ChargedParticle::InitVay(
     Vector t = tau / VY_gamma_i1;
     // eq. (12)
     VY_p_i1 = (p_prime + t * dot(p_prime, t) + cross(p_prime, t)) / (1 + t.abs2nd());
-    // store the trajectory data
-    Time.push_back(t0);
-    X.push_back(X0);
-    P.push_back(P0);
-    double gamma_h = sqrt(P0.abs2nd() + 1.0);
-    Vector beta_h = P0 / gamma_h;
-    A.push_back((cross(beta_h, B_h) + E_h / SpeedOfLight) * qm);
-    // after this step exactly one trajectory point exists
-    NP = 1;
+    double gamma_h = sqrt(P.abs2nd() + 1.0);
+    Vector beta_h = P / gamma_h;
+    A = (cross(beta_h, B_h) + E_h / SpeedOfLight) * qm;
 }
 
 /*!
@@ -297,24 +185,29 @@ void ChargedParticle::InitVay(
  */
 void ChargedParticle::StepVay(GeneralField* field)
 {
+    // keep the one-before trajectory information
+    PreviousTime = Time;
+    PreviousX = X;
+    PreviousP = P;
+    PreviousA = A;
     // the momentum vector at the beginning of the step is known from the previous step
     Vector p_i = VY_p_i1;
     Vector beta_i = p_i / VY_gamma_i1;
     // use eq. (3) to compute the new center position
-    double t_h = Time.back() + dt;
-    Vector x_h = X.back() + beta_i * SpeedOfLight * dt;
+    Time = PreviousTime + dt;
+    X = X + beta_i * SpeedOfLight * dt;
     // compute the fields at the center position of the step
-    ElMagField EB_h = field->Field(t_h, x_h);
+    ElMagField EB_h = field->Field(Time, X);
     Vector E_h = EB_h.E();
     Vector B_h = EB_h.B();
     // perform the first half-step to compute the
     // velocity at the center (half) point using eq. (13)
-    Vector p_h = VY_p_i1 + (E_h/SpeedOfLight + cross(beta_i, B_h)) * qmt2;
-    double gamma_h = sqrt(p_h.abs2nd() + 1.0);
-    Vector beta_h = p_h / gamma_h;
+    P = VY_p_i1 + (E_h/SpeedOfLight + cross(beta_i, B_h)) * qmt2;
+    double gamma_h = sqrt(P.abs2nd() + 1.0);
+    Vector beta_h = P / gamma_h;
     // perform the second half-step to compute the
     // velocity at the end of the time step
-    Vector p_prime = p_h + E_h / SpeedOfLight * qmt2;
+    Vector p_prime = P + E_h / SpeedOfLight * qmt2;
     double gamma2_prime = p_prime.abs2nd() + 1.0;
     Vector tau = B_h * qmt2;
     double u_star = dot(p_prime, tau);
@@ -325,94 +218,28 @@ void ChargedParticle::StepVay(GeneralField* field)
     Vector t = tau / VY_gamma_i1;
     // eq. (12)
     VY_p_i1 = (p_prime + t * dot(p_prime, t) + cross(p_prime, t)) / (1 + t.abs2nd());
-    // store the trajectory data
-    Time.push_back(t_h);
-    X.push_back(x_h);
-    P.push_back(p_h);
-    A.push_back((cross(beta_h, B_h) + E_h / SpeedOfLight) * qm);
-    // keep track of the number of stored trajectory points
-    NP += 1;
+    A = (cross(beta_h, B_h) + E_h / SpeedOfLight) * qm;
 }
 
-void ChargedParticle::Translate(Vector R)
+double ChargedParticle::PreviousRetardedTime(Vector ObservationPoint)
 {
-    for (int i = 0; i < NP; i++)
-    {
-        X[i] = X[i] + R;
-    };
-}
-
-void ChargedParticle::MirrorY(double MirrorY)
-{
-    Charge = -Charge;
-    for (int i = 0; i < NP; i++)
-    {
-        X[i].y = 2.0 * MirrorY - X[i].y;
-        P[i].y = -P[i].y;
-        A[i].y = -A[i].y;
-    };
-}
-
-void ChargedParticle::CoordinatesAtTime(double time, Vector *position, Vector *momentum)
-{
-    // return zero if there is no trajectory
-    if (NP<1)
-    {
-	*position = Vector(1.0, 1.0, 1.0);
-	*momentum = Vector(0.0, 0.0, 0.0);
-	return;
-    };
-    int i1 = 0;    // index of the first trajectory point
-    double t1 = Time[i1];
-    int i2 = NP - 1;    // index of the last trajectory point
-    double t2 = Time[i2];
-    if (time>=t1 && time<=t2)
-    {
-	// reduce the interval until the trajectory segment is found
-	while (i2 - i1 > 1)
-	{
-	    int i = (i2 + i1) / 2;
-	    double t = Time[i];
-	    if (t < time)
-	    {
-		i1 = i;
-		t1 = t;
-	    } else {
-		i2 = i;
-		t2 = t;
-	    }
-	};
-	if (i2==i1)
-	{
-	    *position = X[i1];
-	    *momentum = P[i1];
-	} else {
-	    // interpolate the coordinates within the interval
-	    // interpolation could be improved using higher-order terms
-	    double frac = (time - t1) / (t2 - t1);
-	    *position = X[i1] * (1.0 - frac) + X[i2] * frac;
-	    *momentum = P[i1] * (1.0 - frac) + P[i2] * frac;
-	};
-    } else {
-	*position = Vector(2.0, 2.0, 2.0);
-	*momentum = Vector(0.0, 0.0, 0.0);
-    }
-}
-
-double ChargedParticle::RetardedTime(int index,
-    Vector ObservationPoint)
-{
-    Vector RVec = ObservationPoint - X[index];
+    Vector RVec = ObservationPoint - PreviousX;
     double R = RVec.norm();
-    return(Time[index] + R / SpeedOfLight);
+    return(PreviousTime + R / SpeedOfLight);
 }
 
-ElMagField ChargedParticle::RetardedField(int index,
-    Vector ObservationPoint)
+double ChargedParticle::RetardedTime(Vector ObservationPoint)
 {
-    Vector SourceX = X[index];
-    Vector SourceBeta = P[index];
-    Vector SourceBetaPrime = A[index];
+    Vector RVec = ObservationPoint - X;
+    double R = RVec.norm();
+    return(Time + R / SpeedOfLight);
+}
+
+ElMagField ChargedParticle::PreviousRetardedField(Vector ObservationPoint)
+{
+    Vector SourceX = PreviousX;
+    Vector SourceBeta = PreviousP;
+    Vector SourceBetaPrime = PreviousA;
     double betagamma2 = SourceBeta.abs2nd();
     double gamma2 = betagamma2 + 1.0;
     double gamma = sqrt(gamma2);
@@ -435,361 +262,71 @@ ElMagField ChargedParticle::RetardedField(int index,
     return ElMagField(EField, BField);
 }
 
-ElMagField ChargedParticle::RetardedField(double time, Vector ObservationPoint)
+ElMagField ChargedParticle::RetardedField(Vector ObservationPoint)
 {
-    Vector EField = Vector(0.0, 0.0, 0.0);
-    Vector BField = Vector(0.0, 0.0, 0.0);
-    
-    // return zero if there is no trajectory
-    if (NP<1)
-    {
-	return ElMagField(EField, BField);
-    };
-
-    int i1 = 0;    // index of the first trajectory point
-    double t1 = RetardedTime(i1,ObservationPoint);
-    int i2 = NP - 1;    // index of the last trajectory point
-    double t2 = RetardedTime(i2,ObservationPoint);
-
-    // the field is different from zero only if the observation
-    // time is within the possible retarded time interval
-    if ((time >= t1) && (time <= t2))
-    {
-	// reduce the interval until the trajectory segment is found
-	while (i2 - i1 > 1)
-	{
-	    int i = (i2 + i1) / 2;
-	    double t = RetardedTime(i,ObservationPoint);
-	    if (t < time)
-	    {
-		i1 = i;
-		t1 = t;
-	    }
-	    else
-	    {
-		i2 = i;
-		t2 = t;
-	    }
-	}
-	// interpolate the source point within the interval
-	// interpolation could be improved using higher-order terms
-	double frac = (time - t1) / (t2 - t1);
-	Vector SourceX = X[i1] * (1.0 - frac) + X[i2] * frac;
-	Vector SourceBeta = P[i1] * (1.0 - frac) + P[i2] * frac;
-	double betagamma2 = SourceBeta.abs2nd();
-	double gammasqr = betagamma2 + 1.0;
-	double gamma = sqrt(gammasqr);
-	SourceBeta /= gamma;
-	Vector SourceBetaPrime = A[i1] * (1.0 - frac) + A[i2] * frac;
-	SourceBetaPrime /= gamma;
-	// now compute the field emitted from an interpolated source point
-	Vector RVec = ObservationPoint - SourceX;
-	double R = RVec.norm();
-	Vector N = RVec;
-	N.normalize();
-	double scale = Charge*ElementaryCharge/(4.0*Pi*EpsNull);
-	double bn3rd = pow(1.0 - dot(SourceBeta, N), 3.0);
-	// velocity term
-	EField += (N - SourceBeta) / (R * R * bn3rd) / (gammasqr);
-	// acceleration term
-	EField += cross(N, cross(N - SourceBeta, SourceBetaPrime)) / (R*bn3rd*SpeedOfLight);
-	EField *= scale;
-	BField = cross(N,EField)/SpeedOfLight;
-    }
-    
+    Vector SourceX = X;
+    Vector SourceBeta = P;
+    Vector SourceBetaPrime = A;
+    double betagamma2 = SourceBeta.abs2nd();
+    double gamma2 = betagamma2 + 1.0;
+    double gamma = sqrt(gamma2);
+    SourceBeta /= gamma;
+    SourceBetaPrime /= gamma;
+    // now compute the distance and direction to the observer
+    Vector RVec = ObservationPoint - SourceX;
+    double R = RVec.norm();
+    Vector N = RVec;
+    N.normalize();
+    // now compute the radiated field
+    double scale = Charge*ElementaryCharge/(4.0*Pi*EpsNull);
+    double bn3rd = pow(1.0 - dot(SourceBeta, N), 3.0);
+    // velocity term
+    Vector EField = (N - SourceBeta) / (R*R*bn3rd*gamma2);
+    // acceleration term
+    EField += cross(N, cross(N - SourceBeta, SourceBetaPrime)) / (R*bn3rd*SpeedOfLight);
+    EField *= scale;
+    Vector BField = cross(N,EField) / SpeedOfLight;
     return ElMagField(EField, BField);
 }
 
-int ChargedParticle::FieldTrace(
-    Vector ObservationPoint,
-    double t1,
-    double t2,
-    std::vector<double> *ObservationTime,
-    std::vector<ElMagField> *ObservationField)
+ElMagObs ChargedParticle::PreviousObservation(Vector ObservationPoint)
 {
-    // delete all possibly existing data
-    ObservationTime->clear();
-    ObservationField->clear();
-    // find the first point to be stored
-    int i1 = 0;
-    while ((RetardedTime(i1,ObservationPoint)<t1) && (i1<=NP)) i1++;
-    if (i1>0) --i1;
-    // find the last point to be stored
-    int i2 = NP;
-    while ((RetardedTime(i2-1,ObservationPoint)>t2) && (i2>=0)) i2--;
-    if (i2<NP) i2++;
-    // now compute the field data
-    for( int i=i1; i<i2; i++)
-    {
-	ObservationTime->push_back(RetardedTime(i,ObservationPoint));
-	ObservationField->push_back(RetardedField(i,ObservationPoint));
-    }
-    return i2-i1;
+    double t = PreviousRetardedTime(ObservationPoint);
+    ElMagField field = PreviousRetardedField(ObservationPoint);
+    ElMagObs obs = ElMagObs(t, field.E(), field.B());
+    return obs;
 }
 
-void ChargedParticle::getTimeDomainField(
-    Vector ObservationPoint,
-    double t0,
-    double dt,
-    int nots,
-    std::vector<ElMagField> *ObservationField)
+ElMagObs ChargedParticle::Observation(Vector ObservationPoint)
 {
-    std::vector<double> TraceTime;
-    std::vector<ElMagField> TraceField;
-    double t_max = t0+nots*dt;
-    // preset the return field with an empty trace
-    ElMagField field; // automatically initalized to zero
-    ObservationField->clear();
-    for (int i=0; i<nots; i++)
-	ObservationField->push_back(field);
-    // obtain the raw, non-equidistant trace
-    int NS = FieldTrace(ObservationPoint, t0, t_max, &TraceTime, &TraceField);
-    // if source trace is empty
-    if (NS<=0) return;
-    // Now we process the non-equidistant time trace segment by segment.
-    // The source segment spans (source_t1, source_t2).
-    // source_f1, source_f2 are the corresponding field values;
-    double source_t1, source_t2;
-    ElMagField source_f1, source_f2;
-    source_t2=TraceTime[0];
-    source_f2=TraceField[0];
-    // is2 is the index belonging to source_t2.
-    // is2 must be smaller than (not equal) NS
-    int is2=0;
-    while ((is2+1<NS) && (source_t2<t_max))
-    {
-	// select the next source segment
-	source_t1 = source_t2;
-	source_f1 = source_f2;
-	is2++;
-	source_t2 = TraceTime[is2];
-	source_f2 = TraceField[is2];
-	// the indices of the steps in which the current segment ends lay
-	int idx1 = floor((source_t1-t0)/dt);
-	int idx2 = floor((source_t2-t0)/dt);
-	if ((idx1==idx2) && (idx1>=0) && (idx1<nots))
-	{
-	    // if the source segment is fully contained in one time step
-	    field = ObservationField->at(idx1);
-	    field += (source_f1+source_f2)*(0.5*(source_t2-source_t1)/dt);
-	    ObservationField->at(idx1) = field;
-	} else {
-	    // the source segment is spanning more than one time step
-	    // handle the first time step
-	    if ((idx1>=0) && (idx1<nots))
-	    {
-		field = ObservationField->at(idx1);
-		double dt_i1 = t0+(idx1+1)*dt - source_t1;
-		field += source_f1*(dt_i1/dt) + (source_f2-source_f1)*(0.5*dt_i1/(source_t2-source_t1));
-		ObservationField->at(idx1) = field;
-	    };
-	    // handle the intermediate time steps
-	    for (int idx=idx1+1; idx<idx2; idx++)
-	    {
-		if ((idx>=0) && (idx<nots))
-		{
-		    field = ObservationField->at(idx);
-		    double t_center = t0 + (idx+0.5)*dt;
-		    field += source_f1*((source_t2-t_center)/dt) + source_f2*((t_center-source_t1)/dt);
-		    ObservationField->at(idx) = field;
-		};
-	    };
-	    // handle the last time step
-	    if ((idx2>=0) && (idx2<nots))
-	    {
-		field = ObservationField->at(idx2);
-		double dt_i2 = source_t2 - (t0+idx2*dt);
-		field += source_f2*(dt_i2/dt) + (source_f1-source_f2)*(0.5*dt_i2/(source_t2-source_t1));
-		ObservationField->at(idx2) = field;
-	    };
-	}
-    };
+    double t = RetardedTime(ObservationPoint);
+    ElMagField field = RetardedField(ObservationPoint);
+    ElMagObs obs = ElMagObs(t, field.E(), field.B());
+    return obs;
 }
 
-int ChargedParticle::WriteTrajectorySDDS(const char *filename)
-{
-    cout << "writing SDDS file " << filename << endl;
-    SDDS_DATASET data;
-    if (1 != SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,filename))
-    {
-	cout << "ChargedParticle::WriteSDDS - error initializing output\n";
-	return 1;
-    }
-    if  (
-	SDDS_DefineSimpleParameter(&data,"NumberTimeSteps","", SDDS_LONG)!=1 || 
-	SDDS_DefineSimpleParameter(&data,"Charge","e", SDDS_DOUBLE)!=1 ||
-	SDDS_DefineSimpleParameter(&data,"Mass","m_e", SDDS_DOUBLE)!=1
-	)
-    {
-	cout << "ChargedParticle::WriteSDDS - error defining parameters\n";
-	return 2;
-    }
-    if  (
-	SDDS_DefineColumn(&data,"t\0","t\0","s\0","TimeInSeconds\0",NULL, SDDS_DOUBLE,0)   ==-1 || 
-	SDDS_DefineColumn(&data,"x\0","x\0","m\0","DisplacementInX\0",NULL, SDDS_DOUBLE,0) == -1 ||
-	SDDS_DefineColumn(&data,"y\0","y\0","m\0","DisplacementInY\0",NULL, SDDS_DOUBLE,0) == -1 ||
-	SDDS_DefineColumn(&data,"z\0","z\0","m\0","DisplacementInZ\0",NULL, SDDS_DOUBLE,0) == -1 || 
-	SDDS_DefineColumn(&data,"px\0","px\0",NULL,"Gammabetax\0",NULL, SDDS_DOUBLE,0)== -1 || 
-	SDDS_DefineColumn(&data,"py\0","py\0",NULL,"Gammabetay\0",NULL,SDDS_DOUBLE,0) == -1 ||
-	SDDS_DefineColumn(&data,"pz\0","pz\0",NULL,"Gammabetaz\0",NULL,SDDS_DOUBLE,0) == -1 ||
-	SDDS_DefineColumn(&data,"gamma\0","gamma\0",NULL,"RelativisticFactor\0",NULL,SDDS_DOUBLE,0)==-1
-	)
-    {
-	cout << "ChargedParticle::WriteSDDS - error defining data columns\n";
-	return 3;
-    }
-    if (SDDS_WriteLayout(&data) != 1)
-    {
-	cout << "ChargedParticle::WriteSDDS - error writing layout\n";
-	return 4;
-    }
-    // start a page with number of lines equal to the number of trajectory points
-    cout << "SDDS start page" << endl;
-    if (SDDS_StartPage(&data,(int32_t)NP) !=1 )
-    {
-	cout << "ChargedParticle::WriteSDDS - error starting page\n";
-	return 5;
-    }
-    // write the single valued variables
-    cout << "SDDS write parameters" << endl;
-    if( SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,
-	"NumberTimeSteps",NP,
-	"Charge",Charge,
-	"Mass",Mass,
-	NULL ) !=1
-	)
-    {
-	cout << "ChargedParticle::WriteSDDS - error setting parameters\n";
-	return 6;
-    }
-    // write the table of trajectory data
-    cout << "SDDS writing " << NP << " trajectory points" << endl;
-    for( int i=0; i<NP; i++)
-    {
-	if( SDDS_SetRowValues(&data,
-	    SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,i,
-	    "t",Time[i],
-	    "x",X[i].x,
-	    "y",X[i].y,
-	    "z",X[i].z,
-	    "px",P[i].x,
-	    "py",P[i].y,
-	    "pz",P[i].z,
-	    "gamma",sqrt(1.0+P[i].abs2nd()),
-	    NULL) != 1
-	    )
-	{
-	    cout << "ChargedParticle::WriteSDDS - error writing data columns\n";
-	    return 7;
-	}
-    }
-    if( SDDS_WritePage(&data) != 1)
-    {
-	cout << "ChargedParticle::WriteSDDS - error writing page\n";
-	return 8;
-    }
-    // finalize the file
-    if (SDDS_Terminate(&data) !=1 )
-    {
-	cout << "ChargedParticle::WriteSDDS - error terminating data file\n";
-	return 9;
-    }	
-    // no errors have occured if we made it 'til here
-    cout << "writing SDDS done." << endl;
-    return 0;
-}
 
-int ChargedParticle::WriteFieldTraceSDDS(
-    Vector ObservationPoint,
-    const char *filename)
-{
-    std::vector<double> TraceTime;
-    std::vector<ElMagField> TraceField;
-    if (NP<1) return(10);
-    for(int i=0; i<NP; i++)
-    {
-	TraceTime.push_back(RetardedTime(i,ObservationPoint));
-	TraceField.push_back(RetardedField(i,ObservationPoint));
-    }
-    // now write the field
-    cout << "writing SDDS file " << filename << endl;
-    SDDS_DATASET data;
-    if (1 != SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,filename))
-    {
-	cout << "WriteSDDS - error initializing output\n";
-	return 1;
-    }
-    if  ( SDDS_DefineSimpleParameter(&data,"NumberTimeSteps","", SDDS_LONG) != 1 )
-    {
-	cout << "WriteSDDS - error defining parameters\n";
-	return 2;
-    }
-    if  (
-	SDDS_DefineColumn(&data,"t\0","t\0","s\0","time\0",NULL, SDDS_DOUBLE,0) == -1 ||
-	SDDS_DefineColumn(&data,"Ex\0","Ex\0","V/m\0","electric field\0",NULL, SDDS_DOUBLE,0) == -1 ||
-	SDDS_DefineColumn(&data,"Ey\0","Ey\0","V/m\0","electric field\0",NULL, SDDS_DOUBLE,0) == -1 ||
-	SDDS_DefineColumn(&data,"Ez\0","Ez\0","V/m\0","electric field\0",NULL, SDDS_DOUBLE,0) == -1 || 
-	SDDS_DefineColumn(&data,"Bx\0","Bx\0","T\0","magnetic field\0",NULL, SDDS_DOUBLE,0)== -1 || 
-	SDDS_DefineColumn(&data,"By\0","By\0","T\0","magnetic field\0",NULL,SDDS_DOUBLE,0) == -1 ||
-	SDDS_DefineColumn(&data,"Bz\0","Bz\0","T\0","magnetic field\0",NULL,SDDS_DOUBLE,0) == -1
-    )
-    {
-	cout << "WriteSDDS - error defining data columns\n";
-	return 3;
-    }
-    if (SDDS_WriteLayout(&data) != 1)
-    {
-	cout << "WriteSDDS - error writing layout\n";
-	return 4;
-    }
-    // start a page with number of lines equal to the number of trajectory points
-    cout << "SDDS start page" << endl;
-    if (SDDS_StartPage(&data,(int32_t)NP) !=1 )
-    {
-	cout << "WriteSDDS - error starting page\n";
-	return 5;
-    }
-    // write the single valued variables
-    cout << "SDDS write parameters" << endl;
-    if  ( SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, "NumberTimeSteps",NP, NULL ) != 1 )
-    {
-	cout << "ChargedParticle::WriteSDDS - error setting parameters\n";
-	return 6;
-    }
-    // write the table of trajectory data
-    cout << "SDDS writing " << NP << " field values" << endl;
-    for( int i=0; i<NP; i++)
-    {
-	if (SDDS_SetRowValues(
-	    &data,
-	    SDDS_SET_BY_NAME | SDDS_PASS_BY_VALUE,
-	    i,
-	    "t",TraceTime[i],
-	    "Ex",TraceField[i].E().x,
-	    "Ey",TraceField[i].E().y,
-	    "Ez",TraceField[i].E().z,
-	    "Bx",TraceField[i].B().x,
-	    "By",TraceField[i].B().y,
-	    "Bz",TraceField[i].B().z,
-	    NULL) != 1
-	)
-	{
-	    cout << "WriteSDDS - error writing data columns\n";
-	    return 7;
-	}
-    }
-    if( SDDS_WritePage(&data) != 1)
-    {
-	cout << "WriteSDDS - error writing page\n";
-	return 8;
-    }
-    // finalize the file
-    if (SDDS_Terminate(&data) !=1 )
-    {
-	cout << "WriteSDDS - error terminating data file\n";
-	return 9;
-    }	
-    // no errors have occured if we made it 'til here
-    cout << "writing SDDS done." << endl;
-    return 0;
-}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

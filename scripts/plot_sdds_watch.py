@@ -75,7 +75,8 @@ p = np.array(data.getColumnData("p"))
 z = np.array(data.getColumnData("z"))
 
 zmean = np.mean(z)
-dt = -(z-zmean) / 3.0e8
+dz = (z-zmean)
+dt = -dz / 3.0e8
 
 Np = len(x)
 betagamma = np.mean(p)
@@ -106,8 +107,8 @@ fig.text(0.68,0.93, string, color='b', size=18.0 , ha='left', va='top', linespac
 PlotPS(1000.0*x,1000.0*xp,"$x$ [mm]", "$p_x$ [mrad]", rect_dens = [0.03, 0.55, 0.3, 0.4])
 PlotPS(1000.0*y,1000.0*yp,"$y$ [mm]", "$p_y$ [mrad]", rect_dens = [0.35, 0.55, 0.3, 0.4])
 PlotPS(1000.0*x,1000.0*y,"$x$ [mm]", "$y$ [mm]", rect_dens = [0.03, 0.08, 0.3, 0.4])
-PlotPS(1e12*dt,E,"$dt$ [ps]", "$E [MeV]$", rect_dens = [0.35, 0.08, 0.3, 0.4], center=False)
-PlotPS(1e12*dt,1000*dE-chirp*1e12*dt,"$dt$ [ps]", "$dE [keV]$", rect_dens = [0.68, 0.08, 0.3, 0.4], center=False)
+PlotPS(1e12*dz/3.0e8,E,"$dz/c$ [ps]", "$E [MeV]$", rect_dens = [0.35, 0.08, 0.3, 0.4], center=False)
+PlotPS(1e12*dz/3.0e8,1000*dE-chirp*1e12*dt,"$dz/c$ [ps]", "$dE [keV]$", rect_dens = [0.68, 0.08, 0.3, 0.4], center=False)
 # plt.annotate('E = ', xy=(0.8, 0.8),  xycoords='figure fraction',
 #              xytext=(20, 20), textcoords='offset points',
 #              ha="left", va="bottom",

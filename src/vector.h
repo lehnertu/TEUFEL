@@ -29,8 +29,6 @@ using namespace std;
  
     @author Ulf Lehnert
     @date 10.2.2017
-
-    \todo make components private
  */
 class Vector
 {

@@ -41,13 +41,7 @@ def PlotPS(x, y, xlabel='x', ylabel='y', rect_dens = [0.15, 0.1, 0.8, 0.8], cent
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('file', help='the file name of the watch point SDDS file')
-parser.add_argument('--list_columns', dest='listcol',
-  action='store_const', const=True, default=False,
-  help='list all columns available in the SDDS file')
-parser.add_argument('--list_para', dest='listpara',
-  action='store_const', const=True, default=False,
-  help='list all parameters available in the SDDS file')
+parser.add_argument('file', help='the file name of the watch point HDF5 file')
 
 args = parser.parse_args()
 bunfile = args.file

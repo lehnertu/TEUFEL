@@ -50,16 +50,19 @@
 #include <complex>
 
 #include "bunch.h"
+#include "beam.h"
 #include "global.h"
+#include "logger.h"
 #include "observer.h"
 #include "particle.h"
 #include "fields.h"
 #include "undulator.h"
 #include <iostream>
 #include <fstream>
+#include <time.h>
 
-int NOP = 1e3;
-int NOTS = 4000;    // number of time steps
+int NOP = 1e2;
+int NOTS = 2000;    // number of time steps
 
 int main()
 {
@@ -87,17 +90,22 @@ int main()
     Lattice* lattice = new Lattice;
     lattice->addElement(Undu);
 
+    // setup a bunch with 
     // one single particle corresponding to 4.37e8 electrons (70pC)
-    ChargedParticle* electron = new ChargedParticle(-4.37e8,4.37e8);
+    // positioned at the origin (by default)
+    double ch = 70.0e-12 / ElementaryCharge;
+    ChargedParticle *electron = new ChargedParticle(-ch,ch);
+    electron->setMomentum(Vector(0.0,0.0,betagamma));
+    Bunch *single = new Bunch();
+    single->Add(electron);
     
     // an electron bunch of 70pC total charge modeled with NOP particles
     // the initial bunch length is 50fs
-    double ch = 70.0e-12 / ElementaryCharge / NOP;
+    ch = 70.0e-12 / ElementaryCharge / NOP;
     double sigma_t = 50.0e-15;
     double sigma_z = SpeedOfLight * beta * sigma_t;
     printf("sigma_t =  %9.3g ps\n", 1e12*sigma_t);
     printf("sigma_z =  %9.3g mm\n", 1e3*sigma_z);
-    Bunch *bunch = new Bunch(NOP, -ch, ch);
     Distribution *dist = new Distribution(6, NOP);
     dist->generateGaussian(0.000, 0.001, 0);	// x gaussian with sigma=1mm
     dist->generateGaussian(0.000, 0.0005, 1);	// y gaussian with sigma=0.5mm
@@ -105,26 +113,18 @@ int main()
     dist->generateGaussian(0.000, 0.001, 3);	// px gaussian 1mrad
     dist->generateGaussian(0.000, 0.001, 4);	// py gaussian 1mrad
     dist->generateGaussian(betagamma, 0.001*betagamma, 5);	// pz gaussian 0.1% energy spread
+    // set the initial positions and momenta of the particles
+    Bunch *bunch = new Bunch(dist, -ch, ch);
 
-    // initial position at the origin
-    Vector X0 = Vector(0.0, 0.0, 0.0);
-    // initial momentum of the particle
-    Vector P0 = Vector(0.0, 0.0, betagamma);
-
-    // Track the particle for 3.0 m in lab space.
+    // Tracking should be done for 4.0 m in lab space corresponding to tau [s].
     // Inside the undulator we have an additional pathlength of one radiation
     // wavelength per period. The radiation wavelength already includes the
-    // velocity of the particles. Outside the undulator the electron moves with
-    // beta*SpeedOfLight
+    // velocity of the particles. Outside the undulator the electron moves with beta*SpeedOfLight
     double tau = (double)N * (lambda + lambdar) / SpeedOfLight + (4.0 - (double)N * lambda) / (beta * SpeedOfLight);
     double deltaT = tau / NOTS;
 
-    // set the initial positions and momenta of the particles
-    // and setup for the tracking procedure
-    bunch->InitVay(dist, deltaT, lattice);
-    
     // create a particle dump of the inital distribution
-    if (0 != bunch->WriteWatchPointSDDS(0.0, "elbe-u300_start.sdds"))
+    if (0 != bunch->WriteWatchPointSDDS("elbe-u300_start.sdds"))
     {
 	printf("SDDS write \033[1;31m failed!\033[0m\n");
     }
@@ -133,18 +133,65 @@ int main()
 	printf("SDDS file written - \033[1;32m OK\033[0m\n");
     }
     
-    // do the tracking of the single electron
-    electron->TrackVay(NOTS, deltaT, X0, P0, lattice);
+    // track a beam consisting of two bunches
+    // one containing only the single (reference) electron
+    Beam *beam = new Beam();
+    beam->Add(single);
+    beam->Add(bunch);
     
-    // do the tracking of the bunch
+    // setup for the tracking procedure
+    beam->InitVay(deltaT, lattice);
+    // compute the radiation of the single electron, the bunch and the whole beam on axis
+    double t0 = 10.0/SpeedOfLight - 1.0e-12;
+    PointObserver<Bunch> singleObs = PointObserver<Bunch>(
+	single, Vector(0.0, 0.0, 10.0), t0, 0.05e-13, 3000);
+    PointObserver<Bunch> bunchObs = PointObserver<Bunch>(
+	bunch, Vector(0.0, 0.0, 10.0), t0, 0.05e-13, 3000);
+    ScreenObserver<Bunch> screenObs = ScreenObserver<Bunch>(
+	bunch,
+	Vector(0.0, 0.0, 10.0),		// position
+	Vector(0.01, 0.0, 0.0),		// dx
+	Vector(0.0, 0.01, 0.0),		// dy
+	11,				// unsigned int nx,
+	7,				// unsigned int ny,
+	t0,
+	0.05e-13,			// double dt,
+	3000);				// NOTS
+
+    // log the Parameters of the bunch
+    TrackingLogger<Bunch> *bunchLog = new TrackingLogger<Bunch>(bunch);
+    
+    // do the tracking of the beam
     printf("tracking particles ... ");
     fflush(stdout);
+    // record the start time
+    timespec start_time;
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
     for (int step=0; step<NOTS; step++)
-	bunch->StepVay(lattice);
+    {
+	beam->StepVay(lattice);
+	// update the observers every step
+	// printf("single ... ");
+	// printf(" z(avg.)= %6.3f ", single->avgPosition().z);
+	singleObs.integrate();
+	// printf("bunch ... ");
+	// printf(" z(avg.)= %6.3f ", bunch->avgPosition().z);
+	bunchObs.integrate();
+	screenObs.integrate();
+	// printf("\n");
+	// log every 10th step
+	if (step % 10 == 0) bunchLog->update();
+    }
+    // record the finish time
+    timespec stop_time;
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop_time);
     printf("done.\n");
-    
-    // create a trajectory dump fo the single electron
-    int retval = electron->WriteTrajectorySDDS("elbe-u300_Trajectory.sdds");
+    double elapsed = stop_time.tv_sec-start_time.tv_sec +
+	1e-9*(stop_time.tv_nsec-start_time.tv_nsec);
+    printf("time elapsed during tracking : %9.3f s\n",elapsed);
+	
+    // create a tracking parameter dump fo the bunch
+    int retval = bunchLog->WriteBeamParametersSDDS("elbe-u300_BeamParam.sdds");
     if (0 != retval)
     {
 	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
@@ -154,51 +201,18 @@ int main()
         printf("SDDS file written - \033[1;32m OK\033[0m\n");
     }
 
-    // create a particle dump of the half-way distribution
-    if (0 != bunch->WriteWatchPointSDDS(tau/2, "elbe-u300_half-way.sdds"))
-    {
-	printf("SDDS write \033[1;31m failed!\033[0m\n");
-    }
-    else
-    {
-	printf("SDDS file written - \033[1;32m OK\033[0m\n");
-    }
     // create a particle dump of the final distribution
-    if (0 != bunch->WriteWatchPointSDDS(tau, "elbe-u300_final.sdds"))
+    if (0 != bunch->WriteWatchPointSDDS("elbe-u300_final.sdds"))
     {
 	printf("SDDS write \033[1;31m failed!\033[0m\n");
     }
     else
     {
 	printf("SDDS file written - \033[1;32m OK\033[0m\n");
-    }
-    if (0 != bunch->WriteWatchPointHDF5(tau, "elbe-u300_final.h5"))
-    {
-	printf("HDF5 write \033[1;31m failed!\033[0m\n");
-    }
-    else
-    {
-	printf("HDF5 file written - \033[1;32m OK\033[0m\n");
     }
     
-    // compute the radiation of the single electron on axis
-    PointObserver Obs = PointObserver(Vector(0.0, 0.0, 10.0));
-    // write raw time trace
-    retval = electron->WriteFieldTraceSDDS(
-	Vector(0.0, 0.0, 10.0),
-	"elbe-u300_RadTrace.sdds");
-    if (0 != retval)
-    {
-	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
-    }
-    else
-    {
-	printf("SDDS field trace written - \033[1;32m OK\033[0m\n");
-    }
-    double t0 = 10.0/SpeedOfLight - 1.0e-12;
-    Obs.ComputeTimeDomainField(electron, t0, 0.05e-13, 3000);
-    // write interpolated time trace
-    retval = Obs.WriteTimeDomainFieldSDDS("elbe-u300_SingleEl_ObsRadField.sdds");
+    // write field time traces
+    retval = singleObs.WriteTimeDomainFieldSDDS("elbe-u300_SingleEl_ObsRadField.sdds");
     if (0 != retval)
     {
 	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
@@ -207,13 +221,7 @@ int main()
     {
 	printf("SDDS time domain field written - \033[1;32m OK\033[0m\n");
     }
-
-    // compute the radiation of the whole bunch on axis
-    printf("computing fields ... ");
-    fflush(stdout);
-    Obs.ComputeTimeDomainField(bunch, t0, 0.05e-13, 3000);
-    printf("done.\n");
-    retval = Obs.WriteTimeDomainFieldSDDS("elbe-u300_Bunch_ObsRadField.sdds");
+    retval = bunchObs.WriteTimeDomainFieldSDDS("elbe-u300_Bunch_ObsRadField.sdds");
     if (0 != retval)
     {
 	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
@@ -222,7 +230,17 @@ int main()
     {
 	printf("SDDS time domain field written - \033[1;32m OK\033[0m\n");
     }
+    retval = screenObs.WriteTimeDomainFieldHDF5("elbe-u300_Screen_ObsRadField.h5");
+    if (0 != retval)
+    {
+	printf("HDF5 write \033[1;31m failed! - error %d\033[0m\n", retval);
+    }
+    else
+    {
+	printf("Screen observer time domain field written - \033[1;32m OK\033[0m\n");
+    }
 
+    /*
     // write frequency spectrum to file
     retval = Obs.WriteSpectrumSDDS(
 	"elbe-u300_RadSpectrum.sdds",
@@ -235,11 +253,16 @@ int main()
     {
 	printf("SDDS spectrum file written - \033[1;32m OK\033[0m\n");
     }
+    */
     
     // clean up
     delete lattice;
-    delete electron;
-    delete bunch;
-
+    // deleting the beam automatically
+    // deletes all bunches and particles belonging to it
+    delete dist;
+    delete beam;
+    // delete observers and loggers
+    delete bunchLog;
+    
     return 0;
 }

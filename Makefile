@@ -41,6 +41,7 @@ OBJECTS_DIR   = ./obj
 SRC = 	$(SRCDIR)/beam.cpp \
 	$(SRCDIR)/bunch.cpp \
 	$(SRCDIR)/fields.cpp \
+	$(SRCDIR)/logger.cpp\
 	$(SRCDIR)/observer.cpp\
 	$(SRCDIR)/particle.cpp\
 	$(SRCDIR)/simulation.cpp\
@@ -53,6 +54,7 @@ SRC = 	$(SRCDIR)/beam.cpp \
 OBJ = 	$(OBJDIR)/beam.o \
 	$(OBJDIR)/bunch.o \
 	$(OBJDIR)/fields.o \
+	$(OBJDIR)/logger.o \
 	$(OBJDIR)/observer.o \
 	$(OBJDIR)/particle.o \
 	$(OBJDIR)/simulation.o \
@@ -102,6 +104,7 @@ $(OBJ): $(SRCDIR)/beam.h \
 	$(SRCDIR)/bunch.h \
 	$(SRCDIR)/global.h \
 	$(SRCDIR)/fields.h \
+	$(SRCDIR)/logger.h \
 	$(SRCDIR)/observer.h \
 	$(SRCDIR)/particle.h \
 	$(SRCDIR)/simulation.h \
@@ -110,6 +113,7 @@ $(OBJ): $(SRCDIR)/beam.h \
 
 tests: $(OBJ) 
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.bunch $(TESTDIR)/teufel.bunch.cpp $(LFLAGS) $(OBJ) $(LIBS)
+	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.integrate_field $(TESTDIR)/teufel.integrate_field.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.magnet $(TESTDIR)/teufel.magnet.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.undulator $(TESTDIR)/teufel.undulator.cpp $(LFLAGS) $(OBJ) $(LIBS)
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(TESTDIR)/teufel.loop $(TESTDIR)/teufel.loop.cpp $(LFLAGS) $(OBJ) $(LIBS)
