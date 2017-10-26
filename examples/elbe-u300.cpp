@@ -212,24 +212,18 @@ int main()
     }
     
     // write field time traces
-    retval = singleObs.WriteTimeDomainFieldSDDS("elbe-u300_SingleEl_ObsRadField.sdds");
-    if (0 != retval)
+    try
     {
-	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
-    }
-    else
-    {
+	singleObs.WriteTimeDomainFieldSDDS("elbe-u300_SingleEl_ObsRadField.sdds");
 	printf("SDDS time domain field written - \033[1;32m OK\033[0m\n");
     }
-    retval = bunchObs.WriteTimeDomainFieldSDDS("elbe-u300_Bunch_ObsRadField.sdds");
-    if (0 != retval)
+    catch (exception& e) { cout << e.what() << endl;}
+    try
     {
-	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
-    }
-    else
-    {
+	bunchObs.WriteTimeDomainFieldSDDS("elbe-u300_Bunch_ObsRadField.sdds");
 	printf("SDDS time domain field written - \033[1;32m OK\033[0m\n");
     }
+    catch (exception& e) { cout << e.what() << endl;}
     try
     { 
 	screenObs.WriteTimeDomainFieldHDF5("elbe-u300_Screen_ObsRadField.h5");

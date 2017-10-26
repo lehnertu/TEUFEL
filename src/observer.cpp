@@ -63,24 +63,18 @@ ElMagField PointObserver<sourceT>::getField(int idx)
 }
 
 template <class sourceT>
-int PointObserver<sourceT>::WriteTimeDomainFieldSDDS(const char *filename)
+void PointObserver<sourceT>::WriteTimeDomainFieldSDDS(const char *filename)
 {
     cout << "writing SDDS file " << filename << endl;
     SDDS_DATASET data;
     // if (1 != SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,filename))
     if (1 != SDDS_InitializeOutput(&data,SDDS_ASCII,1,NULL,NULL,filename))
-    {
-	cout << "WriteSDDS - error initializing output\n";
-	return 1;
-    }
+	throw("PointObserver::WriteTimeDomainFieldSDDS - error in InitializeOutput()");
     if  ( SDDS_DefineSimpleParameter(&data,"NumberTimeSteps","", SDDS_LONG) != 1 ||
 	SDDS_DefineSimpleParameter(&data,"t0","", SDDS_DOUBLE) != 1 ||
 	SDDS_DefineSimpleParameter(&data,"dt","", SDDS_DOUBLE) !=1
     )
-    {
-	cout << "WriteSDDS - error defining parameters\n";
-	return 2;
-    }
+	throw("PointObserver::WriteTimeDomainFieldSDDS - error in DefineSimpleParameter()");
     if  (
 	SDDS_DefineColumn(&data,"t\0","t\0","s\0","time\0",NULL, SDDS_DOUBLE,0) == -1 ||
 	SDDS_DefineColumn(&data,"Ex\0","Ex\0","V/m\0","electric field\0",NULL, SDDS_DOUBLE,0) == -1 ||
@@ -90,32 +84,20 @@ int PointObserver<sourceT>::WriteTimeDomainFieldSDDS(const char *filename)
 	SDDS_DefineColumn(&data,"By\0","By\0","T\0","magnetic field\0",NULL,SDDS_DOUBLE,0) == -1 ||
 	SDDS_DefineColumn(&data,"Bz\0","Bz\0","T\0","magnetic field\0",NULL,SDDS_DOUBLE,0) == -1
     )
-    {
-	cout << "WriteSDDS - error defining data columns\n";
-	return 3;
-    }
+	throw("PointObserver::WriteTimeDomainFieldSDDS - error in DefineColumn()");
     if (SDDS_WriteLayout(&data) != 1)
-    {
-	cout << "WriteSDDS - error writing layout\n";
-	return 4;
-    }
+	throw("PointObserver::WriteTimeDomainFieldSDDS - error in WriteLayout()");
     // start a page with number of lines equal to the number of trajectory points
     // cout << "SDDS start page" << endl;
     if (SDDS_StartPage(&data,(int32_t)NOTS) !=1 )
-    {
-	cout << "WriteSDDS - error starting page\n";
-	return 5;
-    }
+	throw("PointObserver::WriteTimeDomainFieldSDDS - error in StartPage()");
     // write the single valued variables
     // cout << "SDDS write parameters" << endl;
     if  ( SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, "NumberTimeSteps",NOTS, NULL ) != 1 || 
 	SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, "t0",t0_obs, NULL ) != 1 ||
 	SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, "dt",dt_obs, NULL ) != 1
     )
-    {
-	cout << "WriteSDDS - error setting parameters\n";
-	return 6;
-    }
+	throw("PointObserver::WriteTimeDomainFieldSDDS - error in SetParameters()");
     // write the table of trajectory data
     // cout << "SDDS writing " << NOTS << " field values" << endl;
     for( int i=0; i<NOTS; i++)
@@ -131,25 +113,16 @@ int PointObserver<sourceT>::WriteTimeDomainFieldSDDS(const char *filename)
 			      "Bz",TimeDomainField[i].B().z,
 			      NULL) != 1
 	)
-	{
-	    cout << "WriteSDDS - error writing data columns\n";
-	    return 7;
-	}
+	    throw("PointObserver::WriteTimeDomainFieldSDDS - error in SetRowValues()");
     }
     if( SDDS_WritePage(&data) != 1)
-    {
-	cout << "WriteSDDS - error writing page\n";
-	return 8;
-    }
+	throw("PointObserver::WriteTimeDomainFieldSDDS - error in WritePage()");
     // finalize the file
     if (SDDS_Terminate(&data) !=1 )
-    {
-	cout << "WriteSDDS - error terminating data file\n";
-	return 9;
-    }	
+	throw("PointObserver::WriteTimeDomainFieldSDDS - error in Terminate()");
     // no errors have occured if we made it 'til here
     // cout << "writing SDDS done." << endl;
-    return 0;
+    return;
 }
 
 // we have to instantiate the class for every possible source type
@@ -224,7 +197,7 @@ ElMagField ScreenObserver<sourceT>::getField(
 }
 
 template <class sourceT>
-int ScreenObserver<sourceT>::WriteTimeDomainFieldHDF5(const char *filename)
+void ScreenObserver<sourceT>::WriteTimeDomainFieldHDF5(const char *filename)
 {
     herr_t status;
     cout << "writing HDF5 file " << filename << endl;
@@ -375,7 +348,7 @@ int ScreenObserver<sourceT>::WriteTimeDomainFieldHDF5(const char *filename)
     if (status<0) throw("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Fclose()");
     // no errors have occured if we made it 'til here
     cout << "writing HDF5 done." << endl;
-    return 0;
+    return;
 }
 
 // we have to instantiate the class for every possible source type

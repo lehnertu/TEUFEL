@@ -84,21 +84,9 @@ public:
      * - 3 componenets of the electric field [V/m]
      * - 3 componenets of the magnetic field [T]
      * 
-     * @return values for error checks:
-     *	 
-     *	0  -  successfully Written the file\n
-     *	1  -  error in SDDS_InitializeOutput \n
-     *	2  -  error in SDDS_DefineSimpleParameter \n
-     *	3  -  error in SDDS_DefineColumn \n
-     *	4  -  error in SDDS_WriteLayout \n
-     *	5  -  error in SDDS_StartPage \n
-     *	6  -  error in SDDS_SetParameters \n
-     *	7  -  error in SDDS_SetRowValues \n
-     *	8  -  error in SDDS_WritePage \n
-     *	9  -  error in SDDS_Terminate \n
-     * 
+     * @throws IOexception
      */
-    int WriteTimeDomainFieldSDDS(const char *filename);
+    void WriteTimeDomainFieldSDDS(const char *filename);
 
 private:
 
@@ -212,7 +200,7 @@ public:
      * 
      * @throws IOexception
      */
-    int WriteTimeDomainFieldHDF5(const char *filename);
+    void WriteTimeDomainFieldHDF5(const char *filename);
 
 private:
     
