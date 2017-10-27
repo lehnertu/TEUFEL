@@ -27,7 +27,7 @@ Testcases
 ---------
 
 A number of test cases is provided which serve both for code benchmarking
-against known results and a coding examples. All tests can be built from
+against known results and as coding examples. All tests can be built from
 the main folder  by
 
 ```make tests```
@@ -45,3 +45,7 @@ sequence, a script is provided in the main folder:
 To check for memory leaks the tool [Valgrind](http://valgrind.org) is recommended.
 
 ```valgrind --tool=memcheck tests/teufel.xxx```
+
+For some testcases and examples python scripts for visualizing the data are
+provided in the scrips/ directory. For reading HDF5 files these scripts use the
+[h5py](http://www.h5py.org/) library which can be installed from the "python-h5py" package on most Linux systems.
