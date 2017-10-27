@@ -5,7 +5,7 @@ import sys, time
 import os.path
 import argparse
 import numpy as np
-import tables
+import h5py
 import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter
 
@@ -25,17 +25,26 @@ if not radOK:
 print "reading ",radfile
 
 # Open the file for reading
-hdf = tables.open_file(radfile, mode="r")
+hdf = h5py.File(radfile, "r")
 print hdf
-# Get the root group
-root = hdf.root
-pos = np.array(root.ObservationPosition.read())
-a = np.array(root.ElMagField.read())
+# Get the groups
+pos = hdf['ObservationPosition']
+Nx = pos.attrs.get('Nx')
+Ny = pos.attrs.get('Ny')
+print "Nx=%d Ny=%d" % (Nx,Ny)
+print pos
+field = hdf['ElMagField']
+print field
+t0 = field.attrs.get('t0')
+dt = field.attrs.get('dt')
+nots = field.attrs.get('NOTS')
+print "t0=%g dt=%g NOTS=%d" % (t0, dt, nots)
+pos = np.array(pos)
+a = np.array(field)
 hdf.close()
 
-dims = a.shape
-xcenter = (dims[0]-1)/2
-ycenter = (dims[1]-1)/2
+xcenter = (Nx-1)/2
+ycenter = (Ny-1)/2
 print "center = (",xcenter,",",ycenter,")"
 centerposition = pos[xcenter][ycenter]
 print "position = ",centerposition
@@ -54,12 +63,10 @@ EVec = np.array([Ex, Ey, Ez]).transpose()
 BVec = np.array([Bx, By, Bz]).transpose()
 # Poynting vector in V/m * (N/(A m)) / (N/A²) = W/m²
 SVec = np.cross(EVec, BVec) / mu0
-t0 = 10.0/3e8 - 1.0e-12
-dt = 0.05e-13
-nots = Ex.shape[0]
 t = 1e9*np.arange(t0,t0+nots*dt,dt)
-if 'dt' in globals():
-    print 'energy flow density = ', SVec.sum(axis=0)*dt, " Ws/m²"
+print 'energy flow density = ', SVec.sum(axis=0)*dt, " Ws/m²"
+
+# first figure with the time-trace of the fields on axis
 
 left, width = 0.15, 0.80
 rect1 = [left, 0.55, width, 0.40]  #left, bottom, width, height
@@ -91,5 +98,34 @@ lines = l4 + l5 +l6
 labels = [l.get_label() for l in lines]
 ax4.legend(lines,labels,loc='upper right')
 ax4.grid(True)
+
+# second figure with power density on screen
+
+t = 1e9*np.arange(t0,t0+nots*dt,dt)
+X = np.empty([Nx, Ny])
+Y = np.empty([Nx, Ny])
+Pz = np.empty([Nx, Ny])
+for ix in range(Nx):
+    for iy in range(Ny):
+	X[ix,iy] = pos[ix,iy,0]
+	Y[ix,iy] = pos[ix,iy,1]
+	trace = a[ix,iy]
+	data = trace.transpose()
+	Ex = data[0]
+	Ey = data[1]
+	Ez = data[2]
+	Bx = data[3]
+	By = data[4]
+	Bz = data[5]
+	EVec = np.array([Ex, Ey, Ez]).transpose()
+	BVec = np.array([Bx, By, Bz]).transpose()
+	SVec = np.cross(EVec, BVec) / mu0
+	Pz[ix,iy] = (SVec.sum(axis=0))[2]*dt
+print Pz
+
+fig2 = plt.figure(2,figsize=(12,9))
+
+plt.contourf(X, Y, Pz, 20, cmap='RdGy')
+plt.colorbar();
 
 plt.show()

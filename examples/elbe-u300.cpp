@@ -61,8 +61,8 @@
 #include <fstream>
 #include <time.h>
 
-int NOP = 1e2;
-int NOTS = 2000;    // number of time steps
+int NOP = 1e3;		// number of particles
+int NOTS = 2000;	// number of time steps
 
 int main()
 {
@@ -150,10 +150,10 @@ int main()
     ScreenObserver<Bunch> screenObs = ScreenObserver<Bunch>(
 	bunch,
 	Vector(0.0, 0.0, 10.0),		// position
-	Vector(0.01, 0.0, 0.0),		// dx
+	Vector(0.01, 0.0, 0.0),	// dx
 	Vector(0.0, 0.01, 0.0),		// dy
-	11,				// unsigned int nx,
-	7,				// unsigned int ny,
+	41,				// unsigned int nx,
+	21,				// unsigned int ny,
 	t0,
 	0.05e-13,			// double dt,
 	3000);				// NOTS
@@ -162,11 +162,12 @@ int main()
     TrackingLogger<Bunch> *bunchLog = new TrackingLogger<Bunch>(bunch);
     
     // do the tracking of the beam
-    printf("tracking particles ... ");
+    printf("tracking particles ...\n");
     fflush(stdout);
     // record the start time
-    timespec start_time;
+    timespec start_time, current_time;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
+    timespec print_time = start_time;
     for (int step=0; step<NOTS; step++)
     {
 	beam->StepVay(lattice);
@@ -181,11 +182,20 @@ int main()
 	// printf("\n");
 	// log every 10th step
 	if (step % 10 == 0) bunchLog->update();
+	// make a print once every 10s
+	clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &current_time);
+	double elapsed = current_time.tv_sec-print_time.tv_sec +
+	    1e-9*(current_time.tv_nsec-print_time.tv_nsec);
+        if (elapsed>10.0)
+	{
+	    print_time = current_time;
+	    printf("tracking step %d / %d\n",step,NOTS);
+	};
     }
     // record the finish time
     timespec stop_time;
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop_time);
-    printf("done.\n");
+    printf("finished tracking particles.\n");
     double elapsed = stop_time.tv_sec-start_time.tv_sec +
 	1e-9*(stop_time.tv_nsec-start_time.tv_nsec);
     printf("time elapsed during tracking : %9.3f s\n",elapsed);
