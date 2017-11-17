@@ -199,6 +199,18 @@ Vector Bunch::avgPosition()
     return pos*(1.0/NOP);
 }
 
+Vector Bunch::rmsPosition()
+{
+    Vector sum;
+    Vector mean = avgPosition();
+    for(int i=0; i<NOP; i++) {
+	Vector dev = P[i]->getPosition() - mean;
+	sum += dev.square();
+    };
+    sum /= NOP;
+    return sum.root();
+}
+
 Vector Bunch::avgMomentum()
 {
     Vector mom;

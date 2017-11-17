@@ -51,6 +51,12 @@ class Vector
     double y;
     double z;
 
+    /*! element-wise square of a vector */
+    Vector square();
+    
+    /*! element-wise square root of a vector */
+    Vector root();
+    
     /*! Sum of two vectors */
     Vector operator+ (Vector v2);
 

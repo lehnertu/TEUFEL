@@ -125,7 +125,7 @@ print Pz
 
 fig2 = plt.figure(2,figsize=(12,9))
 
-plt.contourf(X, Y, Pz, 20, cmap='RdGy')
+plt.contourf(X, Y, Pz, 15, cmap='hot')
 plt.colorbar();
 
 plt.show()

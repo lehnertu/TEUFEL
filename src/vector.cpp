@@ -37,6 +37,16 @@ Vector::Vector(double x0, double y0, double z0)
   z=z0;
 }
 
+Vector Vector::square()
+{
+  return Vector(x*x,y*y,z*z);
+}
+
+Vector Vector::root()
+{
+  return Vector(sqrt(x),sqrt(y),sqrt(z));
+}
+
 Vector Vector::operator+ (Vector v2)
 {
   Vector temp;

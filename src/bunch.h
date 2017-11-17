@@ -196,6 +196,11 @@ public:
      */
     Vector avgPosition();
     
+    /*! @brief RMS size of particle distribution
+     *  The averiging gives equal weight to all particles
+     */
+    Vector rmsPosition();
+    
     /*! @brief Average momentum of all particles
      *  The averiging gives equal weight to all particles
      */

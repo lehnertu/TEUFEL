@@ -43,7 +43,7 @@ void TrackingLogger<objectT>::update()
     Time.push_back(Beam->getTime());
     Pos.push_back(Beam->avgPosition());
     BG.push_back(Beam->avgMomentum());
-    PosRMS.push_back(Vector(0.0,0.0,0.0));
+    PosRMS.push_back(Beam->rmsPosition());
     BGRMS.push_back(Vector(0.0,0.0,0.0));
     PosBG.push_back(Vector(0.0,0.0,0.0));
 }
@@ -71,7 +71,10 @@ int TrackingLogger<objectT>::WriteBeamParametersSDDS(const char *filename)
 	SDDS_DefineColumn(&data,"z_av\0","z_av\0","m\0","average position\0",NULL, SDDS_DOUBLE,0) == -1 ||
 	SDDS_DefineColumn(&data,"bgx_av\0","bgx_av\0","m\0","average momentum\0",NULL, SDDS_DOUBLE,0) == -1 ||
 	SDDS_DefineColumn(&data,"bgy_av\0","bgy_av\0","m\0","average momentum\0",NULL, SDDS_DOUBLE,0) == -1 ||
-	SDDS_DefineColumn(&data,"bgz_av\0","bgz_av\0","m\0","average momentum\0",NULL, SDDS_DOUBLE,0) == -1
+	SDDS_DefineColumn(&data,"bgz_av\0","bgz_av\0","m\0","average momentum\0",NULL, SDDS_DOUBLE,0) == -1 ||
+	SDDS_DefineColumn(&data,"x_rms\0","x_rms\0","m\0","r.m.s. position\0",NULL, SDDS_DOUBLE,0) == -1 ||
+	SDDS_DefineColumn(&data,"y_rms\0","y_rms\0","m\0","r.m.s. position\0",NULL, SDDS_DOUBLE,0) == -1 ||
+	SDDS_DefineColumn(&data,"z_rms\0","z_rms\0","m\0","r.m.s. position\0",NULL, SDDS_DOUBLE,0) == -1
     )
     {
 	cout << "WriteSDDS - error defining data columns\n";
@@ -109,6 +112,9 @@ int TrackingLogger<objectT>::WriteBeamParametersSDDS(const char *filename)
 	    "bgx_av",BG[i].x,
 	    "bgy_av",BG[i].y,
 	    "bgz_av",BG[i].z,
+	    "x_rms",PosRMS[i].x,
+	    "y_rms",PosRMS[i].y,
+	    "z_rms",PosRMS[i].z,
 	    NULL) != 1
 	)
 	{

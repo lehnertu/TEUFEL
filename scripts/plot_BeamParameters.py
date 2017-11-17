@@ -23,10 +23,13 @@ args = parser.parse_args()
 left, width = 0.15, 0.80
 rect1 = [left, 0.55, width, 0.40]  #left, bottom, width, height
 rect2 = [left, 0.08, width, 0.40]
-fig = plt.figure(1,figsize=(12,9))
 
-ax1 = fig.add_axes(rect1)
-ax4 = fig.add_axes(rect2, sharex=ax1)
+fig1 = plt.figure(1,figsize=(12,9))
+ax1 = fig1.add_axes(rect1)
+ax4 = fig1.add_axes(rect2, sharex=ax1)
+
+fig2 = plt.figure(2,figsize=(12,9))
+ax21 = fig2.add_axes(rect1)
 
 for file in args.files:
 
@@ -52,12 +55,15 @@ for file in args.files:
     bgx = np.array(data.getColumnData("bgx_av"))
     bgy = np.array(data.getColumnData("bgy_av"))
     bgz = np.array(data.getColumnData("bgz_av"))
+    x_rms = np.array(data.getColumnData("x_rms"))
+    y_rms = np.array(data.getColumnData("y_rms"))
+    z_rms = np.array(data.getColumnData("z_rms"))
     
     l1 = ax1.plot(t, x, "r-", label=r'$x_{avg.}$')
     l2 = ax1.plot(t, y, "b-", label=r'$y_{avg.}$')
     # l3 = ax1.plot(t, z, "g-", label=r'$z_{avg.}$')
 
-    ax1.set_ylabel(r'$position$ [m]')
+    ax1.set_ylabel(r'position [m]')
     # lines = l1 + l2 + l3
     lines = l1 + l2
     labels = [l.get_label() for l in lines]
@@ -76,5 +82,17 @@ for file in args.files:
     labels = [l.get_label() for l in lines]
     ax4.legend(lines,labels,loc='upper right')
     ax4.grid(True)
+
+    l21 = ax21.plot(t, 1e3*x_rms, "r-", label=r'$x_{r.m.s.}$')
+    l22 = ax21.plot(t, 1e3*y_rms, "b-", label=r'$y_{r.m.s.}$')
+    l23 = ax21.plot(t, 1e3*z_rms, "g-", label=r'$z_{r.m.s.}$')
+
+    ax21.set_ylabel(r'beam size [mm]')
+    ax21.set_xlabel(r't [ns]')
+    lines = l21 + l22 +l23
+    labels = [l.get_label() for l in lines]
+    ax21.legend(lines,labels,loc='upper right')
+    ax21.grid(True)
+
 
 plt.show()

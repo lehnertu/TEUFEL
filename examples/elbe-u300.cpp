@@ -107,11 +107,12 @@ int main()
     printf("sigma_t =  %9.3g ps\n", 1e12*sigma_t);
     printf("sigma_z =  %9.3g mm\n", 1e3*sigma_z);
     Distribution *dist = new Distribution(6, NOP);
-    dist->generateGaussian(0.000, 0.001, 0);	// x gaussian with sigma=1mm
-    dist->generateGaussian(0.000, 0.0005, 1);	// y gaussian with sigma=0.5mm
+    // transverse emittance 0.416µm (geometric) 20µm (normalized)
+    dist->generateGaussian(0.000, 0.001, 0);	// x gaussian with sigma=1.0mm
+    dist->generateGaussian(0.000, 0.0007, 1);	// y gaussian with sigma=0.7mm
     dist->generateGaussian(0.000, sigma_z, 2);	// z gaussian with sigma_z
-    dist->generateGaussian(0.000, 0.001, 3);	// px gaussian 1mrad
-    dist->generateGaussian(0.000, 0.001, 4);	// py gaussian 1mrad
+    dist->generateGaussian(0.000, 0.000417, 3);	// px gaussian 0.4mrad
+    dist->generateGaussian(0.000, 0.000595, 4);	// py gaussian 0.6mrad
     dist->generateGaussian(betagamma, 0.001*betagamma, 5);	// pz gaussian 0.1% energy spread
     // set the initial positions and momenta of the particles
     Bunch *bunch = new Bunch(dist, -ch, ch);
@@ -150,10 +151,10 @@ int main()
     ScreenObserver<Bunch> screenObs = ScreenObserver<Bunch>(
 	bunch,
 	Vector(0.0, 0.0, 10.0),		// position
-	Vector(0.01, 0.0, 0.0),	// dx
-	Vector(0.0, 0.01, 0.0),		// dy
-	41,				// unsigned int nx,
-	21,				// unsigned int ny,
+	Vector(0.02, 0.0, 0.0),		// dx
+	Vector(0.0, 0.02, 0.0),		// dy
+	51,				// unsigned int nx,
+	41,				// unsigned int ny,
 	t0,
 	0.05e-13,			// double dt,
 	3000);				// NOTS
