@@ -20,16 +20,18 @@ parser.add_argument('--list_columns', dest='listcol',
 
 args = parser.parse_args()
 
-left, width = 0.15, 0.80
-rect1 = [left, 0.55, width, 0.40]  #left, bottom, width, height
-rect2 = [left, 0.08, width, 0.40]
+left, width = 0.10, 0.80
+rect1 = [left, 0.68, width, 0.28]  #left, bottom, width, height
+rect2 = [left, 0.37, width, 0.28]
+rect3 = [left, 0.06, width, 0.28]
 
-fig1 = plt.figure(1,figsize=(12,9))
+fig1 = plt.figure(1,figsize=(12,10))
 ax1 = fig1.add_axes(rect1)
+ax2 = ax1.twinx()	# separate axis for z
 ax4 = fig1.add_axes(rect2, sharex=ax1)
-
-fig2 = plt.figure(2,figsize=(12,9))
-ax21 = fig2.add_axes(rect1)
+ax5 = ax4.twinx()	# separate axis for z
+ax21 = fig1.add_axes(rect3)
+ax22 = ax21.twinx()	# separate axis for z
 
 for file in args.files:
 
@@ -61,37 +63,55 @@ for file in args.files:
     
     l1 = ax1.plot(t, x, "r-", label=r'$x_{avg.}$')
     l2 = ax1.plot(t, y, "b-", label=r'$y_{avg.}$')
-    # l3 = ax1.plot(t, z, "g-", label=r'$z_{avg.}$')
+    l3 = ax2.plot(t, z, "g-", label=r'$z_{avg.}$')
 
     ax1.set_ylabel(r'position [m]')
-    # lines = l1 + l2 + l3
-    lines = l1 + l2
+    ax1.ticklabel_format(useOffset=False)
+    for label in ax1.get_xticklabels():
+	label.set_visible(False)
+    ax2.set_ylabel(r'z position [m]', color="g")
+    ax2.tick_params('y', colors='g')
+    ax2.ticklabel_format(useOffset=False)
+    for label in ax2.get_xticklabels():
+	label.set_visible(False)
+    lines = l1 + l2 + l3
     labels = [l.get_label() for l in lines]
-    ax1.legend(lines,labels,loc='upper right')
+    ax2.legend(lines,labels,loc='upper right')
     for label in ax1.get_xticklabels():
 	label.set_visible(False)
     ax1.grid(True)
 
     l4 = ax4.plot(t, bgx, "r-", label=r'$\beta_x\gamma$')
     l5 = ax4.plot(t, bgy, "b-", label=r'$\beta_y\gamma$')
-    l6 = ax4.plot(t, bgz, "g-", label=r'$\beta_z\gamma$')
+    l6 = ax5.plot(t, bgz, "g-", label=r'$\beta_z\gamma$')
     
     ax4.set_ylabel(r'$\beta\gamma$')
-    ax4.set_xlabel(r't [ns]')
+    ax4.ticklabel_format(useOffset=False)
+    for label in ax4.get_xticklabels():
+	label.set_visible(False)
+    ax5.set_ylabel(r'$\beta_z\gamma$', color="g")
+    ax5.tick_params('y', colors='g')
+    ax5.ticklabel_format(useOffset=False)
+    for label in ax5.get_xticklabels():
+	label.set_visible(False)
     lines = l4 + l5 +l6
     labels = [l.get_label() for l in lines]
-    ax4.legend(lines,labels,loc='upper right')
+    ax5.legend(lines,labels,loc='upper right')
     ax4.grid(True)
 
     l21 = ax21.plot(t, 1e3*x_rms, "r-", label=r'$x_{r.m.s.}$')
     l22 = ax21.plot(t, 1e3*y_rms, "b-", label=r'$y_{r.m.s.}$')
-    l23 = ax21.plot(t, 1e3*z_rms, "g-", label=r'$z_{r.m.s.}$')
+    l23 = ax22.plot(t, 1e12*z_rms/3.0e8, "g-", label=r'$z_{r.m.s.}$')
 
     ax21.set_ylabel(r'beam size [mm]')
     ax21.set_xlabel(r't [ns]')
+    ax21.ticklabel_format(useOffset=False)
+    ax22.set_ylabel(r'bunch length [ps]', color="g")
+    ax22.tick_params('y', colors='g')
+    ax22.ticklabel_format(useOffset=False)
     lines = l21 + l22 +l23
     labels = [l.get_label() for l in lines]
-    ax21.legend(lines,labels,loc='upper right')
+    ax22.legend(lines,labels,loc='upper right')
     ax21.grid(True)
 
 
