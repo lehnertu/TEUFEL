@@ -6,6 +6,9 @@ This is a C++ project to support tracking of charged particles in
 arbitrary external fields and to compute the electromagnetic radiation
 emitted by these particles using the Liénard-Wiechert formula.
 
+The particles are distributed over several compute nodes which comminicate
+using OpenMPI.
+
 Functionality
 -------------
 - particle tracking using different pusher algorithms (Euler, Vay)<br>
