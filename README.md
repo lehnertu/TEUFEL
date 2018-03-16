@@ -7,7 +7,12 @@ arbitrary external fields and to compute the electromagnetic radiation
 emitted by these particles using the Liénard-Wiechert formula.
 
 The particles are distributed over several compute nodes which comminicate
-using OpenMPI.
+using OpenMPI. In this computing model a Bunch() is an ensemble of particles
+residing on a single compute node. The Beam() comprises all bunches (and thus all particles).
+Within the Beam() object all MPI communication is handled.
+
+Every particle stores its full trajectory data. All field computation is done
+after the tracking is finished.
 
 Functionality
 -------------
