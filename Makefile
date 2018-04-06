@@ -11,24 +11,28 @@ OBJDIR = ./obj
 LIBDIR = ./lib
 
 SDDS = ./lib/SDDSToolKit-devel-3.4
-
-HDF5INC = /usr/include/hdf5/serial
-HDF5LIB = /usr/lib/x86_64-linux-gnu/hdf5/serial
+# HDF5_ROOT=/opt/pkg/filelib/hdf5/1.8.13/gnu/4.8.2/64/opt
+HDF5INC = $(HDF5_ROOT)/include
+# HDF5LIB = /usr/lib/x86_64-linux-gnu/hdf5/serial
+HDF5LIB = $(HDF5_ROOT)/lib
 
 # HDF5 = $(HOME)/lib/hdf5-1.8.19
 # HDF5INC= $(HDF5)/include
 # HDF5LIB= $(HDF5)/lib
 
-INCPATH      = -I $(SDDS) -I $(SRCDIR) -I $(HDF5INC)
+PUGIXML = $(LIBDIR)/pugixml
+
+INCPATH      = -I $(SDDS) -I $(SRCDIR) -I $(HDF5INC) -I $(PUGIXML)
 
 CC           = gcc
+MPICC        = mpic++
 CXX          = g++
 LINK         = g++
 
 CFLAGS       = -O2 -g -Wall
 CXXFLAGS     = -O2 -g -Wall -std=c++11
 LFLAGS       = -Wl,-rpath,$(HDF5LIB)
-LIBS         = -L$(SDDS) -lSDDS1 -L$(HDF5LIB) -lhdf5 -lpugixml -lmdblib -lmdbcommon -llzma -lz -lm
+LIBS         = -L$(SDDS) -lSDDS1 -L$(HDF5LIB) -lhdf5 -L$(PUGIXML) -lpugixml -lmdblib -lmdbcommon -llzma -lz -lm
 
 ####### Output directory
 
@@ -107,7 +111,7 @@ $(OBJ): $(SRCDIR)/beam.h \
 	$(SRCDIR)/logger.h \
 	$(SRCDIR)/observer.h \
 	$(SRCDIR)/particle.h \
-	$(SRCDIR)/simulation.h \
+#	$(SRCDIR)/simulation.h \
 	$(SRCDIR)/undulator.h \
 	$(SRCDIR)/vector.h
 
@@ -121,6 +125,7 @@ tests: $(OBJ)
 
 examples: $(OBJ) 
 	$(CXX) $(CXXFLAGS) $(INCPATH) -o $(EXPLDIR)/elbe-u300 $(EXPLDIR)/elbe-u300.cpp $(LFLAGS) $(OBJ) $(LIBS)
+	$(MPICC) $(CXXFLAGS) $(INCPATH) -o $(EXPLDIR)/mpi_example $(EXPLDIR)/mpi_example.cpp $(LFLAGS) $(OBJ) $(LIBS)
 
 docs:
 	doxygen setup.dox

@@ -128,7 +128,7 @@ public:
 	double t0,
 	double dt,
 	int nots,
-	std::vector<ElMagField> *ObservationField);
+	ElMagField *ObservationField);
     
 private:
 

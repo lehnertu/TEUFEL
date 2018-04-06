@@ -25,7 +25,6 @@
 #include <math.h>
 #include <random>
 #include <iostream>
-#include <cstring>
 #include "SDDS.h"
 #include "hdf5.h"
 

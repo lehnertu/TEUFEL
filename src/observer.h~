@@ -208,7 +208,7 @@ public:
      *  Memory for the buffer is allocated by this method and must be freeed
      *  by the caller. Returns a pointer to the allocated memory.
      */
-    double* getBuffer();
+    double *getBuffer();
 
     /*! Set all field values from a given allocated buffer.
      *  The count value gives the size of the buffer as a number of doubles.

@@ -130,7 +130,6 @@ int main ()
     if (fabs(F3[6].E().x -0.9)>1e-6) errors++;
     if (fabs(F3[7].E().x -0.7)>1e-6) errors++;
     printf("\n");
-    
     delete B;
 
     Bunch *B2 = new Bunch();
@@ -160,7 +159,6 @@ int main ()
     if (fabs(F4[6].E().x -0.0)>1e-6) errors++;
     if (fabs(F4[7].E().x -0.0)>1e-6) errors++;
     printf("\n");
-    
     delete B2;
     
     printf("errors %d\n",errors);

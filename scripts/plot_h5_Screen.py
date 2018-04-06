@@ -8,13 +8,16 @@ import numpy as np
 import h5py
 import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter
+from matplotlib.patches import Circle
 
 # magnetic field constant in N/A²
 mu0 = 4*np.pi*1e-7
 
 parser = argparse.ArgumentParser()
 parser.add_argument('file', help='the file name of the watch point HDF5 file')
+parser.add_argument('--maxf', help="plot range for the spectrum in Hz", dest="maxf", type=float)
 parser.add_argument('--ROI', help="ROI for the spectrum in Hz", dest="roi", type=float, nargs=2)
+parser.add_argument('--circ', help="ROI for the spatial dist.", dest="circ", type=float)
 
 print
 args = parser.parse_args()
@@ -25,7 +28,7 @@ if args.roi != None:
   print "frequency ROI : %g ... %g Hz" % (f1, f2)
 else:
   roiOK = False
-  
+
 radfile = args.file
 radOK = os.path.isfile(radfile)
 if not radOK:
@@ -144,8 +147,8 @@ intspec = amplit.sum()*df
 print "integrated spectral power density on axis = %g µJ/m²" % (1e6*intspec)
 
 if roiOK:
-  nf1 = np.ceil(f1/df)
-  nf2 = np.floor(f2/df)
+  nf1 = np.ceil(f1/df).astype('int')
+  nf2 = np.floor(f2/df).astype('int')
   intspec = amplit[nf1:nf2].sum()*df
   print "integrated spectral power density in ROI = %g µJ/m²" % (1e6*intspec)
 
@@ -171,7 +174,8 @@ totamp *= dX*dY
 
 ax2 = ax1.twinx()
 l2 = ax2.plot(1e-12*f, 1e6*1e12*totamp, "b-")
-ax2.set_xlim(0.0,7.0)
+if args.maxf != None:
+    ax2.set_xlim(0.0,1e-12*args.maxf)
 ax2.set_ylabel(r'area integrated spectral power density   $dE/df$ [$\mu$J/THz]')
 ax2.yaxis.label.set_color('b')
 ax2.tick_params(axis='y', colors='b')
@@ -209,13 +213,34 @@ dY = pos[0,1,1]-pos[0,0,1]
 Etot = Pz.sum()*dX*dY
 print "integrated energy = ", 1e6*Etot, " µJ"
 
+if args.circ != None:
+    Ecirc = 0
+    r2 = args.circ * args.circ
+    for ix in range(Nx):
+      for iy in range(Ny):
+	    x = pos[ix,iy,0]
+	    y = pos[ix,iy,1]
+	    if x*x + y*y <= r2:
+	      Ecirc += Pz[ix,iy]
+    Ecirc *= dX*dY
+    print "integrated energy in circle = ", 1e6*Ecirc, " µJ"
+
 fig3 = plt.figure(3,figsize=(12,9))
+ax3 = fig3.add_subplot(111)
 plt.contourf(X, Y, 1e6*Pz, 15, cmap='CMRmap')
 plt.title('total energy density [$\mu$J/m$^2$]')
 plt.xlabel('x /m')
 plt.ylabel('y /m')
 cb=plt.colorbar()
 cb.set_label(r'energy density [$\mu$J/m$^2$]')
+if args.circ != None:
+    c = Circle(xy=[0,0], radius=args.circ)
+    ax3.add_artist(c)
+    c.set_fill(False)
+    c.set_linestyle('dashed')
+    c.set_lw(3)
+    c.set_color('white')
+
 
 # fourth figure with power density in ROI on screen
 
@@ -244,14 +269,34 @@ if roiOK:
     dX = pos[1,0,0]-pos[0,0,0]
     dY = pos[0,1,1]-pos[0,0,1]
     Eroi = Pz.sum()*dX*dY
-    print "integrated energy = ", 1e6*Eroi, " µJ"
+    print "integrated energy in ROI = ", 1e6*Eroi, " µJ"
+
+    if args.circ != None:
+        Ecirc = 0
+        r2 = args.circ * args.circ
+        for ix in range(Nx):
+          for iy in range(Ny):
+            x = pos[ix,iy,0]
+            y = pos[ix,iy,1]
+            if x*x + y*y <= r2:
+              Ecirc += Pz[ix,iy]
+        Ecirc *= dX*dY
+        print "integrated energy in ROI in circle = ", 1e6*Ecirc, " µJ"
 
     fig4 = plt.figure(4,figsize=(12,9))
+    ax4 = fig4.add_subplot(111)
     plt.contourf(X, Y, 1e6*Pz, 15, cmap='CMRmap')
     plt.title('energy density within ROI [$\mu$J/m$^2$]')
     plt.xlabel('x /m')
     plt.ylabel('y /m')
     cb=plt.colorbar()
     cb.set_label(r'energy density [$\mu$J/m$^2$]')
+    if args.circ != None:
+        c = Circle(xy=[0,0], radius=args.circ)
+        ax4.add_artist(c)
+        c.set_fill(False)
+        c.set_linestyle('dashed')
+        c.set_lw(3)
+        c.set_color('white')
 
 plt.show()

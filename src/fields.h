@@ -33,6 +33,7 @@
  * @date 7.4.2017
  * 
  * This class holds the two Vectors E [V/m] and B [T] of the electromagnetic field.
+ * Memory is just 6 Bytes for the two Vectors.
  */
 class ElMagField
 {
