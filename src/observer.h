@@ -207,6 +207,7 @@ public:
     /*! Return all field values in a newly allocated buffer.
      *  Memory for the buffer is allocated by this method and must be freeed
      *  by the caller. Returns a pointer to the allocated memory.
+     *  An exception is thrown if the alloaction of the buffer fails.
      */
     double* getBuffer();
 

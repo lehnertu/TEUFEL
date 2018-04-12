@@ -66,8 +66,8 @@
 #include <fstream>
 #include <time.h>
 
-int NOP = 1e4;		// number of particles
-int NOTS = 5000;	// number of time steps
+int NOP = 1e3;		// number of particles
+int NOTS = 4000;	// number of time steps
 
 int main(int argc, char *argv[])
 {
@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
         printf("\n  TEUFEL parallel computing on %d cores.\n\n", NumberOfCores);
     }
 
-    double B = 0.384;
+    double B = 0.25242;
     double lambda = 0.300;
     double N = 8;
     PlanarUndulator* Undu = new PlanarUndulator(Vector(0.0, 0.0, 2.0));
@@ -118,8 +118,8 @@ int main(int argc, char *argv[])
 
     // an electron bunch of 1nC total charge modeled with NOP particles
     // the initial bunch length is 100fs
-    double ch = 1000.0e-12 / ElementaryCharge / NOP;
-    double sigma_t = 0.100e-12;
+    double ch = 451.0e-12 / ElementaryCharge / NOP;
+    double sigma_t = 0.0450e-12;
     double sigma_z = SpeedOfLight * beta * sigma_t;
     Distribution *dist = new Distribution(6, NOP);
     // allocate a communication buffer for the distribution
@@ -133,13 +133,13 @@ int main(int argc, char *argv[])
         printf("\n");
         // set the initial positions and momenta of the particles
         // transverse emittance 0.051µm (geometric) 10µm (normalized)
-        dist->generateGaussian(0.000, 0.000251, 0);	// x gaussian with sigma=1.0mm
-        dist->generateGaussian(0.000, 0.000204*betagamma, 3);	// px gaussian px/pz=0.131mrad
+        dist->generateGaussian(0.000, 0.000309, 0);	// x gaussian with sigma=1.0mm
+        dist->generateGaussian(0.000, 0.000165*betagamma, 3);	// px gaussian px/pz=0.131mrad
         // particles are "back transported" by 2m (undulator center to start)
         // by adding a -2 m/rad correlated position change
         dist->addCorrelation(3, 0, -2.0/betagamma);
-        dist->generateGaussian(0.000, 0.000251, 1);	// y gaussian with sigma=0.7mm
-        dist->generateGaussian(0.000, 0.000204*betagamma, 4);	// py gaussian py/pz=0.131mrad
+        dist->generateGaussian(0.000, 0.000309, 1);	// y gaussian with sigma=0.7mm
+        dist->generateGaussian(0.000, 0.000165*betagamma, 4);	// py gaussian py/pz=0.131mrad
         // particles are "back transported" by 0.8m (undulator entrance to start)
         // by adding a -0.8 m/rad correlated position change
         dist->addCorrelation(4, 1, -0.8/betagamma);
@@ -242,13 +242,13 @@ int main(int argc, char *argv[])
     ScreenObserver<Bunch> screenObs = ScreenObserver<Bunch>(
     	bunch,
     	Vector(0.0, 0.0, z0),		// position
-    	Vector(0.01, 0.0, 0.0),		// dx
-    	Vector(0.0, 0.01, 0.0),		// dy
+    	Vector(0.007, 0.0, 0.0),		// dx
+    	Vector(0.0, 0.007, 0.0),		// dy
     	81,				// unsigned int nx,
     	81,				// unsigned int ny,
     	t0,
-    	0.2e-13,			// double dt,
-    	3000);				// NOTS
+    	2.0e-14,			// double dt,
+    	2000);				// NOTS
 
     // log the Parameters of the bunch
     /*
@@ -269,7 +269,7 @@ int main(int argc, char *argv[])
 	    // if (step % 10 == 0) bunchLog->update();
 	    // make a print once every 60s
 	    double current_time = MPI_Wtime();
-	    if (current_time-print_time > 60)
+	    if (current_time-print_time > 120)
 	    {
 	        print_time = current_time;
 	        printf("Node #%d tracking step %d / %d\n",my_rank,step,NOTS);
@@ -314,17 +314,17 @@ int main(int argc, char *argv[])
     // collect all the field computed on the individual nodes
     // into the master node
     unsigned int count = screenObs.getCount();
+    printf("Node #%d allocating buffers for %d doubles\n",my_rank,count);
     // fill the buffer and get its address
     double* nodeBuffer = screenObs.getBuffer();
     if (nodeBuffer==0)
         printf("MPI_Reduce for screenObs : node #%d was unable to get the node buffer.\n",my_rank);
-    // we have to define a buffer on the root node for the sum
-    // double *reduceBuffer = 0;
-    // getting segmentation faults, so rather get the reduce buffer on all nodes
-    // if (my_rank == 0) reduceBuffer = new double[count];
+    // we have to define a buffer for the sum on all nodes
     double* reduceBuffer = new double[count];
     if (reduceBuffer==0)
         printf("MPI_Reduce for screenObs : node #%d was unable to get the reduce buffer.\n",my_rank);
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (my_rank == 0) printf("\nAll buffers allocated.\n");
     MPI_Reduce(
         nodeBuffer,                 // send buffer
         reduceBuffer,               // receive buffer
@@ -334,6 +334,7 @@ int main(int argc, char *argv[])
         0,                          // rank of the root process
         MPI_COMM_WORLD              // communicator
     );
+    if (my_rank == 0) printf("\nReduce finished.\n\n");
     // the root node copies the data from the reduce buffer into the sreenObs
     // and writes it to the output file
     if (my_rank == 0)

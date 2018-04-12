@@ -221,19 +221,24 @@ template <class sourceT>
 double* ScreenObserver<sourceT>::getBuffer()
 {
     double* buffer = new double[getCount()];
-    double* bp = buffer;
-    for (unsigned int ix = 0; ix < Nx; ix++)
-    	for (unsigned int iy = 0; iy < Ny; iy++)
-    	    for (unsigned int it = 0; it < NOTS; it++)
-    	    {
-        		ElMagField field = getField(ix,iy,it);
-        		*bp++ = field.E().x;
-        		*bp++ = field.E().y;
-        		*bp++ = field.E().z;
-        		*bp++ = field.B().x;
-        		*bp++ = field.B().y;
-        		*bp++ = field.B().z;
-    	    };
+    if (buffer==0)
+        throw("ScreenObserver::getBuffer() - error allocating memory.");
+    else
+    {
+        double* bp = buffer;
+        for (unsigned int ix = 0; ix < Nx; ix++)
+        	for (unsigned int iy = 0; iy < Ny; iy++)
+        	    for (unsigned int it = 0; it < NOTS; it++)
+        	    {
+            		ElMagField field = getField(ix,iy,it);
+            		*bp++ = field.E().x;
+            		*bp++ = field.E().y;
+            		*bp++ = field.E().z;
+            		*bp++ = field.B().x;
+            		*bp++ = field.B().y;
+            		*bp++ = field.B().z;
+        	    };
+    };
     return buffer;
 }
 
