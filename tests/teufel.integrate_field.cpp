@@ -161,6 +161,10 @@ int main ()
     printf("\n");
     delete B2;
     
-    printf("errors %d\n",errors);
+    if (errors>0)
+	printf("\033[1;31m errors %d - test failed!\033[0m\n",errors);
+    else
+	printf("\033[1;32m errors %d - OK\033[0m\n",errors);
+    
     return errors;
 }

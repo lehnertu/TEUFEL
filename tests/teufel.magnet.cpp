@@ -106,10 +106,10 @@ int main ()
     
     // initial potion at the origin
     Vector X0 = Vector(0.0, 0.0, 0.0);
-    electron->setPosition(X0);
     // initial momentum of the particle
     Vector P0 = p*betagamma/p.norm();
-    electron->setMomentum(P0);
+    Vector A0 = Vector(0.0, 0.0, 0.0);
+    electron->initTrajectory(0.0, X0, P0, A0);
     
     // count the errors
     int errors = 0;

@@ -164,15 +164,15 @@ Bunch::Bunch(Distribution *dist, double charge, double mass)
     for(int i=0; i<NOP; i++)
     {
 	ChargedParticle *p = new ChargedParticle(charge,mass);
-	p->setTime( dist->getCoordinate(i,6) );
+	double t0 = dist->getCoordinate(i,6);
 	Vector X0 = Vector(dist->getCoordinate(i,0),
 			   dist->getCoordinate(i,1),
 			   dist->getCoordinate(i,2));
-	p->setPosition( X0 );
 	Vector P0 = Vector(dist->getCoordinate(i,3),
 			   dist->getCoordinate(i,4),
 			   dist->getCoordinate(i,5));
-	p->setMomentum( P0 );
+	Vector A0 = Vector(0,0,0);
+	p->initTrajectory(t0, X0, P0, A0);
 	P.push_back(p);
     }
 }
@@ -460,89 +460,8 @@ void Bunch::integrateFieldTrace(
 	std::vector<ElMagField> *ObservationField)
 {
     // cout << "Bunch::integrateFieldTrace() NOP=" << NOP << endl;
-    double tmax=t0+dt*nots;
+    // integrate for all particles
     for (int i=0; i<NOP; i++)
-    {
-	double ts1 = P[i]->PreviousRetardedTime(ObservationPoint);
-	double ts2 = P[i]->RetardedTime(ObservationPoint);
-	double dts = ts2-ts1;
-	ElMagField field;
-	if ((ts2>t0) && (ts1<tmax))
-	// else - time step is completely outside observation range
-	{
-	    ElMagField f1 = P[i]->PreviousRetardedField(ObservationPoint);
-	    ElMagField f2 = P[i]->RetardedField(ObservationPoint);
-	    if (ts1<=t0)
-	    // if (ts2<=tmax) time step is entering the observation range
-	    // else time step is covering the entire observation range
-	    // both cases are handled with the same code
-	    {
-		// observation bucket in which the step end falls
-		int idx2 = floor((ts2-t0)/dt);
-		if (idx2>nots) idx2=nots;
-		// handle all fully covered buckets
-		for (int idx=0; idx<idx2; idx++)
-		{
-		    double t_center = t0 + (idx+0.5)*dt;
-		    field = f1*((ts2-t_center)/dts) + f2*((t_center-ts1)/dts);
-		    ObservationField->at(idx) += field;
-		    // cout << " idx=" << idx;
-		};
-		// handle the last (partially covered) bucket
-		if (idx2<nots)
-		{
-		    double t_start = t0+idx2*dt;
-		    ElMagField f_start = f1*((ts2-t_start)/dts) + f2*((t_start-ts1)/dts);
-		    field = (f_start+f2)*0.5*((ts2-t_start)/dt);
-            ObservationField->at(idx2) += field;
-		    // cout << " idx2=" << idx2;
-		};
-	    }
-	    else
-	    // if (ts2<=tmax) time step is fully inside observation range
-	    // else time step is leaving the observation range
-	    // both cases are handled with the same code
-	    {
-		// observation bucket in which the step start falls
-		int idx1 = floor((ts1-t0)/dt);
-		// observation bucket in which the step end falls
-		int idx2 = floor((ts2-t0)/dt);
-		if (idx2>nots) idx2=nots;
-		if (idx1==idx2)
-		// time step if fully within one bucket
-		{
-		    field = (f1+f2)*0.5*(dts/dt);
-		    ObservationField->at(idx1) += field;
-		    // cout << " idx12=" << idx1;
-		}
-		else
-		{
-		    // handle the first (partially covered) bucket
-		    double t_end = t0+(idx1+1)*dt;
-		    ElMagField f_end = f1*((ts2-t_end)/dts) + f2*((t_end-ts1)/dts);
-		    field = (f1+f_end)*0.5*((t_end-ts1)/dt);
-		    ObservationField->at(idx1) += field;
-		    // cout << " idx1=" << idx1;
-		    // handle all fully covered buckets
-		    for (int idx=idx1+1; idx<idx2; idx++)
-		    {
-			double t_center = t0 + (idx+0.5)*dt;
-			field = f1*((ts2-t_center)/dts) + f2*((t_center-ts1)/dts);
-			ObservationField->at(idx) += field;
-			// cout << " idx=" << idx;
-		    };
-		    // handle the last (partially covered) bucket
-		    if (idx2<nots)
-		    {
-			double t_start = t0+idx2*dt;
-			ElMagField f_start = f1*((ts2-t_start)/dts) + f2*((t_start-ts1)/dts);
-			field = (f_start+f2)*0.5*((ts2-t_start)/dt);
-			ObservationField->at(idx2) += field;
-			// cout << " idx2=" << idx2;
-		    };
-		}
-	    };
-	};
-	// cout << endl;
-    };
+	P[i]->integrateFieldTrace(ObservationPoint, t0, dt, nots, ObservationField);
+    // cout << endl;
 }

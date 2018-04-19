@@ -106,10 +106,10 @@ int main ()
 
     // initial position at the origin
     Vector X0 = Vector(0.0, 0.0, 0.0);
-    electron->setPosition(X0);
     // initial momentum of the particle
-    Vector P0 = Vector(0.0,0.0,betagamma);
-    electron->setMomentum(P0);
+    Vector P0 = Vector(0.0, 0.0, betagamma);
+    Vector A0 = Vector(0.0, 0.0, 0.0);
+    electron->initTrajectory(0.0, X0, P0, A0);
 
     // create a bunch that can be observed containing just this one electron
     Bunch *bunch = new Bunch();
