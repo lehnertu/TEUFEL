@@ -423,5 +423,6 @@ void ScreenObserver<sourceT>::WriteTimeDomainFieldHDF5(const char *filename)
 }
 
 // we have to instantiate the class for every possible source type
+template class ScreenObserver<ChargedParticle>;
 template class ScreenObserver<Bunch>;
 template class ScreenObserver<Beam>;

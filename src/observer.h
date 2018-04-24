@@ -33,7 +33,7 @@
  * @date 22.4.2017
  * 
  * This class handles the computation and storage of emitted electromagnetic
- * radiation from different sources (bunches and beams).
+ * radiation from different sources (particles, bunches and beams).
  */
 template <class sourceT>
 class PointObserver
@@ -65,8 +65,10 @@ public:
 	double dt,
 	unsigned int nots);
 
-    /*! The source has advanced one time step. Integrate the
-     * fields emitted by the source during this latest step.
+    /*! Integrate the fields emitted by the source
+     *  during all of its history, falling onto the time frame
+     *  of observation.
+     *  Should be called once after tracking all particles.
      */
     void integrate();
 
@@ -171,8 +173,10 @@ public:
 	    double dt,
 	    unsigned int nots);
     
-    /*! The source has advanced one time step. Integrate the
-     * fields emitted by the source during this latest step.
+    /*! Integrate the fields emitted by the source
+     *  during all of its history, falling onto the time frame
+     *  of observation.
+     *  Should be called once after tracking all particles.
      */
     void integrate();
     

@@ -27,9 +27,10 @@
     @author Ulf Lehnert
     @date 6.10.2017
     @file teufel.integrate_field.cpp
-    
-    We derive a Special particle class where we can pre-define which
-    values are returned for the generated fields. Then we query
+   
+    We derive a special particle class from ChrgedParticle. 
+    For this class we can custom-define the time and field vectors
+    that are returned by RetardedTime() and RetardedField(). Then we query
     a Bunch containig just one such particle for the generated field trace
     and check the known values.
     
@@ -49,19 +50,34 @@
 class Special : public ChargedParticle
 {
 public:
-    double time1, time2;
-    ElMagField f1, f2;
     Special(double t1, double t2, double Ex1, double Ex2)
     {
+    // our virtual trajectory has 2 points
+    // this must be set for the loop in integrateFieldTrace() to work correctly
+    NP=2;
+    // define the two trajectory points (their retarded fields)
 	time1=t1; time2=t2;
 	f1=ElMagField(Vector(Ex1,0.0,0.0),Vector(0.0,0.0,0.0));
 	f2=ElMagField(Vector(Ex2,0.0,0.0),Vector(0.0,0.0,0.0));
 	printf("E(%6.3f)=%6.3f  E(%6.3f)=%6.3f\n",t1,f1.E().x,t2,f2.E().x);
     };
-    double PreviousRetardedTime(Vector ObservationPoint) {return time1;};
-    double RetardedTime(Vector ObservationPoint) {return time2;};
-    ElMagField PreviousRetardedField(Vector ObservationPoint){return f1;};
-    ElMagField RetardedField(Vector ObservationPoint){return f2;};
+    virtual double RetardedTime(int index, Vector ObservationPoint)
+    {
+    if (index==0)
+        return time1;
+    else
+        return time2;
+    };
+    virtual ElMagField RetardedField(int index, Vector ObservationPoint)
+    {
+    if (index==0)
+        return f1;
+    else
+        return f2;
+    };
+private:
+    double time1, time2;
+    ElMagField f1, f2;
 };
 
 int main ()

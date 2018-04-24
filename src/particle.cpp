@@ -331,15 +331,16 @@ void ChargedParticle::integrateFieldTrace(
     int nots,
     std::vector<ElMagField> *ObservationField)
 {
-    cout << "ChargedParticle::integrateFieldTrace()" << endl;
+    // cout << "ChargedParticle::integrateFieldTrace() NP=" << NP << endl;
     double tmax=t0+dt*nots;
     // if there is no trajectory of at least one step we do nothing
     if (NP<2) return;
     // loop index i over the time steps of the trajectory
-    for (int i=0; i<NP-2; i++)
+    for (int i=0; i<NP-1; i++)
     {
 	double ts1 = RetardedTime(i,ObservationPoint);
 	double ts2 = RetardedTime(i+1,ObservationPoint);
+	// cout << "time step " << ts1 << " ... " << ts2 << endl;
 	double dts = ts2-ts1;
 	ElMagField field;
 	if ((ts2>t0) && (ts1<tmax))
@@ -361,7 +362,7 @@ void ChargedParticle::integrateFieldTrace(
 		    double t_center = t0 + (idx+0.5)*dt;
 		    field = f1*((ts2-t_center)/dts) + f2*((t_center-ts1)/dts);
 		    ObservationField->at(idx) += field;
-		    cout << " idx=" << idx;
+		    // cout << " idx=" << idx;
 		};
 		// handle the last (partially covered) bucket
 		if (idx2<nots)
@@ -370,7 +371,7 @@ void ChargedParticle::integrateFieldTrace(
 		    ElMagField f_start = f1*((ts2-t_start)/dts) + f2*((t_start-ts1)/dts);
 		    field = (f_start+f2)*0.5*((ts2-t_start)/dt);
 		    ObservationField->at(idx2) += field;
-		    cout << " idx2=" << idx2;
+		    // cout << " idx2=" << idx2;
 		};
 	    }
 	    else
@@ -388,7 +389,7 @@ void ChargedParticle::integrateFieldTrace(
 		{
 		    field = (f1+f2)*0.5*(dts/dt);
 		    ObservationField->at(idx1) += field;
-		    cout << " idx12=" << idx1;
+		    // cout << " idx12=" << idx1;
 		}
 		else
 		{
@@ -397,14 +398,14 @@ void ChargedParticle::integrateFieldTrace(
 		    ElMagField f_end = f1*((ts2-t_end)/dts) + f2*((t_end-ts1)/dts);
 		    field = (f1+f_end)*0.5*((t_end-ts1)/dt);
 		    ObservationField->at(idx1) += field;
-		    cout << " idx1=" << idx1;
+		    // cout << " idx1=" << idx1;
 		    // handle all fully covered buckets
 		    for (int idx=idx1+1; idx<idx2; idx++)
 		    {
 			double t_center = t0 + (idx+0.5)*dt;
 			field = f1*((ts2-t_center)/dts) + f2*((t_center-ts1)/dts);
 			ObservationField->at(idx) += field;
-			cout << " idx=" << idx;
+			// cout << " idx=" << idx;
 		    };
 		    // handle the last (partially covered) bucket
 		    if (idx2<nots)
@@ -413,7 +414,7 @@ void ChargedParticle::integrateFieldTrace(
 			ElMagField f_start = f1*((ts2-t_start)/dts) + f2*((t_start-ts1)/dts);
 			field = (f_start+f2)*0.5*((ts2-t_start)/dt);
 			ObservationField->at(idx2) += field;
-			cout << " idx2=" << idx2;
+			// cout << " idx2=" << idx2;
 		    };
 		}
 	    };
