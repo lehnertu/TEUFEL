@@ -214,7 +214,7 @@ int main()
 	singleObs.integrate();
 	
     PointObserver<Bunch> bunchObs = PointObserver<Bunch>(
-	bunch, Vector(0.0, 0.0, t0), t0, 0.05e-13, 3000);
+	bunch, Vector(0.0, 0.0, z0), t0, 0.05e-13, 3000);
 	bunchObs.integrate();
 	
     ScreenObserver<Bunch> screenObs = ScreenObserver<Bunch>(
