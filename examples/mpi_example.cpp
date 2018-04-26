@@ -85,7 +85,7 @@ int main(int argc, char *argv[])
         printf("\n  TEUFEL parallel computing on %d cores.\n\n", NumberOfCores);
     }
 
-    double B = 0.25242;
+    double B = 0.10315;
     double lambda = 0.300;
     double N = 8;
     PlanarUndulator* Undu = new PlanarUndulator(Vector(0.0, 0.0, 2.0));
@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
         printf("B =  %9.6g T\n", B);
         printf("K(rms) =  %9.3g\n", Undu->GetKrms());
     }
-    double gamma = 195.695;
+    double gamma = 50.881;
     double beta = sqrt(1.0 - 1.0 / (gamma * gamma));
     double betagamma = sqrt(gamma * gamma - 1.0);
     double K = Undu->GetKpeak();
@@ -116,10 +116,10 @@ int main(int argc, char *argv[])
     Lattice* lattice = new Lattice;
     lattice->addElement(Undu);
 
-    // an electron bunch of 1nC total charge modeled with NOP particles
+    // an electron bunch of 77pC total charge modeled with NOP particles
     // the initial bunch length is 100fs
-    double ch = 451.0e-12 / ElementaryCharge / NOP;
-    double sigma_t = 0.0450e-12;
+    double ch = 77.0e-12 / ElementaryCharge / NOP;
+    double sigma_t = 0.102e-12;
     double sigma_z = SpeedOfLight * beta * sigma_t;
     Distribution *dist = new Distribution(6, NOP);
     // allocate a communication buffer for the distribution
@@ -133,13 +133,13 @@ int main(int argc, char *argv[])
         printf("\n");
         // set the initial positions and momenta of the particles
         // transverse emittance 0.051µm (geometric) 10µm (normalized)
-        dist->generateGaussian(0.000, 0.000309, 0);	// x gaussian with sigma=1.0mm
-        dist->generateGaussian(0.000, 0.000165*betagamma, 3);	// px gaussian px/pz=0.131mrad
+        dist->generateGaussian(0.000, 0.000483, 0);	// x gaussian with sigma=1.0mm
+        dist->generateGaussian(0.000, 0.000407*betagamma, 3);	// px gaussian px/pz=0.131mrad
         // particles are "back transported" by 2m (undulator center to start)
         // by adding a -2 m/rad correlated position change
         dist->addCorrelation(3, 0, -2.0/betagamma);
-        dist->generateGaussian(0.000, 0.000309, 1);	// y gaussian with sigma=0.7mm
-        dist->generateGaussian(0.000, 0.000165*betagamma, 4);	// py gaussian py/pz=0.131mrad
+        dist->generateGaussian(0.000, 0.000483, 1);	// y gaussian with sigma=0.7mm
+        dist->generateGaussian(0.000, 0.000407*betagamma, 4);	// py gaussian py/pz=0.131mrad
         // particles are "back transported" by 0.8m (undulator entrance to start)
         // by adding a -0.8 m/rad correlated position change
         dist->addCorrelation(4, 1, -0.8/betagamma);
@@ -221,11 +221,11 @@ int main(int argc, char *argv[])
     delete dist;
     delete mydist;
     
-    // Tracking should be done for 4.0 m in lab space corresponding to tau [s].
+    // Tracking should be done for 3.4 m in lab space corresponding to tau [s].
     // Inside the undulator we have an additional pathlength of one radiation
     // wavelength per period. The radiation wavelength already includes the
     // velocity of the particles. Outside the undulator the electron moves with beta*SpeedOfLight
-    double tau = (double)N * (lambda + lambdar) / SpeedOfLight + (4.0 - (double)N * lambda) / (beta * SpeedOfLight);
+    double tau = (double)N * (lambda + lambdar) / SpeedOfLight + (3.4 - (double)N * lambda) / (beta * SpeedOfLight);
     double deltaT = tau / NOTS;
 
     // track a beam containing just the one bunch per node
@@ -234,21 +234,6 @@ int main(int argc, char *argv[])
     
     // setup for the tracking procedure
     beam->InitVay(deltaT, lattice);
-    // Record the radiation of the beam at 10m distance from the undulator center.
-    // Every node just records the radiation emitted by its own particles.
-    // We have to sum it up later.
-    double z0 = 2.0 + 10.0;
-    double t0 = z0/SpeedOfLight - 1.0e-12;
-    ScreenObserver<Bunch> screenObs = ScreenObserver<Bunch>(
-    	bunch,
-    	Vector(0.0, 0.0, z0),		// position
-    	Vector(0.007, 0.0, 0.0),		// dx
-    	Vector(0.0, 0.007, 0.0),		// dy
-    	81,				// unsigned int nx,
-    	81,				// unsigned int ny,
-    	t0,
-    	2.0e-14,			// double dt,
-    	2000);				// NOTS
 
     // log the Parameters of the bunch
     /*
@@ -263,8 +248,6 @@ int main(int argc, char *argv[])
     for (int step=0; step<NOTS; step++)
     {
     	beam->StepVay(lattice);
-	    // update the observers every step
-	    screenObs.integrate();
 	    // log every 10th step
 	    // if (step % 10 == 0) bunchLog->update();
 	    // make a print once every 60s
@@ -311,6 +294,34 @@ int main(int argc, char *argv[])
     
     MPI_Barrier(MPI_COMM_WORLD);
     if (my_rank == 0) printf("\nAll nodes finished tracking.\n\n");
+    
+    // Record the radiation of the beam at 1.625m distance from the undulator center.
+    // Every node just records the radiation emitted by its own particles.
+    // We have to sum it up later.
+    double z0 = 2.0 + 1.625;
+    double t0 = z0/SpeedOfLight - 1.0e-12;
+    ScreenObserver<Bunch> screenObs = ScreenObserver<Bunch>(
+    	bunch,
+    	Vector(0.0, 0.0, z0),		// position
+    	Vector(0.001, 0.0, 0.0),		// dx
+    	Vector(0.0, 0.001, 0.0),		// dy
+    	81,				// unsigned int nx,
+    	81,				// unsigned int ny,
+    	t0,
+    	5.0e-14,			// double dt,
+    	500);				// NOTS
+
+    // compute field seen from the bunch
+    // in parallel on every node for its own particles
+    start_time = MPI_Wtime();
+    screenObs.integrate();
+    // record the finish time
+    stop_time = MPI_Wtime();
+    printf("Node #%d finished after %6.2f s.\n",my_rank,stop_time-start_time);
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (my_rank == 0) printf("\nAll nodes finished the field computation.\n\n");
+    
     // collect all the field computed on the individual nodes
     // into the master node
     unsigned int count = screenObs.getCount();
@@ -342,7 +353,7 @@ int main(int argc, char *argv[])
         screenObs.fromBuffer(reduceBuffer,count);
         try
         { 
-        	screenObs.WriteTimeDomainFieldHDF5("MPI_dali-u300_Screen_ObsRadField.h5");
+        	screenObs.WriteTimeDomainFieldHDF5("MPI_elbe-u300_Screen_ObsRadField.h5");
         	printf("Screen observer time domain field written - \033[1;32m OK\033[0m\n");
         }
         catch (exception& e) { cout << e.what() << endl;}
