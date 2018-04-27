@@ -52,6 +52,7 @@
 #include <string.h>
 #include <complex>
 
+#include "config.h"
 #include "bunch.h"
 #include "beam.h"
 #include "global.h"
@@ -69,6 +70,8 @@ int NOTS = 1000;	// number of time steps
 
 int main()
 {
+    printf("\n TEUFEL %d.%d\n",TEUFEL_VERSION_MAJOR,TEUFEL_VERSION_MINOR);
+    printf("\n THz-Emission From Undulators and Free-Electron Lasers\n\n",TEUFEL_VERSION_MAJOR,TEUFEL_VERSION_MINOR);
     double B = 0.384;
     double lambda = 0.300;
     double N = 8;
