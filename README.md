@@ -21,6 +21,34 @@ Functionality
 - radiation emission towards a single observation point
 - several external field objects (homogeneous dipole, planar undulator ...)
 
+Build and Installation
+----------------------
+
+We are switching to the cmake build system. Here we describe an out-of-source build.
+First one should obtain the sources by cloning the repository from Github.
+```
+git clone http://github.com/lehnertu/teufel.git
+cd teufel
+```
+Then we create a build directory in the downloaded source directory.
+```
+mkdir build
+cd build
+```
+Then we build the makefile from CMakeLists.txt contained in the root directory.
+```
+cmake ..
+```
+One can check the libraries and tools found and change the make options using
+```
+ccmake ..
+```
+After that 
+```
+make
+```
+creates the executable in the build directory.
+
 Documentation
 -------------
 
