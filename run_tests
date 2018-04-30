@@ -5,44 +5,42 @@ red='\033[1;31m'
 green='\033[1;32m'
 nc='\033[0m'
 
-cd tests
-
-./teufel.integrate_field; rc=$?
+./build/teufel.integrate_field; rc=$?
 num=$(($num + $rc))
 
 echo ''
 echo '==============================================================================='
 echo ''
 
-./teufel.bunch; rc=$?
+./build/teufel.bunch; rc=$?
 num=$(($num + $rc))
 
 echo ''
 echo '==============================================================================='
 echo ''
 
-./teufel.magnet; rc=$?
+./build/teufel.magnet; rc=$?
 num=$(($num + $rc))
 
 echo ''
 echo '==============================================================================='
 echo ''
 
-./teufel.undulator; rc=$?
+./build/teufel.undulator; rc=$?
 num=$(($num + $rc))
 
 echo ''
 echo '==============================================================================='
 echo ''
 
-./teufel.loop; rc=$?
+./build/teufel.loop; rc=$?
 num=$(($num + $rc))
 
 echo ''
 echo '==============================================================================='
 echo ''
 
-./teufel.EcrossB; rc=$?
+./build/teufel.EcrossB; rc=$?
 num=$(($num + $rc))
 
 echo ''

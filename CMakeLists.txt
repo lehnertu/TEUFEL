@@ -9,6 +9,24 @@ if(NOT CMAKE_BUILD_TYPE)
     set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
 endif()
 
+# for building the documentation
+option(BUILD_DOCUMENTATION "Generate doxygen documentation" OFF)
+find_package(Doxygen)
+    if(NOT DOXYGEN_FOUND)
+        message(FATAL_ERROR "Doxygen is not installed or not properly configured")
+    endif(NOT DOXYGEN_FOUND)
+if(BUILD_DOCUMENTATION)
+    add_custom_target(docs ALL
+                      ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/setup.dox
+                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                      COMMENT "Generating API documentation with Doxygen")
+else()
+    add_custom_target(docs
+                      ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/setup.dox
+                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+                      COMMENT "Generating API documentation with Doxygen")
+endif()
+
 # compiler flags
 add_definitions(-std=c++11 -Wall)
 
@@ -55,8 +73,48 @@ configure_file (
   )
 
 add_executable(teufel ${PROJECT_SOURCE_DIR}/src/teufel.cpp)
-#                              ${HDF5_CXX_LIBRARY_hdf5}
 target_link_libraries(teufel ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIB} ${SDDS_MDBLIB} ${SDDS_MDBCOMMON} ${SDDS_LZMA}
                              ${ZLIB_LIBRARY_RELEASE} )
+
+option(BUILD_TESTS "Build binaries for the test cases" ON)
+if(BUILD_TESTS)
+    set(PROJECT_TESTS_DIR ${PROJECT_SOURCE_DIR}/tests)
+    add_executable(teufel.integrate_field ${PROJECT_TESTS_DIR}/teufel.integrate_field.cpp)
+    target_link_libraries(teufel.integrate_field ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIB} ${SDDS_MDBLIB} ${SDDS_MDBCOMMON} ${SDDS_LZMA}
+                             ${ZLIB_LIBRARY_RELEASE} )
+    add_executable(teufel.bunch ${PROJECT_TESTS_DIR}/teufel.bunch.cpp)
+    target_link_libraries(teufel.bunch ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIB} ${SDDS_MDBLIB} ${SDDS_MDBCOMMON} ${SDDS_LZMA}
+                             ${ZLIB_LIBRARY_RELEASE} )
+    add_executable(teufel.magnet ${PROJECT_TESTS_DIR}/teufel.magnet.cpp)
+    target_link_libraries(teufel.magnet ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIB} ${SDDS_MDBLIB} ${SDDS_MDBCOMMON} ${SDDS_LZMA}
+                             ${ZLIB_LIBRARY_RELEASE} )
+    add_executable(teufel.undulator ${PROJECT_TESTS_DIR}/teufel.undulator.cpp)
+    target_link_libraries(teufel.undulator ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIB} ${SDDS_MDBLIB} ${SDDS_MDBCOMMON} ${SDDS_LZMA}
+                             ${ZLIB_LIBRARY_RELEASE} )
+    add_executable(teufel.loop ${PROJECT_TESTS_DIR}/teufel.loop.cpp)
+    target_link_libraries(teufel.loop ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIB} ${SDDS_MDBLIB} ${SDDS_MDBCOMMON} ${SDDS_LZMA}
+                             ${ZLIB_LIBRARY_RELEASE} )
+    add_executable(teufel.EcrossB ${PROJECT_TESTS_DIR}/teufel.EcrossB.cpp)
+    target_link_libraries(teufel.EcrossB ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIB} ${SDDS_MDBLIB} ${SDDS_MDBCOMMON} ${SDDS_LZMA}
+                             ${ZLIB_LIBRARY_RELEASE} )
+endif()
+
+option(BUILD_EXAMPLES "Build binaries for the examples" ON)
+if(BUILD_EXAMPLES)
+else()
+endif()
+
