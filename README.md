@@ -49,8 +49,8 @@ Then we build the makefile from CMakeLists.txt contained in the root directory.
 cmake ..
 ```
 One can check the libraries and tools found and change the make options.
-This can be usefull if it is not desired to build the documentation or the test executables
-(both are enabled by default).
+This can be usefull if it is desired to build the documentation by default
+or to skip the build of the test executables (enabled by default).
 ```
 ccmake ..
 ```
@@ -74,13 +74,9 @@ Testcases
 ---------
 
 A number of test cases is provided which serve both for code benchmarking
-against known results and as coding examples. All tests can be built from
-the main folder  by
-
-```make tests```
-
-For running all the checks in
-sequence, a script is provided in the main folder:
+against known results and as coding examples. All tests are built by default
+in the build directory. For running all the checks in sequence,
+right away from the build directory, a script is provided in the main folder:
 
 ```./run_tests```
 
