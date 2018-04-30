@@ -71,7 +71,7 @@ int NOTS = 1000;	// number of time steps
 int main()
 {
     printf("\n TEUFEL %d.%d\n",TEUFEL_VERSION_MAJOR,TEUFEL_VERSION_MINOR);
-    printf("\n THz-Emission From Undulators and Free-Electron Lasers\n\n",TEUFEL_VERSION_MAJOR,TEUFEL_VERSION_MINOR);
+    printf("\n THz-Emission From Undulators and Free-Electron Lasers\n\n");
     double B = 0.384;
     double lambda = 0.300;
     double N = 8;

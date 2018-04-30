@@ -21,6 +21,45 @@ Functionality
 - radiation emission towards a single observation point
 - several external field objects (homogeneous dipole, planar undulator ...)
 
+Build and Installation
+----------------------
+
+A few libraries are required to build the TEUFEL executable.
+- To simplify building TEUFEL version 3.4 of the the [SDDS toolkit](https://ops.aps.anl.gov/SDDSInfo.shtml)
+  is contained in the repository.
+- On most systems the [HDF5 library](https://support.hdfgroup.org/HDF5/) can be installed
+  from the distribution repositories.<br>
+  It is necessary to set an environment variable for the library to be found by the build system<br>
+  ```export HDF5_ROOT=_path_to_library```
+
+We are using the cmake build system to allow an easy build on a variety of platforms.
+Here we describe a typical out-of-source build.
+First one should obtain the sources by cloning the repository from Github.
+```
+git clone http://github.com/lehnertu/teufel.git
+cd teufel
+```
+Then we create a build directory in the downloaded source directory.
+```
+mkdir build
+cd build
+```
+Then we build the makefile from CMakeLists.txt contained in the root directory.
+```
+cmake ..
+```
+One can check the libraries and tools found and change the make options.
+This can be usefull if it is not desired to build the documentation or the test executables
+(both are enabled by default).
+```
+ccmake ..
+```
+After that 
+```
+make
+```
+creates the executable in the build directory.
+
 Documentation
 -------------
 
