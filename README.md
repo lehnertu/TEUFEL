@@ -49,13 +49,19 @@ cd build
 ```
 
 Then we build the makefile from CMakeLists.txt contained in the root directory.
+
 ```cmake ..```
+
 One can check the libraries and tools found and change the make options.
 This can be usefull if it is desired to build the documentation by default
 or to skip the build of the test executables (enabled by default).
+
 ```ccmake ..```
+
 After that 
+
 ```make```
+
 creates the executable in the build directory.
 
 Documentation
