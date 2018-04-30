@@ -24,7 +24,16 @@ Functionality
 Build and Installation
 ----------------------
 
-We are switching to the cmake build system. Here we describe an out-of-source build.
+A few libraries are required to build the TEUFEL executable.
+- To simplify building TEUFEL version 3.4 of the the [SDDS toolkit](https://ops.aps.anl.gov/SDDSInfo.shtml)
+  is contained in the repository.
+- On most systems the [HDF5 library](https://support.hdfgroup.org/HDF5/) can be installed
+  from the distribution repositories.<br>
+  It is necessary to set an environment variable for the library to be found by the build system<br>
+  ```export HDF5_ROOT=_path_to_library```
+
+We are using the cmake build system to allow an easy build on a variety of platforms.
+Here we describe a typical out-of-source build.
 First one should obtain the sources by cloning the repository from Github.
 ```
 git clone http://github.com/lehnertu/teufel.git
