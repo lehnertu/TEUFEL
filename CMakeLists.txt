@@ -3,9 +3,21 @@ project (TEUFEL)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
+# Set default build type.
+if(NOT CMAKE_BUILD_TYPE)
+    message(STATUS "CMAKE_BUILD_TYPE not given; setting to 'Release'.")
+    set(CMAKE_BUILD_TYPE "Release" CACHE STRING "Choose the type of build." FORCE)
+endif()
+
+# compiler flags
+add_definitions(-std=c++11 -Wall)
+
 find_package(HDF5 COMPONENTS CXX REQUIRED)
-message(STATUS "HDF5 includes ${HDF5_INCLUDE_DIRS}")
-message(STATUS "HDF5 libraries ${HDF5_LIBRARY_DIRS}")
+if (HDF5_FOUND)
+    message(STATUS "HDF5 includes ${HDF5_INCLUDE_DIRS}")
+    message(STATUS "HDF5 libraries ${HDF5_LIBRARIES}")
+endif (HDF5_FOUND)
+
 find_package(ZLIB REQUIRED)
 
 # our local SDDS library
@@ -14,8 +26,6 @@ find_library(SDDS_LIB NAMES SDDS1 HINTS ${SDDS_DIR})
 find_library(SDDS_MDBLIB NAMES mdblib HINTS ${SDDS_DIR})
 find_library(SDDS_MDBCOMMON NAMES mdbcommon HINTS ${SDDS_DIR})
 find_library(SDDS_LZMA NAMES lzma HINTS ${SDDS_DIR})
-
-add_definitions("-std=c++11")
 
 # where to find header files
 include_directories( ${PROJECT_BINARY_DIR}
@@ -45,7 +55,8 @@ configure_file (
   )
 
 add_executable(teufel ${PROJECT_SOURCE_DIR}/src/teufel.cpp)
+#                              ${HDF5_CXX_LIBRARY_hdf5}
 target_link_libraries(teufel ${PROJECT_NAME}lib
-                             ${HDF5_CXX_LIBRARY_hdf5}
+                             ${HDF5_LIBRARIES}
                              ${SDDS_LIB} ${SDDS_MDBLIB} ${SDDS_MDBCOMMON} ${SDDS_LZMA}
                              ${ZLIB_LIBRARY_RELEASE} )
