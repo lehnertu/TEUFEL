@@ -48,7 +48,9 @@ Then we build the makefile from CMakeLists.txt contained in the root directory.
 ```
 cmake ..
 ```
-One can check the libraries and tools found and change the make options using
+One can check the libraries and tools found and change the make options.
+This can be usefull if it is not desired to build the documentation or the test executables
+(both are enabled by default).
 ```
 ccmake ..
 ```
