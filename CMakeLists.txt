@@ -36,11 +36,22 @@ if(SDDS_INCLUDE_DIR)
     message(STATUS "SDDS includes found in ${SDDS_INCLUDE_DIR}")
 endif()
 
+# MPI library
+find_package(MPI COMPONENTS CXX REQUIRED)
+if (MPI_CXX_FOUND)
+    message(STATUS "MPI includes ${MPI_CXX_INCLUDE_PATH}")
+    message(STATUS "MPI libraries ${MPI_CXX_LIBRARIES}")
+    message(STATUS "MPI compile flags ${MPI_CXX_COMPILE_FLAGS}")
+    message(STATUS "MPI link flags ${MPI_CXX_LINK_FLAGS}")
+endif ()
+
 # where to find header files
 include_directories( ${PROJECT_BINARY_DIR}
                      ${PROJECT_SOURCE_DIR}/src 
                      ${HDF5_INCLUDE_DIRS}
-                     ${SDDS_INCLUDE_DIR})
+                     ${PUGIXML_INCLUDE_DIR}
+                     ${SDDS_INCLUDE_DIR}
+                     ${MPI_CXX_INCLUDE_PATH})
 
 # we put all objects into a library that can be linked to the various executables
 aux_source_directory(${PROJECT_SOURCE_DIR}/src lib_sources )
@@ -70,6 +81,7 @@ add_executable(teufel ${PROJECT_SOURCE_DIR}/src/teufel.cpp)
 target_link_libraries(teufel ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
+                             ${PUGIXML_LIBRARIES}
                              ${ZLIB_LIBRARY_RELEASE} )
 
 # for building the documentation
@@ -129,6 +141,21 @@ endif()
 # for building examples
 option(BUILD_EXAMPLES "Build binaries for the examples" ON)
 if(BUILD_EXAMPLES)
-else()
+    set(PROJECT_EXAMPLES_DIR ${PROJECT_SOURCE_DIR}/examples)
+    add_executable(elbe-u300 ${PROJECT_EXAMPLES_DIR}/elbe-u300.cpp)
+    target_link_libraries(elbe-u300 ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIBRARIES}
+                             ${ZLIB_LIBRARY_RELEASE} )
+    add_executable(mpi_example ${PROJECT_EXAMPLES_DIR}/mpi_example.cpp)
+    set_target_properties(mpi_example PROPERTIES
+        COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
+    set_target_properties(mpi_example PROPERTIES
+        LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
+    target_link_libraries(mpi_example ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIBRARIES}
+                             ${MPI_CXX_LIBRARIES}
+                             ${ZLIB_LIBRARY_RELEASE} )
 endif()
 
