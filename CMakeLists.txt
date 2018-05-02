@@ -5,7 +5,7 @@ project (TEUFEL)
 # we add teufel/lib to the search path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/lib")
 
-set(CMAKE_VERBOSE_MAKEFILE ON)
+set(CMAKE_VERBOSE_MAKEFILE OFF)
 
 # Set default build type.
 if(NOT CMAKE_BUILD_TYPE)
@@ -75,7 +75,7 @@ configure_file (
   )
 
 # compiler flags
-add_definitions(-std=c++11 -Wall)
+add_definitions(-std=c++11 -Wall -g0 -m64 -pthread)
 
 add_executable(teufel ${PROJECT_SOURCE_DIR}/src/teufel.cpp)
 target_link_libraries(teufel ${PROJECT_NAME}lib
