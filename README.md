@@ -24,7 +24,17 @@ Functionality
 Build and Installation
 ----------------------
 
+We are using the [cmake](https://cmake.org/) build system to allow an easy build on a variety of platforms.
+Here we describe a typical out-of-source build. When cmake ist installed it usually defines a variable
+CMAKE_MODULE_PATH which set the directories where cmake tries to find its module definitions. TEUFEL adds
+(in CMakeLists.txt) it directory teufel/lib to this search path. This way some custom FindXXX.cmake files
+can be found.
+
 A few libraries are required to build the TEUFEL executable.
+- For implementing parallel execution on multi-core hardware we use the
+  [OpenMPI](https://www.open-mpi.org/) message paasing interface. It should be installed from the
+  system distribution. Other MPI implementations may work as well and may even be found by cmake
+  but are not tested. For development currently OpenMPI-1.8 ist used.
 - To simplify building TEUFEL version 3.4 of the the [SDDS toolkit](https://ops.aps.anl.gov/SDDSInfo.shtml)
   is contained in the repository.
 - On most systems the [HDF5 library](https://support.hdfgroup.org/HDF5/) can be installed
@@ -40,8 +50,6 @@ A few libraries are required to build the TEUFEL executable.
   typical Linux installation positions are found without this hint) for the library to be found.<br>
   ```export PUGIXML_ROOT=_path_to_library```
 
-We are using the cmake build system to allow an easy build on a variety of platforms.
-Here we describe a typical out-of-source build.
 First one should obtain the sources by cloning the repository from Github.
 
 ```
