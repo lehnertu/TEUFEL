@@ -31,6 +31,14 @@ A few libraries are required to build the TEUFEL executable.
   from the distribution repositories.<br>
   It is necessary to set an environment variable for the library to be found by the build system<br>
   ```export HDF5_ROOT=_path_to_library```
+- We use [PugiXML](https://pugixml.org/) to parse the XML input files for TEUFEL.
+  On most systems this can be installed from the distribution repositories. For Linux-X86 systems we
+  provide part of the library in teufel/lib/pugixml.
+  The file teufel/lib/FindPUGIXML.cmake is provided for cmake to find the library.
+  One has to set an environment variable pointing to the installation directory
+  (if in teufel/lib or any other less common installation position -
+  typical Linux installation positions are found without this hint) for the library to be found.<br>
+  ```export PUGIXML_ROOT=_path_to_library```
 
 We are using the cmake build system to allow an easy build on a variety of platforms.
 Here we describe a typical out-of-source build.
