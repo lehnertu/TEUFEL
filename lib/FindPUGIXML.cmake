@@ -9,19 +9,21 @@
 unset (PUGIXML_LIBRARY CACHE)
 unset (PUGIXML_INCLUDE_DIR CACHE)
 
-# If PUGIXML_ROOT was defined in the environment, use it.
+# If PUGIXML_ROOT is not yet known but was defined in the environment, use that.
 if (NOT PUGIXML_ROOT AND NOT $ENV{PUGIXML_ROOT} STREQUAL "")
     SET(PUGIXML_ROOT $ENV{PUGIXML_ROOT})
 endif()
 
 find_path (PUGIXML_INCLUDE_DIR
            NAMES pugixml.hpp
+           PATHS ${PUGIXML_ROOT}
            PATHS ${PUGIXML_ROOT}/include
            /usr/include
            /usr/local/include)
            
 find_library (PUGIXML_LIBRARY
               NAMES pugixml
+              PATHS ${PUGIXML_ROOT}
               PATHS ${PUGIXML_ROOT}/lib
               /usr/lib
               /usr/lib/x86_64-linux-gnu/

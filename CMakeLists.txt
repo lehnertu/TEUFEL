@@ -1,6 +1,10 @@
 cmake_minimum_required (VERSION 2.6)
 project (TEUFEL)
 
+set (TEUFEL_VERSION_MAJOR 0)
+set (TEUFEL_VERSION_MINOR 8)
+set (TEUFEL_VERSION_PATCH 2)
+
 # where to find modules
 # we add teufel/lib to the search path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/lib")
@@ -63,9 +67,6 @@ list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/simulation.cpp)
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/wave.cpp)
 message(STATUS "Found source files ${lib_sources}")
 add_library(${PROJECT_NAME}lib ${lib_sources})
-
-set (TEUFEL_VERSION_MAJOR 0)
-set (TEUFEL_VERSION_MINOR 8)
 
 # configure a header file to pass some of the CMake settings
 # to the source code
