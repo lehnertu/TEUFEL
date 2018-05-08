@@ -143,17 +143,30 @@ endif()
 option(BUILD_EXAMPLES "Build binaries for the examples" ON)
 if(BUILD_EXAMPLES)
     set(PROJECT_EXAMPLES_DIR ${PROJECT_SOURCE_DIR}/examples)
+    
     add_executable(elbe-u300 ${PROJECT_EXAMPLES_DIR}/elbe-u300.cpp)
     target_link_libraries(elbe-u300 ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
                              ${ZLIB_LIBRARY_RELEASE} )
+                             
     add_executable(mpi_example ${PROJECT_EXAMPLES_DIR}/mpi_example.cpp)
     set_target_properties(mpi_example PROPERTIES
         COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
     set_target_properties(mpi_example PROPERTIES
         LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
     target_link_libraries(mpi_example ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIBRARIES}
+                             ${MPI_CXX_LIBRARIES}
+                             ${ZLIB_LIBRARY_RELEASE} )
+
+    add_executable(single_electron ${PROJECT_EXAMPLES_DIR}/single_electron_wiggler.cpp)
+    set_target_properties(single_electron PROPERTIES
+        COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
+    set_target_properties(single_electron PROPERTIES
+        LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
+    target_link_libraries(single_electron ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
                              ${MPI_CXX_LIBRARIES}
