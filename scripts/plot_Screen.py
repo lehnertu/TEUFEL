@@ -120,8 +120,11 @@ if roiOK:
   print "integrated spectral power density in ROI = %g µJ/m²" % (1e6*intspec)
 
 # add spectrum integrated over the whole area
-
+# and integrated over the cirular range (if defined)
 totamp = np.zeros_like(amplit)
+if args.circ != None:
+    r2 = args.circ * args.circ
+    circamp = np.zeros_like(amplit)
 for ix in range(Nx):
   for iy in range(Ny):
     trace = a[ix,iy]
@@ -135,13 +138,23 @@ for ix in range(Nx):
     spectE = np.fft.fft(Ex)[:nots/2]
     spectB = np.fft.fft(By)[:nots/2]
     totamp += np.real(spectE*np.conj(spectB)/mu0)*2*dt/(df*nf)
+    if args.circ != None:
+      x = pos[ix,iy,0]
+      y = pos[ix,iy,1]
+      if x*x + y*y <= r2:
+        circamp += np.real(spectE*np.conj(spectB)/mu0)*2*dt/(df*nf)
+
 dX = pos[1,0,0]-pos[0,0,0]
 dY = pos[0,1,1]-pos[0,0,1]
 print "dx=%g dy=%g m" % (dX,dY)
 totamp *= dX*dY
+if args.circ != None:
+    circamp *= dX*dY
 
 ax2 = ax1.twinx()
 l2 = ax2.plot(1e-12*f, 1e6*1e12*totamp, "b-")
+if args.circ != None:
+    l3 = ax2.plot(1e-12*f, 1e6*1e12*circamp, "b--")
 if args.fmax != None:
     ax2.set_xlim(0.0,1e-12*args.fmax)
 ax2.set_ylabel(r'area integrated spectral power density   $dE/df$ [$\mu$J/THz]')
