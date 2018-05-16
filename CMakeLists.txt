@@ -63,7 +63,7 @@ aux_source_directory(${PROJECT_SOURCE_DIR}/src lib_sources )
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/teufel.cpp)
 # files not yet finished and not included in the build
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/cavity.cpp)
-list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/simulation.cpp)
+# list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/simulation.cpp)
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/wave.cpp)
 message(STATUS "Found source files ${lib_sources}")
 add_library(${PROJECT_NAME}lib ${lib_sources})

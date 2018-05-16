@@ -46,33 +46,54 @@
 
 */
 
-#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <string.h>
-#include <complex>
+#include <iostream>
 
 #include "config.h"
-#include "bunch.h"
-#include "beam.h"
-#include "global.h"
-#include "logger.h"
-#include "observer.h"
-#include "particle.h"
-#include "fields.h"
-#include "undulator.h"
-#include <iostream>
-#include <fstream>
-#include <time.h>
+#include "simulation.h"
 
-int NOP = 1e2;		// number of particles
-int NOTS = 1000;	// number of time steps
+#include "pugixml.hpp"
 
-int main()
+int main(int argc, char* argv[])
 {
-    printf("\n TEUFEL %d.%02d.%02d\n",
-        TEUFEL_VERSION_MAJOR,TEUFEL_VERSION_MINOR,TEUFEL_VERSION_PATCH);
-    printf("\n THz-Emission From Undulators and Free-Electron Lasers\n\n");
+    std::cout << std::endl;
+    std::cout << " TEUFEL " << TEUFEL_VERSION_MAJOR << ".";
+    std::cout.width(2);
+    std::cout.fill('0');
+    std::cout << TEUFEL_VERSION_MINOR << ".";
+    std::cout.width(2);
+    std::cout.fill('0');
+    std::cout << TEUFEL_VERSION_PATCH << std::endl;
+    // printf("\n TEUFEL %d.%02d.%02d\n", TEUFEL_VERSION_MAJOR,TEUFEL_VERSION_MINOR,TEUFEL_VERSION_PATCH);
+    cout << std::endl <<" THz-Emission From Undulators and Free-Electron Lasers" << std::endl << std::endl;
+    
+    pugi::xml_document doc;
+    if (argc < 2) {
+        std::cout << " Usage is teufel <infile>\n\n";
+        exit(1);
+    } else {
+        std::cout << " reading XML input from " << argv[1] << std::endl;
+        pugi::xml_parse_result result = doc.load_file(argv[1]);
+        if (result)
+        {
+            std::cout << " input parsed without errors" << std::endl;
+        }
+        else
+        {
+            std::cout << " ERROR reading file " << argv[1] << std::endl;
+            std::cout << " Error description: " << result.description() << std::endl;
+            exit(1);
+        }
+    };
+    pugi::xml_node root = doc.child("teufel");
+    if (!root) throw std::invalid_argument("root node <teufel> not found");
+    string description = root.attribute("description").value();
+    string author = root.attribute("author").value();
+    std::cout << " case : " << description << std::endl;
+    std::cout << " by : " << author << std::endl;
+    
+/*    
     double B = 0.384;
     double lambda = 0.300;
     double N = 8;
@@ -240,6 +261,7 @@ int main()
     delete beam;
     // delete observers and loggers
     delete bunchLog;
-    
+*/
+
     return 0;
 }
