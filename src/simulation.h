@@ -50,32 +50,30 @@ public:
     //! Destructor only used to free the memory
     ~Simulation();
     
-    /* Parse the input file and create all described objects.
+    /* Parse the input file and create all described lattice elements.
+     * Each one is added to the given lattice object.
      * If there is no child <lattice> under the root node
      * the whole program is aborted.
      * 
      * @return the number of processed items
      */
-    int parseLattice();
+    int parseLattice(Lattice *lattice);
 
     /* Parse the input file and create the beam.
      * If there is no child <beam> under the root node
      * the whole program is aborted.
      */
-    int parseBeam();
+    void parseBeam();
     
-    //! run the simulation
-    void run();
-    
-    //! again parse the input file and create all requested output files
-    void generateOutput();
+    /* Parse the input file and create the defined observers.
+     * Will not cause problems, if no observers are defined (tracking only).
+     */
+    void parseObservations();
 
 private:
     
     //! the root node of the input file
     pugi::xml_node root;
 
-    Lattice* lattice;
-    
 };
 

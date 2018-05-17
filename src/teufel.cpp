@@ -51,7 +51,9 @@
 #include <iostream>
 
 #include "config.h"
+#include "fields.h"
 #include "simulation.h"
+#include "observer.h"
 
 #include "pugixml.hpp"
 
@@ -97,7 +99,14 @@ int main(int argc, char* argv[])
     
     // Further parsing of the input document is done by the simulation object
     Simulation *sim = new Simulation(root);
-    int NoE = sim->parseLattice();
+    
+    // We create an empty lattice object.
+    // All lattice elements found when parsing the input are added to this.
+    Lattice *lattice = new Lattice;
+    int NoE = sim->parseLattice(lattice);
+    std::cout << "\n lattice of " << NoE << " elements created.\n\n";
+    
+    std::vector<Observer> listObservers;
     
 /*    
     double B = 0.384;

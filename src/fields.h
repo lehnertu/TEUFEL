@@ -139,7 +139,9 @@ public:
     /*! Default constructor with no functionality. */
     GeneralField() {};
 
+    /*! Default destructor */
     virtual ~GeneralField() {};
+    
     /*!
      * The electromagnetic field at a given time and point in space.
      * 

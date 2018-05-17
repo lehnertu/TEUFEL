@@ -125,6 +125,11 @@ void PointObserver<sourceT>::WriteTimeDomainFieldSDDS(const char *filename)
     return;
 }
 
+template <class sourceT>
+void PointObserver<sourceT>::generateOutput()
+{
+}
+
 // we have to instantiate the class for every possible source type
 template class PointObserver<Bunch>;
 template class PointObserver<Beam>;
@@ -420,6 +425,11 @@ void ScreenObserver<sourceT>::WriteTimeDomainFieldHDF5(const char *filename)
     // no errors have occured if we made it 'til here
     cout << "writing HDF5 done." << endl;
     return;
+}
+
+template <class sourceT>
+void ScreenObserver<sourceT>::generateOutput()
+{
 }
 
 // we have to instantiate the class for every possible source type

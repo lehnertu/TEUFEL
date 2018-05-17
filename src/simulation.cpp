@@ -32,15 +32,13 @@
 Simulation::Simulation(const pugi::xml_node node)
 {
     root = node;
-    lattice = new Lattice;
 }
 
 Simulation::~Simulation()
 {
-    delete lattice;
 }
 
-int Simulation::parseLattice()
+int Simulation::parseLattice(Lattice *lattice)
 {
     int count = 0;
     std::string type;
@@ -80,22 +78,16 @@ int Simulation::parseLattice()
     return count;
 }
 
-int Simulation::parseBeam()
+void Simulation::parseBeam()
 {
-    int count = 0;
     pugi::xml_node beam = root.child("beam");
     if (!beam)
     {
 	std::cout << "fatal error : node <beam> not found" << std::endl;
 	exit(-1);
     };
-    return count;
 }
 
-void Simulation::run()
-{
-}
-
-void Simulation::generateOutput()
+void Simulation::parseObservations()
 {
 }
