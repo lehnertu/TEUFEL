@@ -68,6 +68,8 @@ int main(int argc, char* argv[])
     // printf("\n TEUFEL %d.%02d.%02d\n", TEUFEL_VERSION_MAJOR,TEUFEL_VERSION_MINOR,TEUFEL_VERSION_PATCH);
     cout << std::endl <<" THz-Emission From Undulators and Free-Electron Lasers" << std::endl << std::endl;
     
+    // The first command line argument is interpreted as the input file name
+    // This is an XML document which is opened and parsed here.
     pugi::xml_document doc;
     if (argc < 2) {
         std::cout << " Usage is teufel <infile>\n\n";
@@ -91,7 +93,11 @@ int main(int argc, char* argv[])
     string description = root.attribute("description").value();
     string author = root.attribute("author").value();
     std::cout << " case : " << description << std::endl;
-    std::cout << " by : " << author << std::endl;
+    std::cout << " by : " << author << std::endl << std::endl;
+    
+    // Further parsing of the input document is done by the simulation object
+    Simulation *sim = new Simulation(root);
+    int NoE = sim->parseLattice();
     
 /*    
     double B = 0.384;
@@ -263,5 +269,7 @@ int main(int argc, char* argv[])
     delete bunchLog;
 */
 
+    delete sim;
+    
     return 0;
 }

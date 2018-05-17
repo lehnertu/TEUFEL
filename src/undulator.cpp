@@ -36,6 +36,30 @@ PlanarUndulator::PlanarUndulator(Vector pos) :
     Setup(0.0, 1.0, 1);
 }
 
+PlanarUndulator::PlanarUndulator(const pugi::xml_node node) :
+    ExternalField()
+{
+    pugi::xml_node position = node.child("position");
+    if (!position) throw std::invalid_argument("undulator <position> not found");
+    else
+    {
+        double x, y, z;
+        x = position.attribute("x").as_double(0.0);
+        y = position.attribute("y").as_double(0.0);
+        z = position.attribute("z").as_double(0.0);
+        origin = Vector(x,y,z);
+    }
+    pugi::xml_node field = node.child("field");
+    if (!field) throw std::invalid_argument("undulator <field> not found");
+    else
+    {
+        double B = field.attribute("B").as_double(0.0);
+        double period = field.attribute("period").as_double(0.0);
+        int N = field.attribute("N").as_int(0);
+        Setup(B, period, N);
+    }
+}
+
 void PlanarUndulator::Setup(
     double B,
     double lambda,

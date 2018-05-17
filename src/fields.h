@@ -244,7 +244,7 @@ private:
      */
     virtual ElMagField LocalField(double t, Vector X) = 0;
 
-private :
+protected :
 
     /*! This is the position of the element in laboratory frame */
     Vector origin;

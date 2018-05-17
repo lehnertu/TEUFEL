@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include "pugixml.hpp"
 #include "vector.h"
 #include "fields.h"
 
@@ -58,13 +59,19 @@ public:
      */
     PlanarUndulator(Vector pos);
 
+    /*! This constructor takes the information from an XML node
+     *  describing all undulator properties. It will throw exceptions
+     *  if necessary information is missing or cannot be interpreted.
+     */
+    PlanarUndulator(const pugi::xml_node node);
+
     /* Specify the magnetic field.<br>
      * This is called with values B=0, lambda=1.0, N=1 by the constructors.
      */
     void Setup(
-	double B,                         // peak field [T]
-        double lambda,                    // undulator period [m]
-        int    N                          // number of undulator periods
+	double B,                          // peak field [T]
+        double lambda,                 // undulator period [m]
+        int    N                       // number of undulator periods
         );
 
     double  GetBPeak();
