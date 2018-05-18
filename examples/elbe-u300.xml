@@ -7,8 +7,8 @@
             <position x="0.0" y="0.0" z="2.0"/>
         </undulator>
     </lattice>
-    <beam gamma="50.881">
-        <particle charge="-1e-9" cmr="-1.0" >
+    <beam>
+        <particle gamma="50.881" charge="-1e-9" cmr="-1.0" >
             <position x="0.0" y="0.0" z="0.0" />
             <direction x="0.0" y="0.0" z="1.0" />
         </particle>

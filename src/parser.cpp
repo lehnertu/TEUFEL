@@ -22,6 +22,7 @@
 #include <iostream>
 #include <iomanip>
 #include <stdexcept>
+#include <math.h>
 
 #include "fields.h"
 #include "global.h"
@@ -44,10 +45,10 @@ int InputParser::parseLattice(Lattice *lattice)
     std::string type;
     std::string name;
     pugi::xml_node latticenode = root.child("lattice");
-    if (!latticenode) throw std::invalid_argument("<lattice> not found");
+    if (!latticenode) throw std::invalid_argument("section <lattice> not found in input.");
+    // loop over all children of the lattice node
     for (pugi::xml_node_iterator it = latticenode.begin(); it != latticenode.end(); ++it)
     {
-        count++;
         pugi::xml_node element = *it;
         type = element.name();
         std::cout << "lattice::" << type << std::endl;
@@ -58,34 +59,68 @@ int InputParser::parseLattice(Lattice *lattice)
             if (type == "planar")
             {
                 std::cout << name << "::PlanarUndulator" << std::endl;
+                // the undulator object parses its own input
                 PlanarUndulator* Undu = new PlanarUndulator(element);
                 lattice->addElement(Undu);
-                /*
-                std::cout << std::fixed << std::setprecision(3);
-                std::cout << "  x=" << x << " m ";
-                std::cout << "  y=" << y << " m ";
-                std::cout << "  z=" << z << " m " << std::endl;
-                std::cout << std::fixed << std::setprecision(6);
-                std::cout << "  B= " << B << " T ";
-                std::cout << "  lambda= " << period << " m ";
-                std::cout << "  N= " << N << std::endl;
-                */
             }
             else throw std::invalid_argument("unknown undulator type");
+            count++;
         }
         else throw std::invalid_argument("unknown lattice element");
     }
     return count;
 }
 
-void InputParser::parseBeam()
+int InputParser::parseBeam(Beam *beam)
 {
-    pugi::xml_node beam = root.child("beam");
-    if (!beam)
+    int count = 0;
+    pugi::xml_node beamnode = root.child("beam");
+    if (!beamnode)
     {
-	std::cout << "fatal error : node <beam> not found" << std::endl;
-	exit(-1);
+        throw std::invalid_argument("section <beam> not found in input.");
+    }
+    else
+    {
+        // count the number of objects found within the beam
+        for (pugi::xml_node_iterator it = beamnode.begin(); it != beamnode.end(); ++it)
+        {
+            pugi::xml_node entry = *it;
+            std::string type = entry.name();
+            if (type == "particle")
+            {
+                double gamma = entry.attribute("gamma").as_double(0.0);
+                double betagamma = sqrt(gamma * gamma - 1.0);
+                double charge = entry.attribute("charge").as_double(0.0)/ElementaryCharge;
+                double cmr = entry.attribute("cmr").as_double(0.0);
+                pugi::xml_node posnode = entry.child("position");
+                if (!posnode) throw std::invalid_argument("<particle> <position> not found");
+                double x, y, z;
+                x = posnode.attribute("x").as_double(0.0);
+                y = posnode.attribute("y").as_double(0.0);
+                z = posnode.attribute("z").as_double(0.0);
+                Vector pos = Vector(x, y, z);
+                pugi::xml_node dirnode = entry.child("direction");
+                if (!dirnode) throw std::invalid_argument("<particle> <direction> not found");
+                x = dirnode.attribute("x").as_double(0.0);
+                y = dirnode.attribute("y").as_double(0.0);
+                z = dirnode.attribute("z").as_double(0.0);
+                Vector mom = Vector(x, y, z);
+                mom.normalize();
+                mom *= betagamma;
+                Vector acc = Vector(0.0, 0.0, 0.0);
+                // now we have all information - create a particle
+                ChargedParticle *p = new ChargedParticle(charge,cmr*charge);
+                p->initTrajectory(0.0, pos, mom, acc);
+                // create a bunch with just this particle and add it to the beam
+                Bunch *single = new Bunch();
+                single->Add(p);
+                beam->Add(single);
+                count++;
+            }
+            else throw std::invalid_argument("unknown type of beam entry");
+        };
     };
+    return count;
 }
 
 void InputParser::parseObservations()

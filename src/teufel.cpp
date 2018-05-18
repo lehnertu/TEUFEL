@@ -106,6 +106,13 @@ int main(int argc, char* argv[])
     int NoE = parse->parseLattice(lattice);
     std::cout << "\n lattice of " << NoE << " elements created.\n\n";
     
+    // We create an empty beam object.
+    // Then we call the parser to fill in the necessary information
+    // from the input file.
+    Beam *beam = new Beam();
+    int NoB = parse->parseBeam(beam);
+    std::cout << "\n beam of " << NoB << " bunches created.\n\n";
+
     std::vector<Observer> listObservers;
     
 /*    

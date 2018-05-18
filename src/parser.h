@@ -51,20 +51,25 @@ public:
     //! Destructor only used to free the memory
     ~InputParser();
     
-    /* Parse the input file and create all described lattice elements.
-     * Each one is added to the given lattice object.
-     * If there is no child <lattice> under the root node
-     * the whole program is aborted.
+    /*! Parse the input file and create all described lattice elements.
+     *  Each one is added to the given lattice object.
+     *  If there is no child <lattice> under the root node
+     *  the whole program is aborted.
      * 
-     * @return the number of processed items
+     *  @return The number of elements added to the lattice.
      */
     int parseLattice(Lattice *lattice);
 
-    /* Parse the input file and create the beam.
-     * If there is no child <beam> under the root node
-     * the whole program is aborted.
+    /*! Parse the input file and create the beam.
+     *  If there is no child <beam> under the root node
+     *  the whole program is aborted.
+     * 
+     *  Every entry in the beam section creates a single bunch.
+     *  Also for each <particle> entry an individual bunch is created.
+     * 
+     *  @return The number of bunches is returned.
      */
-    void parseBeam();
+    int parseBeam(Beam *beam);
     
     /* Parse the input file and create the defined observers.
      * Will not cause problems, if no observers are defined (tracking only).
