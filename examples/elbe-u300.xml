@@ -8,8 +8,10 @@
         </undulator>
     </lattice>
     <beam gamma="50.881">
-        <bunch NOP="1000" charge="77.0e-12">
-        </bunch>
+        <particle charge="-1e-9" cmr="-1.0" >
+            <position x="0.0" y="0.0" z="0.0" />
+            <direction x="0.0" y="0.0" z="1.0" />
+        </particle>
     </beam>
     <tracking method="Vay">
     </tracking>

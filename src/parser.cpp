@@ -25,20 +25,20 @@
 
 #include "fields.h"
 #include "global.h"
-#include "simulation.h"
+#include "parser.h"
 #include "undulator.h"
 #include "vector.h"
 
-Simulation::Simulation(const pugi::xml_node node)
+InputParser::InputParser(const pugi::xml_node node)
 {
     root = node;
 }
 
-Simulation::~Simulation()
+InputParser::~InputParser()
 {
 }
 
-int Simulation::parseLattice(Lattice *lattice)
+int InputParser::parseLattice(Lattice *lattice)
 {
     int count = 0;
     std::string type;
@@ -78,7 +78,7 @@ int Simulation::parseLattice(Lattice *lattice)
     return count;
 }
 
-void Simulation::parseBeam()
+void InputParser::parseBeam()
 {
     pugi::xml_node beam = root.child("beam");
     if (!beam)
@@ -88,6 +88,6 @@ void Simulation::parseBeam()
     };
 }
 
-void Simulation::parseObservations()
+void InputParser::parseObservations()
 {
 }

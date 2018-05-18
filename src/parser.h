@@ -27,16 +27,17 @@
 using namespace std;
 
 /*!
- *    \class Distribution
- *    \brief Main class describing/running the whole simulation.
+ *    \class InputParser
+ *    \brief Parse the XML input file.
  * 
  *    @author Ulf Lehnert
  *    @date 14.9.2017
  *    
- *    This class provides the main framework for running a simulation.
- *    All input about the configuration is read from an XML input file.
+ *    All input about the computation case is read from an XML input file.
+ *    This class provides methods for parsing that file and
+ *    creation of all objects needed to run the simulation.
  */
-class Simulation
+class InputParser
 {
 
 public:
@@ -45,10 +46,10 @@ public:
      *  an open XML file. This will be the root node from which
      *  all necessary information will be parsed.
      */
-    Simulation(const pugi::xml_node node);
+    InputParser(const pugi::xml_node node);
     
     //! Destructor only used to free the memory
-    ~Simulation();
+    ~InputParser();
     
     /* Parse the input file and create all described lattice elements.
      * Each one is added to the given lattice object.
