@@ -23,6 +23,7 @@
 #include "global.h"
 
 #include <math.h>
+#include <stdexcept>
 
 PlanarUndulator::PlanarUndulator() :
     ExternalField()
