@@ -63,8 +63,17 @@ public:
      */
     void Add(Bunch *bunch);
     
+    /*!
+     * Get a pointer to a particular bunch.
+     * Returns a NULL pointer if the index is out of range.
+     */
+    Bunch* getBunch(int i);
+    
     //! Report the number of bunches in the beam.
     int getNOB();	
+
+    //! Report the total number of particles contained in the beam.
+    int getNOP();
     
     //! Report the total charge of the particles contained in the beam.
     double getTotalCharge();

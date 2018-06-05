@@ -112,36 +112,13 @@ int main(int argc, char* argv[])
     // from the input file.
     Beam *beam = new Beam();
     int NoB = parse->parseBeam(beam);
-    std::cout << "\n beam of " << NoB << " bunches created.\n\n";
+    std::cout << " beam of " << NoB << " bunches created." << std::endl;
+    std::cout << " total number of particles : " << beam->getNOP() << std::endl;
+    std::cout << " total charge : " << beam->getTotalCharge()*ElementaryCharge*1.0e9 << "nC" << std::endl;
 
     std::vector<Observer> listObservers;
     
 /*    
-    double B = 0.384;
-    double lambda = 0.300;
-    double N = 8;
-    PlanarUndulator* Undu = new PlanarUndulator(Vector(0.0, 0.0, 2.0));
-    Undu->Setup(B, lambda, N);
-
-    printf("Undulator Period = %9.6g m\n", lambda);
-    printf("N = %9.6g\n", (double)N);
-    printf("B =  %9.6g T\n", B);
-    printf("K(rms) =  %9.3g\n", Undu->GetKrms());
-    double gamma = 195.695;
-    double beta = sqrt(1.0 - 1.0 / (gamma * gamma));
-    double betagamma = sqrt(gamma * gamma - 1.0);
-    double K = Undu->GetKpeak();
-    double lambdar = (lambda / (2 * gamma * gamma)) * (1 + K * K / 2);
-    printf("beta =  %12.9g\n", beta);
-    printf("gamma =  %12.9g\n", gamma);
-    printf("c*p =  %12.9g MeV\n", 1e-6 * mecsquared * betagamma);
-    printf("Radiation Wavelength =  %6.3f mm\n", lambdar * 1.0e3);
-    printf("Radiation Frequency =  %6.3g THz\n", SpeedOfLight/lambdar*1.0e-12);
-    
-    // a simple lattice with just the Undulator Field
-    Lattice* lattice = new Lattice;
-    lattice->addElement(Undu);
-
     // an electron bunch of 1nC total charge modeled with NOP particles
     // the initial bunch length is 100fs
     double ch = 1000.0e-12 / ElementaryCharge / NOP;

@@ -188,7 +188,10 @@ public:
     //! Report the total charge of the particles contained in the bunch.
     double getTotalCharge();
 
-    //! Get a pointer to a particle from its index within the bunch
+    /*!
+     * Get a pointer to a particle from its index within the bunch.
+     * Returns a NULL pointer if the index is out of range.
+     */
     ChargedParticle* getParticle(int i);
 
     /*! @brief Setup for tracking the whole bunch using the Vay algorithm.
