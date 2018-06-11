@@ -49,10 +49,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <iostream>
-#include <stdexcept>
 
 #include "config.h"
 #include "fields.h"
+#include "global.h"
 #include "observer.h"
 #include "parser.h"
 
@@ -92,7 +92,8 @@ int main(int argc, char* argv[])
         }
     };
     pugi::xml_node root = doc.child("teufel");
-    if (!root) throw std::invalid_argument("root node <teufel> not found");
+    if (!root)
+        throw ("TEUFEL::InputParser - root node <teufel> not found.");
     string description = root.attribute("description").value();
     string author = root.attribute("author").value();
     std::cout << " case : " << description << std::endl;

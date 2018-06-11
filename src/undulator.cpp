@@ -23,7 +23,6 @@
 #include "global.h"
 
 #include <math.h>
-#include <stdexcept>
 
 PlanarUndulator::PlanarUndulator() :
     ExternalField()
@@ -41,7 +40,8 @@ PlanarUndulator::PlanarUndulator(const pugi::xml_node node) :
     ExternalField()
 {
     pugi::xml_node position = node.child("position");
-    if (!position) throw std::invalid_argument("undulator <position> not found");
+    if (!position)
+        throw("InputParser::PlanarUndulator - uundulator <position> not found.");
     else
     {
         double x, y, z;
@@ -51,7 +51,8 @@ PlanarUndulator::PlanarUndulator(const pugi::xml_node node) :
         origin = Vector(x,y,z);
     }
     pugi::xml_node field = node.child("field");
-    if (!field) throw std::invalid_argument("undulator <field> not found");
+    if (!field)
+        throw("InputParser::PlanarUndulator - uundulator <field> not found.");
     else
     {
         double B = field.attribute("B").as_double(0.0);
