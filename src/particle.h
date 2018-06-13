@@ -73,7 +73,7 @@ public:
     int getNP() { return NP; };
 
     /*! Return the charge of the particle */
-    int getCharge() { return Charge; };
+    double getCharge() { return Charge; };
     
     /*! Return the time of the last stored trajectory point
      *  or zero if there is no trajectory.

@@ -206,7 +206,9 @@ double Bunch::getTotalCharge()
 
 ChargedParticle* Bunch::getParticle(int i)
 {
-    return P[i];
+    ChargedParticle *p = 0;
+    if (i>=0 && i<NOP) p=P[i];
+    return p;
 }
 
 void Bunch::InitVay(double tstep,

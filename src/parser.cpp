@@ -21,7 +21,6 @@
 
 #include <iostream>
 #include <iomanip>
-#include <stdexcept>
 #include <math.h>
 
 #include "fields.h"
@@ -71,7 +70,8 @@ int InputParser::parseLattice(Lattice *lattice)
     std::string type;
     std::string name;
     pugi::xml_node latticenode = root.child("lattice");
-    if (!latticenode) throw std::invalid_argument("section <lattice> not found in input.");
+    if (!latticenode)
+        throw("InputParser::parseLattice(Lattice - section <lattice> not found in input.");
     // loop over all children of the lattice node
     for (pugi::xml_node_iterator it = latticenode.begin(); it != latticenode.end(); ++it)
     {
@@ -89,10 +89,12 @@ int InputParser::parseLattice(Lattice *lattice)
                 PlanarUndulator* Undu = new PlanarUndulator(element);
                 lattice->addElement(Undu);
             }
-            else throw std::invalid_argument("unknown undulator type");
+            else
+                throw("InputParser::parseLattice(Lattice - unknown undulator type.");
             count++;
         }
-        else throw std::invalid_argument("unknown lattice element");
+        else
+            throw("InputParser::parseLattice(Lattice - unknown lattice element.");
     }
     return count;
 }
@@ -103,7 +105,7 @@ int InputParser::parseBeam(Beam *beam)
     pugi::xml_node beamnode = root.child("beam");
     if (!beamnode)
     {
-        throw std::invalid_argument("section <beam> not found in input.");
+        throw("InputParser::parseBeam - section <beam> not found in input.");
     }
     else
     {
@@ -119,14 +121,16 @@ int InputParser::parseBeam(Beam *beam)
                 double charge = entry.attribute("charge").as_double(0.0)/ElementaryCharge;
                 double cmr = entry.attribute("cmr").as_double(0.0);
                 pugi::xml_node posnode = entry.child("position");
-                if (!posnode) throw std::invalid_argument("<particle> <position> not found");
+                if (!posnode)
+                    throw("InputParser::parseBeam - <particle> <position> not found.");
                 double x, y, z;
                 x = posnode.attribute("x").as_double(0.0);
                 y = posnode.attribute("y").as_double(0.0);
                 z = posnode.attribute("z").as_double(0.0);
                 Vector pos = Vector(x, y, z);
                 pugi::xml_node dirnode = entry.child("direction");
-                if (!dirnode) throw std::invalid_argument("<particle> <direction> not found");
+                if (!dirnode)
+                    throw("InputParser::parseBeam - <particle> <direction> not found.");
                 x = dirnode.attribute("x").as_double(0.0);
                 y = dirnode.attribute("y").as_double(0.0);
                 z = dirnode.attribute("z").as_double(0.0);
@@ -143,7 +147,8 @@ int InputParser::parseBeam(Beam *beam)
                 beam->Add(single);
                 count++;
             }
-            else throw std::invalid_argument("unknown type of beam entry");
+            else
+                throw("InputParser::parseBeam - unknown type of beam entry.");
         };
     };
     return count;

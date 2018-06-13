@@ -42,9 +42,26 @@ void Beam::Add(Bunch *bunch)
     B.push_back(bunch);
 }
 
+Bunch* Beam::getBunch(int i)
+{
+    Bunch *b = 0;
+    if (i>=0 && i<NOB) b=B[i];
+    return b;
+}
+
 int Beam::getNOB()
 {
     return NOB;
+}
+
+int Beam::getNOP()
+{
+    int nop = 0;
+    for(int i=0; i<NOB; i++)
+    {
+        nop += B[i]->getNOP();
+    }
+    return nop;
 }
 
 double Beam::getTotalCharge()
