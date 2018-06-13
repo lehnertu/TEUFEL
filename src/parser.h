@@ -23,6 +23,7 @@
 
 #include "pugixml.hpp"
 #include "beam.h"
+#include "muParser.h"
 
 using namespace std;
 
@@ -50,6 +51,22 @@ public:
     
     //! Destructor only used to free the memory
     ~InputParser();
+    
+    /*! The children of the given node are checked, whether they are <calc> nodes.
+     *  In that case the provided statements are fed to the calculator.
+     * 
+     *  Possible combinations of attributes are:
+     * 
+     *  var="name" eq="..."
+     *  A variable with given name is initialized with the given equation.
+     * 
+     *  print="comment" eq="..."
+     *  The result of the given equation is printed along with the comment.
+     *  
+     *  All defined variables are persistent for the duration of the run
+     *  and can be used in further equations.
+     */
+    void parseCalc(const pugi::xml_node node);
     
     /*! Parse the input file and create all described lattice elements.
      *  Each one is added to the given lattice object.
@@ -80,6 +97,8 @@ private:
     
     //! the root node of the input file
     pugi::xml_node root;
-
+    
+    //! the math equation parser
+    mu::Parser *calc;
 };
 

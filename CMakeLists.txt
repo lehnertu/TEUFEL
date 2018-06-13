@@ -28,6 +28,16 @@ find_package(ZLIB REQUIRED)
 # XML library
 find_package(PUGIXML REQUIRED)
 
+# muParser library
+find_package(PkgConfig)
+pkg_check_modules(MUPARSER REQUIRED muparser)
+find_path(MUPARSER_INCLUDE_DIR muParser.h
+          HINTS ${PMUPARSER_INCLUDEDIR} ${MUPARSER_INCLUDE_DIRS})
+find_library(MUPARSER_LIBRARY NAMES muparser
+          HINTS ${MUPARSER_LIBDIR} ${MUPARSER_LIBRARY_DIRS})
+message(STATUS "muParser include : ${MUPARSER_INCLUDE_DIR}")
+message(STATUS "muParser library : ${MUPARSER_LIBRARY}")
+
 # our local SDDS library
 set(SDDS_DIR ${PROJECT_SOURCE_DIR}/lib/SDDSToolKit-devel-3.4)
 find_library(SDDS_LIB NAMES SDDS1 HINTS ${SDDS_DIR})
@@ -54,6 +64,7 @@ include_directories( ${PROJECT_BINARY_DIR}
                      ${PROJECT_SOURCE_DIR}/src 
                      ${HDF5_INCLUDE_DIRS}
                      ${PUGIXML_INCLUDE_DIR}
+                     ${MUPARSER_INCLUDE_DIR}
                      ${SDDS_INCLUDE_DIR}
                      ${MPI_CXX_INCLUDE_PATH})
 
@@ -83,6 +94,7 @@ target_link_libraries(teufel ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
                              ${PUGIXML_LIBRARIES}
+                             ${MUPARSER_LIBRARY}
                              ${ZLIB_LIBRARY_RELEASE} )
 
 # for building the documentation

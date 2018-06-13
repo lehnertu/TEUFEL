@@ -32,11 +32,37 @@
 
 InputParser::InputParser(const pugi::xml_node node)
 {
+    // this is the <teufel> node
     root = node;
+    calc = new mu::Parser();
+    // execute all <calc> nodes present as children of root
+    for (pugi::xml_node_iterator it = root.begin(); it != root.end(); ++it)
+    {
+        pugi::xml_node element = *it;
+        std::string type = element.name();
+        if ( type == "calc") parseCalc(element);
+    }
 }
 
 InputParser::~InputParser()
 {
+}
+
+void InputParser::parseCalc(const pugi::xml_node node)
+{
+    std::string prt = node.attribute("print").value();
+    std::string var = node.attribute("var").value();
+    std::string eq = node.attribute("eq").value();
+    if (prt.length() > 0)
+    {
+        calc->SetExpr(eq);
+        std::cout << "calc : " << prt << calc->Eval() << std::endl;
+    };
+    if (var.length() > 0)
+    {
+        calc->SetExpr(eq);
+        std::cout << "calc : set " << var << " = " << calc->Eval() << std::endl;
+    };
 }
 
 int InputParser::parseLattice(Lattice *lattice)
