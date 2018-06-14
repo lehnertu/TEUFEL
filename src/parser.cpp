@@ -34,6 +34,12 @@ InputParser::InputParser(const pugi::xml_node node)
     // this is the <teufel> node
     root = node;
     calc = new mu::Parser();
+    // we pre-define a number of constants in the calculator
+    calc->DefineConst("_c", (double)SpeedOfLight);
+    calc->DefineConst("_e", (double)ElementaryCharge);
+    calc->DefineConst("_mec2", (double)mecsquared);
+    calc->DefineConst("_eps0", (double)EpsNull);
+    calc->DefineConst("_mu0", (double)MuNull);
     // execute all <calc> nodes present as children of root
     for (pugi::xml_node_iterator it = root.begin(); it != root.end(); ++it)
     {
@@ -52,16 +58,50 @@ void InputParser::parseCalc(const pugi::xml_node node)
     std::string prt = node.attribute("print").value();
     std::string var = node.attribute("var").value();
     std::string eq = node.attribute("eq").value();
+    // if this is a print statement
     if (prt.length() > 0)
     {
-        calc->SetExpr(eq);
-        std::cout << "calc : " << prt << calc->Eval() << std::endl;
+        try
+        {
+            calc->SetExpr(eq);
+            std::cout << "calc : " << prt << calc->Eval() << std::endl;
+        }
+        catch (mu::Parser::exception_type &e)
+        {
+            std::cout << "InputParser::parseCalc : can't evaluate " << eq << std::endl;
+            std::cout << e.GetMsg() << endl;
+        }
     };
+    // if this is a variable definition
     if (var.length() > 0)
     {
-        calc->SetExpr(eq);
-        std::cout << "calc : set " << var << " = " << calc->Eval() << std::endl;
+        try
+        {
+            calc->SetExpr(eq);
+            calc->DefineConst(var, calc->Eval());
+        }
+        catch (mu::Parser::exception_type &e)
+        {
+            std::cout << "InputParser::parseCalc : can't evaluate " << eq << std::endl;
+            std::cout << e.GetMsg() << endl;
+        }
     };
+}
+
+double InputParser::parseValue(const pugi::xml_attribute attr)
+{
+    double retval = 0.0;
+    try
+    {
+        calc->SetExpr(attr.value());
+        retval = calc->Eval();
+    }
+    catch (mu::Parser::exception_type &e)
+    {
+        std::cout << "InputParser::parseValue : can't evaluate " << attr.value() << std::endl;
+        std::cout << e.GetMsg() << endl;
+    }
+    return retval;
 }
 
 int InputParser::parseLattice(Lattice *lattice)
@@ -86,7 +126,8 @@ int InputParser::parseLattice(Lattice *lattice)
             {
                 std::cout << name << "::PlanarUndulator" << std::endl;
                 // the undulator object parses its own input
-                PlanarUndulator* Undu = new PlanarUndulator(element);
+                // we provide a reference to the parser
+                PlanarUndulator* Undu = new PlanarUndulator(element, this);
                 lattice->addElement(Undu);
             }
             else
@@ -116,24 +157,24 @@ int InputParser::parseBeam(Beam *beam)
             std::string type = entry.name();
             if (type == "particle")
             {
-                double gamma = entry.attribute("gamma").as_double(0.0);
+                double gamma = parseValue(entry.attribute("gamma"));
                 double betagamma = sqrt(gamma * gamma - 1.0);
-                double charge = entry.attribute("charge").as_double(0.0)/ElementaryCharge;
-                double cmr = entry.attribute("cmr").as_double(0.0);
+                double charge = parseValue(entry.attribute("charge"))/ElementaryCharge;
+                double cmr = parseValue(entry.attribute("cmr"));
                 pugi::xml_node posnode = entry.child("position");
                 if (!posnode)
                     throw("InputParser::parseBeam - <particle> <position> not found.");
                 double x, y, z;
-                x = posnode.attribute("x").as_double(0.0);
-                y = posnode.attribute("y").as_double(0.0);
-                z = posnode.attribute("z").as_double(0.0);
+                x = parseValue(posnode.attribute("x"));
+                y = parseValue(posnode.attribute("y"));
+                z = parseValue(posnode.attribute("z"));
                 Vector pos = Vector(x, y, z);
                 pugi::xml_node dirnode = entry.child("direction");
                 if (!dirnode)
                     throw("InputParser::parseBeam - <particle> <direction> not found.");
-                x = dirnode.attribute("x").as_double(0.0);
-                y = dirnode.attribute("y").as_double(0.0);
-                z = dirnode.attribute("z").as_double(0.0);
+                x = parseValue(dirnode.attribute("x"));
+                y = parseValue(dirnode.attribute("y"));
+                z = parseValue(dirnode.attribute("z"));
                 Vector mom = Vector(x, y, z);
                 mom.normalize();
                 mom *= betagamma;

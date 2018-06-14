@@ -31,23 +31,29 @@ CMAKE_MODULE_PATH which set the directories where cmake tries to find its module
 can be found.
 
 A few libraries are required to build the TEUFEL executable.
+
 - For implementing parallel execution on multi-core hardware we use the
   [OpenMPI](https://www.open-mpi.org/) message paasing interface. It should be installed from the
   system distribution. Other MPI implementations may work as well and may even be found by cmake
   but are not tested. For development currently OpenMPI-1.8 ist used.
+
 - To simplify building TEUFEL version 3.4 of the the [SDDS toolkit](https://ops.aps.anl.gov/SDDSInfo.shtml)
   is contained in the repository.
+
 - On most systems the [HDF5 library](https://support.hdfgroup.org/HDF5/) can be installed
-  from the distribution repositories.<br>
-  It is necessary to set an environment variable for the library to be found by the build system<br>
+  from the distribution repositories.
+  It is necessary to set an environment variable for the library to be found by the build system
+
   ```export HDF5_ROOT=_path_to_library```
+
 - We use [PugiXML](https://pugixml.org/) to parse the XML input files for TEUFEL.
   On most systems this can be installed from the distribution repositories. For Linux-X86 systems we
   provide part of the library in teufel/lib/pugixml.
   The file teufel/lib/FindPUGIXML.cmake is provided for cmake to find the library.
   One has to set an environment variable pointing to the installation directory
   (if in teufel/lib or any other less common installation position -
-  typical Linux installation positions are found without this hint) for the library to be found.<br>
+  typical Linux installation positions are found without this hint) for the library to be found.
+
   ```export PUGIXML_ROOT=_path_to_library```
 
 First one should obtain the sources by cloning the repository from Github.

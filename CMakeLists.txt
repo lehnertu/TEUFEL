@@ -139,6 +139,7 @@ if(BUILD_TESTS)
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
                              ${PUGIXML_LIBRARIES}
+                             ${MUPARSER_LIBRARY}
                              ${ZLIB_LIBRARY_RELEASE} )
     add_executable(teufel.loop ${PROJECT_TESTS_DIR}/teufel.loop.cpp)
     target_link_libraries(teufel.loop ${PROJECT_NAME}lib
@@ -162,6 +163,7 @@ if(BUILD_EXAMPLES)
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
                              ${PUGIXML_LIBRARIES}
+                             ${MUPARSER_LIBRARY}
                              ${ZLIB_LIBRARY_RELEASE} )
                              
     add_executable(mpi_example ${PROJECT_EXAMPLES_DIR}/mpi_example.cpp)
@@ -174,6 +176,7 @@ if(BUILD_EXAMPLES)
                              ${SDDS_LIBRARIES}
                              ${MPI_CXX_LIBRARIES}
                              ${PUGIXML_LIBRARIES}
+                             ${MUPARSER_LIBRARY}
                              ${ZLIB_LIBRARY_RELEASE} )
 
     add_executable(single_electron ${PROJECT_EXAMPLES_DIR}/single_electron_wiggler.cpp)
@@ -186,6 +189,7 @@ if(BUILD_EXAMPLES)
                              ${SDDS_LIBRARIES}
                              ${MPI_CXX_LIBRARIES}
                              ${PUGIXML_LIBRARIES}
+                             ${MUPARSER_LIBRARY}
                              ${ZLIB_LIBRARY_RELEASE} )
 endif()
 

@@ -24,6 +24,7 @@
 #include "pugixml.hpp"
 #include "vector.h"
 #include "fields.h"
+#include "parser.h"
 
 /*!
  * \class PlanarUndulator
@@ -62,8 +63,11 @@ public:
     /*! This constructor takes the information from an XML node
      *  describing all undulator properties. It will throw exceptions
      *  if necessary information is missing or cannot be interpreted.
+     * 
+     *  A reference to the input parser must be provided as it is
+     *  necessary to run the input through the calculator.
      */
-    PlanarUndulator(const pugi::xml_node node);
+    PlanarUndulator(const pugi::xml_node node, InputParser *parser);
 
     /* Specify the magnetic field.<br>
      * This is called with values B=0, lambda=1.0, N=1 by the constructors.

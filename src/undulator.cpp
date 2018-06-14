@@ -36,7 +36,7 @@ PlanarUndulator::PlanarUndulator(Vector pos) :
     Setup(0.0, 1.0, 1);
 }
 
-PlanarUndulator::PlanarUndulator(const pugi::xml_node node) :
+PlanarUndulator::PlanarUndulator(const pugi::xml_node node, InputParser *parser) :
     ExternalField()
 {
     pugi::xml_node position = node.child("position");
@@ -45,9 +45,9 @@ PlanarUndulator::PlanarUndulator(const pugi::xml_node node) :
     else
     {
         double x, y, z;
-        x = position.attribute("x").as_double(0.0);
-        y = position.attribute("y").as_double(0.0);
-        z = position.attribute("z").as_double(0.0);
+        x = parser->parseValue(position.attribute("x"));
+        y = parser->parseValue(position.attribute("y"));
+        z = parser->parseValue(position.attribute("z"));
         origin = Vector(x,y,z);
     }
     pugi::xml_node field = node.child("field");
@@ -55,8 +55,8 @@ PlanarUndulator::PlanarUndulator(const pugi::xml_node node) :
         throw("InputParser::PlanarUndulator - uundulator <field> not found.");
     else
     {
-        double B = field.attribute("B").as_double(0.0);
-        double period = field.attribute("period").as_double(0.0);
+        double B = parser->parseValue(field.attribute("B"));
+        double period = parser->parseValue(field.attribute("period"));
         int N = field.attribute("N").as_int(0);
         Setup(B, period, N);
     }
@@ -72,6 +72,7 @@ void PlanarUndulator::Setup(
     LambdaU = lambda;
     NPeriods = N;
     Krms = LambdaU * SpeedOfLight * BPeak / (2.0 * Pi * mecsquared) / sqrt(2.0);
+    std::cout << "planar undulator  N = " << NPeriods << ",  lambda = " << LambdaU << ",  K(rms) = " << Krms << std::endl;
     ky = 2.0 * Pi / LambdaU;
     kz = 2.0 * Pi / LambdaU;
 }

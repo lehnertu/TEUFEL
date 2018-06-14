@@ -37,6 +37,10 @@ using namespace std;
  *    All input about the computation case is read from an XML input file.
  *    This class provides methods for parsing that file and
  *    creation of all objects needed to run the simulation.
+ * 
+ *    The class incorporates a calculator based on the [muParser](http://beltoforion.de/article.php?a=muparser) library.
+ *    All floating point input values are evaluated by this calculator.
+ * 
  */
 class InputParser
 {
@@ -65,8 +69,16 @@ public:
      *  
      *  All defined variables are persistent for the duration of the run
      *  and can be used in further equations.
+     * 
+     *  A number of constants is pre-defined for use in calculations
+     *  "_c", "_e", "_mec2", "_eps0", "_mu0"
      */
     void parseCalc(const pugi::xml_node node);
+    
+    /*! Convert a node attribute into a double value using the calculator.
+     *  In case of an error 0.0 is returned.
+     */
+    double parseValue(const pugi::xml_attribute att);
     
     /*! Parse the input file and create all described lattice elements.
      *  Each one is added to the given lattice object.
