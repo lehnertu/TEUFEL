@@ -39,14 +39,9 @@ InputParser::InputParser(const pugi::xml_node node)
     calc->DefineConst("_e", (double)ElementaryCharge);
     calc->DefineConst("_mec2", (double)mecsquared);
     calc->DefineConst("_eps0", (double)EpsNull);
-    calc->DefineConst("_mu0", (double)MuNull);
-    // execute all <calc> nodes present as children of root
-    for (pugi::xml_node_iterator it = root.begin(); it != root.end(); ++it)
-    {
-        pugi::xml_node element = *it;
-        std::string type = element.name();
-        if ( type == "calc") parseCalc(element);
-    }
+    calc->DefineConst("_pi", (double)Pi);
+    // evaluate all <calc> nodes present as children of root
+    parseCalcChildren(root);
 }
 
 InputParser::~InputParser()
@@ -88,6 +83,16 @@ void InputParser::parseCalc(const pugi::xml_node node)
     };
 }
 
+void InputParser::parseCalcChildren(const pugi::xml_node node)
+{
+    for (pugi::xml_node_iterator it = node.begin(); it != node.end(); ++it)
+    {
+        pugi::xml_node element = *it;
+        std::string type = element.name();
+        if ( type == "calc") parseCalc(element);
+    }
+}
+
 double InputParser::parseValue(const pugi::xml_attribute attr)
 {
     double retval = 0.0;
@@ -117,8 +122,9 @@ int InputParser::parseLattice(Lattice *lattice)
     {
         pugi::xml_node element = *it;
         type = element.name();
-        std::cout << "lattice::" << type << std::endl;
-        if (type == "undulator")
+        if (type == "calc")
+            parseCalc(element);
+        else if (type == "undulator")
         {
             type = element.attribute("type").value();
             name = element.attribute("name").value();
@@ -155,12 +161,15 @@ int InputParser::parseBeam(Beam *beam)
         {
             pugi::xml_node entry = *it;
             std::string type = entry.name();
-            if (type == "particle")
+            if (type == "calc")
+                parseCalc(entry);
+            else if (type == "particle")
             {
                 double gamma = parseValue(entry.attribute("gamma"));
                 double betagamma = sqrt(gamma * gamma - 1.0);
                 double charge = parseValue(entry.attribute("charge"))/ElementaryCharge;
                 double cmr = parseValue(entry.attribute("cmr"));
+                parseCalcChildren(entry);
                 pugi::xml_node posnode = entry.child("position");
                 if (!posnode)
                     throw("InputParser::parseBeam - <particle> <position> not found.");

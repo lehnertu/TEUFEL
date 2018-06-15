@@ -1,16 +1,23 @@
 <?xml version="1.0"?>
 <teufel description="Superradiant emission from the ELBE U300 undulator"
     author="Ulf Lehnert 14.9.2017">
-    <calc print="observer position z0 = " var="z0" eq="10.0"/>
-    <calc print="observation start time t0 = " var="t0" eq="z0/_c"/>
+    <calc print="beam energy [eV] = " var="E_beam" eq="26.0e6" />
+    <calc print="gamma = " var="gamma" eq="E_beam/_mec2"/>
+    <!-- set desired output frequency -->
+    <calc print="freq [Hz] = " var="f" eq="1.0e12"/>
+    <calc print="lambda [m] = " var="lambda" eq="_c/f"/>
     <lattice>
         <undulator name="U300" type="planar">
-            <field B="0.10315" period="0.300" N="8" />
+            <!-- compute undulator setting from desired output frequency -->
+            <calc var="lambda_U" eq="0.300" />
+            <calc print="K_rms(U300) = " var="K_rms" eq="sqrt(lambda/lambda_U*2*gamma*gamma-1)" />
+            <calc print="B_peak [T] = " var="B0" eq="K_rms*sqrt(2)/_c*2*_pi*_mec2/lambda_U" />
+            <field B="B0" period="lambda_U" N="8" />
             <position x="0.0" y="0.0" z="2.0"/>
         </undulator>
     </lattice>
     <beam>
-        <particle gamma="50.881" charge="-1.0e-9" cmr="-1.0" >
+        <particle gamma="gamma" charge="-1.0e-9" cmr="-1.0" >
             <position x="0.0" y="0.0" z="0.0" />
             <direction x="0.0" y="0.0" z="1.0" />
         </particle>
@@ -18,5 +25,7 @@
     <tracking method="Vay">
     </tracking>
     <observer>
+        <calc print="observer position z0 = " var="z0" eq="10.0"/>
+        <calc print="observation start time t0 = " var="t0" eq="z0/_c"/>
     </observer>
 </teufel>

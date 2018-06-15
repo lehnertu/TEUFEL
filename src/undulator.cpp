@@ -39,6 +39,7 @@ PlanarUndulator::PlanarUndulator(Vector pos) :
 PlanarUndulator::PlanarUndulator(const pugi::xml_node node, InputParser *parser) :
     ExternalField()
 {
+    parser->parseCalcChildren(node);
     pugi::xml_node position = node.child("position");
     if (!position)
         throw("InputParser::PlanarUndulator - uundulator <position> not found.");

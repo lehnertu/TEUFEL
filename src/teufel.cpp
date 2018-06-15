@@ -61,7 +61,7 @@
 int main(int argc, char* argv[])
 {
     std::cout << std::endl;
-    std::cout << " TEUFEL " << TEUFEL_VERSION_MAJOR << ".";
+    std::cout << "TEUFEL " << TEUFEL_VERSION_MAJOR << ".";
     std::cout.width(2);
     std::cout.fill('0');
     std::cout << TEUFEL_VERSION_MINOR << ".";
@@ -69,25 +69,25 @@ int main(int argc, char* argv[])
     std::cout.fill('0');
     std::cout << TEUFEL_VERSION_PATCH << std::endl;
     // printf("\n TEUFEL %d.%02d.%02d\n", TEUFEL_VERSION_MAJOR,TEUFEL_VERSION_MINOR,TEUFEL_VERSION_PATCH);
-    cout << std::endl <<" THz-Emission From Undulators and Free-Electron Lasers" << std::endl << std::endl;
+    cout << std::endl <<"THz-Emission From Undulators and Free-Electron Lasers" << std::endl << std::endl;
     
     // The first command line argument is interpreted as the input file name
     // This is an XML document which is opened and parsed here.
     pugi::xml_document doc;
     if (argc < 2) {
-        std::cout << " Usage is teufel <infile>\n\n";
+        std::cout << "Usage is teufel <infile>\n\n";
         exit(1);
     } else {
-        std::cout << " reading XML input from " << argv[1] << std::endl;
+        std::cout << "reading XML input from " << argv[1] << std::endl;
         pugi::xml_parse_result result = doc.load_file(argv[1]);
         if (result)
         {
-            std::cout << " input parsed without errors" << std::endl;
+            std::cout << "input parsed without errors" << std::endl;
         }
         else
         {
-            std::cout << " ERROR reading file " << argv[1] << std::endl;
-            std::cout << " Error description: " << result.description() << std::endl;
+            std::cout << "ERROR reading file " << argv[1] << std::endl;
+            std::cout << "Error description: " << result.description() << std::endl;
             exit(1);
         }
     };
@@ -96,8 +96,8 @@ int main(int argc, char* argv[])
         throw ("TEUFEL::InputParser - root node <teufel> not found.");
     string description = root.attribute("description").value();
     string author = root.attribute("author").value();
-    std::cout << " case : " << description << std::endl;
-    std::cout << " by : " << author << std::endl << std::endl;
+    std::cout << "case : " << description << std::endl;
+    std::cout << "by : " << author << std::endl << std::endl;
     
     // Further parsing of the input document is done by the simulation object
     InputParser *parse = new InputParser(root);
@@ -106,16 +106,16 @@ int main(int argc, char* argv[])
     // All lattice elements found when parsing the input are added to this.
     Lattice *lattice = new Lattice;
     int NoE = parse->parseLattice(lattice);
-    std::cout << "\n lattice of " << NoE << " elements created.\n\n";
+    std::cout << "\nlattice of " << NoE << " elements created.\n\n";
     
     // We create an empty beam object.
     // Then we call the parser to fill in the necessary information
     // from the input file.
     Beam *beam = new Beam();
     int NoB = parse->parseBeam(beam);
-    std::cout << " beam of " << NoB << " bunches created." << std::endl;
-    std::cout << " total number of particles : " << beam->getNOP() << std::endl;
-    std::cout << " total charge : " << beam->getTotalCharge()*ElementaryCharge*1.0e9 << "nC" << std::endl;
+    std::cout << "beam of " << NoB << " bunches created." << std::endl;
+    std::cout << "total number of particles : " << beam->getNOP() << std::endl;
+    std::cout << "total charge : " << beam->getTotalCharge()*ElementaryCharge*1.0e9 << "nC" << std::endl;
 
     std::vector<Observer> listObservers;
     

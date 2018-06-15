@@ -56,8 +56,8 @@ public:
     //! Destructor only used to free the memory
     ~InputParser();
     
-    /*! The children of the given node are checked, whether they are <calc> nodes.
-     *  In that case the provided statements are fed to the calculator.
+    /*! The provided node is a <calc> node.
+     *  The provided statements are fed to the calculator.
      * 
      *  Possible combinations of attributes are:
      * 
@@ -75,7 +75,13 @@ public:
      */
     void parseCalc(const pugi::xml_node node);
     
-    /*! Convert a node attribute into a double value using the calculator.
+    /*! The children of the given node are checked, whether they are <calc> nodes.
+     *  In that case the provided statements are fed to the calculator
+     *  by calling parseCalc().
+     */
+    void parseCalcChildren(const pugi::xml_node node);
+
+     /*! Convert a node attribute into a double value using the calculator.
      *  In case of an error 0.0 is returned.
      */
     double parseValue(const pugi::xml_attribute att);
