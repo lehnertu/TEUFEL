@@ -56,6 +56,12 @@ A few libraries are required to build the TEUFEL executable.
 
   ```export PUGIXML_ROOT=_path_to_library```
 
+- We use [muParser](https://github.com/beltoforion/muparser) to provide
+  an inline scientific calculator that allows calculations to be performed
+  inside the XML input file. If it is not installed on your system it should
+  be cloned an built under teufel/lib/muparser/. In both cases the script
+  teufel/lib/FindMUPARSER.cmake will find and include the library.
+
 First one should obtain the sources by cloning the repository from Github.
 
 ```

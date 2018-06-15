@@ -29,7 +29,7 @@ find_path (MUPARSER_INCLUDE_DIR
 message(STATUS "MUPARSER_INCLUDE_DIR = ${MUPARSER_INCLUDE_DIR}")
            
 find_library (MUPARSER_LIBRARY
-              NAMES libmuparser.a
+              NAMES libmuparser.a libmuparser.so
               PATHS /usr/lib
               /usr/lib/x86_64-linux-gnu/
               /usr/local/lib
