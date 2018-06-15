@@ -6,6 +6,8 @@
 # PUGIXML_LIBRARIES - library to link against
 # PUGIXML_FOUND - true if pugixml was found.
 
+message(STATUS "this is FindPUGIXML.cmake")
+
 unset (PUGIXML_LIBRARY CACHE)
 unset (PUGIXML_INCLUDE_DIR CACHE)
 
@@ -19,7 +21,8 @@ find_path (PUGIXML_INCLUDE_DIR
            PATHS ${PUGIXML_ROOT}
            PATHS ${PUGIXML_ROOT}/include
            /usr/include
-           /usr/local/include)
+           /usr/local/include
+           ${CMAKE_SOURCE_DIR}/lib/pugixml)
            
 find_library (PUGIXML_LIBRARY
               NAMES pugixml
@@ -27,7 +30,8 @@ find_library (PUGIXML_LIBRARY
               PATHS ${PUGIXML_ROOT}/lib
               /usr/lib
               /usr/lib/x86_64-linux-gnu/
-              /usr/local/lib)
+              /usr/local/lib
+              ${CMAKE_SOURCE_DIR}/lib/pugixml)
 
 # Support the REQUIRED and QUIET arguments, and set PUGIXML_FOUND if found.
 include (FindPackageHandleStandardArgs)

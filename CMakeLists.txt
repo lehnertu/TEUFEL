@@ -8,6 +8,7 @@ set (TEUFEL_VERSION_PATCH 2)
 # where to find modules
 # we add teufel/lib to the search path
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/lib")
+message(STATUS "cmake search path: ${CMAKE_MODULE_PATH}")
 
 set(CMAKE_VERBOSE_MAKEFILE OFF)
 
@@ -29,14 +30,7 @@ find_package(ZLIB REQUIRED)
 find_package(PUGIXML REQUIRED)
 
 # muParser library
-find_package(PkgConfig)
-pkg_check_modules(MUPARSER REQUIRED muparser)
-find_path(MUPARSER_INCLUDE_DIR muParser.h
-          HINTS ${PMUPARSER_INCLUDEDIR} ${MUPARSER_INCLUDE_DIRS})
-find_library(MUPARSER_LIBRARY NAMES muparser
-          HINTS ${MUPARSER_LIBDIR} ${MUPARSER_LIBRARY_DIRS})
-message(STATUS "muParser include : ${MUPARSER_INCLUDE_DIR}")
-message(STATUS "muParser library : ${MUPARSER_LIBRARY}")
+find_package(MUPARSER REQUIRED)
 
 # our local SDDS library
 set(SDDS_DIR ${PROJECT_SOURCE_DIR}/lib/SDDSToolKit-devel-3.4)
