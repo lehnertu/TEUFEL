@@ -106,6 +106,14 @@ public:
      */
     int parseBeam(Beam *beam);
     
+    /*! Parse the input file and setup for tracking particles.
+     *  If there is no child <tracking> under the root node
+     *  the whole program is aborted.
+     * 
+     *  The parameters for tracking are stored in the beam object.
+     */
+    void parseTracking(Beam *beam);
+    
     /* Parse the input file and create the defined observers.
      * Will not cause problems, if no observers are defined (tracking only).
      */

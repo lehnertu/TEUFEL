@@ -233,7 +233,8 @@ int main(int argc, char *argv[])
     beam->Add(bunch);
     
     // setup for the tracking procedure
-    beam->InitVay(deltaT, lattice);
+    beam->setTimeStep(deltaT);
+    beam->InitVay(lattice);
 
     // log the Parameters of the bunch
     /*

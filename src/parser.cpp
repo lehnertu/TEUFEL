@@ -116,7 +116,7 @@ int InputParser::parseLattice(Lattice *lattice)
     std::string name;
     pugi::xml_node latticenode = root.child("lattice");
     if (!latticenode)
-        throw("InputParser::parseLattice(Lattice - section <lattice> not found in input.");
+        throw(IOexception("InputParser::parseLattice(Lattice - section <lattice> not found in input."));
     // loop over all children of the lattice node
     for (pugi::xml_node_iterator it = latticenode.begin(); it != latticenode.end(); ++it)
     {
@@ -137,11 +137,11 @@ int InputParser::parseLattice(Lattice *lattice)
                 lattice->addElement(Undu);
             }
             else
-                throw("InputParser::parseLattice(Lattice - unknown undulator type.");
+                throw(IOexception("InputParser::parseLattice(Lattice - unknown undulator type."));
             count++;
         }
         else
-            throw("InputParser::parseLattice(Lattice - unknown lattice element.");
+            throw(IOexception("InputParser::parseLattice(Lattice - unknown lattice element."));
     }
     return count;
 }
@@ -152,7 +152,7 @@ int InputParser::parseBeam(Beam *beam)
     pugi::xml_node beamnode = root.child("beam");
     if (!beamnode)
     {
-        throw("InputParser::parseBeam - section <beam> not found in input.");
+        throw(IOexception("InputParser::parseBeam - section <beam> not found in input."));
     }
     else
     {
@@ -172,7 +172,7 @@ int InputParser::parseBeam(Beam *beam)
                 parseCalcChildren(entry);
                 pugi::xml_node posnode = entry.child("position");
                 if (!posnode)
-                    throw("InputParser::parseBeam - <particle> <position> not found.");
+                    throw(IOexception("InputParser::parseBeam - <particle> <position> not found."));
                 double x, y, z;
                 x = parseValue(posnode.attribute("x"));
                 y = parseValue(posnode.attribute("y"));
@@ -180,7 +180,7 @@ int InputParser::parseBeam(Beam *beam)
                 Vector pos = Vector(x, y, z);
                 pugi::xml_node dirnode = entry.child("direction");
                 if (!dirnode)
-                    throw("InputParser::parseBeam - <particle> <direction> not found.");
+                    throw(IOexception("InputParser::parseBeam - <particle> <direction> not found."));
                 x = parseValue(dirnode.attribute("x"));
                 y = parseValue(dirnode.attribute("y"));
                 z = parseValue(dirnode.attribute("z"));
@@ -198,10 +198,37 @@ int InputParser::parseBeam(Beam *beam)
                 count++;
             }
             else
-                throw("InputParser::parseBeam - unknown type of beam entry.");
+                throw(IOexception("InputParser::parseBeam - unknown type of beam entry."));
         };
     };
     return count;
+}
+
+void InputParser::parseTracking(Beam *beam)
+{
+    pugi::xml_node track = root.child("tracking");
+    if (!track)
+    {
+        throw(IOexception("InputParser::parseTracking - section <tracking> not found in input."));
+    }
+    else
+    {
+        std::string method = track.attribute("method").value();
+        if (method == "Vay")
+        {
+            beam->setTrackingMethod(TRACKING_VAY);
+        }
+        else
+            throw(IOexception("InputParser::parseTracking - unknown tracking method."));
+        pugi::xml_attribute timestep = track.attribute("delta_t");
+        if (!timestep)
+            throw(IOexception("InputParser::parseTracking - <tracking> attribute delta_t not found."));
+        beam->setTimeStep(parseValue(timestep));
+        pugi::xml_attribute nst = track.attribute("NOTS");
+        if (!nst)
+            throw(IOexception("InputParser::parseTracking - <tracking> attribute NOTS not found."));
+        beam->setNOTS(nst.as_int());
+    }
 }
 
 void InputParser::parseObservations()

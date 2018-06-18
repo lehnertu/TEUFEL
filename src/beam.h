@@ -28,6 +28,9 @@
 
 using namespace std;
 
+//! choice of the tracking method
+typedef enum keyword { TRACKING_NONE, TRACKING_EULER, TRACKING_VAY } TrackingMethod;
+
 /*!
     \class Beam
     \brief Ensemble of bunches
@@ -78,6 +81,35 @@ public:
     //! Report the total charge of the particles contained in the beam.
     double getTotalCharge();
     
+    //! Report the used tracking method
+    TrackingMethod getTrackingMethod() { return tracker; };
+    
+    //! Set the tracking method to be used.
+    void setTrackingMethod(TrackingMethod method) { tracker = method; };
+    
+    //! Report the used tracking time step
+    double getTimeStep() { return dt; };
+    
+    //! Set the tracking time step to be used.
+    void setTimeStep(double step) { dt = step; };
+    
+    //! Report the number of time steps
+    int getNOTS() { return NOTS; };
+    
+    //! Set the number of time steps to be used for tracking.
+    void setNOTS(int n) { NOTS = n; };
+
+    /*!
+     *  Generic setup method to initlize the tracking of all particles in the beam.
+     *  Depending on the choosen stepper method the appropriate init methods
+     *  are called.
+     * 
+     *  @param field the field through which the beam will be tracked
+     * 
+     *  In case of failing sanity checks an IOexception is thrown.
+     */
+    void setupTracking(GeneralField *field);
+    
     /*! @brief Setup for tracking the whole beam using the Vay algorithm.
      * 
      * See ChargedParticle::InitVay for details
@@ -85,11 +117,9 @@ public:
      * @todo Tracking particles which do not start all at the same time
      * is not yet supported.
      * 
-     * @param tstep the length of the time step.
      * @param field the field through which the beam will be tracked
      */
-    void InitVay(double tstep,
-		 GeneralField *field);
+    void InitVay(GeneralField *field);
     
     /*! @brief Perform one tracking step using the Vay algorithm.
      * 
@@ -149,8 +179,13 @@ private:
 
     /*! Time step for tracking - this will remain constant
      * after being set at the start of tracking.
-     * @todo do we actually need it?
      */
     double dt;
 
+    //! numer of time steps
+    int NOTS;
+    
+    //! Method used for tracking
+    TrackingMethod tracker;
+    
 };

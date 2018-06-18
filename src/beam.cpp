@@ -28,6 +28,7 @@
 Beam::Beam()
 {
     NOB = 0;
+    tracker = TRACKING_NONE;
 }
 
 Beam::~Beam()
@@ -74,13 +75,29 @@ double Beam::getTotalCharge()
     return charge;
 }
 
-void Beam::InitVay(double tstep,
-		GeneralField *field)
+void Beam::setupTracking(GeneralField *field)
 {
-    dt = tstep;
+    switch (tracker)
+    {
+        case TRACKING_NONE:
+            throw(IOexception("Beam::setupTracking - no tracking method provided."));
+            break;
+        case TRACKING_EULER:
+            throw(IOexception("Beam::setupTracking - EULER tracking method not yet implemented."));
+            break;
+        case TRACKING_VAY:
+            InitVay(field);
+            break;
+        default:
+            throw(IOexception("Beam::setupTracking - unknown tracking method."));
+    }
+}
+
+void Beam::InitVay(GeneralField *field)
+{
     for(int i=0; i<NOB; i++)
     {
-	B[i]->InitVay(tstep, field);
+	B[i]->InitVay(dt, field);
     }
 }
 

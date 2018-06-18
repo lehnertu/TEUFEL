@@ -117,6 +117,12 @@ int main(int argc, char* argv[])
     std::cout << "total number of particles : " << beam->getNOP() << std::endl;
     std::cout << "total charge : " << beam->getTotalCharge()*ElementaryCharge*1.0e9 << "nC" << std::endl;
 
+    // get all tracking information from the input file
+    parse->parseTracking(beam);
+    
+    // prepare the tracking of the beam
+    beam->setupTracking(lattice);
+    
     std::vector<Observer> listObservers;
     
 /*    

@@ -47,6 +47,8 @@
  * \brief Class for exceptions returning a user-defined message.
  * @author Ulf Lehnert
  * @date 24.10.2017
+ * 
+ * @todo use this exception throughout the code!
  */
 class IOexception: public std::exception
 {

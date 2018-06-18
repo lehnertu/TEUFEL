@@ -110,7 +110,8 @@ int main()
     beam->Add(single);
     
     // setup for the tracking procedure
-    beam->InitVay(deltaT, lattice);
+    beam->setTimeStep(deltaT);
+    beam->InitVay(lattice);
 
     // do the tracking of the beam
     printf("tracking particles ...\n");

@@ -6,13 +6,14 @@
     <!-- set desired output frequency -->
     <calc print="freq [Hz] = " var="f" eq="1.0e12"/>
     <calc print="lambda [m] = " var="lambda" eq="_c/f"/>
+    <calc var="lambda_U" eq="0.300" />
     <lattice>
         <undulator name="U300" type="planar">
             <!-- compute undulator setting from desired output frequency -->
-            <calc var="lambda_U" eq="0.300" />
             <calc print="K_rms(U300) = " var="K_rms" eq="sqrt(lambda/lambda_U*2*gamma*gamma-1)" />
-            <calc print="B_peak [T] = " var="B0" eq="K_rms*sqrt(2)/_c*2*_pi*_mec2/lambda_U" />
-            <field B="B0" period="lambda_U" N="8" />
+            <!-- setup the undulator -->
+            <field B="K_rms*sqrt(2)/_c*2*_pi*_mec2/lambda_U"
+                   period="lambda_U" N="8" />
             <position x="0.0" y="0.0" z="2.0"/>
         </undulator>
     </lattice>
@@ -22,8 +23,10 @@
             <direction x="0.0" y="0.0" z="1.0" />
         </particle>
     </beam>
-    <tracking method="Vay">
-    </tracking>
+    <calc print="tracking length [m] = " var="total_L" eq="4.0" />
+    <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
+    <calc print="dt = " var="dt" eq="total_t/4000" />
+    <tracking method="Vay" delta_t="dt" NOTS="4000" />
     <observer>
         <calc print="observer position z0 = " var="z0" eq="10.0"/>
         <calc print="observation start time t0 = " var="t0" eq="z0/_c"/>

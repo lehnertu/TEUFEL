@@ -150,7 +150,8 @@ int main()
     beam->Add(bunch);
     
     // setup for the tracking procedure
-    beam->InitVay(deltaT, lattice);
+    beam->setTimeStep(deltaT);
+    beam->InitVay(lattice);
 
     // log the Parameters of the bunch
     TrackingLogger<Bunch> *bunchLog = new TrackingLogger<Bunch>(bunch);
