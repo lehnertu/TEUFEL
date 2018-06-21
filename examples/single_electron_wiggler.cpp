@@ -150,7 +150,8 @@ int main()
 	
 	// compute the radiation observed on a finite screen
     ScreenObserver<Bunch> screenObs = ScreenObserver<Bunch>(
-	    single,
+	single,
+        "SingleParticle_Screen_ObsRadField.h5",
     	Vector(0.0, 0.0, z0),       // position
     	Vector(0.004, 0.0, 0.0),    // dx
     	Vector(0.0, 0.004, 0.0),    // dy

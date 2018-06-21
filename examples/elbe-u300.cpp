@@ -219,7 +219,8 @@ int main()
 	bunchObs.integrate();
 	
     ScreenObserver<Bunch> screenObs = ScreenObserver<Bunch>(
-	    bunch,
+	bunch,
+        "elbe-u300_Screen_ObsRadField.h5",
     	Vector(0.0, 0.0, z0),		// position
     	Vector(0.001, 0.0, 0.0),		// dx
     	Vector(0.0, 0.001, 0.0),		// dy

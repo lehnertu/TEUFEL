@@ -3,7 +3,7 @@ project (TEUFEL)
 
 set (TEUFEL_VERSION_MAJOR 0)
 set (TEUFEL_VERSION_MINOR 8)
-set (TEUFEL_VERSION_PATCH 2)
+set (TEUFEL_VERSION_PATCH 4)
 
 # where to find modules
 # we add teufel/lib to the search path

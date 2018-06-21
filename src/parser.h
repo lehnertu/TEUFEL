@@ -21,9 +21,14 @@
 
 #pragma once
 
+#include <vector>
+
 #include "pugixml.hpp"
 #include "beam.h"
 #include "muParser.h"
+#include "beam.h"
+#include "fields.h"
+#include "observer.h"
 
 using namespace std;
 
@@ -114,10 +119,16 @@ public:
      */
     void parseTracking(Beam *beam);
     
-    /* Parse the input file and create the defined observers.
-     * Will not cause problems, if no observers are defined (tracking only).
+    /*! Parse the input file and create the defined observers.
+     *  All observers found are appended to the given list.
+     *  Will not cause problems, if no observers are defined (tracking only)
+     *  but the main nodes <observer> should still be present.
+     * 
+     *  For construction of the observer the observed beam object must be given.
+     * 
+     *  @return The number of observers is returned.
      */
-    void parseObservations();
+    int parseObservers(std::vector<Observer*> *listObservers, Beam* beam);
 
 private:
     

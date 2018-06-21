@@ -93,6 +93,24 @@ void Beam::setupTracking(GeneralField *field)
     }
 }
 
+void Beam::doStep(GeneralField *field)
+{
+    switch (tracker)
+    {
+        case TRACKING_NONE:
+            throw(IOexception("Beam::doStep - no tracking method provided."));
+            break;
+        case TRACKING_EULER:
+            throw(IOexception("Beam::doStep - EULER tracking method not yet implemented."));
+            break;
+        case TRACKING_VAY:
+            StepVay(field);
+            break;
+        default:
+            throw(IOexception("Beam::doStep - unknown tracking method."));
+    }
+}
+
 void Beam::InitVay(GeneralField *field)
 {
     for(int i=0; i<NOB; i++)

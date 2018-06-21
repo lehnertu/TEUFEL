@@ -46,6 +46,7 @@ InputParser::InputParser(const pugi::xml_node node)
 
 InputParser::~InputParser()
 {
+    delete calc;
 }
 
 void InputParser::parseCalc(const pugi::xml_node node)
@@ -156,7 +157,6 @@ int InputParser::parseBeam(Beam *beam)
     }
     else
     {
-        // count the number of objects found within the beam
         for (pugi::xml_node_iterator it = beamnode.begin(); it != beamnode.end(); ++it)
         {
             pugi::xml_node entry = *it;
@@ -224,13 +224,88 @@ void InputParser::parseTracking(Beam *beam)
         if (!timestep)
             throw(IOexception("InputParser::parseTracking - <tracking> attribute delta_t not found."));
         beam->setTimeStep(parseValue(timestep));
-        pugi::xml_attribute nst = track.attribute("NOTS");
+        pugi::xml_attribute nst = track.attribute("n");
         if (!nst)
-            throw(IOexception("InputParser::parseTracking - <tracking> attribute NOTS not found."));
+            throw(IOexception("InputParser::parseTracking - <tracking> attribute n not found."));
         beam->setNOTS(nst.as_int());
     }
 }
 
-void InputParser::parseObservations()
+int InputParser::parseObservers(std::vector<Observer*> *listObservers, Beam *beam)
 {
+    int NOO = 0;
+    pugi::xml_node obsroot = root.child("observer");
+    if (!obsroot)
+    {
+        throw(IOexception("InputParser::parseObservers - section <observer> not found in input."));
+    }
+    else
+    {
+        for (pugi::xml_node_iterator it = obsroot.begin(); it != obsroot.end(); ++it)
+        {
+            pugi::xml_node obs = *it;
+            std::string type = obs.name();
+            if (type == "calc")
+                parseCalc(obs);
+            else if (type == "point")
+            {
+                NOO++;
+            }
+            else if (type == "screen")
+            {
+                double x, y, z;
+                double t0, dt;
+                pugi::xml_attribute fn = obs.attribute("file");
+                if (!fn)
+                    throw(IOexception("InputParser::parseObservers - <screen> attribute file not found."));                
+                parseCalcChildren(obs);
+                pugi::xml_node posnode = obs.child("position");
+                if (!posnode)
+                    throw(IOexception("InputParser::parseObservers - <screen> <position> not found."));
+                x = parseValue(posnode.attribute("x"));
+                y = parseValue(posnode.attribute("y"));
+                z = parseValue(posnode.attribute("z"));
+                Vector pos = Vector(x, y, z);
+                pugi::xml_node hnode = obs.child("hpitch");
+                if (!hnode)
+                    throw(IOexception("InputParser::parseObservers - <screen> <hpitch> not found."));
+                x = parseValue(hnode.attribute("x"));
+                y = parseValue(hnode.attribute("y"));
+                z = parseValue(hnode.attribute("z"));
+                Vector dx = Vector(x, y, z);
+                pugi::xml_attribute nh = hnode.attribute("n");
+                if (!nh)
+                    throw(IOexception("InputParser::parseObservers - <screen> <hpitch> attribute n not found."));
+                pugi::xml_node vnode = obs.child("vpitch");
+                if (!vnode)
+                    throw(IOexception("InputParser::parseObservers - <screen> <vpitch> not found."));
+                x = parseValue(vnode.attribute("x"));
+                y = parseValue(vnode.attribute("y"));
+                z = parseValue(vnode.attribute("z"));
+                Vector dy = Vector(x, y, z);
+                pugi::xml_attribute nv = vnode.attribute("n");
+                if (!nv)
+                    throw(IOexception("InputParser::parseObservers - <screen> <vpitch> attribute n not found."));
+                pugi::xml_node tnode = obs.child("time");
+                if (!tnode)
+                    throw(IOexception("InputParser::parseObservers - <screen> <time> not found."));
+                t0 = parseValue(tnode.attribute("t0"));
+                dt = parseValue(tnode.attribute("dt"));
+                pugi::xml_attribute nt = tnode.attribute("n");
+                if (!nt)
+                    throw(IOexception("InputParser::parseObservers - <screen> <time> attribute n not found."));
+                ScreenObserver<Beam> *screenObs = new ScreenObserver<Beam>(
+                    beam, fn.as_string(),
+                    pos, dx, dy,
+                    nh.as_int(),
+                    nv.as_int(),
+                    t0, dt, nt.as_int() );
+                listObservers->push_back(screenObs);
+                NOO++;
+            }
+            else
+                throw(IOexception("InputParser::parseObservers - unknown observer type."));
+        };
+    }
+    return NOO;
 }

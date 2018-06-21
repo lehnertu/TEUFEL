@@ -303,6 +303,7 @@ int main(int argc, char *argv[])
     double t0 = z0/SpeedOfLight - 1.0e-12;
     ScreenObserver<Bunch> screenObs = ScreenObserver<Bunch>(
     	bunch,
+        "MPI_elbe-u300_Screen_ObsRadField.h5",
     	Vector(0.0, 0.0, z0),		// position
     	Vector(0.001, 0.0, 0.0),		// dx
     	Vector(0.0, 0.001, 0.0),		// dy

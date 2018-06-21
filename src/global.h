@@ -29,6 +29,9 @@
 
 #pragma once
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <iostream>
 #include <exception>
 
 #define ElementaryCharge 1.6021766208e-19       // [As]

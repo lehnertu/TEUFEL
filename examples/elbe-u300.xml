@@ -3,6 +3,7 @@
     author="Ulf Lehnert 14.9.2017">
     <calc print="beam energy [eV] = " var="E_beam" eq="26.0e6" />
     <calc print="gamma = " var="gamma" eq="E_beam/_mec2"/>
+    <calc print="charge [nC] = " var="charge" eq="-1.0" />
     <!-- set desired output frequency -->
     <calc print="freq [Hz] = " var="f" eq="1.0e12"/>
     <calc print="lambda [m] = " var="lambda" eq="_c/f"/>
@@ -18,7 +19,7 @@
         </undulator>
     </lattice>
     <beam>
-        <particle gamma="gamma" charge="-1.0e-9" cmr="-1.0" >
+        <particle gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" >
             <position x="0.0" y="0.0" z="0.0" />
             <direction x="0.0" y="0.0" z="1.0" />
         </particle>
@@ -26,9 +27,15 @@
     <calc print="tracking length [m] = " var="total_L" eq="4.0" />
     <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
     <calc print="dt = " var="dt" eq="total_t/4000" />
-    <tracking method="Vay" delta_t="dt" NOTS="4000" />
+    <tracking method="Vay" delta_t="dt" n="4000" />
     <observer>
-        <calc print="observer position z0 = " var="z0" eq="10.0"/>
-        <calc print="observation start time t0 = " var="t0" eq="z0/_c"/>
+        <calc print="screen position z0 = " var="z0" eq="10.0"/>
+        <calc print="screen start time t0 = " var="t0" eq="z0/_c"/>
+        <screen file="screen_10m.h5">
+            <position x="0.0" y="0.0" z="z0" />
+            <hpitch x="0.01" y="0.0" z="0.0" n="81" />
+            <vpitch x="0.0" y="0.01" z="0.0" n="81" />
+            <time t0="t0" dt="1e-13" n="300" />
+        </screen>
     </observer>
 </teufel>

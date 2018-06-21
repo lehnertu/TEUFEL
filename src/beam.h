@@ -54,7 +54,7 @@ public:
     
     /*!
      * Destructor:
-     * Deleting the bunch also deletes all contained bunches.
+     * Deleting the beam also deletes all contained bunches.
      * This in turn deletes all particles belonging to the bunches.
      * So, normally the beam is the only object that needs to be deleted.
      */
@@ -109,6 +109,16 @@ public:
      *  In case of failing sanity checks an IOexception is thrown.
      */
     void setupTracking(GeneralField *field);
+    
+    /*!
+     *  Generic setup method to to do oe tracking step of all particles in the beam.
+     *  Depending on the choosen stepper method the appropriate stepper is called.
+     * 
+     *  @param field the field through which the beam is tracked
+     * 
+     *  In case of failing sanity checks an IOexception is thrown.
+     */
+    void doStep(GeneralField *field);
     
     /*! @brief Setup for tracking the whole beam using the Vay algorithm.
      * 

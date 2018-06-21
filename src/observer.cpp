@@ -137,6 +137,7 @@ template class PointObserver<Beam>;
 template <class sourceT>
 ScreenObserver<sourceT>::ScreenObserver(
     sourceT *src,
+    std::string filename,
     Vector position,
     Vector dx,
     Vector dy,
@@ -147,6 +148,7 @@ ScreenObserver<sourceT>::ScreenObserver(
     unsigned int nots)
 {
     Source = src;
+    FileName = filename,
     O = position;
     dX = dx;
     dY = dy;
@@ -273,12 +275,12 @@ void ScreenObserver<sourceT>::fromBuffer(double *buffer, unsigned int count)
 }
 
 template <class sourceT>
-void ScreenObserver<sourceT>::WriteTimeDomainFieldHDF5(const char *filename)
+void ScreenObserver<sourceT>::WriteTimeDomainFieldHDF5(std::string filename)
 {
     herr_t status;
     cout << "writing HDF5 file " << filename << endl;
     // Create a new file using the default properties.
-    hid_t file = H5Fcreate (filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    hid_t file = H5Fcreate (filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
     if (file<0) throw("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Fcreate()");
     
     // Create dataspace for the observation positions.
@@ -430,6 +432,7 @@ void ScreenObserver<sourceT>::WriteTimeDomainFieldHDF5(const char *filename)
 template <class sourceT>
 void ScreenObserver<sourceT>::generateOutput()
 {
+    WriteTimeDomainFieldHDF5(FileName);
 }
 
 // we have to instantiate the class for every possible source type

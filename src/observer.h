@@ -21,7 +21,11 @@
 
 #pragma once
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <iostream>
 #include <vector>
+
 #include "global.h"
 #include "fields.h"
 #include "vector.h"
@@ -128,7 +132,7 @@ public:
     void WriteTimeDomainFieldSDDS(const char *filename);
 
     /*! Generate the output file(s) from this observation.
-     *  TODO : this should call  WriteTimeDomainFieldSDDS()
+     *  @todo : this should call  WriteTimeDomainFieldSDDS()
      */
     virtual void generateOutput();
 
@@ -162,6 +166,8 @@ private:
  * 
  * This class handles the computation and storage of emitted electromagnetic
  * radiation from different sources (bunches and beams).
+ * 
+ * @todo The observers need not necessarily be templated, the integrate() method is the only one accessing the source and could easily be oberloaded.
  */
 template <class sourceT>
 class ScreenObserver : public Observer
@@ -206,6 +212,7 @@ public:
      */
     ScreenObserver(
         sourceT *src,
+        std::string filename,
         Vector position,
         Vector dx,
         Vector dy,
@@ -279,10 +286,10 @@ public:
      * 
      * @throws IOexception
      */
-    void WriteTimeDomainFieldHDF5(const char *filename);
+    void WriteTimeDomainFieldHDF5(std::string filename);
 
     /*! Generate the output file(s) from this observation.
-     *  TODO : this should call  WriteTimeDomainFieldHDF5()
+     *  @todo : this should call  WriteTimeDomainFieldHDF()
      */
     virtual void generateOutput();
 
@@ -298,6 +305,9 @@ private:
     //! the field source
     sourceT *Source;
     
+    //! file name for the final output
+    std::string FileName;
+
     //! the origin of the grid
     Vector O;
     
