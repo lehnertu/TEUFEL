@@ -104,7 +104,7 @@ void Distribution::bufferData(double *buffer, int bufsize)
     }
     else
     {
-        throw("Distribution::bufferData() - buffer size mismatch");
+        throw(IOexception("Distribution::bufferData() - buffer size mismatch"));
     }
 }
 
@@ -116,7 +116,7 @@ void Distribution::fromBuffer(double *buffer, int bufsize)
     }
     else
     {
-        throw("Distribution::fromBuffer() - buffer size mismatch");
+        throw(IOexception("Distribution::fromBuffer() - buffer size mismatch"));
     }
 }
 

@@ -92,7 +92,7 @@ int main(int argc, char* argv[])
     };
     pugi::xml_node root = doc.child("teufel");
     if (!root)
-        throw ("TEUFEL::InputParser - root node <teufel> not found.");
+        throw(IOexception("TEUFEL::InputParser - root node <teufel> not found."));
     string description = root.attribute("description").value();
     string author = root.attribute("author").value();
     std::cout << "case : " << description << std::endl;

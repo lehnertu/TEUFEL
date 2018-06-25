@@ -159,7 +159,7 @@ void ChargedParticle::InitVay(
 {
     // check prerequisites
     if (NP<1)
-	throw("ChargedParticle::InitVay() - must initalize trajectory before tracking");
+	throw(IOexception("ChargedParticle::InitVay() - must initalize trajectory before tracking"));
     // preset the fixed values
     dt = tstep;
     qm = Charge/Mass * InvRestMass;
