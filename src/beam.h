@@ -22,6 +22,7 @@
 #pragma once
 
 #include "fields.h"
+#include "global.h"
 #include "bunch.h"
 #include "vector.h"
 #include <vector>
@@ -146,8 +147,10 @@ public:
      *  - momentum px,py,pz,p (beta*gamma)
      *  - angles xp,yp (px/pz, py/pz)
      *  - gamma
+     * 
+     *  @return number of particles written
      */
-    int WriteWatchPointHDF5(const char *filename);
+    int WriteWatchPointHDF5(std::string filename);
     
     /*! Compute the electromagnetic field radiated by the bunch
      * seen at the observation point. The field is given in time domain

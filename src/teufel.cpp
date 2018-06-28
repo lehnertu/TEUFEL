@@ -120,13 +120,17 @@ int main(int argc, char* argv[])
     std::cout << std::endl;
 
     // get all tracking information from the input file
-    parse->parseTracking(beam);
+    std::vector<watch_t> watches;
+    int NoW = parse->parseTracking(beam, &watches);
+    std::cout << "defined " << NoW << " watch points." << std::endl;
+    std::cout << std::endl;
     
     // parse all observer definitions
     std::vector<Observer*> listObservers;
     int NoO = parse->parseObservers(&listObservers, beam);
     std::cout << std::endl;
-    std::cout << "created " << NoO << " observers." << std::endl;
+    std::cout << "defined " << NoO << " observers." << std::endl;
+    std::cout << std::endl;
     
     // prepare the tracking of the beam
     beam->setupTracking(lattice);
@@ -134,6 +138,17 @@ int main(int argc, char* argv[])
     // we are done with the input document
     delete parse;
     
+    // handle watch point of initial particle distribution
+    for (int iw=0; iw<NoW; iw++)
+    {
+        watch_t w = watches.at(iw);
+        if (w.step == 0)
+        {
+            std::cout << "writing watch point " << w.filename << std::endl;
+            int nw = beam->WriteWatchPointHDF5(w.filename);
+            std::cout << nw << " particles written." << std::endl;
+        }
+    }
     // do the tracking of the beam
     std::cout << std::endl;
     std::cout << "tracking " << beam->getNOP() << " particles ..." << std::endl;
@@ -144,7 +159,18 @@ int main(int argc, char* argv[])
     for (int step=0; step<beam->getNOTS(); step++)
     {
         beam->doStep(lattice);
-        // update the observers every step
+        // handle watch points
+        for (int iw=0; iw<NoW; iw++)
+        {
+            watch_t w = watches.at(iw);
+            if (w.step == step+1)
+            {
+                std::cout << "writing watch point " << w.filename << std::endl;
+                int nw = beam->WriteWatchPointHDF5(w.filename);
+                std::cout << nw << " particles written." << std::endl;
+                std::cout << std::endl;
+            }
+        }
         // make a print once every 10s
         clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &current_time);
         double elapsed = current_time.tv_sec-print_time.tv_sec +

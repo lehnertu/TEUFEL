@@ -140,14 +140,17 @@ class Bunch
 
 public:
 
-    /*! default constructor: creates an empty bunch .
+    /*! default constructor: creates an empty bunch.
     */	
     Bunch();
     
     /*! create a bunch of given number of particles each having
-     * given charge and mass.
+     *  given charge and mass. Charge and mass are given in units of elementary
+     *  charge and electron mass. So for a bunch of electrons the respective
+     *  parameters are negative (charge) and positive (mass) number of
+     *  electrons in the bunch.
      * 
-     * The particles have no initial coordinates
+     *  The particles have no initial coordinates
      */
     Bunch(int N, double charge, double mass);
     
@@ -155,7 +158,7 @@ public:
      * each having given charge and mass.
      * 
      * The given distribution contains 3 position coordinates [m],
-     * 3 momentum coordinates [] and the start tim [s].
+     * 3 momentum coordinates [] and the start time [s].
      * If the given distribution has less than 7 dimensions the missing
      * coordinates are initalized as 0 which can be used to start all
      * particles at zero time.
@@ -288,11 +291,11 @@ public:
      * \param[out] ObservationField Electromagnetic field integrals at the observation point.
      */
     void integrateFieldTrace(
-	Vector ObservationPoint,
-	double t0,
-	double dt,
-	int nots,
-	std::vector<ElMagField> *ObservationField);
+        Vector ObservationPoint,
+        double t0,
+        double dt,
+        int nots,
+        std::vector<ElMagField> *ObservationField);
 
 private:
 

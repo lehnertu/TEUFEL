@@ -116,8 +116,14 @@ public:
      *  the whole program is aborted.
      * 
      *  The parameters for tracking are stored in the beam object.
+     * 
+     *  Watch points where beam snapshots are stored during tracking
+     *  are defined in this section. The definitions are appended to the
+     *  list provided.
+     * 
+     *  @return The number of watch points
      */
-    void parseTracking(Beam *beam);
+    int parseTracking(Beam *beam, std::vector<watch_t> *watches);
     
     /*! Parse the input file and create the defined observers.
      *  All observers found are appended to the given list.

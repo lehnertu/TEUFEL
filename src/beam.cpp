@@ -128,9 +128,10 @@ void Beam::StepVay(GeneralField *field)
 }
 
 //! @todo not yet coded - how to store several bunches hierarchically ?
-int Beam::WriteWatchPointHDF5(const char *filename)
+int Beam::WriteWatchPointHDF5(std::string filename)
 {
-    return 0;
+    int nop = 0;
+    return nop;
 }
 
 void Beam::integrateFieldTrace(

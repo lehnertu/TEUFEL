@@ -60,3 +60,8 @@ public:
     virtual const char* what() const throw() {return m;};
     const char* m;
 };
+
+/*! a data struct to hold the definition of a watch point
+ *  where a beam snapshot will be written during tracking
+ */
+typedef struct { int step; std::string filename; } watch_t;
