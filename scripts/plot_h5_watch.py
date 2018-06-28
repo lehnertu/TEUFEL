@@ -95,7 +95,7 @@ ez_rms = 1.0e15 * np.sqrt((np.dot(dE,dE)*np.dot(dt,dt)-pow(np.dot(dE,dt),2))/pow
 string = r'$E_{beam}$ = %4.2f MeV' % E0 + '\n' + \
   '%d particles' % Np + '\n' + \
   r'$\sigma_E$ = %4.1f keV' % erms + '\n' + \
-  r'$\sigma_t$ = %1.2f ps' % tau + '\n' + \
+  r'$\sigma_t$ = %1.3f ps' % tau + '\n' + \
   r'$c$ = %2.2f keV/ps' % chirp + '\n' + \
   r'$\epsilon^n_{x, RMS}$ = %2.3f $\mu m$' % ex_rms  + '\n' + \
   r'$\epsilon^n_{y, RMS}$ = %2.3f $\mu m$' % ey_rms  + '\n' + \

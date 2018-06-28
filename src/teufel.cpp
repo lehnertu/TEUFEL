@@ -167,8 +167,13 @@ int main(int argc, char* argv[])
             {
                 std::cout << "writing watch point " << w.filename << std::endl;
                 int nw = beam->WriteWatchPointHDF5(w.filename);
-                std::cout << nw << " particles written." << std::endl;
-                std::cout << std::endl;
+                if (nw>=0)
+                {
+                    std::cout << nw << " particles written." << std::endl;
+                    std::cout << std::endl;
+                }
+                else
+                    std::cout << "error writing " << w.filename << std::endl;
             }
         }
         // make a print once every 10s

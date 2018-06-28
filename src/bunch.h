@@ -238,6 +238,15 @@ public:
      */
     Vector avgMomentum();
 
+    /*! @brief write coordinates of all particles to a buffer
+     *  @param buffer address of the buffer
+     *  @param size maximum number of particles the buffer can hold
+     *      The data writing stops when the buffer limit is reached
+     *      even if not all particles have been written.
+     *  @return pointer to the next empty memory place in the buffer.
+     */
+    double* bufferCoordinates(double *buffer, int size);
+    
     /*! Dump all particle information into an SDDS file.
      *  The written quantities include:
      *  - time t

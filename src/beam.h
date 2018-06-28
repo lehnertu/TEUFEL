@@ -148,7 +148,7 @@ public:
      *  - angles xp,yp (px/pz, py/pz)
      *  - gamma
      * 
-     *  @return number of particles written
+     *  @return number of particles written, -1 in case of an error
      */
     int WriteWatchPointHDF5(std::string filename);
     

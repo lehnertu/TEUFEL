@@ -264,18 +264,41 @@ Vector Bunch::avgMomentum()
     return mom*(1.0/NOP);
 }
 
+double* Bunch::bufferCoordinates(double *buffer, int size)
+{
+    double *bp = buffer;
+    int nop = NOP;
+    if (nop>size)
+    {
+        nop = size;
+        std::cout << "warning in Bunch::bufferCoordinates() - buffer too small" << std::endl;
+    }
+    for(int i=0; i<nop; i++)
+    {
+        Vector X = P[i]->getPosition();
+        Vector BG = P[i]->getMomentum();
+        *bp++ = X.x;
+        *bp++ = X.y;
+        *bp++ = X.z;
+        *bp++ = BG.x;
+        *bp++ = BG.y;
+        *bp++ = BG.z;
+    }
+    return bp;
+}
+
 int Bunch::WriteWatchPointSDDS(const char *filename)
 {
     cout << "writing SDDS file " << filename << endl;
     SDDS_DATASET data;
     if (1 != SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,filename))
     {
-        cout << "Bunch::WriteWatchPointSDDS - error initializing output\n";
+        std::cout << "Bunch::WriteWatchPointSDDS - error initializing output" << std::endl;
         return 1;
     }
     if  (SDDS_DefineSimpleParameter(&data,"NumberOfParticles","", SDDS_LONG)!=1)
     {
-        cout << "Bunch::WriteWatchPointSDDS - error defining parameters\n";
+        std::cout << "Bunch::WriteWatchPointSDDS - error defining parameters" << std::endl;
         return 2;
     }
     if  (
@@ -292,19 +315,19 @@ int Bunch::WriteWatchPointSDDS(const char *filename)
         SDDS_DefineColumn(&data,"gamma\0","gamma\0",NULL,"RelativisticFactor\0",NULL,SDDS_DOUBLE,0)==-1
         )
     {
-        cout << "Bunch::WriteWatchPointSDDS - error defining data columns\n";
+        std::cout << "Bunch::WriteWatchPointSDDS - error defining data columns" << std::endl;
         return 3;
     }
     if (SDDS_WriteLayout(&data) != 1)
     {
-        cout << "Bunch::WriteWatchPointSDDS - error writing layout\n";
+        std::cout << "Bunch::WriteWatchPointSDDS - error writing layout" << std::endl;
         return 4;
     }
     // start a page with number of lines equal to the number of trajectory points
     // cout << "SDDS start page" << endl;
     if (SDDS_StartPage(&data,(int32_t)NOP) !=1 )
     {
-        cout << "Bunch::WriteWatchPointSDDS - error starting page\n";
+        std::cout << "Bunch::WriteWatchPointSDDS - error starting page" << std::endl;
         return 5;
     }
     // write the single valued variables
@@ -314,7 +337,7 @@ int Bunch::WriteWatchPointSDDS(const char *filename)
         NULL ) !=1
         )
     {
-        cout << "Bunch::WriteWatchPointSDDS - error setting parameters\n";
+        std::cout << "Bunch::WriteWatchPointSDDS - error setting parameters" << std::endl;
         return 6;
     }
     // write the table of particle data
@@ -340,19 +363,19 @@ int Bunch::WriteWatchPointSDDS(const char *filename)
             NULL) != 1
             )
         {
-            cout << "Bunch::WriteWatchPointSDDS - error writing data columns\n";
+            std::cout << "Bunch::WriteWatchPointSDDS - error writing data columns" << std::endl;
             return 7;
         }
     }
     if( SDDS_WritePage(&data) != 1)
     {
-        cout << "Bunch::WriteWatchPointSDDS - error writing page\n";
+        std::cout << "Bunch::WriteWatchPointSDDS - error writing page" << std::endl;
         return 8;
     }
     // finalize the file
     if (SDDS_Terminate(&data) !=1 )
     {
-        cout << "Bunch::WriteWatchPointSDDS - error terminating data file\n";
+        std::cout << "Bunch::WriteWatchPointSDDS - error terminating data file" << std::endl;
         return 9;
     }	
     // no errors have occured if we made it 'til here
@@ -368,7 +391,7 @@ int Bunch::WriteWatchPointHDF5(const char *filename)
     hid_t file = H5Fcreate (filename, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
     if (file < 0 )
     {
-        cout << "Bunch::WriteWatchPointHDF5 - error crating file\n";
+        std::cout << "Bunch::WriteWatchPointHDF5 - error crating file" << std::endl;
         return 1;
     };
     // Create dataspace. Setting maximum size to NULL sets the maximum
@@ -379,7 +402,7 @@ int Bunch::WriteWatchPointHDF5(const char *filename)
     hid_t space = H5Screate_simple (2, dims, NULL);
     if (space < 0 )
     {
-        cout << "Bunch::WriteWatchPointHDF5 - error crating dataspace\n";
+        std::cout << "Bunch::WriteWatchPointHDF5 - error crating dataspace" << std::endl;
         return 2;
     };
     // buffer the data
@@ -400,7 +423,7 @@ int Bunch::WriteWatchPointHDF5(const char *filename)
     hid_t dcpl = H5Pcreate (H5P_DATASET_CREATE);
     if (dcpl < 0 )
     {
-        cout << "Bunch::WriteWatchPointHDF5 - error crating property list\n";
+        std::cout << "Bunch::WriteWatchPointHDF5 - error crating property list" << std::endl;
         return 3;
     };
     // Create the dataset.
@@ -411,7 +434,7 @@ int Bunch::WriteWatchPointHDF5(const char *filename)
         dcpl, H5P_DEFAULT);
     if (dset < 0 )
     {
-        cout << "Bunch::WriteWatchPointHDF5 - error crating dataset\n";
+        std::cout << "Bunch::WriteWatchPointHDF5 - error crating dataset" << std::endl;
         return 4;
     };
     // Write the data to the dataset
@@ -423,36 +446,36 @@ int Bunch::WriteWatchPointHDF5(const char *filename)
         buffer);
     if (status < 0 )
     {
-        cout << "Bunch::WriteWatchPointHDF5 - error writing dataset\n";
+        std::cout << "Bunch::WriteWatchPointHDF5 - error writing dataset" << std::endl;
         return 5;
     }
     // Close and release resources.
     status = H5Pclose (dcpl);
     if (status < 0 )
     {
-        cout << "Bunch::WriteWatchPointHDF5 - error releasing property list\n";
+        std::cout << "Bunch::WriteWatchPointHDF5 - error releasing property list" << std::endl;
         return 6;
     }
     status = H5Dclose (dset);
     if (status < 0 )
     {
-        cout << "Bunch::WriteWatchPointHDF5 - error releasing dataset\n";
+        std::cout << "Bunch::WriteWatchPointHDF5 - error releasing dataset" << std::endl;
         return 7;
     }
     status = H5Sclose (space);
     if (status < 0 )
     {
-        cout << "Bunch::WriteWatchPointHDF5 - error releasing dataspace\n";
+        std::cout << "Bunch::WriteWatchPointHDF5 - error releasing dataspace" << std::endl;
         return 8;
     }
     status = H5Fclose (file);
     if (status < 0 )
     {
-        cout << "Bunch::WriteWatchPointHDF5 - error closing file\n";
+        std::cout << "Bunch::WriteWatchPointHDF5 - error closing file" << std::endl;
         return 9;
     }
     // no errors have occured if we made it 'til here
-    cout << "writing HDF5 done." << endl;
+    std::cout << "writing HDF5 done." << std::endl;
     return 0;
 }
 
