@@ -332,10 +332,6 @@ int InputParser::parseObservers(std::vector<Observer*> *listObservers, Beam *bea
             std::string type = obs.name();
             if (type == "calc")
                 parseCalc(obs);
-            else if (type == "point")
-            {
-                NOO++;
-            }
             else if (type == "screen")
             {
                 double x, y, z;
@@ -386,6 +382,36 @@ int InputParser::parseObservers(std::vector<Observer*> *listObservers, Beam *bea
                     nv.as_int(),
                     t0, dt, nt.as_int() );
                 listObservers->push_back(screenObs);
+                NOO++;
+            }
+            else if (type == "point")
+            {
+                double x, y, z;
+                double t0, dt;
+                pugi::xml_attribute fn = obs.attribute("file");
+                if (!fn)
+                    throw(IOexception("InputParser::parseObservers - <point> attribute file not found."));                
+                parseCalcChildren(obs);
+                pugi::xml_node posnode = obs.child("position");
+                if (!posnode)
+                    throw(IOexception("InputParser::parseObservers - <point> <position> not found."));
+                x = parseValue(posnode.attribute("x"));
+                y = parseValue(posnode.attribute("y"));
+                z = parseValue(posnode.attribute("z"));
+                Vector pos = Vector(x, y, z);
+                pugi::xml_node tnode = obs.child("time");
+                if (!tnode)
+                    throw(IOexception("InputParser::parseObservers - <point> <time> not found."));
+                t0 = parseValue(tnode.attribute("t0"));
+                dt = parseValue(tnode.attribute("dt"));
+                pugi::xml_attribute nt = tnode.attribute("n");
+                if (!nt)
+                    throw(IOexception("InputParser::parseObservers - <point> <time> attribute n not found."));
+                PointObserver<Beam> *pointObs = new PointObserver<Beam>(
+                    beam, fn.as_string(),
+                    pos,
+                    t0, dt, nt.as_int() );
+                listObservers->push_back(pointObs);
                 NOO++;
             }
             else

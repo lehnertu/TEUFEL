@@ -133,7 +133,7 @@ int main()
     double z0 = 2.0 + 10.0;
     double t0 = z0/SpeedOfLight - 1.0e-12;
     PointObserver<Bunch> singleObs = PointObserver<Bunch>(
-	    single, Vector(0.0, 0.0, z0), t0, 0.05e-13, 3000);
+	    single, "SingleParticle_ObsRadField.sdds", Vector(0.0, 0.0, z0), t0, 0.05e-13, 3000);
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
     singleObs.integrate();
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop_time);
@@ -143,7 +143,7 @@ int main()
     // write field time traces
     try
     {
-    	singleObs.WriteTimeDomainFieldSDDS("SingleParticle_ObsRadField.sdds");
+    	singleObs.WriteTimeDomainFieldSDDS();
 	    printf("SDDS time domain field written - \033[1;32m OK\033[0m\n");
     }
     catch (exception& e) { cout << e.what() << endl;}
@@ -169,7 +169,7 @@ int main()
     // write screen time traces
     try
     { 
-    	screenObs.WriteTimeDomainFieldHDF5("SingleParticle_Screen_ObsRadField.h5");
+    	screenObs.WriteTimeDomainFieldHDF5();
     	printf("Screen observer time domain field written - \033[1;32m OK\033[0m\n");
     }
     catch (exception& e) { cout << e.what() << endl;}

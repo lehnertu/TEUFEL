@@ -123,6 +123,8 @@ int main(int argc, char* argv[])
     std::vector<watch_t> watches;
     int NoW = parse->parseTracking(beam, &watches);
     std::cout << "defined " << NoW << " watch points." << std::endl;
+    if (NoW != (int)watches.size())
+        std::cout << "WARNING : number of watches (" << NoW << ") differs from length of the list (" << watches.size() << ")" << std::endl;
     std::cout << std::endl;
     
     // parse all observer definitions
@@ -130,6 +132,8 @@ int main(int argc, char* argv[])
     int NoO = parse->parseObservers(&listObservers, beam);
     std::cout << std::endl;
     std::cout << "defined " << NoO << " observers." << std::endl;
+    if (NoO != (int)listObservers.size())
+        std::cout << "WARNING : number of observers (" << NoO << ") differs from length of the list (" << listObservers.size() << ")" << std::endl;
     std::cout << std::endl;
     
     // prepare the tracking of the beam
@@ -197,9 +201,10 @@ int main(int argc, char* argv[])
     // compute all observations
     for (int i=0; i<NoO; i++)
     {
-        Observer *obs = listObservers.at(i);
         std::cout << std::endl << "computing observer No. " << i+1 << std::endl;
+        Observer *obs = listObservers.at(i);
         clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
+        std::cout << "integrating ... " << std::endl;
         obs->integrate();
         clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop_time);
         double elapsed = stop_time.tv_sec-start_time.tv_sec +

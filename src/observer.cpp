@@ -32,12 +32,14 @@
 template <class sourceT>
 PointObserver<sourceT>::PointObserver(
     sourceT *src,
+    std::string filename,
     Vector position,
     double t0,
     double dt,
     unsigned int nots)
 {
     Source = src;
+    FileName = filename,
     Pos = position;
     t0_obs = t0;
     dt_obs = dt;
@@ -63,12 +65,12 @@ ElMagField PointObserver<sourceT>::getField(int idx)
 }
 
 template <class sourceT>
-void PointObserver<sourceT>::WriteTimeDomainFieldSDDS(const char *filename)
+void PointObserver<sourceT>::WriteTimeDomainFieldSDDS()
 {
-    cout << "writing SDDS file " << filename << endl;
+    cout << "writing SDDS file " << FileName << endl;
     SDDS_DATASET data;
     // if (1 != SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,filename))
-    if (1 != SDDS_InitializeOutput(&data,SDDS_ASCII,1,NULL,NULL,filename))
+    if (1 != SDDS_InitializeOutput(&data,SDDS_ASCII,1,NULL,NULL,FileName.c_str()))
 	throw(IOexception("PointObserver::WriteTimeDomainFieldSDDS - error in InitializeOutput()"));
     if  ( SDDS_DefineSimpleParameter(&data,"NumberTimeSteps","", SDDS_LONG) != 1 ||
 	SDDS_DefineSimpleParameter(&data,"t0","", SDDS_DOUBLE) != 1 ||
@@ -128,6 +130,7 @@ void PointObserver<sourceT>::WriteTimeDomainFieldSDDS(const char *filename)
 template <class sourceT>
 void PointObserver<sourceT>::generateOutput()
 {
+    WriteTimeDomainFieldSDDS();
 }
 
 // we have to instantiate the class for every possible source type
@@ -275,12 +278,12 @@ void ScreenObserver<sourceT>::fromBuffer(double *buffer, unsigned int count)
 }
 
 template <class sourceT>
-void ScreenObserver<sourceT>::WriteTimeDomainFieldHDF5(std::string filename)
+void ScreenObserver<sourceT>::WriteTimeDomainFieldHDF5()
 {
     herr_t status;
-    cout << "writing HDF5 file " << filename << endl;
+    cout << "writing HDF5 file " << FileName << endl;
     // Create a new file using the default properties.
-    hid_t file = H5Fcreate (filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    hid_t file = H5Fcreate (FileName.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
     if (file<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Fcreate()"));
     
     // Create dataspace for the observation positions.
@@ -432,7 +435,7 @@ void ScreenObserver<sourceT>::WriteTimeDomainFieldHDF5(std::string filename)
 template <class sourceT>
 void ScreenObserver<sourceT>::generateOutput()
 {
-    WriteTimeDomainFieldHDF5(FileName);
+    WriteTimeDomainFieldHDF5();
 }
 
 // we have to instantiate the class for every possible source type

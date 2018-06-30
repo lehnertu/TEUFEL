@@ -211,11 +211,11 @@ int main()
     double z0 = 2.0 + 1.625;
     double t0 = z0/SpeedOfLight - 1.0e-12;
     PointObserver<Bunch> singleObs = PointObserver<Bunch>(
-	single, Vector(0.0, 0.0, z0), t0, 0.05e-13, 3000);
+	single, "elbe-u300_SingleEl_ObsRadField.sdds", Vector(0.0, 0.0, z0), t0, 0.05e-13, 3000);
 	singleObs.integrate();
 	
     PointObserver<Bunch> bunchObs = PointObserver<Bunch>(
-	bunch, Vector(0.0, 0.0, z0), t0, 0.05e-13, 3000);
+	bunch, "elbe-u300_Bunch_ObsRadField.sdds", Vector(0.0, 0.0, z0), t0, 0.05e-13, 3000);
 	bunchObs.integrate();
 	
     ScreenObserver<Bunch> screenObs = ScreenObserver<Bunch>(
@@ -234,19 +234,19 @@ int main()
     // write field time traces
     try
     {
-    	singleObs.WriteTimeDomainFieldSDDS("elbe-u300_SingleEl_ObsRadField.sdds");
+    	singleObs.WriteTimeDomainFieldSDDS();
 	    printf("SDDS time domain field written - \033[1;32m OK\033[0m\n");
     }
     catch (exception& e) { cout << e.what() << endl;}
     try
     {
-    	bunchObs.WriteTimeDomainFieldSDDS("elbe-u300_Bunch_ObsRadField.sdds");
+    	bunchObs.WriteTimeDomainFieldSDDS();
     	printf("SDDS time domain field written - \033[1;32m OK\033[0m\n");
     }
     catch (exception& e) { cout << e.what() << endl;}
     try
     { 
-    	screenObs.WriteTimeDomainFieldHDF5("elbe-u300_Screen_ObsRadField.h5");
+    	screenObs.WriteTimeDomainFieldHDF5();
     	printf("Screen observer time domain field written - \033[1;32m OK\033[0m\n");
     }
     catch (exception& e) { cout << e.what() << endl;}

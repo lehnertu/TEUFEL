@@ -8,7 +8,10 @@ import tables
 import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter
 
+pixels = 100
+
 def PlotPS(x, y, xlabel='x', ylabel='y', rect_dens = [0.15, 0.1, 0.8, 0.8], center=True):
+  global pixels
   # determine the scale range
   if center:
     xmax=max(abs(x))
@@ -20,10 +23,10 @@ def PlotPS(x, y, xlabel='x', ylabel='y', rect_dens = [0.15, 0.1, 0.8, 0.8], cent
     ymax=max(y)
   # Histogram in 2D
   if center:
-    H, xticks, yticks = np.histogram2d(x,y,bins=200,
+    H, xticks, yticks = np.histogram2d(x,y,bins=pixels,
       range=[[-xmax,xmax],[-ymax,ymax]])
   else:
-    H, xticks, yticks = np.histogram2d(x,y,bins=200,
+    H, xticks, yticks = np.histogram2d(x,y,bins=pixels,
       range=[[xmin,xmax],[ymin,ymax]])
   # wegen Matrickonvention muss H transponiert werden
   # da von links oben beginnend gezeichnet wird, muss man vertikal flippen
@@ -42,8 +45,10 @@ def PlotPS(x, y, xlabel='x', ylabel='y', rect_dens = [0.15, 0.1, 0.8, 0.8], cent
 
 parser = argparse.ArgumentParser()
 parser.add_argument('file', help='the file name of the watch point HDF5 file')
+parser.add_argument('-pix', help="the number of pixels for the plots", dest="pix", type=int)
 
 args = parser.parse_args()
+if (args.pix != None): pixels = args.pix
 bunfile = args.file
 bunOK = os.path.isfile(bunfile)
 if not bunOK:

@@ -355,7 +355,7 @@ int main(int argc, char *argv[])
         screenObs.fromBuffer(reduceBuffer,count);
         try
         { 
-        	screenObs.WriteTimeDomainFieldHDF5("MPI_elbe-u300_Screen_ObsRadField.h5");
+        	screenObs.WriteTimeDomainFieldHDF5();
         	printf("Screen observer time domain field written - \033[1;32m OK\033[0m\n");
         }
         catch (exception& e) { cout << e.what() << endl;}

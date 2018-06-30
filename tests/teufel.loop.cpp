@@ -164,7 +164,7 @@ int main ()
     // the radiation field is observed at the centre of the loop at (R,0,0)
     // define the observer at the center of the circle
     // just one time slice of (essentially) zero duration at t=tau
-    PointObserver<Bunch> Obs = PointObserver<Bunch>(bunch, Vector(-Radius,0.0,0.0), tau, 1.0e-15, 1);
+    PointObserver<Bunch> Obs = PointObserver<Bunch>(bunch, "teufel.loop_field.sdds", Vector(-Radius,0.0,0.0), tau, 1.0e-15, 1);
 	Obs.integrate();
     
     // check the field value

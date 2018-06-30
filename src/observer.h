@@ -95,12 +95,14 @@ public:
      * Bunch() or Beam() being the field source.
      * 
      * \param[in] src The source generating the field.
+     * \param[in] filename The name of the generated output file.
      * \param[in] t0 Start time of the trace.
      * \param[in] dt Time step of the observation trace.
      * \param[in] nots Number of time steps.
      */
     PointObserver(
         sourceT *src,
+        std::string filename,
         Vector position,
         double t0,
         double dt,
@@ -117,7 +119,9 @@ public:
      */
     ElMagField getField(int idx);
     
-    /*! Write the time-domain field trace into an SDDS file.
+    /*! @brief Write the time-domain field trace into an SDDS file.
+     * 
+     * The file name has been defined when creating the observer object.
      * 
      * This method requires that a trace of observed field values has been
      * collected before and stored in PointObserver::TimeDomainField.
@@ -129,7 +133,7 @@ public:
      * 
      * @throws IOexception
      */
-    void WriteTimeDomainFieldSDDS(const char *filename);
+    void WriteTimeDomainFieldSDDS();
 
     /*! Generate the output file(s) from this observation.
      *  @todo : this should call  WriteTimeDomainFieldSDDS()
@@ -141,6 +145,9 @@ private:
     //! the field source
     sourceT *Source;
     
+    //! file name for the final output
+    std::string FileName;
+
     //! the position of the observer
     Vector Pos;
 
@@ -201,6 +208,7 @@ public:
      * Bunch() or Beam() being the field source.
      * 
      * \param[in] src The source generating the field.
+     * \param[in] filename The name of the generated output file.
      * \param[in] position The center of the screen.
      * \param[in] dx The x direction/spacing of the grid.
      * \param[in] dy The y direction/spacing of the grid.
@@ -270,7 +278,10 @@ public:
      */
     void fromBuffer(double *buffer, unsigned int count);
 
-    /*! Write all the time-domain field traces into an HDF5 file.
+    /*! @brief Write all the time-domain field traces into an HDF5 file.
+     * 
+     *  The file name was defined when creating the oberver object.
+     * 
      *  Data is divided into 2 data sets
      * 
      *  "ObservationPosition" :
@@ -286,7 +297,7 @@ public:
      * 
      * @throws IOexception
      */
-    void WriteTimeDomainFieldHDF5(std::string filename);
+    void WriteTimeDomainFieldHDF5();
 
     /*! Generate the output file(s) from this observation.
      *  @todo : this should call  WriteTimeDomainFieldHDF()
