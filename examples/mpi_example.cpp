@@ -75,12 +75,12 @@ int main(int argc, char *argv[])
     MPI_Init(&argc, &argv);
     
     int NumberOfCores = 1;
-    teufel::my_rank = 0;
+    teufel::rank = 0;
     MPI_Comm_size(MPI_COMM_WORLD, &NumberOfCores);
     bool parallel = (NumberOfCores != 1);
-    if (parallel) MPI_Comm_rank(MPI_COMM_WORLD, &teufel::my_rank);
+    if (parallel) MPI_Comm_rank(MPI_COMM_WORLD, &teufel::rank);
     
-    if (parallel and teufel::my_rank==0)
+    if (parallel and teufel::rank==0)
     {
         printf("\n  TEUFEL parallel computing on %d cores.\n\n", NumberOfCores);
     }
@@ -91,7 +91,7 @@ int main(int argc, char *argv[])
     PlanarUndulator* Undu = new PlanarUndulator(Vector(0.0, 0.0, 2.0));
     Undu->Setup(B, lambda, N);
 
-    if (teufel::my_rank==0)
+    if (teufel::rank==0)
     {
         printf("Undulator Period = %9.6g m\n", lambda);
         printf("N = %9.6g\n", (double)N);
@@ -103,7 +103,7 @@ int main(int argc, char *argv[])
     double betagamma = sqrt(gamma * gamma - 1.0);
     double K = Undu->GetKpeak();
     double lambdar = (lambda / (2 * gamma * gamma)) * (1 + K * K / 2);
-    if (teufel::my_rank==0)
+    if (teufel::rank==0)
     {
         printf("beta =  %12.9g\n", beta);
         printf("gamma =  %12.9g\n", gamma);
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
     int bufsize = 6*NOP;
     double *buffer = new double[bufsize];
     // only the master node computes the particle distribution
-    if (teufel::my_rank==0)
+    if (teufel::rank==0)
     {
         printf("sigma_t =  %9.3g ps\n", 1e12*sigma_t);
         printf("sigma_z =  %9.3g mm\n", 1e3*sigma_z);
@@ -169,7 +169,7 @@ int main(int argc, char *argv[])
 
     // node 1 generates a bunch of all particles for output only
     /*
-    if (teufel::my_rank==1)
+    if (teufel::rank==1)
     {
         Bunch *all = new Bunch(dist, -ch, ch);
         if (0 != all->WriteWatchPointSDDS("MPI_node1_all_particles_received.sdds"))
@@ -189,23 +189,23 @@ int main(int argc, char *argv[])
     int bunchsize = NOP / NumberOfCores;
     int remainder = NOP % NumberOfCores;   
     int index;  // where do my particles start in the list
-    if (teufel::my_rank<remainder)
+    if (teufel::rank<remainder)
     {   // first few nodes get one particle more
         bunchsize++;
-        index = teufel::my_rank*(bunchsize+1);
+        index = teufel::rank*(bunchsize+1);
     }
     else 
     {   
-        index = remainder + teufel::my_rank*bunchsize;
+        index = remainder + teufel::rank*bunchsize;
     }
     Distribution *mydist = dist->subDist(index, bunchsize);
-    printf("Node #%d computing %d particles starting at index %d\n",teufel::my_rank,bunchsize,index);
+    printf("Node #%d computing %d particles starting at index %d\n",teufel::rank,bunchsize,index);
     Bunch *bunch = new Bunch(mydist, -ch, ch);
 
     // every node creates a dump o the initial particle distribution
     /*
 	char partFileName[80];
-	sprintf(partFileName,"MPI_node%d_particles_start.sdds",teufel::my_rank);
+	sprintf(partFileName,"MPI_node%d_particles_start.sdds",teufel::rank);
     if (0 != bunch->WriteWatchPointSDDS(partFileName))
     {
       	printf("SDDS write \033[1;31m failed!\033[0m\n");
@@ -242,7 +242,7 @@ int main(int argc, char *argv[])
     */
     
     // do the tracking of the beam
-    printf("Node #%d tracking started.\n",teufel::my_rank);
+    printf("Node #%d tracking started.\n",teufel::rank);
     // record the start time
     double start_time = MPI_Wtime();
     double print_time = start_time;
@@ -256,17 +256,17 @@ int main(int argc, char *argv[])
 	    if (current_time-print_time > 120)
 	    {
 	        print_time = current_time;
-	        printf("Node #%d tracking step %d / %d\n",teufel::my_rank,step,NOTS);
+	        printf("Node #%d tracking step %d / %d\n",teufel::rank,step,NOTS);
 	    };
     }
     // record the finish time
     double stop_time = MPI_Wtime();
-    printf("Node #%d finished after %6.2f s.\n",teufel::my_rank,stop_time-start_time);
+    printf("Node #%d finished after %6.2f s.\n",teufel::rank,stop_time-start_time);
 	
 	// create a file for the field per node
 	/*
 	char obsFileName[80];
-	sprintf(obsFileName,"MPI_node%d_Screen_ObsRadField.h5",teufel::my_rank);
+	sprintf(obsFileName,"MPI_node%d_Screen_ObsRadField.h5",teufel::rank);
 	screenObs.WriteTimeDomainFieldHDF5(obsFileName);
 	*/
 	
@@ -294,7 +294,7 @@ int main(int argc, char *argv[])
     */
     
     MPI_Barrier(MPI_COMM_WORLD);
-    if (teufel::my_rank == 0) printf("\nAll nodes finished tracking.\n\n");
+    if (teufel::rank == 0) printf("\nAll nodes finished tracking.\n\n");
     
     // Record the radiation of the beam at 1.625m distance from the undulator center.
     // Every node just records the radiation emitted by its own particles.
@@ -315,30 +315,30 @@ int main(int argc, char *argv[])
 
     // compute field seen from the bunch
     // in parallel on every node for its own particles
-    printf("Node #%d integrating...\n",teufel::my_rank);
+    printf("Node #%d integrating...\n",teufel::rank);
     start_time = MPI_Wtime();
     screenObs.integrate();
     // record the finish time
     stop_time = MPI_Wtime();
-    printf("Node #%d finished after %6.2f s.\n",teufel::my_rank,stop_time-start_time);
+    printf("Node #%d finished after %6.2f s.\n",teufel::rank,stop_time-start_time);
 
     MPI_Barrier(MPI_COMM_WORLD);
-    if (teufel::my_rank == 0) printf("\nAll nodes finished the field computation.\n\n");
+    if (teufel::rank == 0) printf("\nAll nodes finished the field computation.\n\n");
     
     // collect all the field computed on the individual nodes
     // into the master node
     unsigned int count = screenObs.getCount();
-    printf("Node #%d allocating buffers for %d doubles\n",teufel::my_rank,count);
+    printf("Node #%d allocating buffers for %d doubles\n",teufel::rank,count);
     // fill the buffer and get its address
     double* nodeBuffer = screenObs.getBuffer();
     if (nodeBuffer==0)
-        printf("MPI_Reduce for screenObs : node #%d was unable to get the node buffer.\n",teufel::my_rank);
+        printf("MPI_Reduce for screenObs : node #%d was unable to get the node buffer.\n",teufel::rank);
     // we have to define a buffer for the sum on all nodes
     double* reduceBuffer = new double[count];
     if (reduceBuffer==0)
-        printf("MPI_Reduce for screenObs : node #%d was unable to get the reduce buffer.\n",teufel::my_rank);
+        printf("MPI_Reduce for screenObs : node #%d was unable to get the reduce buffer.\n",teufel::rank);
     MPI_Barrier(MPI_COMM_WORLD);
-    if (teufel::my_rank == 0) printf("\nAll buffers allocated.\n");
+    if (teufel::rank == 0) printf("\nAll buffers allocated.\n");
     MPI_Reduce(
         nodeBuffer,                 // send buffer
         reduceBuffer,               // receive buffer
@@ -348,10 +348,10 @@ int main(int argc, char *argv[])
         0,                          // rank of the root process
         MPI_COMM_WORLD              // communicator
     );
-    if (teufel::my_rank == 0) printf("\nReduce finished.\n\n");
+    if (teufel::rank == 0) printf("\nReduce finished.\n\n");
     // the root node copies the data from the reduce buffer into the sreenObs
     // and writes it to the output file
-    if (teufel::my_rank == 0)
+    if (teufel::rank == 0)
     {
         screenObs.fromBuffer(reduceBuffer,count);
         try
@@ -361,7 +361,7 @@ int main(int argc, char *argv[])
         }
         catch (exception& e) { cout << e.what() << endl;}
     }
-    // if (teufel::my_rank == 0) delete reduceBuffer;
+    // if (teufel::rank == 0) delete reduceBuffer;
     delete reduceBuffer;
     delete nodeBuffer;
         
@@ -373,7 +373,7 @@ int main(int argc, char *argv[])
     // delete bunchLog;
 
     MPI_Barrier(MPI_COMM_WORLD);
-    if (parallel and teufel::my_rank==0)
+    if (parallel and teufel::rank==0)
     {
         printf("\n  TEUFEL run finished.\n\n");
     }

@@ -73,7 +73,7 @@ void PlanarUndulator::Setup(
     LambdaU = lambda;
     NPeriods = N;
     Krms = LambdaU * SpeedOfLight * BPeak / (2.0 * Pi * mecsquared) / sqrt(2.0);
-    if (teufel::my_rank==0)
+    if (teufel::rank==0)
         std::cout << "planar undulator  N = " << NPeriods << ",  lambda = " << LambdaU << ",  K(rms) = " << Krms << std::endl;
     ky = 2.0 * Pi / LambdaU;
     kz = 2.0 * Pi / LambdaU;

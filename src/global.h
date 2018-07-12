@@ -49,7 +49,7 @@
 // Must be set to zero for all non-MPI executables.
 namespace teufel
 {
-    extern int my_rank;
+    extern int rank;
 }
 
 /*! 
