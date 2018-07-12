@@ -60,12 +60,16 @@ void InputParser::parseCalc(const pugi::xml_node node)
         try
         {
             calc->SetExpr(eq);
-            std::cout << "calc : " << prt << calc->Eval() << std::endl;
+            if (teufel::my_rank==0)
+                std::cout << "calc : " << prt << calc->Eval() << std::endl;
         }
         catch (mu::Parser::exception_type &e)
         {
-            std::cout << "InputParser::parseCalc : can't evaluate " << eq << std::endl;
-            std::cout << e.GetMsg() << endl;
+            if (teufel::my_rank==0)
+            {
+                std::cout << "InputParser::parseCalc : can't evaluate " << eq << std::endl;
+                std::cout << e.GetMsg() << endl;
+            }
         }
     };
     // if this is a variable definition
@@ -78,8 +82,11 @@ void InputParser::parseCalc(const pugi::xml_node node)
         }
         catch (mu::Parser::exception_type &e)
         {
-            std::cout << "InputParser::parseCalc : can't evaluate " << eq << std::endl;
-            std::cout << e.GetMsg() << endl;
+            if (teufel::my_rank==0)
+            {
+                std::cout << "InputParser::parseCalc : can't evaluate " << eq << std::endl;
+                std::cout << e.GetMsg() << endl;
+            }
         }
     };
 }
@@ -104,8 +111,11 @@ double InputParser::parseValue(const pugi::xml_attribute attr)
     }
     catch (mu::Parser::exception_type &e)
     {
-        std::cout << "InputParser::parseValue : can't evaluate " << attr.value() << std::endl;
-        std::cout << e.GetMsg() << endl;
+        if (teufel::my_rank==0)
+        {
+            std::cout << "InputParser::parseValue : can't evaluate " << attr.value() << std::endl;
+            std::cout << e.GetMsg() << endl;
+        }
     }
     return retval;
 }
@@ -131,7 +141,7 @@ int InputParser::parseLattice(Lattice *lattice)
             name = element.attribute("name").value();
             if (type == "planar")
             {
-                std::cout << name << "::PlanarUndulator" << std::endl;
+                if (teufel::my_rank==0) std::cout << name << "::PlanarUndulator" << std::endl;
                 // the undulator object parses its own input
                 // we provide a reference to the parser
                 PlanarUndulator* Undu = new PlanarUndulator(element, this);

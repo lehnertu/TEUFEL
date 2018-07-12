@@ -33,8 +33,8 @@
         <calc print="screen start time t0 = " var="t0" eq="z0/_c"/>
         <screen file="single_charge_screen_10m.h5">
             <position x="0.0" y="0.0" z="z0" />
-            <hpitch x="0.01" y="0.0" z="0.0" n="81" />
-            <vpitch x="0.0" y="0.01" z="0.0" n="81" />
+            <hpitch x="0.01" y="0.0" z="0.0" n="41" />
+            <vpitch x="0.0" y="0.01" z="0.0" n="41" />
             <time t0="t0" dt="1e-13" n="300" />
         </screen>
     </observer>

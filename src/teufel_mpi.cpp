@@ -22,52 +22,52 @@
 =========================================================================*/
 
 /*!
-    \brief Radiation from the ELBE U300 THz source
+    \brief TEUFEL main program
 
     @author Ulf Lehnert
-    @date 16.3.2018
-    @file teufel.cpp
+    @date 12.7.2018
+    @file teufel_mpi.cpp
     
-    This test case tracks a number of particle in an undulator field.
-    The particle energy is 24 MeV. we are tracking a number of macroparticles
-    distributed as a number of bunches over the compute nodes. The total beam
-    corresponds to 4.37e8 electrons that is a charge of 70 pC.
-    As there is no interaction between the particles all bunches are
-    tracked independently in parallel.
+    This is the MPI version of main executable of TEUFEL.
+    It should be executed like
     
-    The particles propagates through an undulator of 8 periods with 300 mm
-    preiod length. The particles start at z=0, the undulator is centered at z=2.0m.
-    At z=10m the produced radiation is observed.
+    mpiexec -n 4 teufel_mpi input.xml
     
-    The program generates a trajectory dump elbe-u300_trajectory.sdds which
-    can be used to plot the elctron trajectory.
+    All computation is distributed over a number of nodes connected
+    in a CPU cluster. Even on sigle-processor machines it makes sense to
+    use the MPI parallelization to equally distribute the load over
+    all cores available.
     
-    At c*t=2.0m a snapshot of the particle distribution and the local fields is generated.
-
+    The input file is read and interpreted by all nodes individually.
+    The beam is only created on the root node and ditributed over all
+    nodes such that all receive approximately equal numbers of particles.
+    Then the tracking is done by all nodes independently for their own
+    set of particles.
+    
 */
 
 #include <math.h>
+#include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <complex>
+#include <iostream>
+#include <time.h>
 
 #include "bunch.h"
 #include "beam.h"
-#include "global.h"
-#include "logger.h"
-#include "observer.h"
-#include "particle.h"
+#include "config.h"
 #include "fields.h"
+#include "global.h"
+#include "observer.h"
+#include "parser.h"
+#include "particle.h"
 #include "undulator.h"
 
-#include <mpi.h>
-#include <iostream>
-#include <fstream>
-#include <time.h>
+#include "pugixml.hpp"
 
-int NOP = 1e2;		// number of particles
-int NOTS = 4000;	// number of time steps
+int NOP = 1e2;          // number of particles
+int NOTS = 4000;        // number of time steps
 
 int main(int argc, char *argv[])
 {
@@ -77,14 +77,101 @@ int main(int argc, char *argv[])
     int NumberOfCores = 1;
     teufel::my_rank = 0;
     MPI_Comm_size(MPI_COMM_WORLD, &NumberOfCores);
-    bool parallel = (NumberOfCores != 1);
-    if (parallel) MPI_Comm_rank(MPI_COMM_WORLD, &teufel::my_rank);
+    MPI_Comm_rank(MPI_COMM_WORLD, &teufel::my_rank);
     
-    if (parallel and teufel::my_rank==0)
+    if (teufel::my_rank==0)
     {
-        printf("\n  TEUFEL parallel computing on %d cores.\n\n", NumberOfCores);
+        std::cout << std::endl;
+        std::cout << " TEUFEL " << TEUFEL_VERSION_MAJOR << ".";
+        std::cout.width(2);
+        std::cout.fill('0');
+        std::cout << TEUFEL_VERSION_MINOR << ".";
+        std::cout.width(2);
+        std::cout.fill('0');
+        std::cout << TEUFEL_VERSION_PATCH << std::endl;
+        cout << std::endl <<" THz-Emission From Undulators and Free-Electron Lasers" << std::endl << std::endl;
+        cout << std::endl <<" TEUFEL parallel computing on " << NumberOfCores << " cores." << std::endl << std::endl;
     }
 
+    // ===============================================================
+    // parsing the input file by all processes in parallel
+    // console output is only printed from rank 0
+    // ===============================================================
+    
+    // The first command line argument is interpreted as the input file name
+    // This is an XML document which is opened and parsed here.
+    pugi::xml_document doc;
+    if (argc < 2) {
+        if (teufel::my_rank==0) std::cout << "Usage is teufel <infile>" << std::endl << std::endl;
+        exit(1);
+    } else {
+        if (teufel::my_rank==0) std::cout << "reading XML input from " << argv[1] << std::endl;
+        pugi::xml_parse_result result = doc.load_file(argv[1]);
+        if (result)
+        {
+            if (teufel::my_rank==0) std::cout << "input parsed without errors" << std::endl;
+        }
+        else
+        {
+            if (teufel::my_rank==0) std::cout << "ERROR reading file " << argv[1] << std::endl;
+            if (teufel::my_rank==0) std::cout << "Error description: " << result.description() << std::endl;
+            exit(1);
+        }
+    };
+    pugi::xml_node root = doc.child("teufel");
+    if (!root)
+        throw(IOexception("TEUFEL::InputParser - root node <teufel> not found."));
+    string description = root.attribute("description").value();
+    string author = root.attribute("author").value();
+    if (teufel::my_rank==0) std::cout << "case : " << description << std::endl;
+    if (teufel::my_rank==0) std::cout << "by : " << author << std::endl << std::endl;
+    
+    // Further parsing of the input document is done by the simulation object
+    InputParser *parse = new InputParser(root);
+    
+    // We create an empty lattice object.
+    // All lattice elements found when parsing the input are added to this.
+    Lattice *lattice = new Lattice;
+    int NoE = parse->parseLattice(lattice);
+    if (teufel::my_rank==0) std::cout << std::endl;
+    if (teufel::my_rank==0) std::cout << "lattice of " << NoE << " elements created." << std::endl;
+    
+    // We create an empty beam object.
+    // Then we call the parser to fill in the necessary information
+    // from the input file.
+    Beam *beam = new Beam();
+    int NoB = parse->parseBeam(beam);
+    if (teufel::my_rank==0) std::cout << std::endl;
+    if (teufel::my_rank==0) std::cout << "beam of " << NoB << " bunches created." << std::endl;
+    if (teufel::my_rank==0) std::cout << "total number of particles : " << beam->getNOP() << std::endl;
+    if (teufel::my_rank==0) std::cout << "total charge : " << beam->getTotalCharge()*ElementaryCharge*1.0e9 << "nC" << std::endl;
+    if (teufel::my_rank==0) std::cout << std::endl;
+
+    // get all tracking information from the input file
+    std::vector<watch_t> watches;
+    int NoW = parse->parseTracking(beam, &watches);
+    if (teufel::my_rank==0) std::cout << "defined " << NoW << " watch points." << std::endl;
+    if (NoW != (int)watches.size())
+        if (teufel::my_rank==0) std::cout << "WARNING : number of watches (" << NoW << ") differs from length of the list (" << watches.size() << ")" << std::endl;
+    if (teufel::my_rank==0) std::cout << std::endl;
+    
+    // parse all observer definitions
+    std::vector<Observer*> listObservers;
+    int NoO = parse->parseObservers(&listObservers, beam);
+    if (teufel::my_rank==0) std::cout << std::endl;
+    if (teufel::my_rank==0) std::cout << "defined " << NoO << " observers." << std::endl;
+    if (NoO != (int)listObservers.size())
+        if (teufel::my_rank==0) std::cout << "WARNING : number of observers (" << NoO << ") differs from length of the list (" << listObservers.size() << ")" << std::endl;
+    if (teufel::my_rank==0) std::cout << std::endl;
+    
+    // we are done with the input document
+    delete parse;
+
+    // ===============================================================
+    // done parsing the input file
+    // ===============================================================
+
+/*
     double B = 0.10315;
     double lambda = 0.300;
     double N = 8;
@@ -113,8 +200,8 @@ int main(int argc, char *argv[])
     }
         
     // a simple lattice with just the Undulator Field
-    Lattice* lattice = new Lattice;
-    lattice->addElement(Undu);
+    // Lattice* lattice = new Lattice;
+    // lattice->addElement(Undu);
 
     // an electron bunch of 77pC total charge modeled with NOP particles
     // the initial bunch length is 100fs
@@ -133,29 +220,29 @@ int main(int argc, char *argv[])
         printf("\n");
         // set the initial positions and momenta of the particles
         // transverse emittance 0.051µm (geometric) 10µm (normalized)
-        dist->generateGaussian(0.000, 0.000483, 0);	// x gaussian with sigma=1.0mm
-        dist->generateGaussian(0.000, 0.000407*betagamma, 3);	// px gaussian px/pz=0.131mrad
+        dist->generateGaussian(0.000, 0.000483, 0);     // x gaussian with sigma=1.0mm
+        dist->generateGaussian(0.000, 0.000407*betagamma, 3);   // px gaussian px/pz=0.131mrad
         // particles are "back transported" by 2m (undulator center to start)
         // by adding a -2 m/rad correlated position change
         dist->addCorrelation(3, 0, -2.0/betagamma);
-        dist->generateGaussian(0.000, 0.000483, 1);	// y gaussian with sigma=0.7mm
-        dist->generateGaussian(0.000, 0.000407*betagamma, 4);	// py gaussian py/pz=0.131mrad
+        dist->generateGaussian(0.000, 0.000483, 1);     // y gaussian with sigma=0.7mm
+        dist->generateGaussian(0.000, 0.000407*betagamma, 4);   // py gaussian py/pz=0.131mrad
         // particles are "back transported" by 0.8m (undulator entrance to start)
         // by adding a -0.8 m/rad correlated position change
         dist->addCorrelation(4, 1, -0.8/betagamma);
-        dist->generateGaussian(0.000, sigma_z, 2);	// z gaussian with sigma_z
-        dist->generateGaussian(betagamma, 0.001*betagamma, 5);	// pz gaussian 0.1% energy spread
+        dist->generateGaussian(0.000, sigma_z, 2);      // z gaussian with sigma_z
+        dist->generateGaussian(betagamma, 0.001*betagamma, 5);  // pz gaussian 0.1% energy spread
         // the master node knows the distribution and fills its buffer
         dist->bufferData(buffer,bufsize);
         // generate a bunch of all particles for output only
         Bunch *all = new Bunch(dist, -ch, ch);
         if (0 != all->WriteWatchPointSDDS("MPI_node0_all_particles_generated.sdds"))
         {
-          	printf("SDDS write \033[1;31m failed!\033[0m\n");
+                printf("SDDS write \033[1;31m failed!\033[0m\n");
         }
         else
         {
-    	    printf("SDDS file written - \033[1;32m OK\033[0m\n");
+            printf("SDDS file written - \033[1;32m OK\033[0m\n");
         }
         delete all;
     }
@@ -167,23 +254,6 @@ int main(int argc, char *argv[])
     // Now all nodes should have the same buffer.
     dist->fromBuffer(buffer,bufsize);
 
-    // node 1 generates a bunch of all particles for output only
-    /*
-    if (teufel::my_rank==1)
-    {
-        Bunch *all = new Bunch(dist, -ch, ch);
-        if (0 != all->WriteWatchPointSDDS("MPI_node1_all_particles_received.sdds"))
-        {
-          	printf("SDDS write \033[1;31m failed!\033[0m\n");
-        }
-        else
-        {
-    	    printf("SDDS file written - \033[1;32m OK\033[0m\n");
-        }
-        delete all;
-    }
-    */
-    
     // The complete set of particles is divided into an number of bunches.
     // Every bunch is tracked on one computation node all running in parallel.
     int bunchsize = NOP / NumberOfCores;
@@ -202,20 +272,6 @@ int main(int argc, char *argv[])
     printf("Node #%d computing %d particles starting at index %d\n",teufel::my_rank,bunchsize,index);
     Bunch *bunch = new Bunch(mydist, -ch, ch);
 
-    // every node creates a dump o the initial particle distribution
-    /*
-	char partFileName[80];
-	sprintf(partFileName,"MPI_node%d_particles_start.sdds",teufel::my_rank);
-    if (0 != bunch->WriteWatchPointSDDS(partFileName))
-    {
-      	printf("SDDS write \033[1;31m failed!\033[0m\n");
-    }
-    else
-    {
-	    printf("SDDS file written - \033[1;32m OK\033[0m\n");
-    }
-    */
-    
     // we are done with the distributions
     delete buffer;
     delete dist;
@@ -229,7 +285,7 @@ int main(int argc, char *argv[])
     double deltaT = tau / NOTS;
 
     // track a beam containing just the one bunch per node
-    Beam *beam = new Beam();
+    // Beam *beam = new Beam();
     beam->Add(bunch);
     
     // setup for the tracking procedure
@@ -237,9 +293,6 @@ int main(int argc, char *argv[])
     beam->InitVay(lattice);
 
     // log the Parameters of the bunch
-    /*
-    TrackingLogger<Bunch> *bunchLog = new TrackingLogger<Bunch>(bunch);
-    */
     
     // do the tracking of the beam
     printf("Node #%d tracking started.\n",teufel::my_rank);
@@ -248,51 +301,23 @@ int main(int argc, char *argv[])
     double print_time = start_time;
     for (int step=0; step<NOTS; step++)
     {
-    	beam->StepVay(lattice);
-	    // log every 10th step
-	    // if (step % 10 == 0) bunchLog->update();
-	    // make a print once every 60s
-	    double current_time = MPI_Wtime();
-	    if (current_time-print_time > 120)
-	    {
-	        print_time = current_time;
-	        printf("Node #%d tracking step %d / %d\n",teufel::my_rank,step,NOTS);
-	    };
+        beam->StepVay(lattice);
+            // log every 10th step
+            // if (step % 10 == 0) bunchLog->update();
+            // make a print once every 60s
+            double current_time = MPI_Wtime();
+            if (current_time-print_time > 120)
+            {
+                print_time = current_time;
+                printf("Node #%d tracking step %d / %d\n",teufel::my_rank,step,NOTS);
+            };
     }
     // record the finish time
     double stop_time = MPI_Wtime();
     printf("Node #%d finished after %6.2f s.\n",teufel::my_rank,stop_time-start_time);
-	
-	// create a file for the field per node
-	/*
-	char obsFileName[80];
-	sprintf(obsFileName,"MPI_node%d_Screen_ObsRadField.h5",teufel::my_rank);
-	screenObs.WriteTimeDomainFieldHDF5(obsFileName);
-	*/
-	
-	/*
-    // create a tracking parameter dump fo the bunch
-    int retval = bunchLog->WriteBeamParametersSDDS("dali-u300_BeamParam.sdds");
-    if (0 != retval)
-    {
-    	printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
-    }
-    else
-    {
-        printf("SDDS file written - \033[1;32m OK\033[0m\n");
-    }
-
-    // create a particle dump of the final distribution
-    if (0 != bunch->WriteWatchPointSDDS("dali-u300_final.sdds"))
-    {
-    	printf("SDDS write \033[1;31m failed!\033[0m\n");
-    }
-    else
-    {
-	    printf("SDDS file written - \033[1;32m OK\033[0m\n");
-    }
-    */
-    
+        
+    // create a file for the field per node
+        
     MPI_Barrier(MPI_COMM_WORLD);
     if (teufel::my_rank == 0) printf("\nAll nodes finished tracking.\n\n");
     
@@ -302,16 +327,16 @@ int main(int argc, char *argv[])
     double z0 = 2.0 + 1.625;
     double t0 = z0/SpeedOfLight - 1.0e-12;
     ScreenObserver<Bunch> screenObs = ScreenObserver<Bunch>(
-    	bunch,
+        bunch,
         "MPI_elbe-u300_Screen_ObsRadField.h5",
-    	Vector(0.0, 0.0, z0),		// position
-    	Vector(0.002, 0.0, 0.0),		// dx
-    	Vector(0.0, 0.002, 0.0),		// dy
-    	41,				// unsigned int nx,
-    	41,				// unsigned int ny,
-    	t0,
-    	5.0e-13,			// double dt,
-    	50);				// NOTS
+        Vector(0.0, 0.0, z0),           // position
+        Vector(0.002, 0.0, 0.0),                // dx
+        Vector(0.0, 0.002, 0.0),                // dy
+        41,                             // unsigned int nx,
+        41,                             // unsigned int ny,
+        t0,
+        5.0e-13,                        // double dt,
+        50);                            // NOTS
 
     // compute field seen from the bunch
     // in parallel on every node for its own particles
@@ -356,15 +381,16 @@ int main(int argc, char *argv[])
         screenObs.fromBuffer(reduceBuffer,count);
         try
         { 
-        	screenObs.WriteTimeDomainFieldHDF5();
-        	printf("Screen observer time domain field written - \033[1;32m OK\033[0m\n");
+                screenObs.WriteTimeDomainFieldHDF5();
+                printf("Screen observer time domain field written - \033[1;32m OK\033[0m\n");
         }
         catch (exception& e) { cout << e.what() << endl;}
     }
     // if (teufel::my_rank == 0) delete reduceBuffer;
     delete reduceBuffer;
     delete nodeBuffer;
-        
+*/
+
     // clean up
     delete lattice;
     // deleting the beam automatically deletes all bunches and particles belonging to it
@@ -373,7 +399,7 @@ int main(int argc, char *argv[])
     // delete bunchLog;
 
     MPI_Barrier(MPI_COMM_WORLD);
-    if (parallel and teufel::my_rank==0)
+    if (teufel::my_rank==0)
     {
         printf("\n  TEUFEL run finished.\n\n");
     }

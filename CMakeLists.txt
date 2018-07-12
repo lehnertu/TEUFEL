@@ -91,6 +91,19 @@ target_link_libraries(teufel ${PROJECT_NAME}lib
                              ${MUPARSER_LIBRARY}
                              ${ZLIB_LIBRARY_RELEASE} )
 
+add_executable(teufel_mpi ${PROJECT_SOURCE_DIR}/src/teufel_mpi.cpp)
+set_target_properties(teufel_mpi PROPERTIES
+    COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
+set_target_properties(teufel_mpi PROPERTIES
+    LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
+target_link_libraries(teufel_mpi ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIBRARIES}
+                             ${MPI_CXX_LIBRARIES}
+                             ${PUGIXML_LIBRARIES}
+                             ${MUPARSER_LIBRARY}
+                             ${ZLIB_LIBRARY_RELEASE} )
+
 # for building the documentation
 option(BUILD_DOCUMENTATION "Generate doxygen documentation" OFF)
 find_package(Doxygen)

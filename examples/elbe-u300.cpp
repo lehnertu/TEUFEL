@@ -66,6 +66,9 @@ int NOTS = 2000;	// number of time steps
 
 int main()
 {
+    // this must be globall defined even though it is only used in the MPI version
+    teufel::my_rank = 0;
+
     double B = 0.10315;
     double lambda = 0.300;
     double N = 8;

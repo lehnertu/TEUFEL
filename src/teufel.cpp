@@ -136,12 +136,12 @@ int main(int argc, char* argv[])
         std::cout << "WARNING : number of observers (" << NoO << ") differs from length of the list (" << listObservers.size() << ")" << std::endl;
     std::cout << std::endl;
     
-    // prepare the tracking of the beam
-    beam->setupTracking(lattice);
-
     // we are done with the input document
     delete parse;
     
+    // prepare the tracking of the beam
+    beam->setupTracking(lattice);
+
     // handle watch point of initial particle distribution
     for (int iw=0; iw<NoW; iw++)
     {
