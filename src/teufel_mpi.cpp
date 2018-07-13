@@ -214,34 +214,29 @@ int main(int argc, char *argv[])
         };
     };
     
-    MPI_Barrier(MPI_COMM_WORLD);
-    
     delete sendbuffer;
     delete recbuffer;
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
+    // ===============================================================
+    // track the beam on all nodes in parallel
+    // ===============================================================
 
     // this is the beam we will actually track
     Beam *trackedBeam = new Beam();
     trackedBeam->Add(trackedBunch);
+    // copy the tracking information
+    trackedBeam->setTrackingMethod(beam->getTrackingMethod());
+    trackedBeam->setTimeStep(beam->getTimeStep());
+    trackedBeam->setNOTS(beam->getNOTS());
+    // prepare the tracking of the beam
+    trackedBeam->setupTracking(lattice);
     
     std::cout << "node " << teufel::rank << " tracking beam of " <<
         trackedBeam->getNOP() << " particles." << std::endl;
-    
+  
 /*
-
-    // Tracking should be done for 3.4 m in lab space corresponding to tau [s].
-    // Inside the undulator we have an additional pathlength of one radiation
-    // wavelength per period. The radiation wavelength already includes the
-    // velocity of the particles. Outside the undulator the electron moves with beta*SpeedOfLight
-    double tau = (double)N * (lambda + lambdar) / SpeedOfLight + (3.4 - (double)N * lambda) / (beta * SpeedOfLight);
-    double deltaT = tau / NOTS;
-
-    // track a beam containing just the one bunch per node
-    // Beam *beam = new Beam();
-    beam->Add(bunch);
-    
-    // setup for the tracking procedure
-    beam->setTimeStep(deltaT);
-    beam->InitVay(lattice);
 
     // log the Parameters of the bunch
     
@@ -355,6 +350,7 @@ int main(int argc, char *argv[])
     
     // deleting the beam automatically deletes all bunches and particles belonging to it
     delete beam;
+    delete trackedBeam;
 
     MPI_Barrier(MPI_COMM_WORLD);
     if (teufel::rank==0)

@@ -195,7 +195,7 @@ private:
      */
     double dt;
 
-    //! numer of time steps
+    //! number of time steps
     int NOTS;
     
     //! Method used for tracking
