@@ -24,6 +24,9 @@
 #include "fields.h"
 #include "vector.h"
 
+//! size of the buffer for particle serialization
+#define PARTICLE_SERIALIZE_BUFSIZE 12
+
 /*!
  * \class ChargedParticle
  * \brief Particle with electric charge.
@@ -66,6 +69,13 @@ public:
      */
     ChargedParticle(const ChargedParticle *origin);
     
+    /*! Constructor from buffer:<br>
+     *  Take the data stored with serialize() and recreate this
+     *  as a new particle including initTrajectory().
+     *  There is no check of buffer size.
+     */
+    ChargedParticle(double *buffer);
+    
     /*! Destructor: free all memory. */
     virtual ~ChargedParticle();
     
@@ -89,6 +99,21 @@ public:
      *  or zero if there is no trajectory.
      */
     Vector getMomentum();
+    
+    /*! Copy all current information about the particle into one buffer
+     *  of double type. This can be used to transfer the particle to a different
+     *  MPI node but looses the trajectory information.
+     *  The serialized properties include:
+     *  @item double Charge
+     *  @item double Mass
+     *  @item double Time[0]
+     *  @item double[3] X[0]
+     *  @item double[3] P[0]
+     *  @item double[3] A[0]
+     *  The buffer must have a size of PARTICLE_SERIALIZE_BUFSIZE doubles.
+     *  There is no check for sufficient buffer size.
+     */
+    void serialize(double *buffer);
     
     /*! Return the time [s] for one point of the trajectory */
     double TrajTime(int step);

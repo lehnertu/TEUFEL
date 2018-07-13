@@ -62,6 +62,18 @@ ChargedParticle::ChargedParticle(const ChargedParticle *origin)
     VY_gamma_i1 = origin->VY_gamma_i1;
 }
 
+ChargedParticle::ChargedParticle(double *buffer)
+{
+    Charge = buffer[0];
+    Mass = buffer[1];
+    dt = 0.0;
+    double t = buffer[2];
+    Vector x = Vector(buffer[3],buffer[4],buffer[5]);
+    Vector p = Vector(buffer[6],buffer[7],buffer[8]);
+    Vector a = Vector(buffer[9],buffer[10],buffer[11]);
+    initTrajectory(t, x, p, a);
+}
+
 ChargedParticle::~ChargedParticle()
 {
 }
@@ -88,6 +100,49 @@ Vector ChargedParticle::getMomentum()
 	return P.back();
     else
 	return Vector(0.0, 0.0, 0.0);
+}
+
+    /*! Copy all current information about the particle into one buffer
+     *  of double type. This can be used to transfer the particle to a different
+     *  MPI node but looses the trajectory information.
+     *  The serialized properties include:
+     *  @item double Charge
+     *  @item double Mass
+     *  @item double Time[0]
+     *  @item double[3] X[0]
+     *  @item double[3] P[0]
+     *  The buffer must have a size of PARTICLE_SERIALIZE_BUFSIZE doubles.
+     *  There is no check for sufficient buffer size.
+     */
+void ChargedParticle::serialize(double *buffer)
+{
+    double *b = buffer;
+    *b++ = Charge;
+    *b++ = Mass;
+    if (NP>0)
+    {
+        *b++ = Time[0];
+        *b++ = X[0].x;
+        *b++ = X[0].y;
+        *b++ = X[0].z;
+        *b++ = P[0].x;
+        *b++ = P[0].y;
+        *b++ = P[0].z;
+        *b++ = A[0].x;
+        *b++ = A[0].y;
+        *b++ = A[0].z;
+    } else {
+        *b++ = 0.0;
+        *b++ = 0.0;
+        *b++ = 0.0;
+        *b++ = 0.0;
+        *b++ = 0.0;
+        *b++ = 0.0;
+        *b++ = 0.0;
+        *b++ = 0.0;
+        *b++ = 0.0;
+        *b++ = 0.0;
+    }
 }
 
 double ChargedParticle::TrajTime(int step)

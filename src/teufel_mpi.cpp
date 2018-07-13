@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
     // console output is only printed from rank 0
     // ===============================================================
     
-    // The first command line argument is interpreted as the input file name
+    // The first command line argument is interpreted as the input file name.
     // This is an XML document which is opened and parsed here.
     pugi::xml_document doc;
     if (argc < 2) {
@@ -126,7 +126,7 @@ int main(int argc, char *argv[])
     if (teufel::rank==0) std::cout << "case : " << description << std::endl;
     if (teufel::rank==0) std::cout << "by : " << author << std::endl << std::endl;
     
-    // Further parsing of the input document is done by the simulation object
+    // Further parsing of the input document is done by the parser object.
     InputParser *parse = new InputParser(root);
     
     // We create an empty lattice object.
@@ -164,44 +164,70 @@ int main(int argc, char *argv[])
         if (teufel::rank==0) std::cout << "WARNING : number of observers (" << NoO << ") differs from length of the list (" << listObservers.size() << ")" << std::endl;
     if (teufel::rank==0) std::cout << std::endl;
     
+    // done parsing the input file
     delete parse;
 
     // ===============================================================
-    // done parsing the input file
+    // re-distribute all particles into one bunch per node
+    // all containing approximately equal numbers of particles
     // ===============================================================
 
+    // buffers for MPI communication
+    double *sendbuffer = new double[PARTICLE_SERIALIZE_BUFSIZE];
+    double *recbuffer = new double[PARTICLE_SERIALIZE_BUFSIZE];
+    MPI_Request send_req;
+
+    Bunch *trackedBunch = new Bunch();
+    if (teufel::rank == 0) std::cout << "distribute particles..." << std::endl;
+    // all nodes synchronously traverse the beam
+    int pc = 0;                 // particle counter
+    int nob = beam->getNOB();
+    for (int i=0; i<nob; i++)
+    {
+        Bunch *b = beam->getBunch(i);
+        int nop = b->getNOP();
+        for (int j=0; j<nop; j++)
+        {
+            // only the root node is sending particle information
+            if (teufel::rank == 0)
+            {
+                ChargedParticle *p = b->getParticle(j);
+                p->serialize(sendbuffer);
+                // non-blocking send
+                MPI_Issend(sendbuffer, PARTICLE_SERIALIZE_BUFSIZE, MPI_DOUBLE,
+                    pc%NumberOfCores, 42, MPI_COMM_WORLD, &send_req);
+            };
+            // all nodes in turn receive the particles
+            if (teufel::rank == (pc%NumberOfCores) )
+            {
+                MPI_Recv(recbuffer, PARTICLE_SERIALIZE_BUFSIZE, MPI_DOUBLE,
+                    0, 42, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                ChargedParticle *tp = new ChargedParticle(recbuffer);
+                trackedBunch->Add(tp);
+            };
+            // the root node waits for completion of the transfer
+            if (teufel::rank == 0)
+            {
+                MPI_Wait(&send_req,MPI_STATUS_IGNORE);
+            };
+            pc++;
+        };
+    };
+    
+    MPI_Barrier(MPI_COMM_WORLD);
+    
+    delete sendbuffer;
+    delete recbuffer;
+
+    // this is the beam we will actually track
+    Beam *trackedBeam = new Beam();
+    trackedBeam->Add(trackedBunch);
+    
+    std::cout << "node " << teufel::rank << " tracking beam of " <<
+        trackedBeam->getNOP() << " particles." << std::endl;
+    
 /*
 
-    // Distribute the particle coordinates to all nodes.
-    MPI_Barrier(MPI_COMM_WORLD);
-    MPI_Bcast(buffer, bufsize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Barrier(MPI_COMM_WORLD);
-    // Now all nodes should have the same buffer.
-    dist->fromBuffer(buffer,bufsize);
-
-    // The complete set of particles is divided into an number of bunches.
-    // Every bunch is tracked on one computation node all running in parallel.
-    int bunchsize = NOP / NumberOfCores;
-    int remainder = NOP % NumberOfCores;   
-    int index;  // where do my particles start in the list
-    if (teufel::rank<remainder)
-    {   // first few nodes get one particle more
-        bunchsize++;
-        index = teufel::rank*(bunchsize+1);
-    }
-    else 
-    {   
-        index = remainder + teufel::rank*bunchsize;
-    }
-    Distribution *mydist = dist->subDist(index, bunchsize);
-    printf("Node #%d computing %d particles starting at index %d\n",teufel::rank,bunchsize,index);
-    Bunch *bunch = new Bunch(mydist, -ch, ch);
-
-    // we are done with the distributions
-    delete buffer;
-    delete dist;
-    delete mydist;
-    
     // Tracking should be done for 3.4 m in lab space corresponding to tau [s].
     // Inside the undulator we have an additional pathlength of one radiation
     // wavelength per period. The radiation wavelength already includes the
@@ -324,13 +350,15 @@ int main(int argc, char *argv[])
     // delete all watches
     watches.clear();
 
+    // deleting the lattice automatically deletes all lattice elments
     delete lattice;
+    
     // deleting the beam automatically deletes all bunches and particles belonging to it
     delete beam;
 
     MPI_Barrier(MPI_COMM_WORLD);
     if (teufel::rank==0)
-        std::cout << std::endl << "  TEUFEL run finished." << std::endl << std::endl;
+        std::cout << std::endl << " TEUFEL run finished." << std::endl << std::endl;
     
     MPI_Finalize();
     return 0;

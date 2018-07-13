@@ -66,6 +66,7 @@ include_directories( ${PROJECT_BINARY_DIR}
 aux_source_directory(${PROJECT_SOURCE_DIR}/src lib_sources )
 # the main program is not part of the library
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/teufel.cpp)
+list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/teufel_mpi.cpp)
 # files not yet finished and not included in the build
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/cavity.cpp)
 # list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/simulation.cpp)

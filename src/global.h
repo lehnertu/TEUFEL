@@ -45,10 +45,14 @@
 // the electron rest mass in kg can be obtained as
 // mecsquared*ElementaryCharge/SpeedOfLight^2
 
-// The MPI rank is kept as a global variable accessible from all modules.
-// Must be set to zero for all non-MPI executables.
 namespace teufel
 {
+    /*! The MPI rank is kept as a global variable accessible from all modules.
+     *  It is set to values different from 0 only by MPI executables.
+     *  Must be set to zero for all non-MPI executables.
+     *  It is mainly intended to suppress unnecessary output from code
+     *  executed by many nodes in parallel.
+     */
     extern int rank;
 }
 
