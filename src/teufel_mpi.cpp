@@ -291,9 +291,8 @@ int main(int argc, char *argv[])
     }
 
     // record the start time
-    timespec start_time, stop_time, current_time, print_time;
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
-    print_time = start_time;
+    double start_time = MPI_Wtime();
+    double print_time = start_time;
 
     // do the tracking of the beam
     for (int step=0; step<trackedBeam->getNOTS(); step++)
@@ -348,10 +347,8 @@ int main(int argc, char *argv[])
         // make a print once every 10s
         if (teufel::rank == 0)
         {
-            clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &current_time);
-            double elapsed = current_time.tv_sec-print_time.tv_sec +
-                1e-9*(current_time.tv_nsec-print_time.tv_nsec);
-            if (elapsed>10.0)
+            double current_time = MPI_Wtime();
+            if (current_time-print_time > 10)
             {
                 print_time = current_time;
                 std::cout << "tracking step " << step << std::endl;
@@ -362,44 +359,47 @@ int main(int argc, char *argv[])
     // record the finish time
     if (teufel::rank == 0)
     {
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop_time);
+        double stop_time = MPI_Wtime();
         std::cout << "finished tracking particles." << std::endl;
-        double elapsed = stop_time.tv_sec-start_time.tv_sec +
-            1e-9*(stop_time.tv_nsec-start_time.tv_nsec);
-        std::cout << "time elapsed during tracking : " << elapsed << " s" << std::endl;
+        std::cout << "time elapsed during tracking : " << stop_time-start_time << " s" << std::endl;
     };
+
+    // ===============================================================
+    // compute the radiation observations
+    // each node does the computation for it's own set of particles
+    // the fields are combined before writing the files
+    // ===============================================================
+
+    MPI_Barrier(MPI_COMM_WORLD);
+    
+    //! @todo : all observers defined by the parser look at beam, not at trackedBeam
+    
+    // compute all observations
+    for (int i=0; i<NoO; i++)
+    {
+        double start_time = MPI_Wtime();
+        if (teufel::rank == 0)
+        {
+            std::cout << std::endl << "computing observer No. " << i+1 << std::endl;
+        };
+        Observer *obs = listObservers.at(i);
+        std::cout << "node " << teufel::rank << " integrating ... " << std::endl;
+        obs->integrate();
+        double stop_time = MPI_Wtime();
+        if (teufel::rank == 0)
+        {
+            std::cout << "time elapsed : " << stop_time-start_time << " s" << std::endl;
+        };
+        
+        // collect all the field computed on the individual nodes into the master node
+        
+        // write output file
+        if (teufel::rank == 0) obs->generateOutput();
+    }
+        
 
 /*
 
-    // Record the radiation of the beam at 1.625m distance from the undulator center.
-    // Every node just records the radiation emitted by its own particles.
-    // We have to sum it up later.
-    double z0 = 2.0 + 1.625;
-    double t0 = z0/SpeedOfLight - 1.0e-12;
-    ScreenObserver<Bunch> screenObs = ScreenObserver<Bunch>(
-        bunch,
-        "MPI_elbe-u300_Screen_ObsRadField.h5",
-        Vector(0.0, 0.0, z0),           // position
-        Vector(0.002, 0.0, 0.0),                // dx
-        Vector(0.0, 0.002, 0.0),                // dy
-        41,                             // unsigned int nx,
-        41,                             // unsigned int ny,
-        t0,
-        5.0e-13,                        // double dt,
-        50);                            // NOTS
-
-    // compute field seen from the bunch
-    // in parallel on every node for its own particles
-    printf("Node #%d integrating...\n",teufel::rank);
-    start_time = MPI_Wtime();
-    screenObs.integrate();
-    // record the finish time
-    stop_time = MPI_Wtime();
-    printf("Node #%d finished after %6.2f s.\n",teufel::rank,stop_time-start_time);
-
-    MPI_Barrier(MPI_COMM_WORLD);
-    if (teufel::rank == 0) printf("\nAll nodes finished the field computation.\n\n");
-    
     // collect all the field computed on the individual nodes
     // into the master node
     unsigned int count = screenObs.getCount();
