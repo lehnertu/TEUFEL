@@ -35,13 +35,22 @@ Beam::Beam()
 Beam::~Beam()
 {
     for(int i=0; i<NOB; i++)
-    delete B[i];
+        delete B[i];
 }
 
 void Beam::Add(Bunch *bunch)
 {
     NOB++;
     B.push_back(bunch);
+}
+
+void Beam::clear()
+{
+    // as B is only a list of pointers we have to delete all bunches individually
+    for(int i=0; i<NOB; i++)
+        delete B[i];
+    NOB = 0;
+    B.clear();
 }
 
 Bunch* Beam::getBunch(int i)
@@ -150,7 +159,7 @@ int Beam::WriteWatchPointHDF5(std::string filename)
     hid_t file = H5Fcreate (filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
     if (file < 0 )
     {
-        std::cout << "Beam::WriteWatchPointHDF5 - error crating file" << std::endl;
+        std::cout << "Beam::WriteWatchPointHDF5 - error creating file" << std::endl;
         return -1;
     };
     // Create dataspace. Setting maximum size to NULL sets the maximum
@@ -161,14 +170,14 @@ int Beam::WriteWatchPointHDF5(std::string filename)
     hid_t space = H5Screate_simple (2, dims, NULL);
     if (space < 0 )
     {
-        std::cout << "Beam::WriteWatchPointHDF5 - error crating dataspace" << std::endl;
+        std::cout << "Beam::WriteWatchPointHDF5 - error creating dataspace" << std::endl;
         return -1;
     };
     // Create the dataset creation property list
     hid_t dcpl = H5Pcreate (H5P_DATASET_CREATE);
     if (dcpl < 0 )
     {
-        std::cout << "Beam::WriteWatchPointHDF5 - error crating property list" << std::endl;
+        std::cout << "Beam::WriteWatchPointHDF5 - error creating property list" << std::endl;
         return -1;
     };
     // Create the dataset.
@@ -179,7 +188,7 @@ int Beam::WriteWatchPointHDF5(std::string filename)
         dcpl, H5P_DEFAULT);
     if (dset < 0 )
     {
-        std::cout << "Beam::WriteWatchPointHDF5 - error crating dataset" << std::endl;
+        std::cout << "Beam::WriteWatchPointHDF5 - error creating dataset" << std::endl;
         return -1;
     };
     // Write the data to the dataset

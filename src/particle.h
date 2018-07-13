@@ -103,6 +103,7 @@ public:
     /*! Copy all current information about the particle into one buffer
      *  of double type. This can be used to transfer the particle to a different
      *  MPI node but looses the trajectory information.
+     *  All stored information belongs to the last known trajectory point.
      *  The serialized properties include:
      *  @item double Charge
      *  @item double Mass

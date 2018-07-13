@@ -102,18 +102,6 @@ Vector ChargedParticle::getMomentum()
 	return Vector(0.0, 0.0, 0.0);
 }
 
-    /*! Copy all current information about the particle into one buffer
-     *  of double type. This can be used to transfer the particle to a different
-     *  MPI node but looses the trajectory information.
-     *  The serialized properties include:
-     *  @item double Charge
-     *  @item double Mass
-     *  @item double Time[0]
-     *  @item double[3] X[0]
-     *  @item double[3] P[0]
-     *  The buffer must have a size of PARTICLE_SERIALIZE_BUFSIZE doubles.
-     *  There is no check for sufficient buffer size.
-     */
 void ChargedParticle::serialize(double *buffer)
 {
     double *b = buffer;
@@ -121,16 +109,19 @@ void ChargedParticle::serialize(double *buffer)
     *b++ = Mass;
     if (NP>0)
     {
-        *b++ = Time[0];
-        *b++ = X[0].x;
-        *b++ = X[0].y;
-        *b++ = X[0].z;
-        *b++ = P[0].x;
-        *b++ = P[0].y;
-        *b++ = P[0].z;
-        *b++ = A[0].x;
-        *b++ = A[0].y;
-        *b++ = A[0].z;
+        *b++ = Time.back();
+        Vector x = X.back();
+        Vector p = P.back();
+        Vector a = A.back();
+        *b++ = x.x;
+        *b++ = x.y;
+        *b++ = x.z;
+        *b++ = p.x;
+        *b++ = p.y;
+        *b++ = p.z;
+        *b++ = a.x;
+        *b++ = a.y;
+        *b++ = a.z;
     } else {
         *b++ = 0.0;
         *b++ = 0.0;

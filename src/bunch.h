@@ -271,16 +271,6 @@ public:
      */
     int WriteWatchPointSDDS(const char *filename);
 
-    /*! Dump all particle information into an HDF5 file.
-     *  The written quantities include:
-     *  - time t
-     *  - position x,y,z
-     *  - momentum px,py,pz,p (beta*gamma)
-     *  - angles xp,yp (px/pz, py/pz)
-     *  - gamma
-     */
-    int WriteWatchPointHDF5(const char *filename);
-
     /*! Compute the electromagnetic field radiated by the bunch
      * seen at the observation point. The field is given in time domain
      * starting at t0 with NOTS equidistant time steps of dt length.

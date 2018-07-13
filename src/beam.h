@@ -67,6 +67,10 @@ public:
      */
     void Add(Bunch *bunch);
     
+    /*! Remove all bunches and particles belonging to this beam.
+     */
+    void clear();
+    
     //! Report the number of bunches in the beam.
     int getNOB();       
 
