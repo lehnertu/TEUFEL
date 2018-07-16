@@ -2,8 +2,8 @@ cmake_minimum_required (VERSION 2.6)
 project (TEUFEL)
 
 set (TEUFEL_VERSION_MAJOR 0)
-set (TEUFEL_VERSION_MINOR 8)
-set (TEUFEL_VERSION_PATCH 4)
+set (TEUFEL_VERSION_MINOR 9)
+set (TEUFEL_VERSION_PATCH 0)
 
 # where to find modules
 # we add teufel/lib to the search path
