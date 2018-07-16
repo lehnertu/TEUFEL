@@ -118,7 +118,6 @@ public:
      * This class is templated and spezialized for
      * Bunch() or Beam() being the field source.
      * 
-     * \param[in] src The source generating the field.
      * \param[in] filename The name of the generated output file.
      * \param[in] t0 Start time of the trace.
      * \param[in] dt Time step of the observation trace.
@@ -136,6 +135,8 @@ public:
      *  of observation.
      *  Should be called once after tracking all particles.
      * 
+     * \param[in] src The source generating the field.
+     *
      *  This method is defined for Beam() and Bunch() as field sources.
      */
     virtual void integrate(Beam *src);
@@ -251,7 +252,6 @@ public:
      * and assumed constant over the whole area of the cell for
      * power flow calculation.
      * 
-     * \param[in] src The source generating the field.
      * \param[in] filename The name of the generated output file.
      * \param[in] position The center of the screen.
      * \param[in] dx The x direction/spacing of the grid.
@@ -278,6 +278,8 @@ public:
      *  of observation.
      *  Should be called once after tracking all particles.
      * 
+     * \param[in] src The source generating the field.
+     *
      *  This method is defined for Beam() and Bunch() as field sources.
      */
     virtual void integrate(Beam *src);
