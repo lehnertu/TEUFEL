@@ -43,7 +43,7 @@ PointObserver::PointObserver(
     NOTS = nots;
     ElMagField field;
     // fill the field with zeros
-    for (int i=0; i<NOTS; i++) TimeDomainField.push_back(field);
+    for (unsigned int i=0; i<NOTS; i++) TimeDomainField.push_back(field);
 }
 
 void PointObserver::integrate(Beam *src)
@@ -58,11 +58,70 @@ void PointObserver::integrate(Bunch *src)
         Pos, t0_obs, dt_obs, NOTS, &TimeDomainField);
 }
 
-ElMagField PointObserver::getField(int idx)
+ElMagField PointObserver::getField(unsigned int idx)
 {
     ElMagField field;
     if ( idx>=0 && idx<NOTS) field=TimeDomainField[idx];
     return field;
+}
+
+void PointObserver::setField(
+        unsigned int it,
+        ElMagField field)
+{
+    if (it<NOTS)
+        TimeDomainField[it] = field;
+    else
+        throw(IOexception("PointObserver::setField() - requested index out of range."));
+}
+
+unsigned int PointObserver::getBufferSize()
+{
+    return NOTS*6;
+}
+
+double* PointObserver::getBuffer()
+{
+    double* buffer = new double[getBufferSize()];
+    if (buffer==0)
+        throw(IOexception("PointObserver::getBuffer() - error allocating memory."));
+    else
+    {
+        double* bp = buffer;
+        for (unsigned int it = 0; it < NOTS; it++)
+        {
+            ElMagField field = getField(it);
+            *bp++ = field.E().x;
+            *bp++ = field.E().y;
+            *bp++ = field.E().z;
+            *bp++ = field.B().x;
+            *bp++ = field.B().y;
+            *bp++ = field.B().z;
+        };
+    };
+    return buffer;
+}
+
+void PointObserver::fromBuffer(double *buffer, unsigned int size)
+{
+    if (size==NOTS*6)
+    {
+        ElMagField field;
+        double *bp = buffer;
+        for (unsigned int it = 0; it < NOTS; it++)
+        {
+            Vector E, B;
+            E.x = *bp++;
+            E.y = *bp++;
+            E.z = *bp++;
+            B.x = *bp++;
+            B.y = *bp++;
+            B.z = *bp++;
+            setField(it,ElMagField(E,B));
+        };
+    } else {
+        throw(IOexception("PointObserver::fromBuffer() - buffer size mismatch."));
+    }
 }
 
 void PointObserver::WriteTimeDomainFieldSDDS()
@@ -102,7 +161,7 @@ void PointObserver::WriteTimeDomainFieldSDDS()
 	throw(IOexception("PointObserver::WriteTimeDomainFieldSDDS - error in SetParameters()"));
     // write the table of trajectory data
     // cout << "SDDS writing " << NOTS << " field values" << endl;
-    for( int i=0; i<NOTS; i++)
+    for(unsigned int i=0; i<NOTS; i++)
     {
 	if (SDDS_SetRowValues(&data,
 	    SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,i,
@@ -220,14 +279,14 @@ void ScreenObserver::setField(
 	    throw(IOexception("ScreenObserver::setField() - requested index out of range."));
 }
 
-unsigned int ScreenObserver::getCount()
+unsigned int ScreenObserver::getBufferSize()
 {
     return Nx*Ny*NOTS*6;
 }
 
 double* ScreenObserver::getBuffer()
 {
-    double* buffer = new double[getCount()];
+    double* buffer = new double[getBufferSize()];
     if (buffer==0)
         throw(IOexception("ScreenObserver::getBuffer() - error allocating memory."));
     else
@@ -249,9 +308,9 @@ double* ScreenObserver::getBuffer()
     return buffer;
 }
 
-void ScreenObserver::fromBuffer(double *buffer, unsigned int count)
+void ScreenObserver::fromBuffer(double *buffer, unsigned int size)
 {
-    if (count==Nx*Ny*NOTS*6)
+    if (size==Nx*Ny*NOTS*6)
     {
         ElMagField field;
         double *bp = buffer;

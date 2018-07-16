@@ -36,7 +36,7 @@
     <observer>
         <calc print="screen position z0 = " var="z0" eq="10.0"/>
         <calc print="screen start time t0 = " var="t0" eq="z0/_c"/>
-        <point file="elbe-u300_obs_10m.h5">
+        <point file="elbe-u300_obs_10m.sdds">
             <position x="0.0" y="0.0" z="z0" />
             <time t0="t0" dt="1e-13" n="300" />
         </point>

@@ -326,7 +326,7 @@ int main(int argc, char *argv[])
     
     // collect all the field computed on the individual nodes
     // into the master node
-    unsigned int count = screenObs.getCount();
+    unsigned int count = screenObs.getBufferSize();
     printf("Node #%d allocating buffers for %d doubles\n",teufel::rank,count);
     // fill the buffer and get its address
     double* nodeBuffer = screenObs.getBuffer();

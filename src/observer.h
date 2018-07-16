@@ -63,6 +63,27 @@ public:
     virtual void integrate(Beam *src) = 0;
     virtual void integrate(Bunch *src) = 0;
 
+    /*! The method gives the size of the buffer necessary to store
+     *  the complete field information as a number of doubles (not bytes!).
+     *  This is a purely virtual method that must be overwritten by derived objects.
+     */
+    virtual unsigned int getBufferSize() = 0;
+    
+    /*! Return all field values in a newly allocated buffer.
+     *  Memory for the buffer is allocated by this method and must be freeed
+     *  by the caller. Returns a pointer to the allocated memory.
+     *  An exception is thrown if the alloaction of the buffer fails.
+     *  This is a purely virtual method that must be overwritten by derived objects.
+     */
+    virtual double* getBuffer() = 0;
+
+    /*! Set all field values from a given allocated buffer.
+     *  The count value gives the size of the buffer as a number of doubles.
+     *  An exception is thrown if it doesn't match the actual field size.
+     *  This is a purely virtual method that must be overwritten by derived objects.
+     */
+    virtual void fromBuffer(double *buffer, unsigned int size) = 0;
+
     /*!
      *  Generate whatever output the special observer has to deliver.
      *  This is a purely virtual method that must be overwritten by derived objects.
@@ -122,8 +143,35 @@ public:
 
     /*! Return the field value stored in one time slice
      */
-    ElMagField getField(int idx);
+    ElMagField getField(unsigned int idx);
     
+    /*! Set one particular field value stored in one time slice with index it.
+     *  This method throws an exception in case of an out-of-range index.
+     *  This exception should not be caught as it represents an internal
+     *  coding error (should never happen).
+     */
+    void setField(
+        unsigned int it,
+        ElMagField field);
+
+    /*! The method gives the size of the buffer necessary to store
+     *  the complete field information as a number of doubles (not bytes!).
+     */
+    virtual unsigned int getBufferSize();
+    
+    /*! Return all field values in a newly allocated buffer.
+     *  Memory for the buffer is allocated by this method and must be freeed
+     *  by the caller. Returns a pointer to the allocated memory.
+     *  An exception is thrown if the alloaction of the buffer fails.
+     */
+    virtual double* getBuffer();
+
+    /*! Set all field values from a given allocated buffer.
+     *  The count value gives the size of the buffer as a number of doubles.
+     *  An exception is thrown if it doesn't match the actual field size.
+     */
+    virtual void fromBuffer(double *buffer, unsigned int size);
+
     /*! @brief Write the time-domain field trace into an SDDS file.
      * 
      * The file name has been defined when creating the observer object.
@@ -141,7 +189,7 @@ public:
     void WriteTimeDomainFieldSDDS();
 
     /*! Generate the output file(s) from this observation.
-     *  @todo : this should call  WriteTimeDomainFieldSDDS()
+     *  The present code just calls  WriteTimeDomainFieldSDDS().
      */
     virtual void generateOutput();
 
@@ -154,7 +202,7 @@ private:
     Vector Pos;
 
     //! number of time steps in the interpolated trace
-    int NOTS;
+    unsigned int NOTS;
 
     //! the start of the field trace
     double t0_obs;
@@ -175,8 +223,6 @@ private:
  * 
  * This class handles the computation and storage of emitted electromagnetic
  * radiation from different sources (bunches and beams).
- * 
- * @todo The observers need not necessarily be templated, the integrate() method is the only one accessing the source and could easily be oberloaded.
  */
 class ScreenObserver : public Observer
 {
@@ -263,20 +309,20 @@ public:
     /*! The method gives the size of the buffer necessary to store
      *  the complete field information as a number of doubles (not bytes!).
      */
-    unsigned int getCount();
+    virtual unsigned int getBufferSize();
     
     /*! Return all field values in a newly allocated buffer.
      *  Memory for the buffer is allocated by this method and must be freeed
      *  by the caller. Returns a pointer to the allocated memory.
      *  An exception is thrown if the alloaction of the buffer fails.
      */
-    double* getBuffer();
+    virtual double* getBuffer();
 
     /*! Set all field values from a given allocated buffer.
      *  The count value gives the size of the buffer as a number of doubles.
      *  An exception is thrown if it doesn't match the actual field size.
      */
-    void fromBuffer(double *buffer, unsigned int count);
+    virtual void fromBuffer(double *buffer, unsigned int size);
 
     /*! @brief Write all the time-domain field traces into an HDF5 file.
      * 
@@ -300,7 +346,7 @@ public:
     void WriteTimeDomainFieldHDF5();
 
     /*! Generate the output file(s) from this observation.
-     *  @todo : this should call  WriteTimeDomainFieldHDF()
+     *  The present code just calls  WriteTimeDomainFieldHDF()
      */
     virtual void generateOutput();
 

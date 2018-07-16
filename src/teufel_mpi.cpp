@@ -390,9 +390,51 @@ int main(int argc, char *argv[])
         };
         
         // collect all the field computed on the individual nodes into the master node
-        
-        // write output file
-        if (teufel::rank == 0) obs->generateOutput();
+        unsigned int count = obs->getBufferSize();
+        std::cout << "Node " << teufel::rank << " allocating buffers for "<< count << " doubles" << std::endl;
+        // fill the buffer and get its address
+        double* nodeBuffer = obs->getBuffer();
+        if (nodeBuffer==0)
+        {
+            std::cout << "MPI_Reduce for Obsserver : node " << teufel::rank << " was unable to get the node buffer." << std::endl;
+            throw(IOexception("memory allocation error"));
+        };
+        // we have to define a buffer for the sum on all nodes
+        double* reduceBuffer = new double[count];
+        if (reduceBuffer==0)
+        {
+            std::cout << "MPI_Reduce for Obsserver : node " << teufel::rank << " was unable to get the recude buffer." << std::endl;
+            throw(IOexception("memory allocation error"));
+        };
+        MPI_Barrier(MPI_COMM_WORLD);
+        if (teufel::rank == 0)
+            std::cout << std::endl << "All buffers allocated." << std::endl;
+        MPI_Reduce(
+            nodeBuffer,                 // send buffer
+            reduceBuffer,               // receive buffer
+            count,                      // number of values
+            MPI_DOUBLE,                 // data type
+            MPI_SUM,                    // operation
+            0,                          // rank of the root process
+            MPI_COMM_WORLD              // communicator
+        );
+        if (teufel::rank == 0)
+            std::cout << "Reduce finished." << std::endl;
+        // the root node copies the data from the reduce buffer into the Observer
+        // and writes it to the output file
+        if (teufel::rank == 0)
+        {
+            obs->fromBuffer(reduceBuffer,count);
+            try
+            { 
+                    obs->generateOutput();
+                    std::cout << "Observer output file written." << std::endl;
+            }
+            catch (exception& e) { cout << e.what() << endl;}
+        }
+        // if (teufel::rank == 0) delete reduceBuffer;
+        delete reduceBuffer;
+        delete nodeBuffer;
     }
         
 
@@ -400,43 +442,6 @@ int main(int argc, char *argv[])
 
     // collect all the field computed on the individual nodes
     // into the master node
-    unsigned int count = screenObs.getCount();
-    printf("Node #%d allocating buffers for %d doubles\n",teufel::rank,count);
-    // fill the buffer and get its address
-    double* nodeBuffer = screenObs.getBuffer();
-    if (nodeBuffer==0)
-        printf("MPI_Reduce for screenObs : node #%d was unable to get the node buffer.\n",teufel::rank);
-    // we have to define a buffer for the sum on all nodes
-    double* reduceBuffer = new double[count];
-    if (reduceBuffer==0)
-        printf("MPI_Reduce for screenObs : node #%d was unable to get the reduce buffer.\n",teufel::rank);
-    MPI_Barrier(MPI_COMM_WORLD);
-    if (teufel::rank == 0) printf("\nAll buffers allocated.\n");
-    MPI_Reduce(
-        nodeBuffer,                 // send buffer
-        reduceBuffer,               // receive buffer
-        count,                      // number of values
-        MPI_DOUBLE,                 // data type
-        MPI_SUM,                    // operation
-        0,                          // rank of the root process
-        MPI_COMM_WORLD              // communicator
-    );
-    if (teufel::rank == 0) printf("\nReduce finished.\n\n");
-    // the root node copies the data from the reduce buffer into the sreenObs
-    // and writes it to the output file
-    if (teufel::rank == 0)
-    {
-        screenObs.fromBuffer(reduceBuffer,count);
-        try
-        { 
-                screenObs.WriteTimeDomainFieldHDF5();
-                printf("Screen observer time domain field written - \033[1;32m OK\033[0m\n");
-        }
-        catch (exception& e) { cout << e.what() << endl;}
-    }
-    // if (teufel::rank == 0) delete reduceBuffer;
-    delete reduceBuffer;
-    delete nodeBuffer;
 */
 
     // delete all observers
