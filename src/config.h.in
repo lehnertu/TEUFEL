@@ -1,0 +1,5 @@
+// the configured options and settings from CMakeLists.txt
+#define TEUFEL_VERSION_MAJOR @TEUFEL_VERSION_MAJOR@
+#define TEUFEL_VERSION_MINOR @TEUFEL_VERSION_MINOR@
+#define TEUFEL_VERSION_PATCH @TEUFEL_VERSION_PATCH@
+

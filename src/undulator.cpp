@@ -36,6 +36,33 @@ PlanarUndulator::PlanarUndulator(Vector pos) :
     Setup(0.0, 1.0, 1);
 }
 
+PlanarUndulator::PlanarUndulator(const pugi::xml_node node, InputParser *parser) :
+    ExternalField()
+{
+    parser->parseCalcChildren(node);
+    pugi::xml_node position = node.child("position");
+    if (!position)
+        throw(IOexception("InputParser::PlanarUndulator - uundulator <position> not found."));
+    else
+    {
+        double x, y, z;
+        x = parser->parseValue(position.attribute("x"));
+        y = parser->parseValue(position.attribute("y"));
+        z = parser->parseValue(position.attribute("z"));
+        origin = Vector(x,y,z);
+    }
+    pugi::xml_node field = node.child("field");
+    if (!field)
+        throw(IOexception("InputParser::PlanarUndulator - uundulator <field> not found."));
+    else
+    {
+        double B = parser->parseValue(field.attribute("B"));
+        double period = parser->parseValue(field.attribute("period"));
+        int N = field.attribute("N").as_int(0);
+        Setup(B, period, N);
+    }
+}
+
 void PlanarUndulator::Setup(
     double B,
     double lambda,
@@ -46,6 +73,8 @@ void PlanarUndulator::Setup(
     LambdaU = lambda;
     NPeriods = N;
     Krms = LambdaU * SpeedOfLight * BPeak / (2.0 * Pi * mecsquared) / sqrt(2.0);
+    if (teufel::rank==0)
+        std::cout << "planar undulator  N = " << NPeriods << ",  lambda = " << LambdaU << ",  K(rms) = " << Krms << std::endl;
     ky = 2.0 * Pi / LambdaU;
     kz = 2.0 * Pi / LambdaU;
 }

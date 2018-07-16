@@ -29,6 +29,9 @@
 
 #pragma once
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <iostream>
 #include <exception>
 
 #define ElementaryCharge 1.6021766208e-19       // [As]
@@ -41,6 +44,17 @@
 
 // the electron rest mass in kg can be obtained as
 // mecsquared*ElementaryCharge/SpeedOfLight^2
+
+namespace teufel
+{
+    /*! The MPI rank is kept as a global variable accessible from all modules.
+     *  It is set to values different from 0 only by MPI executables.
+     *  Must be set to zero for all non-MPI executables.
+     *  It is mainly intended to suppress unnecessary output from code
+     *  executed by many nodes in parallel.
+     */
+    extern int rank;
+}
 
 /*! 
  * \class IOexception
@@ -55,3 +69,8 @@ public:
     virtual const char* what() const throw() {return m;};
     const char* m;
 };
+
+/*! a data struct to hold the definition of a watch point
+ *  where a beam snapshot will be written during tracking
+ */
+typedef struct { int step; std::string filename; } watch_t;

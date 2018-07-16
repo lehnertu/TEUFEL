@@ -8,7 +8,10 @@ import tables
 import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter
 
+pixels = 100
+
 def PlotPS(x, y, xlabel='x', ylabel='y', rect_dens = [0.15, 0.1, 0.8, 0.8], center=True):
+  global pixels
   # determine the scale range
   if center:
     xmax=max(abs(x))
@@ -20,10 +23,10 @@ def PlotPS(x, y, xlabel='x', ylabel='y', rect_dens = [0.15, 0.1, 0.8, 0.8], cent
     ymax=max(y)
   # Histogram in 2D
   if center:
-    H, xticks, yticks = np.histogram2d(x,y,bins=200,
+    H, xticks, yticks = np.histogram2d(x,y,bins=pixels,
       range=[[-xmax,xmax],[-ymax,ymax]])
   else:
-    H, xticks, yticks = np.histogram2d(x,y,bins=200,
+    H, xticks, yticks = np.histogram2d(x,y,bins=pixels,
       range=[[xmin,xmax],[ymin,ymax]])
   # wegen Matrickonvention muss H transponiert werden
   # da von links oben beginnend gezeichnet wird, muss man vertikal flippen
@@ -42,8 +45,10 @@ def PlotPS(x, y, xlabel='x', ylabel='y', rect_dens = [0.15, 0.1, 0.8, 0.8], cent
 
 parser = argparse.ArgumentParser()
 parser.add_argument('file', help='the file name of the watch point HDF5 file')
+parser.add_argument('-pix', help="the number of pixels for the plots", dest="pix", type=int)
 
 args = parser.parse_args()
+if (args.pix != None): pixels = args.pix
 bunfile = args.file
 bunOK = os.path.isfile(bunfile)
 if not bunOK:
@@ -95,7 +100,7 @@ ez_rms = 1.0e15 * np.sqrt((np.dot(dE,dE)*np.dot(dt,dt)-pow(np.dot(dE,dt),2))/pow
 string = r'$E_{beam}$ = %4.2f MeV' % E0 + '\n' + \
   '%d particles' % Np + '\n' + \
   r'$\sigma_E$ = %4.1f keV' % erms + '\n' + \
-  r'$\sigma_t$ = %1.2f ps' % tau + '\n' + \
+  r'$\sigma_t$ = %1.3f ps' % tau + '\n' + \
   r'$c$ = %2.2f keV/ps' % chirp + '\n' + \
   r'$\epsilon^n_{x, RMS}$ = %2.3f $\mu m$' % ex_rms  + '\n' + \
   r'$\epsilon^n_{y, RMS}$ = %2.3f $\mu m$' % ey_rms  + '\n' + \

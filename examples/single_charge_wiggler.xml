@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<teufel description="Superradiant emission from the ELBE U300 undulator"
+<teufel description="Unduator radiation emission from a point charge"
     author="Ulf Lehnert 14.9.2017">
     <calc print="beam energy [eV] = " var="E_beam" eq="26.0e6" />
     <calc print="gamma = " var="gamma" eq="E_beam/_mec2"/>
@@ -19,26 +19,23 @@
         </undulator>
     </lattice>
     <beam>
-        <bunch gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" n="1000" >
-            <!-- compute bunch length for a form factor of 0.5 -->
-            <calc print="for F=0.5 bunchlength [s] = " var="tau" eq="0.1325/f"/>
-            <position x="0.0" y="0.0" z="0.0" zrms="tau*_c" />
-            <momentum x="0.0" y="0.0" z="1.0" delta="1e-3" />
-        </bunch>
+        <particle gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" >
+            <position x="0.0" y="0.0" z="0.0" />
+            <direction x="0.0" y="0.0" z="1.0" />
+        </particle>
     </beam>
     <calc print="tracking length [m] = " var="total_L" eq="4.0" />
     <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
     <calc print="dt = " var="dt" eq="total_t/4000" />
-    <tracking method="Vay" delta_t="dt" n="4000" >
-        <watch step="0" file="elbe-u300_inital.h5" />
-        <watch step="4000" file="elbe-u300_final.h5" />
-    </tracking>
+    <tracking method="Vay" delta_t="dt" n="4000" />
     <observer>
         <calc print="screen position z0 = " var="z0" eq="10.0"/>
         <calc print="screen start time t0 = " var="t0" eq="z0/_c"/>
-        <point file="elbe-u300_obs_10m.sdds">
+        <screen file="single_charge_screen_10m.h5">
             <position x="0.0" y="0.0" z="z0" />
+            <hpitch x="0.01" y="0.0" z="0.0" n="41" />
+            <vpitch x="0.0" y="0.01" z="0.0" n="41" />
             <time t0="t0" dt="1e-13" n="300" />
-        </point>
+        </screen>
     </observer>
 </teufel>

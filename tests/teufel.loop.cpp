@@ -106,21 +106,15 @@ int main ()
 
     // initial position at the origin
     Vector X0 = Vector(0.0, 0.0, 0.0);
-    electron->setPosition(X0);
     // initial momentum of the particle
-    Vector P0 = Vector(0.0,0.0,betagamma);
-    electron->setMomentum(P0);
+    Vector P0 = Vector(0.0, 0.0, betagamma);
+    Vector A0 = Vector(0.0, 0.0, 0.0);
+    electron->initTrajectory(0.0, X0, P0, A0);
 
     // create a bunch that can be observed containing just this one electron
     Bunch *bunch = new Bunch();
     bunch->Add(electron);
 
-    // calculate the radiation fields at the time the electron finishes the loop
-    // the radiation field is observed at the centre of the loop at (R,0,0)
-    // define the observer at the center of the circle
-    // just one time slice of (essentially) zero duration at t=tau
-    PointObserver<Bunch> Obs = PointObserver<Bunch>(bunch, Vector(-Radius,0.0,0.0), tau, 1.0e-15, 1);
-    
     // count the errors
     int errors = 0;
   
@@ -130,7 +124,6 @@ int main ()
     for (int i=0; i<NOTS; i++)
     {
 	electron->StepVay(lattice);
-	Obs.integrate();
     };
     
     Vector MPos=electron->getPosition();
@@ -147,7 +140,6 @@ int main ()
     for (int i=0; i<NOTS; i++)
     {
 	electron->StepVay(lattice);
-	Obs.integrate();
     };
     
     Vector FPos=electron->getPosition();
@@ -168,6 +160,13 @@ int main ()
     } else {
 	printf("Final Momentum = %12.5f - \033[1;32m OK\033[0m\n",FMom.norm());}
 
+    // calculate the radiation fields at the time the electron finishes the loop
+    // the radiation field is observed at the centre of the loop at (R,0,0)
+    // define the observer at the center of the circle
+    // just one time slice of (essentially) zero duration at t=tau
+    PointObserver Obs = PointObserver("teufel.loop_field.sdds", Vector(-Radius,0.0,0.0), tau, 1.0e-15, 1);
+    Obs.integrate(bunch);
+    
     // check the field value
     ElMagField field = Obs.getField(0);
     

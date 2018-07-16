@@ -33,6 +33,7 @@
  * @date 7.4.2017
  * 
  * This class holds the two Vectors E [V/m] and B [T] of the electromagnetic field.
+ * Memory is just 6 Bytes for the two Vectors.
  */
 class ElMagField
 {
@@ -138,7 +139,9 @@ public:
     /*! Default constructor with no functionality. */
     GeneralField() {};
 
+    /*! Default destructor */
     virtual ~GeneralField() {};
+    
     /*!
      * The electromagnetic field at a given time and point in space.
      * 
@@ -243,7 +246,7 @@ private:
      */
     virtual ElMagField LocalField(double t, Vector X) = 0;
 
-private :
+protected :
 
     /*! This is the position of the element in laboratory frame */
     Vector origin;

@@ -99,10 +99,10 @@ int main ()
 
     // initial position at the origin
     Vector X0 = Vector(0.0, 0.0, 0.0);
-    electron->setPosition(X0);
     // initial momentum of the particle - arbitrary direction
     Vector P0 = RandVector*betagamma;
-    electron->setMomentum(P0);
+    Vector A0 = Vector(0.0, 0.0, 0.0);
+    electron->initTrajectory(0.0, X0, P0, A0);
     
     // track the particle 
     double tau=10e-9;

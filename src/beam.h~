@@ -22,15 +22,11 @@
 #pragma once
 
 #include "fields.h"
-#include "global.h"
 #include "bunch.h"
 #include "vector.h"
 #include <vector>
 
 using namespace std;
-
-//! choice of the tracking method
-typedef enum keyword { TRACKING_NONE, TRACKING_EULER, TRACKING_VAY } TrackingMethod;
 
 /*!
     \class Beam
@@ -55,7 +51,7 @@ public:
     
     /*!
      * Destructor:
-     * Deleting the beam also deletes all contained bunches.
+     * Deleting the bunch also deletes all contained bunches.
      * This in turn deletes all particles belonging to the bunches.
      * So, normally the beam is the only object that needs to be deleted.
      */
@@ -67,63 +63,11 @@ public:
      */
     void Add(Bunch *bunch);
     
-    /*! Remove all bunches and particles belonging to this beam.
-     */
-    void clear();
-    
     //! Report the number of bunches in the beam.
-    int getNOB();       
-
-    /*!
-     * Get a pointer to a particular bunch.
-     * Returns a NULL pointer if the index is out of range.
-     */
-    Bunch* getBunch(int i);
-    
-    //! Report the total number of particles contained in the beam.
-    int getNOP();
+    int getNOB();	
     
     //! Report the total charge of the particles contained in the beam.
     double getTotalCharge();
-    
-    //! Report the used tracking method
-    TrackingMethod getTrackingMethod() { return tracker; };
-    
-    //! Set the tracking method to be used.
-    void setTrackingMethod(TrackingMethod method) { tracker = method; };
-    
-    //! Report the used tracking time step
-    double getTimeStep() { return dt; };
-    
-    //! Set the tracking time step to be used.
-    void setTimeStep(double step) { dt = step; };
-    
-    //! Report the number of time steps
-    int getNOTS() { return NOTS; };
-    
-    //! Set the number of time steps to be used for tracking.
-    void setNOTS(int n) { NOTS = n; };
-
-    /*!
-     *  Generic setup method to initlize the tracking of all particles in the beam.
-     *  Depending on the choosen stepper method the appropriate init methods
-     *  are called.
-     * 
-     *  @param field the field through which the beam will be tracked
-     * 
-     *  In case of failing sanity checks an IOexception is thrown.
-     */
-    void setupTracking(GeneralField *field);
-    
-    /*!
-     *  Generic setup method to to do oe tracking step of all particles in the beam.
-     *  Depending on the choosen stepper method the appropriate stepper is called.
-     * 
-     *  @param field the field through which the beam is tracked
-     * 
-     *  In case of failing sanity checks an IOexception is thrown.
-     */
-    void doStep(GeneralField *field);
     
     /*! @brief Setup for tracking the whole beam using the Vay algorithm.
      * 
@@ -132,9 +76,11 @@ public:
      * @todo Tracking particles which do not start all at the same time
      * is not yet supported.
      * 
+     * @param tstep the length of the time step.
      * @param field the field through which the beam will be tracked
      */
-    void InitVay(GeneralField *field);
+    void InitVay(double tstep,
+		 GeneralField *field);
     
     /*! @brief Perform one tracking step using the Vay algorithm.
      * 
@@ -151,10 +97,8 @@ public:
      *  - momentum px,py,pz,p (beta*gamma)
      *  - angles xp,yp (px/pz, py/pz)
      *  - gamma
-     * 
-     *  @return number of particles written, -1 in case of an error
      */
-    int WriteWatchPointHDF5(std::string filename);
+    int WriteWatchPointHDF5(const char *filename);
     
     /*! Compute the electromagnetic field radiated by the bunch
      * seen at the observation point. The field is given in time domain
@@ -184,7 +128,7 @@ public:
 	double t0,
 	double dt,
 	int nots,
-	std::vector<ElMagField> *ObservationField);
+	ElMagField *ObservationField);
     
 private:
 
@@ -196,13 +140,8 @@ private:
 
     /*! Time step for tracking - this will remain constant
      * after being set at the start of tracking.
+     * @todo do we actually need it?
      */
     double dt;
 
-    //! number of time steps
-    int NOTS;
-    
-    //! Method used for tracking
-    TrackingMethod tracker;
-    
 };
