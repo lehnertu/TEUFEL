@@ -26,6 +26,8 @@
 #include <iostream>
 #include <vector>
 
+#include "beam.h"
+#include "bunch.h"
 #include "global.h"
 #include "fields.h"
 #include "vector.h"
@@ -56,8 +58,10 @@ public:
     /*!
      *  Integrate the observed fields along the tracked trajectories.
      *  This is a purely virtual method that must be overwritten by derived objects.
+     *  It is defined for Beam() and Bunch() as field sources.
      */
-    virtual void integrate() = 0;
+    virtual void integrate(Beam *src) = 0;
+    virtual void integrate(Bunch *src) = 0;
 
     /*!
      *  Generate whatever output the special observer has to deliver.
@@ -76,7 +80,6 @@ public:
  * This class handles the computation and storage of emitted electromagnetic
  * radiation from different sources (particles, bunches and beams).
  */
-template <class sourceT>
 class PointObserver : public Observer
 {
 
@@ -101,7 +104,6 @@ public:
      * \param[in] nots Number of time steps.
      */
     PointObserver(
-        sourceT *src,
         std::string filename,
         Vector position,
         double t0,
@@ -112,8 +114,11 @@ public:
      *  during all of its history, falling onto the time frame
      *  of observation.
      *  Should be called once after tracking all particles.
+     * 
+     *  This method is defined for Beam() and Bunch() as field sources.
      */
-    virtual void integrate();
+    virtual void integrate(Beam *src);
+    virtual void integrate(Bunch *src);
 
     /*! Return the field value stored in one time slice
      */
@@ -142,9 +147,6 @@ public:
 
 private:
 
-    //! the field source
-    sourceT *Source;
-    
     //! file name for the final output
     std::string FileName;
 
@@ -176,7 +178,6 @@ private:
  * 
  * @todo The observers need not necessarily be templated, the integrate() method is the only one accessing the source and could easily be oberloaded.
  */
-template <class sourceT>
 class ScreenObserver : public Observer
 {
     
@@ -204,9 +205,6 @@ public:
      * and assumed constant over the whole area of the cell for
      * power flow calculation.
      * 
-     * This class is templated and spezialized for
-     * Bunch() or Beam() being the field source.
-     * 
      * \param[in] src The source generating the field.
      * \param[in] filename The name of the generated output file.
      * \param[in] position The center of the screen.
@@ -219,7 +217,6 @@ public:
      * \param[in] nots Number of time steps.
      */
     ScreenObserver(
-        sourceT *src,
         std::string filename,
         Vector position,
         Vector dx,
@@ -234,8 +231,11 @@ public:
      *  during all of its history, falling onto the time frame
      *  of observation.
      *  Should be called once after tracking all particles.
+     * 
+     *  This method is defined for Beam() and Bunch() as field sources.
      */
-    virtual void integrate();
+    virtual void integrate(Beam *src);
+    virtual void integrate(Bunch *src);
     
     /*! Return the field value stored in one time slice
      *  with index it from the grid cell with indices ix, iy.
@@ -312,9 +312,6 @@ private:
     Vector CellPosition(int ix, int iy);
     
 private:
-    
-    //! the field source
-    sourceT *Source;
     
     //! file name for the final output
     std::string FileName;

@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
     
     // parse all observer definitions
     std::vector<Observer*> listObservers;
-    int NoO = parse->parseObservers(&listObservers, beam);
+    int NoO = parse->parseObservers(&listObservers);
     std::cout << std::endl;
     std::cout << "defined " << NoO << " observers." << std::endl;
     if (NoO != (int)listObservers.size())
@@ -205,7 +205,7 @@ int main(int argc, char* argv[])
         Observer *obs = listObservers.at(i);
         clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
         std::cout << "integrating ... " << std::endl;
-        obs->integrate();
+        obs->integrate(beam);
         clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop_time);
         double elapsed = stop_time.tv_sec-start_time.tv_sec +
             1e-9*(stop_time.tv_nsec-start_time.tv_nsec);

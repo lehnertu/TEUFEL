@@ -130,11 +130,9 @@ public:
      *  Will not cause problems, if no observers are defined (tracking only)
      *  but the main nodes <observer> should still be present.
      * 
-     *  For construction of the observer the observed beam object must be given.
-     * 
      *  @return The number of observers is returned.
      */
-    int parseObservers(std::vector<Observer*> *listObservers, Beam* beam);
+    int parseObservers(std::vector<Observer*> *listObservers);
 
 private:
     

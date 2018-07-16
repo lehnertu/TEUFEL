@@ -157,7 +157,7 @@ int main(int argc, char *argv[])
     
     // parse all observer definitions
     std::vector<Observer*> listObservers;
-    int NoO = parse->parseObservers(&listObservers, beam);
+    int NoO = parse->parseObservers(&listObservers);
     if (teufel::rank==0) std::cout << std::endl;
     if (teufel::rank==0) std::cout << "defined " << NoO << " observers." << std::endl;
     if (NoO != (int)listObservers.size())
@@ -372,8 +372,6 @@ int main(int argc, char *argv[])
 
     MPI_Barrier(MPI_COMM_WORLD);
     
-    //! @todo : all observers defined by the parser look at beam, not at trackedBeam
-    
     // compute all observations
     for (int i=0; i<NoO; i++)
     {
@@ -384,7 +382,7 @@ int main(int argc, char *argv[])
         };
         Observer *obs = listObservers.at(i);
         std::cout << "node " << teufel::rank << " integrating ... " << std::endl;
-        obs->integrate();
+        obs->integrate(trackedBeam);
         double stop_time = MPI_Wtime();
         if (teufel::rank == 0)
         {

@@ -29,16 +29,13 @@
 #include "SDDS.h"
 #include "hdf5.h"
 
-template <class sourceT>
-PointObserver<sourceT>::PointObserver(
-    sourceT *src,
+PointObserver::PointObserver(
     std::string filename,
     Vector position,
     double t0,
     double dt,
     unsigned int nots)
 {
-    Source = src;
     FileName = filename,
     Pos = position;
     t0_obs = t0;
@@ -49,23 +46,26 @@ PointObserver<sourceT>::PointObserver(
     for (int i=0; i<NOTS; i++) TimeDomainField.push_back(field);
 }
 
-template <class sourceT>
-void PointObserver<sourceT>::integrate()
+void PointObserver::integrate(Beam *src)
 {
-    Source->integrateFieldTrace(
+    src->integrateFieldTrace(
 	Pos, t0_obs, dt_obs, NOTS, &TimeDomainField);
 }
 
-template <class sourceT>
-ElMagField PointObserver<sourceT>::getField(int idx)
+void PointObserver::integrate(Bunch *src)
+{
+    src->integrateFieldTrace(
+        Pos, t0_obs, dt_obs, NOTS, &TimeDomainField);
+}
+
+ElMagField PointObserver::getField(int idx)
 {
     ElMagField field;
     if ( idx>=0 && idx<NOTS) field=TimeDomainField[idx];
     return field;
 }
 
-template <class sourceT>
-void PointObserver<sourceT>::WriteTimeDomainFieldSDDS()
+void PointObserver::WriteTimeDomainFieldSDDS()
 {
     cout << "writing SDDS file " << FileName << endl;
     SDDS_DATASET data;
@@ -127,19 +127,12 @@ void PointObserver<sourceT>::WriteTimeDomainFieldSDDS()
     return;
 }
 
-template <class sourceT>
-void PointObserver<sourceT>::generateOutput()
+void PointObserver::generateOutput()
 {
     WriteTimeDomainFieldSDDS();
 }
 
-// we have to instantiate the class for every possible source type
-template class PointObserver<Bunch>;
-template class PointObserver<Beam>;
-
-template <class sourceT>
-ScreenObserver<sourceT>::ScreenObserver(
-    sourceT *src,
+ScreenObserver::ScreenObserver(
     std::string filename,
     Vector position,
     Vector dx,
@@ -150,7 +143,6 @@ ScreenObserver<sourceT>::ScreenObserver(
     double dt,
     unsigned int nots)
 {
-    Source = src;
     FileName = filename,
     O = position;
     dX = dx;
@@ -175,26 +167,34 @@ ScreenObserver<sourceT>::ScreenObserver(
     }
 }
 
-template <class sourceT>
-Vector ScreenObserver<sourceT>::CellPosition(int ix, int iy)
+Vector ScreenObserver::CellPosition(int ix, int iy)
 {
     return O + dX*((double)ix-0.5*((double)Nx-1.0)) + dY*((double)iy-0.5*((double)Ny-1.0));
 }
 
-template <class sourceT>
-void ScreenObserver<sourceT>::integrate()
+void ScreenObserver::integrate(Beam *src)
 {
     for (unsigned int ix = 0; ix < Nx; ix++) {
 	for (unsigned int iy = 0; iy < Ny; iy++)
 	{
-	    Source->integrateFieldTrace(
+	    src->integrateFieldTrace(
 		CellPosition(ix, iy), t0_obs, dt_obs, NOTS, &TimeDomainField[ix][iy]);
 	};
     }
 }
 
-template <class sourceT>
-ElMagField ScreenObserver<sourceT>::getField(
+void ScreenObserver::integrate(Bunch *src)
+{
+    for (unsigned int ix = 0; ix < Nx; ix++) {
+        for (unsigned int iy = 0; iy < Ny; iy++)
+        {
+            src->integrateFieldTrace(
+                CellPosition(ix, iy), t0_obs, dt_obs, NOTS, &TimeDomainField[ix][iy]);
+        };
+    }
+}
+
+ElMagField ScreenObserver::getField(
 	unsigned int ix,
 	unsigned int iy,
 	unsigned int it)
@@ -208,8 +208,7 @@ ElMagField ScreenObserver<sourceT>::getField(
     return field;
 }
 
-template <class sourceT>
-void ScreenObserver<sourceT>::setField(
+void ScreenObserver::setField(
 	unsigned int ix,
 	unsigned int iy,
 	unsigned int it,
@@ -221,14 +220,12 @@ void ScreenObserver<sourceT>::setField(
 	    throw(IOexception("ScreenObserver::setField() - requested index out of range."));
 }
 
-template <class sourceT>
-unsigned int ScreenObserver<sourceT>::getCount()
+unsigned int ScreenObserver::getCount()
 {
     return Nx*Ny*NOTS*6;
 }
 
-template <class sourceT>
-double* ScreenObserver<sourceT>::getBuffer()
+double* ScreenObserver::getBuffer()
 {
     double* buffer = new double[getCount()];
     if (buffer==0)
@@ -252,8 +249,7 @@ double* ScreenObserver<sourceT>::getBuffer()
     return buffer;
 }
 
-template <class sourceT>
-void ScreenObserver<sourceT>::fromBuffer(double *buffer, unsigned int count)
+void ScreenObserver::fromBuffer(double *buffer, unsigned int count)
 {
     if (count==Nx*Ny*NOTS*6)
     {
@@ -277,8 +273,7 @@ void ScreenObserver<sourceT>::fromBuffer(double *buffer, unsigned int count)
     }
 }
 
-template <class sourceT>
-void ScreenObserver<sourceT>::WriteTimeDomainFieldHDF5()
+void ScreenObserver::WriteTimeDomainFieldHDF5()
 {
     herr_t status;
     cout << "writing HDF5 file " << FileName << endl;
@@ -432,13 +427,7 @@ void ScreenObserver<sourceT>::WriteTimeDomainFieldHDF5()
     return;
 }
 
-template <class sourceT>
-void ScreenObserver<sourceT>::generateOutput()
+void ScreenObserver::generateOutput()
 {
     WriteTimeDomainFieldHDF5();
 }
-
-// we have to instantiate the class for every possible source type
-template class ScreenObserver<ChargedParticle>;
-template class ScreenObserver<Bunch>;
-template class ScreenObserver<Beam>;

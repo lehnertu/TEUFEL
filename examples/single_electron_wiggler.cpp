@@ -132,10 +132,10 @@ int main()
     // compute the radiation of the single electron on axis
     double z0 = 2.0 + 10.0;
     double t0 = z0/SpeedOfLight - 1.0e-12;
-    PointObserver<Bunch> singleObs = PointObserver<Bunch>(
-	    single, "SingleParticle_ObsRadField.sdds", Vector(0.0, 0.0, z0), t0, 0.05e-13, 3000);
+    PointObserver singleObs = PointObserver(
+	    "SingleParticle_ObsRadField.sdds", Vector(0.0, 0.0, z0), t0, 0.05e-13, 3000);
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
-    singleObs.integrate();
+    singleObs.integrate(single);
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop_time);
     printf("finished on-axis radiation calculation.\n");
     elapsed = stop_time.tv_sec-start_time.tv_sec + 1e-9*(stop_time.tv_nsec-start_time.tv_nsec);
@@ -149,8 +149,7 @@ int main()
     catch (exception& e) { cout << e.what() << endl;}
 	
 	// compute the radiation observed on a finite screen
-    ScreenObserver<Bunch> screenObs = ScreenObserver<Bunch>(
-	single,
+    ScreenObserver screenObs = ScreenObserver(
         "SingleParticle_Screen_ObsRadField.h5",
     	Vector(0.0, 0.0, z0),       // position
     	Vector(0.004, 0.0, 0.0),    // dx
@@ -161,7 +160,7 @@ int main()
     	0.5e-13,                    // double dt,
     	1000);                      // NOTS
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
-	screenObs.integrate();
+    screenObs.integrate(single);
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop_time);
     printf("finished radiation calculation on screen.\n");
     elapsed = stop_time.tv_sec-start_time.tv_sec + 1e-9*(stop_time.tv_nsec-start_time.tv_nsec);

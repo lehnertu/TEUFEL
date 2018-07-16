@@ -326,7 +326,7 @@ int InputParser::parseTracking(Beam *beam, std::vector<watch_t> *watches)
     return NoW;
 }
 
-int InputParser::parseObservers(std::vector<Observer*> *listObservers, Beam *beam)
+int InputParser::parseObservers(std::vector<Observer*> *listObservers)
 {
     int NOO = 0;
     pugi::xml_node obsroot = root.child("observer");
@@ -385,8 +385,8 @@ int InputParser::parseObservers(std::vector<Observer*> *listObservers, Beam *bea
                 pugi::xml_attribute nt = tnode.attribute("n");
                 if (!nt)
                     throw(IOexception("InputParser::parseObservers - <screen> <time> attribute n not found."));
-                ScreenObserver<Beam> *screenObs = new ScreenObserver<Beam>(
-                    beam, fn.as_string(),
+                ScreenObserver *screenObs = new ScreenObserver(
+                    fn.as_string(),
                     pos, dx, dy,
                     nh.as_int(),
                     nv.as_int(),
@@ -417,8 +417,8 @@ int InputParser::parseObservers(std::vector<Observer*> *listObservers, Beam *bea
                 pugi::xml_attribute nt = tnode.attribute("n");
                 if (!nt)
                     throw(IOexception("InputParser::parseObservers - <point> <time> attribute n not found."));
-                PointObserver<Beam> *pointObs = new PointObserver<Beam>(
-                    beam, fn.as_string(),
+                PointObserver *pointObs = new PointObserver(
+                    fn.as_string(),
                     pos,
                     t0, dt, nt.as_int() );
                 listObservers->push_back(pointObs);

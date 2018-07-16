@@ -301,8 +301,7 @@ int main(int argc, char *argv[])
     // We have to sum it up later.
     double z0 = 2.0 + 1.625;
     double t0 = z0/SpeedOfLight - 1.0e-12;
-    ScreenObserver<Bunch> screenObs = ScreenObserver<Bunch>(
-    	bunch,
+    ScreenObserver screenObs = ScreenObserver(
         "MPI_elbe-u300_Screen_ObsRadField.h5",
     	Vector(0.0, 0.0, z0),		// position
     	Vector(0.002, 0.0, 0.0),		// dx
@@ -317,7 +316,7 @@ int main(int argc, char *argv[])
     // in parallel on every node for its own particles
     printf("Node #%d integrating...\n",teufel::rank);
     start_time = MPI_Wtime();
-    screenObs.integrate();
+    screenObs.integrate(bunch);
     // record the finish time
     stop_time = MPI_Wtime();
     printf("Node #%d finished after %6.2f s.\n",teufel::rank,stop_time-start_time);
