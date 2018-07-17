@@ -8,18 +8,23 @@ emitted by these particles using the Liénard-Wiechert formula.
 
 The particles are distributed over several compute nodes which comminicate
 using OpenMPI. In this computing model a Bunch() is an ensemble of particles
-residing on a single compute node. The Beam() comprises all bunches (and thus all particles).
-Within the Beam() object all MPI communication is handled.
+residing on a single compute node. The Beam() may contain a number of bunches
+with different properties (like mass and charge of the particles).
+The Beam() is distributed over all available compute nodes which
+each track their own particles independently. 
 
 Every particle stores its full trajectory data. All field computation is done
-after the tracking is finished.
+after the tracking is finished. Every compute node computes the fields of
+its own particles which are then gatherd onto the root node for file output.
 
 Functionality
 -------------
 - particle tracking using different pusher algorithms (Euler, Vay)<br>
   see \ref ChargedParticle
-- radiation emission towards a single observation point
+- radiation emission towards a single observation point or observation screen
 - several external field objects (homogeneous dipole, planar undulator ...)
+- the trackig problem is defined by a human-readable XML file
+- a built-in calculator allows easy computation of input parameters within the input file
 
 Build and Installation
 ----------------------
@@ -29,6 +34,13 @@ Here we describe a typical out-of-source build. When cmake ist installed it usua
 CMAKE_MODULE_PATH which set the directories where cmake tries to find its module definitions. TEUFEL adds
 (in CMakeLists.txt) it directory teufel/lib to this search path. This way some custom FindXXX.cmake files
 can be found.
+
+First one should obtain the sources by cloning the repository from Github.
+
+<pre>
+git clone http://github.com/lehnertu/teufel.git
+cd teufel
+</pre>
 
 A few libraries are required to build the TEUFEL executable.
 
@@ -59,22 +71,24 @@ A few libraries are required to build the TEUFEL executable.
 - We use [muParser](https://github.com/beltoforion/muparser) to provide
   an inline scientific calculator that allows calculations to be performed
   inside the XML input file. If it is not installed on your system it should
-  be cloned an built under teufel/lib/muparser/. In both cases the script
+  be cloned an built under teufel/lib/muparser/.
+  <pre>
+  cd lib
+  git clone https://github.com/beltoforion/muparser.git
+  cd muparser/
+  cd build/
+  cmake ..
+  make
+  </pre>
+  In both cases the script
   teufel/lib/FindMUPARSER.cmake will find and include the library.
-
-First one should obtain the sources by cloning the repository from Github.
-
-```
-git clone http://github.com/lehnertu/teufel.git
-cd teufel
-```
 
 Then we create a build directory in the downloaded source directory.
 
-```
+<pre>
 mkdir build
 cd build
-```
+</pre>
 
 Then we build the makefile from CMakeLists.txt contained in the root directory.
 
