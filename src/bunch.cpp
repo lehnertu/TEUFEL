@@ -383,6 +383,16 @@ int Bunch::WriteWatchPointSDDS(const char *filename)
     return 0;
 }
 
+ElMagField Bunch::RetardedField(double obs_time, Vector obs_pos)
+{
+    // initialize to zero
+    ElMagField field;
+    // integrate for all particles
+    for (int i=0; i<NOP; i++)
+        field += P[i]->RetardedField(obs_time, obs_pos);
+    return field;
+}
+
 void Bunch::integrateFieldTrace(
         Vector ObservationPoint,
         double t0,

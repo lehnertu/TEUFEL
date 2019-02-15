@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<teufel description="Superradiant emission from the ELBE U300 undulator"
+    author="Ulf Lehnert 14.9.2017">
+    <calc print="beam energy [eV] = " var="E_beam" eq="26.0e6" />
+    <calc print="gamma = " var="gamma" eq="E_beam/_mec2"/>
+    <calc print="charge [nC] = " var="charge" eq="-1.0" />
+    <!-- set desired output frequency -->
+    <calc print="freq [Hz] = " var="f" eq="1.0e12"/>
+    <calc print="lambda [m] = " var="lambda" eq="_c/f"/>
+    <calc var="lambda_U" eq="0.300" />
+    <lattice>
+        <undulator name="U300" type="planar">
+            <!-- compute undulator setting from desired output frequency -->
+            <calc print="K_rms(U300) = " var="K_rms" eq="sqrt(lambda/lambda_U*2*gamma*gamma-1)" />
+            <!-- setup the undulator -->
+            <field B="K_rms*sqrt(2)/_c*2*_pi*_mec2/lambda_U"
+                   period="lambda_U" N="8" />
+            <position x="0.0" y="0.0" z="2.0"/>
+        </undulator>
+    </lattice>
+    <beam>
+        <bunch gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" n="1000" >
+            <!-- compute bunch length for a form factor of 0.5 -->
+            <calc print="for F=0.5 bunchlength [s] = " var="tau" eq="0.1325/f"/>
+            <position x="0.0" y="0.0" z="0.0" zrms="tau*_c" />
+            <momentum x="0.0" y="0.0" z="1.0" delta="1e-3" />
+        </bunch>
+    </beam>
+    <calc print="tracking length [m] = " var="total_L" eq="4.0" />
+    <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
+    <calc print="dt = " var="dt" eq="total_t/4000" />
+    <tracking method="Vay" delta_t="dt" n="4000" >
+        <watch step="0" file="elbe-u300_0.h5" />
+        <watch step="1000" file="elbe-u300_1000.h5" />
+        <watch step="2000" file="elbe-u300_2000.h5" />
+        <watch step="3000" file="elbe-u300_3000.h5" />
+        <watch step="4000" file="elbe-u300_4000.h5" />
+    </tracking>
+    <observer>
+        <calc print="observation position z0 = " var="z0" eq="10.0"/>
+        <calc print="observation start time t0 = " var="t0" eq="z0/_c"/>
+        <point file="elbe-u300_obs_10m.sdds">
+            <position x="0.0" y="0.0" z="z0" />
+            <time t0="t0" dt="1e-13" n="300" />
+        </point>
+        <snapshot file="elbe-u300_snap_2000.sdds">
+            <time t0="2000*dt" />
+            <position x="0.0" y="0.0" z="2000*dt*_c" />
+            <hpitch x="0.000100" y="0.0" z="0.0" n="101" />
+            <vpitch x="0.0" y="0.0" z="0.000010" n="1001" />
+        </snapshot>
+    </observer>
+</teufel>

@@ -233,6 +233,16 @@ int Beam::WriteWatchPointHDF5(std::string filename)
     return nop;
 }
 
+ElMagField Beam::RetardedField(double obs_time, Vector obs_pos)
+{
+    // initialize to zero
+    ElMagField field;
+    // integrate for all bunches
+    for (int i=0; i<NOB; i++)
+        field += B[i]->RetardedField(obs_time, obs_pos);
+    return field;
+}
+
 void Beam::integrateFieldTrace(
     Vector ObservationPoint,
     double t0,

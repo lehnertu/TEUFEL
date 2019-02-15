@@ -123,58 +123,65 @@ int main ()
     electron->InitVay(deltaT, lattice);
     for (int i=0; i<NOTS; i++)
     {
-	electron->StepVay(lattice);
+    	electron->StepVay(lattice);
     };
     
     Vector MPos=electron->getPosition();
     printf("half-loop position = (%10.3g, %10.3g %10.3g) m  ", MPos.x, MPos.y, MPos.z);
     if ((MPos-Vector(-2.0*Radius, 0.0, 0.0)).norm()>1.0e-3)
     {
-	errors++;
-	printf(" - \033[1;31m test failed!\033[0m\n"); 
+    	errors++;
+	    printf(" - \033[1;31m test failed!\033[0m\n"); 
     } else {
-	printf(" - \033[1;32m OK\033[0m\n");
+	    printf(" - \033[1;32m OK\033[0m\n");
     }
     
     // track for the second half circle 
     for (int i=0; i<NOTS; i++)
     {
-	electron->StepVay(lattice);
+	    electron->StepVay(lattice);
     };
     
     Vector FPos=electron->getPosition();
     printf("final position = (%10.3g, %10.3g %10.3g) m  ", FPos.x, FPos.y, FPos.z);
     if ((FPos-X0).norm()>1.0e-4)
     {
-	errors++;
-	printf(" - \033[1;31m test failed!\033[0m\n"); 
+    	errors++;
+	    printf(" - \033[1;31m test failed!\033[0m\n"); 
     } else {
-	printf(" - \033[1;32m OK\033[0m\n");
+	    printf(" - \033[1;32m OK\033[0m\n");
     }
     
     // look for the momentum changes
     Vector FMom=electron->getMomentum();
     if (fabs(FMom.norm()-P0.norm()) > 1.0e-3) {
-	errors++;
-	printf("Final Momentum = %12.5f - \033[1;31m test failed!\033[0m\n", FMom.norm());
+	    errors++;
+	    printf("Final Momentum = %12.5f - \033[1;31m test failed!\033[0m\n", FMom.norm());
     } else {
-	printf("Final Momentum = %12.5f - \033[1;32m OK\033[0m\n",FMom.norm());}
+	    printf("Final Momentum = %12.5f - \033[1;32m OK\033[0m\n",FMom.norm());}
 
     // calculate the radiation fields at the time the electron finishes the loop
     // the radiation field is observed at the centre of the loop at (R,0,0)
     // define the observer at the center of the circle
+    ElMagField snapshot = electron->RetardedField(tau,Vector(-Radius,0.0,0.0));
+    if (fabs(snapshot.B().norm()-RadBField)/RadBField > 1.0e-3) {
+	    errors++;
+	    printf("Field snapshot observed = %12.5g T \033[1;31m test failed!\033[0m\n", snapshot.B().norm());
+    } else {
+	    printf("Field snapshot observed = %12.5g T - \033[1;32m OK\033[0m\n",snapshot.B().norm());
+    }
+
     // just one time slice of (essentially) zero duration at t=tau
     PointObserver Obs = PointObserver("teufel.loop_field.sdds", Vector(-Radius,0.0,0.0), tau, 1.0e-15, 1);
     Obs.integrate(bunch);
     
     // check the field value
-    ElMagField field = Obs.getField(0);
-    
+    ElMagField field = Obs.getField(0);    
     if (fabs(field.B().norm()-RadBField)/RadBField > 1.0e-3) {
-	errors++;
-	printf("Field observed = %12.5g T \033[1;31m test failed!\033[0m\n", field.B().norm());
+	    errors++;
+	    printf("Field observed = %12.5g T \033[1;31m test failed!\033[0m\n", field.B().norm());
     } else {
-	printf("Field observed = %12.5g T - \033[1;32m OK\033[0m\n",field.B().norm());
+	    printf("Field observed = %12.5g T - \033[1;32m OK\033[0m\n",field.B().norm());
     }
 
     // clean up

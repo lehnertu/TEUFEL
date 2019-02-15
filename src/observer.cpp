@@ -54,19 +54,16 @@ SnapshotObserver::SnapshotObserver(
 
 void SnapshotObserver::integrate(Beam *src)
 {
-    //! @todo TODO
-    for (unsigned int ix = 0; ix < Nx; ix++) {
+    for (unsigned int ix = 0; ix < Nx; ix++)
     	for (unsigned int iy = 0; iy < Ny; iy++)
-	    {
-	        // src->integrateFieldTrace(
-	    	//     CellPosition(ix, iy), t0_obs, dt_obs, NOTS, &TimeDomainField[ix][iy]);
-	    };
-    }
+	        FieldArray[ix][iy] = src->RetardedField(t_obs, CellPosition(ix, iy));
 }
 
 void SnapshotObserver::integrate(Bunch *src)
 {
-    //! @todo TODO
+    for (unsigned int ix = 0; ix < Nx; ix++)
+    	for (unsigned int iy = 0; iy < Ny; iy++)
+	        FieldArray[ix][iy] = src->RetardedField(t_obs, CellPosition(ix, iy));
 }
 
 ElMagField SnapshotObserver::getField(

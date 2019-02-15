@@ -106,6 +106,8 @@ public:
 class SnapshotObserver : public Observer
 {
 
+public:
+
     /*! Standard constructor:<br>
      * Compute the electromagnetic field observed at a given point in time.
      * 

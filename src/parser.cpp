@@ -376,7 +376,6 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                 pugi::xml_attribute nv = vnode.attribute("n");
                 if (!nv)
                     throw(IOexception("InputParser::parseObservers - <snapshot> <vpitch> attribute n not found."));
-                /* don't include while class is not yet ready
                 SnapshotObserver *snapObs = new SnapshotObserver(
                     fn.as_string(),
                     pos, h, v,
@@ -384,7 +383,6 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                     nv.as_int(),
                     t0 );
                 listObservers->push_back(snapObs);
-                */
             }
             else if (type == "screen")
             {
