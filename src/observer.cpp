@@ -42,6 +42,8 @@ SnapshotObserver::SnapshotObserver(
     O = position;
     dX = dx;
     dY = dy;
+    Nx = nx;
+    Ny = ny;
     t_obs = t;
 
     // set the field sizes and fill the field with zeros
