@@ -117,22 +117,18 @@ public:
      * 
      *  The parameters for tracking are stored in the beam object.
      * 
-     *  Watch points where beam snapshots are stored during tracking
-     *  are defined in this section. The definitions are appended to the
-     *  list provided.
-     * 
-     *  @return The number of watch points
+     *  Watch points where particle coordinates are stored during tracking
+     *  are defined under this section. Those are defined as <watch> children
+     *  of the <tracking> node. The definitions are appended to the list provided.
      */
-    int parseTracking(Beam *beam, std::vector<watch_t> *watches);
+    void parseTracking(Beam *beam, std::vector<watch_t> *watches);
     
     /*! Parse the input file and create the defined observers.
      *  All observers found are appended to the given list.
      *  Will not cause problems, if no observers are defined (tracking only)
      *  but the main nodes <observer> should still be present.
-     * 
-     *  @return The number of observers is returned.
      */
-    int parseObservers(std::vector<Observer*> *listObservers);
+    void parseObservers(std::vector<Observer*> *listObservers);
 
 private:
     

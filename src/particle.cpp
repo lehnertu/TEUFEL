@@ -205,7 +205,7 @@ void ChargedParticle::InitVay(
 {
     // check prerequisites
     if (NP<1)
-	throw(IOexception("ChargedParticle::InitVay() - must initalize trajectory before tracking"));
+	throw(RANGEexception("ChargedParticle::InitVay() - must initalize trajectory before tracking"));
     // preset the fixed values
     dt = tstep;
     qm = Charge/Mass * InvRestMass;
@@ -367,6 +367,117 @@ ElMagField ChargedParticle::RetardedField(int index,
     EField += cross(N, cross(N - SourceBeta, SourceBetaPrime)) / (R*bn3rd*SpeedOfLight);
     EField *= scale;
     Vector BField = cross(N,EField) / SpeedOfLight;
+    return ElMagField(EField, BField);
+}
+
+/*!
+ * Implementation details:
+ * ----------------------
+ * 
+ * At first we compute relative retardation times at the observation point.
+ * This is the time difference between the observation time and
+ * the arrival time of a signal from a trajectory point at the
+ * observation point. Positive means signal arrives early
+ * negative means signal arrives late. If the signals from both ends of the trajectory
+ * arrive early, no field can be generated. If both are late the trajectory
+ * will be extrapolated to negative times. In the intermediate case a bisection
+ * of the trajectory interval is done until the trajectory interval has been reduced
+ * to a single time step.
+ */
+ElMagField ChargedParticle::RetardedField(double obs_time, Vector obs_pos)
+{
+    // check prerequisites
+    if (NP<1) throw(RANGEexception("ChargedParticle::LightConePosition() - must initalize trajectory before calling"));
+    // consider the first point of the trajectory.
+    int i1 = 0;
+    Vector RVec1 = obs_pos - X[i1];
+    double R1 = RVec1.norm();
+    double t1 = obs_time - (Time[i1] + R1 / SpeedOfLight);
+    // consider the last point of the trajectory.
+    int i2 = NP-1;
+    Vector RVec2 = obs_pos - X[i2];
+    double R2 = RVec2.norm();
+    double t2 = obs_time - (Time[i2] + R2 / SpeedOfLight);
+    // initialize fields as zero
+    Vector EField;
+    Vector BField;
+    // If t2 is positive no signal can be generated
+    if (t2<=0.0)
+    {
+        // these are the quantities we need from the trajectory
+        Vector SourceX;
+        Vector SourceBeta;
+        Vector SourceBetaPrime;
+        // reletivistic factors to be computed in every case
+        double betagamma2, gamma2, gamma;
+        if (t1<=0.0)
+        {
+            // one has to extrapolate to negative trajectory times
+            // if the is only one trajectory point available (i1==i2) we will be here as well
+            Vector Rc = (obs_pos - X[0]) / SpeedOfLight;
+            SourceBeta = P[0];
+            betagamma2 = SourceBeta.abs2nd();
+            gamma2 = betagamma2 + 1.0;
+            gamma = sqrt(gamma2);
+            SourceBeta/=gamma;
+            // compute the time t at emission of the signal (field)
+            // t is always negative
+            double t0 = obs_time;
+            double bR = dot(SourceBeta,Rc);
+            double bb = dot(SourceBeta,SourceBeta);
+            double RR = dot(Rc,Rc);
+            double t = (t0-bR-sqrt((t0-bR)*(t0-bR)-(1-bb)*(t0*t0-RR)))/(1-bb);
+            // compute the trajectory point at emission
+            SourceX = X[0] + SourceBeta*SpeedOfLight*t;
+            SourceBetaPrime = Vector(0.0,0.0,0.0);
+        }
+        else
+        {
+            // Bisect the trajectory interval until only a single
+            // step is left for interpolation (i2-i2 == 1).
+            // There always must be t2<0 and t1>0.
+            while (i2-i1 > 1)
+            {
+                int iMid = (i2+i1)/2;
+                Vector RVecMid = obs_pos - X[iMid];
+                double RMid = RVecMid.norm();
+                double tMid = obs_time - (Time[iMid] + RMid / SpeedOfLight);
+                if (tMid > 0.0)
+                {
+                    i1 = iMid;
+                    t1 = tMid;
+                }
+                else
+                {
+                    i2 = iMid;
+                    t2 = tMid;
+                }
+            }
+            double frac = t1/(t1-t2);
+            SourceX = X[i1]*(1.0-frac) + X[i2]*frac;
+            SourceBeta = P[i1]*(1.0-frac) + P[i2]*frac;
+            betagamma2 = SourceBeta.abs2nd();
+            gamma2 = betagamma2 + 1.0;
+            gamma = sqrt(gamma2);
+            SourceBeta/=gamma;
+            SourceBetaPrime = A[i1]*(1.0-frac) + A[i2]*frac;
+            SourceBetaPrime/=gamma;
+        }
+        // compute the distance and direction to the observer
+        Vector RVec = obs_pos - SourceX;
+        double R = RVec.norm();
+        Vector N = RVec;
+        N.normalize();
+        // compute the radiated field
+        double scale = Charge*ElementaryCharge/(4.0*Pi*EpsNull);
+        double bn3rd = pow(1.0 - dot(SourceBeta, N), 3.0);
+        // velocity term
+        EField = (N - SourceBeta) / (R*R*bn3rd*gamma2);
+        // acceleration term
+        EField += cross(N, cross(N - SourceBeta, SourceBetaPrime)) / (R*bn3rd*SpeedOfLight);
+        EField *= scale;
+        BField = cross(N,EField) / SpeedOfLight;
+    };
     return ElMagField(EField, BField);
 }
 

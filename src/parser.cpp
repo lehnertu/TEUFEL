@@ -275,9 +275,8 @@ int InputParser::parseBeam(Beam *beam)
     return count;
 }
 
-int InputParser::parseTracking(Beam *beam, std::vector<watch_t> *watches)
+void InputParser::parseTracking(Beam *beam, std::vector<watch_t> *watches)
 {
-    int NoW = 0;
     pugi::xml_node track = root.child("tracking");
     if (!track)
     {
@@ -314,21 +313,18 @@ int InputParser::parseTracking(Beam *beam, std::vector<watch_t> *watches)
                     throw(IOexception("InputParser::parseTracking - <watch> attribute step not found."));
                 pugi::xml_attribute fn = child.attribute("file");
                 if (!fn)
-                    throw(IOexception("InputParser::parseTracking - <watch> attribute step not found."));
+                    throw(IOexception("InputParser::parseTracking - <watch> attribute file not found."));
                 watch_t w = { step.as_int(), fn.as_string() };
                 watches->push_back(w);
-                NoW++;
             }
             else
                 throw(IOexception("InputParser::parseTracking - unknown child under <tracking>."));
         }
     }
-    return NoW;
 }
 
-int InputParser::parseObservers(std::vector<Observer*> *listObservers)
+void InputParser::parseObservers(std::vector<Observer*> *listObservers)
 {
-    int NOO = 0;
     pugi::xml_node obsroot = root.child("observer");
     if (!obsroot)
     {
@@ -342,6 +338,54 @@ int InputParser::parseObservers(std::vector<Observer*> *listObservers)
             std::string type = obs.name();
             if (type == "calc")
                 parseCalc(obs);
+            else if (type == "snapshot")
+            {
+                double x, y, z;
+                pugi::xml_attribute fn = obs.attribute("file");
+                if (!fn)
+                    throw(IOexception("InputParser::parseObservers - <snapshot> attribute file not found."));                
+                parseCalcChildren(obs);
+                pugi::xml_node tnode = obs.child("time");
+                if (!tnode)
+                    throw(IOexception("InputParser::parseObservers - <snapshot> <time> not found."));
+                double t0 = parseValue(tnode.attribute("t0"));
+                pugi::xml_node posnode = obs.child("position");
+                if (!posnode)
+                    throw(IOexception("InputParser::parseObservers - <snapshot> <position> not found."));
+                x = parseValue(posnode.attribute("x"));
+                y = parseValue(posnode.attribute("y"));
+                z = parseValue(posnode.attribute("z"));
+                Vector pos = Vector(x, y, z);
+                pugi::xml_node hnode = obs.child("hpitch");
+                if (!hnode)
+                    throw(IOexception("InputParser::parseObservers - <snapshot> <hpitch> not found."));
+                x = parseValue(hnode.attribute("x"));
+                y = parseValue(hnode.attribute("y"));
+                z = parseValue(hnode.attribute("z"));
+                Vector h = Vector(x, y, z);
+                pugi::xml_attribute nh = hnode.attribute("n");
+                if (!nh)
+                    throw(IOexception("InputParser::parseObservers - <snapshot> <hpitch> attribute n not found."));
+                pugi::xml_node vnode = obs.child("vpitch");
+                if (!vnode)
+                    throw(IOexception("InputParser::parseObservers - <snapshot> <vpitch> not found."));
+                x = parseValue(vnode.attribute("x"));
+                y = parseValue(vnode.attribute("y"));
+                z = parseValue(vnode.attribute("z"));
+                Vector v = Vector(x, y, z);
+                pugi::xml_attribute nv = vnode.attribute("n");
+                if (!nv)
+                    throw(IOexception("InputParser::parseObservers - <snapshot> <vpitch> attribute n not found."));
+                /* don't include while class is not yet ready
+                SnapshotObserver *snapObs = new SnapshotObserver(
+                    fn.as_string(),
+                    pos, h, v,
+                    nh.as_int(),
+                    nv.as_int(),
+                    t0 );
+                listObservers->push_back(snapObs);
+                */
+            }
             else if (type == "screen")
             {
                 double x, y, z;
@@ -392,7 +436,6 @@ int InputParser::parseObservers(std::vector<Observer*> *listObservers)
                     nv.as_int(),
                     t0, dt, nt.as_int() );
                 listObservers->push_back(screenObs);
-                NOO++;
             }
             else if (type == "point")
             {
@@ -422,11 +465,9 @@ int InputParser::parseObservers(std::vector<Observer*> *listObservers)
                     pos,
                     t0, dt, nt.as_int() );
                 listObservers->push_back(pointObs);
-                NOO++;
             }
             else
                 throw(IOexception("InputParser::parseObservers - unknown observer type."));
         };
     }
-    return NOO;
 }

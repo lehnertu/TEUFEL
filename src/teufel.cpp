@@ -121,19 +121,15 @@ int main(int argc, char* argv[])
 
     // get all tracking information from the input file
     std::vector<watch_t> watches;
-    int NoW = parse->parseTracking(beam, &watches);
-    std::cout << "defined " << NoW << " watch points." << std::endl;
-    if (NoW != (int)watches.size())
-        std::cout << "WARNING : number of watches (" << NoW << ") differs from length of the list (" << watches.size() << ")" << std::endl;
-    std::cout << std::endl;
-    
+    parse->parseTracking(beam, &watches);
+    if (teufel::rank==0) std::cout << "defined " << (int)watches.size() << " watch points." << std::endl;
+    if (teufel::rank==0) std::cout << std::endl;
+
     // parse all observer definitions
     std::vector<Observer*> listObservers;
-    int NoO = parse->parseObservers(&listObservers);
+    parse->parseObservers(&listObservers);
     std::cout << std::endl;
-    std::cout << "defined " << NoO << " observers." << std::endl;
-    if (NoO != (int)listObservers.size())
-        std::cout << "WARNING : number of observers (" << NoO << ") differs from length of the list (" << listObservers.size() << ")" << std::endl;
+    std::cout << "defined " << (int)listObservers.size() << " observers." << std::endl;
     std::cout << std::endl;
     
     // we are done with the input document
@@ -143,7 +139,7 @@ int main(int argc, char* argv[])
     beam->setupTracking(lattice);
 
     // handle watch point of initial particle distribution
-    for (int iw=0; iw<NoW; iw++)
+    for (int iw=0; iw<(int)watches.size(); iw++)
     {
         watch_t w = watches.at(iw);
         if (w.step == 0)
@@ -164,7 +160,7 @@ int main(int argc, char* argv[])
     {
         beam->doStep(lattice);
         // handle watch points
-        for (int iw=0; iw<NoW; iw++)
+        for (int iw=0; iw<(int)watches.size(); iw++)
         {
             watch_t w = watches.at(iw);
             if (w.step == step+1)
@@ -199,7 +195,7 @@ int main(int argc, char* argv[])
     std::cout << "time elapsed during tracking : " << elapsed << " s" << std::endl;
 
     // compute all observations
-    for (int i=0; i<NoO; i++)
+    for (int i=0; i<(int)listObservers.size(); i++)
     {
         std::cout << std::endl << "computing observer No. " << i+1 << std::endl;
         Observer *obs = listObservers.at(i);
@@ -214,7 +210,7 @@ int main(int argc, char* argv[])
     }
         
     // delete all observers
-    for (int i=0; i<NoO; i++)
+    for (int i=0; i<(int)listObservers.size(); i++)
         delete listObservers.at(i);
     listObservers.clear();
     

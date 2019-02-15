@@ -70,7 +70,7 @@ public:
     virtual unsigned int getBufferSize() = 0;
     
     /*! Return all field values in a newly allocated buffer.
-     *  Memory for the buffer is allocated by this method and must be freeed
+     *  Memory for the buffer is allocated by this method and must be freed
      *  by the caller. Returns a pointer to the allocated memory.
      *  An exception is thrown if the alloaction of the buffer fails.
      *  This is a purely virtual method that must be overwritten by derived objects.
@@ -93,13 +93,169 @@ public:
 };
 
 /*!
- * \class PointObserver
- * \brief Observer of emitted radiation at a single point in space.
+ * \class SnapshotObserver
+ * \brief Observer of emitted radiation at a given point in time.
  * @author Ulf Lehnert
  * @date 22.4.2017
  * 
  * This class handles the computation and storage of emitted electromagnetic
  * radiation from different sources (particles, bunches and beams).
+ * It provides the electromagnetic fields at a single moment in time
+ * observed on a 2-dimensional grid in space.
+ */
+class SnapshotObserver : public Observer
+{
+
+    /*! Standard constructor:<br>
+     * Compute the electromagnetic field observed at a given point in time.
+     * 
+     * The field is computed on a grid in space.
+     * The center of the grid is given with the position argument.
+     * From there a grid of size (nx,ny) is created
+     * extending along the dx and dy vectors.
+     * These vectors define the size of one single grid cell.
+     * They need not neccessarily be orthogonal to each other.
+     * If nxy are odd then the (nxy-1)/2 indexed grid cell
+     * (index running 0...nxy-1) will have its center exactly
+     * at the given center position.
+     * 
+     * \param[in] filename The name of the generated output file.
+     * \param[in] position The center of the grid.
+     * \param[in] dx The x direction/spacing of the grid.
+     * \param[in] dy The y direction/spacing of the grid.
+     * \param[in] nx The number of grid cells in x direction.
+     * \param[in] ny The number of grid cells in y direction.
+     * \param[in] t  Time of observation.
+     */
+    SnapshotObserver(
+        std::string filename,
+        Vector position,
+        Vector dx,
+        Vector dy,
+        unsigned int nx,
+        unsigned int ny,
+        double t);
+
+    /*! Integrate the fields emitted by all particles of the source
+     *  during all of their history, induced a th time of observation.
+     *  Should be called after tracking all particles at least to the time of observation.
+     * 
+     * \param[in] src The source generating the field.
+     *
+     *  This method is defined for Beam() and Bunch() as field sources.
+     */
+    virtual void integrate(Beam *src);
+    virtual void integrate(Bunch *src);
+    
+    /*! Return the field value stored in one grid cell with indices ix, iy.
+     *  This method throws an exception in case of an out-of-range index.
+     *  This exception should not be caught as it represents an internal
+     *  coding error (should never happen).
+     */
+    ElMagField getField(
+        unsigned int ix,
+        unsigned int iy);
+
+    /*! Set the field value stored in one grid cell with indices ix, iy.
+     *  This method throws an exception in case of an out-of-range index.
+     *  This exception should not be caught as it represents an internal
+     *  coding error (should never happen).
+     */
+    void setField(
+        unsigned int ix,
+        unsigned int iy,
+        ElMagField field);
+
+    /*! The method gives the size of the buffer necessary to store
+     *  the complete field information as a number of doubles (not bytes!).
+     */
+    virtual unsigned int getBufferSize();
+    
+    /*! Return all field values in a newly allocated buffer.
+     *  Memory for the buffer is allocated by this method and must be freed
+     *  by the caller. Returns a pointer to the allocated memory.
+     *  An exception is thrown if the alloaction of the buffer fails.
+     */
+    virtual double* getBuffer();
+
+    /*! Set all field values from a given allocated buffer.
+     *  The count value gives the size of the buffer as a number of doubles.
+     *  An exception is thrown if it doesn't match the actual field size.
+     */
+    virtual void fromBuffer(double *buffer, unsigned int size);
+
+    /*! @brief Write all the field values into an HDF5 file.
+     * 
+     *  The file name was defined when creating the oberver object.
+     * 
+     *  Data is divided into 2 data sets
+     * 
+     *  "ObservationPosition" :
+     *  - 2D array of cell center position (Vector) [m]
+     *  - Attributes : Nx, Ny
+     * 
+     *  "ElMagField" :
+     *  - 2D array [Nx,Ny] of ElMagField
+     *      - 3 componenets of the electric field [V/m]
+     *      - 3 componenets of the magnetic field [T]
+     *  - Atributes : t_obs
+     * 
+     * @throws IOexception
+     */
+    void WriteFieldHDF5();
+
+    /*! Generate the output file(s) from this observation.
+     *  The present code just calls  WriteFieldHDF()
+     */
+    virtual void generateOutput();
+
+private:
+    
+    /*! Compute the center position of the grid cell
+     *  from its indeces
+     */
+    Vector CellPosition(int ix, int iy);
+    
+private:
+    
+    //! file name for the final output
+    std::string FileName;
+
+    //! the origin of the grid
+    Vector O;
+    
+    //! the x-direction vector of the grid
+    Vector dX;
+    
+    //! the y-direction vector of the grid
+    Vector dY;
+
+    //! the number of grid cells in x direction
+    unsigned int Nx;
+    
+    //! the number of grid cells in x direction
+    unsigned int Ny;
+    
+    //! the observation time
+    double t_obs;
+    
+    /*! the electromagnetic field is stored in a 2-dimensional vector.
+     *  The first (outermost) index is ix.
+     *  The second index is iy.
+     */ 
+    std::vector<std::vector<ElMagField>> FieldArray;
+
+};
+
+/*!
+ * \class PointObserver
+ * \brief Observer of emitted radiation time trace at a single point in space.
+ * @author Ulf Lehnert
+ * @date 22.4.2017
+ * 
+ * This class handles the computation and storage of emitted electromagnetic
+ * radiation from different sources (particles, bunches and beams).
+ * It provides a time-trace of electromagnetic field values.
  */
 class PointObserver : public Observer
 {
@@ -218,12 +374,14 @@ private:
 
 /*!
  * \class ScreenObserver
- * \brief Observer of emitted radiation on a gridded screen.
+ * \brief Observer of emitted radiation time trace on a gridded screen.
  * @author Ulf Lehnert
  * @date 18.10.2017
  * 
  * This class handles the computation and storage of emitted electromagnetic
  * radiation from different sources (bunches and beams).
+ * For every point on a 2-dimensional screen time-traces of
+ * the observed electromagnetic field are generated.
  */
 class ScreenObserver : public Observer
 {

@@ -149,19 +149,15 @@ int main(int argc, char *argv[])
 
     // get all tracking information from the input file
     std::vector<watch_t> watches;
-    int NoW = parse->parseTracking(beam, &watches);
-    if (teufel::rank==0) std::cout << "defined " << NoW << " watch points." << std::endl;
-    if (NoW != (int)watches.size())
-        if (teufel::rank==0) std::cout << "WARNING : number of watches (" << NoW << ") differs from length of the list (" << watches.size() << ")" << std::endl;
+    parse->parseTracking(beam, &watches);
+    if (teufel::rank==0) std::cout << "defined " << (int)watches.size() << " watch points." << std::endl;
     if (teufel::rank==0) std::cout << std::endl;
     
     // parse all observer definitions
     std::vector<Observer*> listObservers;
-    int NoO = parse->parseObservers(&listObservers);
+    parse->parseObservers(&listObservers);
     if (teufel::rank==0) std::cout << std::endl;
-    if (teufel::rank==0) std::cout << "defined " << NoO << " observers." << std::endl;
-    if (NoO != (int)listObservers.size())
-        if (teufel::rank==0) std::cout << "WARNING : number of observers (" << NoO << ") differs from length of the list (" << listObservers.size() << ")" << std::endl;
+    if (teufel::rank==0) std::cout << "defined " << (int)listObservers.size() << " observers." << std::endl;
     if (teufel::rank==0) std::cout << std::endl;
     
     // done parsing the input file
@@ -246,7 +242,7 @@ int main(int argc, char *argv[])
     MPI_Barrier(MPI_COMM_WORLD);
 
     // handle watch point of initial particle distribution if requested
-    for (int iw=0; iw<NoW; iw++)
+    for (int iw=0; iw<(int)watches.size(); iw++)
     {
         watch_t w = watches.at(iw);
         if (w.step == 0)
@@ -300,7 +296,7 @@ int main(int argc, char *argv[])
 //         // do a step
         trackedBeam->doStep(lattice);
         // handle watch points
-        for (int iw=0; iw<NoW; iw++)
+        for (int iw=0; iw<(int)watches.size(); iw++)
         {
             watch_t w = watches.at(iw);
             if (w.step == step+1)
@@ -373,7 +369,7 @@ int main(int argc, char *argv[])
     MPI_Barrier(MPI_COMM_WORLD);
     
     // compute all observations
-    for (int i=0; i<NoO; i++)
+    for (int i=0; i<(int)listObservers.size(); i++)
     {
         double start_time = MPI_Wtime();
         if (teufel::rank == 0)
@@ -445,7 +441,7 @@ int main(int argc, char *argv[])
 */
 
     // delete all observers
-    for (int i=0; i<NoO; i++)
+    for (int i=0; i<(int)listObservers.size(); i++)
         delete listObservers.at(i);
     listObservers.clear();
     

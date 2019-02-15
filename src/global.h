@@ -59,8 +59,6 @@ namespace teufel
 /*! 
  * \class IOexception
  * \brief Class for exceptions returning a user-defined message.
- * @author Ulf Lehnert
- * @date 24.10.2017
  */
 class IOexception: public std::exception
 {
@@ -70,7 +68,20 @@ public:
     const char* m;
 };
 
+/*! 
+ * \class RANGEexception
+ * \brief Class for exceptions returning a user-defined message.
+ */
+class RANGEexception: public std::exception
+{
+public:
+    RANGEexception(const char* message) {m=message;}
+    virtual const char* what() const throw() {return m;};
+    const char* m;
+};
+
 /*! a data struct to hold the definition of a watch point
- *  where a beam snapshot will be written during tracking
+ *  where particle coordinates will be written during tracking
  */
 typedef struct { int step; std::string filename; } watch_t;
+
