@@ -43,11 +43,17 @@
             <position x="0.0" y="0.0" z="z0" />
             <time t0="t0" dt="1e-13" n="300" />
         </point>
-        <snapshot file="elbe-u300_snap_2000.sdds">
+        <snapshot file="elbe-u300_snap_2000.h5">
             <time t0="2000*dt" />
-            <position x="0.0" y="0.0" z="2000*dt*_c" />
-            <hpitch x="0.000100" y="0.0" z="0.0" n="101" />
-            <vpitch x="0.0" y="0.0" z="0.000010" n="1001" />
+            <position x="0.0" y="0.0" z="2000*dt*_c-0.000020*100" />
+            <hpitch x="0.000500" y="0.0" z="0.0" n="101" />
+            <vpitch x="0.0" y="0.0" z="0.000020" n="251" />
+        </snapshot>
+        <snapshot file="elbe-u300_snap_4000.h5">
+            <time t0="4000*dt" />
+            <position x="0.0" y="0.0" z="4000*dt*_c-0.000020*100" />
+            <hpitch x="0.000500" y="0.0" z="0.0" n="101" />
+            <vpitch x="0.0" y="0.0" z="0.000020" n="251" />
         </snapshot>
     </observer>
 </teufel>
