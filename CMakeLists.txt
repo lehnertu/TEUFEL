@@ -159,6 +159,11 @@ if(BUILD_TESTS)
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
                              ${ZLIB_LIBRARY_RELEASE} )
+    add_executable(teufel.electrostatic ${PROJECT_TESTS_DIR}/teufel.electrostatic.cpp)
+    target_link_libraries(teufel.electrostatic ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIBRARIES}
+                             ${ZLIB_LIBRARY_RELEASE} )
 endif()
 
 # for building examples
