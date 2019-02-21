@@ -73,6 +73,20 @@ else:
 print "scale B = ",bmax
 blevels = np.linspace(-bmax, bmax, num=11)
 
+print("Ex range %g ... %g"%(np.min(Ex),np.max(Ex)))
+SignEx = np.sign(Ex)
+AbsEx = np.fabs(Ex)
+cut = 1.0e-5*np.max(AbsEx)
+AbsEx = AbsEx+cut
+print("fabs(Ex) range %g ... %g"%(np.min(AbsEx),np.max(AbsEx)))
+LogEx = np.log(AbsEx)
+LogCut = np.log(cut)
+LogEx = LogEx-LogCut
+LogMax = np.max(LogEx)-6
+loglevels = np.linspace(-LogMax, LogMax, num=11)
+print("log(fabs(Ex)) range %g ... %g"%(np.min(LogEx),np.max(LogEx)))
+LogEx = LogEx*SignEx
+
 fig1 = plt.figure(figsize=(12,8),dpi=80)
 ax1 = plt.subplot(2,3,1)
 ax2 = plt.subplot(2,3,2)
@@ -80,7 +94,7 @@ ax3 = plt.subplot(2,3,3)
 ax4 = plt.subplot(2,3,4)
 ax5 = plt.subplot(2,3,5)
 ax6 = plt.subplot(2,3,6)
-ax1.contourf(Ex,elevels,cmap='jet')
+ax1.contourf(LogEx,loglevels,cmap='jet')
 ax2.contourf(Ey,elevels,cmap='jet')
 ax3.contourf(Ez,elevels,cmap='jet')
 ax4.contourf(Bx,blevels,cmap='jet')
