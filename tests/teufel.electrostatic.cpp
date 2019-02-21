@@ -56,7 +56,7 @@
 #include <iostream>
 #include <fstream>
 
-int NOTS = 1000;                // number of time steps
+int NOTS = 2000;                // number of time steps
 
 int main ()
 {
@@ -113,11 +113,13 @@ int main ()
     printf("\n");
     
     // create the trajectory of the particle in motion
-    double gamma = 5.0;
+    double gamma = 10.0;
     double beta = sqrt(1.0-1.0/(gamma*gamma));
     double betagamma= sqrt(gamma*gamma-1.0);
-    //create an arbitrary unit vector and generate particle's momentum
+    // create an arbitrary unit vector and generate particle's momentum
     Vector Dir= Vector(2.0,3.0,5.0);
+    // make it easy for debugging only
+    // Vector Dir= Vector(0.0,0.0,1.0);
     Dir.normalize();
     Vector Perpendicular = cross(Dir,Vector(1.0,0.0,0.0));
     Perpendicular.normalize();
@@ -160,8 +162,19 @@ int main ()
     	errors++;
     	printf(" - \033[1;31m test failed!\033[0m\n");
     }
-    printf("\n");
-
+    // list the transverse electric field for 0.01mm of trajectory
+    printf("trace : ");
+    double ETransListNull[11];
+    for (int i=0; i<11; i++)
+    {
+        double l = -0.005+i*0.001;
+        EB = particle->RetardedField(0.0, ObsPos+Dir*l);
+        ObsE = EB.E();
+        ETransListNull[i]=dot(ObsE,Perpendicular);
+        printf("%9.6g  ",ETransListNull[i]);
+    };
+    printf("\n\n");
+        
     // check the field near 1m of trajectory
     double ObsTime = 3.0e-9;
     ObsPos = Dir*ObsTime*beta*SpeedOfLight;
@@ -177,7 +190,7 @@ int main ()
     printf("\n");
     
     ObsPos += Perpendicular*0.001;
-    EB = particle->RetardedField(ObsTime+0.00/SpeedOfLight, ObsPos);
+    EB = particle->RetardedField(ObsTime, ObsPos);
     ObsE = EB.E();
     ObsB = EB.B();
     printf("E =  %9.6g V/m (%9.6g,%9.6g,%9.6g) V/m",ObsE.norm(),ObsE.x,ObsE.y,ObsE.z);
@@ -194,6 +207,26 @@ int main ()
     	errors++;
     	printf(" - \033[1;31m test failed!\033[0m\n");
     }
+    // list the transverse electric field for 0.01mm of trajectory
+    printf("trace : ");
+    double ETransList[11];
+    for (int i=0; i<11; i++)
+    {
+        double l = -0.005+i*0.001;
+        EB = particle->RetardedField(ObsTime, ObsPos+Dir*l);
+        ObsE = EB.E();
+        ETransList[i]=dot(ObsE,Perpendicular);
+        printf("%9.6g  ",ETransList[i]);
+    };
+    printf("\n\n");
+
+    // check equality of both lists
+    for (int i=0; i<11; i++)
+        if ((ETransList[i]-ETransListNull[i])/ETransListNull[i] > 1e-5)
+        {
+            printf("Fields differ at trace point No. %d - \033[1;31m test failed!\033[0m\n",i);
+          	errors++;
+        };
 
     // clean up
     delete lattice;

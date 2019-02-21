@@ -405,6 +405,7 @@ ElMagField ChargedParticle::RetardedField(double obs_time, Vector obs_pos)
     if (t2<=0.0)
     {
         // these are the quantities we need from the trajectory
+        double SourceT;
         Vector SourceX;
         Vector SourceBeta;
         Vector SourceBetaPrime;
@@ -412,6 +413,7 @@ ElMagField ChargedParticle::RetardedField(double obs_time, Vector obs_pos)
         double betagamma2, gamma2, gamma;
         if (t1<=0.0)
         {
+            // printf("ChargedParticle::RetardedField - extrapolating from zero\n");
             // one has to extrapolate to negative trajectory times
             // if the is only one trajectory point available (i1==i2) we will be here as well
             Vector Rc = (obs_pos - X[0]) / SpeedOfLight;
@@ -426,13 +428,14 @@ ElMagField ChargedParticle::RetardedField(double obs_time, Vector obs_pos)
             double bR = dot(SourceBeta,Rc);
             double bb = dot(SourceBeta,SourceBeta);
             double RR = dot(Rc,Rc);
-            double t = (t0-bR-sqrt((t0-bR)*(t0-bR)-(1-bb)*(t0*t0-RR)))/(1-bb);
+            SourceT = (t0-bR-sqrt((t0-bR)*(t0-bR)-(1-bb)*(t0*t0-RR)))/(1-bb);
             // compute the trajectory point at emission
-            SourceX = X[0] + SourceBeta*SpeedOfLight*t;
+            SourceX = X[0] + SourceBeta*SpeedOfLight*SourceT;
             SourceBetaPrime = Vector(0.0,0.0,0.0);
         }
         else
         {
+            // printf("ChargedParticle::RetardedField - interpolating within trajectory\n");
             // Bisect the trajectory interval until only a single
             // step is left for interpolation (i2-i2 == 1).
             // There always must be t2<0 and t1>0.
@@ -454,7 +457,61 @@ ElMagField ChargedParticle::RetardedField(double obs_time, Vector obs_pos)
                 }
             }
             double frac = t1/(t1-t2);
-            SourceX = X[i1]*(1.0-frac) + X[i2]*frac;
+            // printf("i1=%d  i2=%d  frac=%12.9f\n",i1,i2,frac);
+            // Simple linear interpolation is not enough.
+            // Do a refinement until the interpolaed position changes
+            // by less than a 1.0e-5 fraction of the trajectory step.
+            //! @todo Linear interpolation fails, as does recursive refinement.<br>
+            //! One should do ananalytic solution as it is done for the back-extrapolation.
+            //! The present code works at suffucuently large distances from the trajectory.
+            double t1 = Time[i1];
+            double t2 = Time[i2];
+            Vector X1 = X[i1];
+            Vector X2 = X[i2];
+            SourceT = t1*(1.0-frac) + t2*frac;
+            SourceX = X1*(1.0-frac) + X2*frac;
+            double R = (obs_pos-SourceX).norm();
+            // how much off is the time
+            double dt = SourceT + R / SpeedOfLight - obs_time;
+            // how does dt change with frac
+            // the first refinement step uses the trajectory time step for computing the derivative
+            double r1 = (obs_pos-X1).norm();
+            double r2 = (obs_pos-X2).norm();
+            double dtdfrac = (t2-t1) + (r2-r1)/SpeedOfLight;
+            double dfrac = dt/dtdfrac;
+            // printf("frac= %12.9f R=%9.6g  SourceT=%9.6g  dt=%9.6g => dfrac=%12.9f\n",frac,R,SourceT,dt,-dfrac);
+            int number_ref=1;
+            while (fabs(dfrac)>1e-5 && number_ref<10)
+            {
+                // for subsequent refinement steps we use the change from the last step
+                // to compute the drivative
+                // before
+                double Lastdt = dt;
+                // after
+                frac -=dfrac;
+                SourceT = t1*(1.0-frac) + t2*frac;
+                SourceX = X1*(1.0-frac) + X2*frac;
+                R = (obs_pos-SourceX).norm();
+                dt = SourceT + R / SpeedOfLight - obs_time;
+                // how does dt change with frac
+                dtdfrac = -(dt-Lastdt)/dfrac;
+                dfrac = dt/dtdfrac; 
+                // printf("frac=%12.9f  R=%9.6g  SourceT=%9.6g  dt=%9.6g => dfrac=%12.9f\n",frac,R,SourceT,dt,-dfrac);
+                number_ref++;
+            }
+            // repeat with corrected frac
+            frac -=dfrac;
+            SourceT = t1*(1.0-frac) + t2*frac;
+            SourceX = X1*(1.0-frac) + X2*frac;
+            if (number_ref>=10)
+            {
+                printf("WARNING : no convergence in ChargedParticle::RetardedField\n");
+                printf("Obs    : t=%9.6g  X=(%9.6g, %9.6g, %9.6g)\n",obs_time,obs_pos.x,obs_pos.y,obs_pos.z);
+                printf("Source : t=%9.6g  X=(%9.6g, %9.6g, %9.6g)\n",SourceT,SourceX.x,SourceX.y,SourceX.z);
+                R = (obs_pos-SourceX).norm();
+                dt = SourceT + R / SpeedOfLight - obs_time;
+                printf("frac=%12.9f  R=%9.6g  dt=%9.6g => dfrac=%12.9f\n",frac,R,dt,-dfrac);
+            }
             SourceBeta = P[i1]*(1.0-frac) + P[i2]*frac;
             betagamma2 = SourceBeta.abs2nd();
             gamma2 = betagamma2 + 1.0;
@@ -463,8 +520,10 @@ ElMagField ChargedParticle::RetardedField(double obs_time, Vector obs_pos)
             SourceBetaPrime = A[i1]*(1.0-frac) + A[i2]*frac;
             SourceBetaPrime/=gamma;
         }
+        // printf("ChargedParticle::RetardedField - SourceX = (%9.6g, %9.6g, %9.6g)\n",SourceX.x,SourceX.y,SourceX.z);
         // compute the distance and direction to the observer
         Vector RVec = obs_pos - SourceX;
+        // printf("ChargedParticle::RetardedField - RVec = (%9.6g, %9.6g, %9.6g)\n",RVec.x,RVec.y,RVec.z);
         double R = RVec.norm();
         Vector N = RVec;
         N.normalize();

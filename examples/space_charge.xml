@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<teufel description="Space charge field of a particle"
+    author="Ulf Lehnert 19.2.2019">
+    <lattice>
+    </lattice>
+    <calc print="gamma = " var="gamma" eq="5.0"/>
+    <calc print="beta = " var="beta" eq="sqrt(1.0-1.0/(gamma*gamma))"/>
+    <beam>
+        <bunch gamma="gamma" charge="1.0e-12" cmr="-1.0" n="1" >
+            <position x="0.0" y="0.0" z="0.0" zrms="0.0" />
+            <momentum x="0.0" y="0.0" z="1.0" delta="0.0" />
+        </bunch>
+    </beam>
+    <calc print="tracking length [m] = " var="total_L" eq="1.25" />
+    <calc print="tracking total time [s] = " var="total_t" eq="total_L/beta/_c" />
+    <calc print="dt = " var="dt" eq="total_t/5000" />
+    <tracking method="Vay" delta_t="dt" n="5000" >
+    </tracking>
+    <observer>
+        <snapshot file="Space_charge_0000.h5">
+            <calc print="tobs = " var="tobs" eq="0"/>
+            <calc print="zobs = " var="zobs" eq="tobs*beta*_c"/>
+            <time t0="tobs" />
+            <position x="0.0" y="0.0" z="zobs" />
+            <hpitch x="0.000010" y="0.0" z="0.0" n="201" />
+            <vpitch x="0.0" y="0.0" z="0.000010" n="201" />
+        </snapshot>
+        <snapshot file="Space_charge_0001.h5">
+            <calc print="tobs = " var="tobs" eq="1.1*dt"/>
+            <calc print="zobs = " var="zobs" eq="tobs*beta*_c"/>
+            <time t0="tobs" />
+            <position x="0.0" y="0.0" z="zobs" />
+            <hpitch x="0.000010" y="0.0" z="0.0" n="201" />
+            <vpitch x="0.0" y="0.0" z="0.000010" n="201" />
+        </snapshot>
+        <snapshot file="Space_charge_0100.h5">
+            <calc print="tobs = " var="tobs" eq="100.2*dt"/>
+            <calc print="zobs = " var="zobs" eq="tobs*beta*_c"/>
+            <time t0="tobs" />
+            <position x="0.0" y="0.0" z="zobs" />
+            <hpitch x="0.000010" y="0.0" z="0.0" n="201" />
+            <vpitch x="0.0" y="0.0" z="0.000010" n="201" />
+        </snapshot>
+        <snapshot file="Space_charge_4001.h5">
+            <calc print="tobs = " var="tobs" eq="4000.1*dt"/>
+            <calc print="zobs = " var="zobs" eq="tobs*beta*_c"/>
+            <time t0="tobs" />
+            <position x="0.0" y="0.0" z="zobs" />
+            <hpitch x="0.000010" y="0.0" z="0.0" n="201" />
+            <vpitch x="0.0" y="0.0" z="0.000010" n="201" />
+        </snapshot>
+        <snapshot file="Space_charge_4002.h5">
+            <calc print="tobs = " var="tobs" eq="4000.2*dt"/>
+            <calc print="zobs = " var="zobs" eq="tobs*beta*_c"/>
+            <time t0="tobs" />
+            <position x="0.0" y="0.0" z="zobs" />
+            <hpitch x="0.000010" y="0.0" z="0.0" n="201" />
+            <vpitch x="0.0" y="0.0" z="0.000010" n="201" />
+        </snapshot>
+    </observer>
+</teufel>
