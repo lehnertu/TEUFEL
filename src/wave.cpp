@@ -94,7 +94,7 @@ ElMagField GaussianWave::LocalField(double t, Vector X)
 	// the phase factor is missing because it is contained in the complex amplitude
 	complex<double> dens = exp(complex<double>(-pow(r/w,2.0), -k*z -Pi*r*r/lambda/R));
 	Vector E = Vector( (A*dens).real(), 0.0, 0.0 );
-	Vector B = Vector(0,0,0);
+	Vector B = Vector(0.0, (A*dens).real()/SpeedOfLight, 0.0);
     return ElMagField(E, B);
 }
 

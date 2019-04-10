@@ -74,11 +74,16 @@ int main ()
     printf("\nTEUFEL - radiation push testcase\n");
 
 	GaussianWave *wave = new GaussianWave();
-	wave->Setup(1.0e-6, complex<double>(1.0e6,0.0), 1.0);
+	wave->Setup(1.0e-6, complex<double>(3.23e8,0.0), 1.0);
 	ElMagField F = wave->Field(0.0, Vector(0.0, 0.0, 0.0));
     Vector ObsE = F.E();
     printf("E =  (%9.6g,%9.6g,%9.6g) V/m\n",ObsE.x,ObsE.y,ObsE.z);
-	
+    double I0 = dot(ObsE,ObsE)/2.0*EpsNull*SpeedOfLight;
+    printf("I0 =  %9.6g W/cm²\n",1e4*I0);
+    double lambda = wave->getWavelength();
+    printf("lambda =  %9.6g µm\n",1e6*lambda);
+	double a0 = 0.85e-9*1e6*lambda*sqrt(1e4*I0);
+    printf("a0=%9.6g\n",a0);
 	
     // a simple lattice with just the inpinging wave
     Lattice *lattice = new Lattice;
@@ -99,18 +104,27 @@ int main ()
     double deltaT = 10*tau / NOTS;
     electron->InitVay(deltaT, lattice);
     // record maximum displacement in x-direction
-    double xdisp = 0;
+    double xmin = 0.0;
+    double xmax = 0.0;
+    double ymin = 0.0;
+    double ymax = 0.0;
+    double zmin = 0.0;
+    double zmax = 0.0;
     for (int i=0; i<NOTS; i++)
     {
     	electron->StepVay(lattice);
     	Vector x = electron->getPosition();
-    	double dx = abs(x.x);
-    	if (dx>xdisp) xdisp = dx;
+    	if (x.x<xmin) xmin = x.x;
+    	if (x.x>xmax) xmax = x.x;
+    	if (x.y<ymin) ymin = x.y;
+    	if (x.y>ymax) ymax = x.y;
+    	if (x.z<zmin) zmin = x.z;
+    	if (x.z>zmax) zmax = x.z;
     };
     double t = electron->getTime();
     Vector XP = electron->getPosition();
     printf("x(%9.6g s) =  (%9.6g,%9.6g,%9.6g) m\n",t,XP.x,XP.y,XP.z);
-    printf("maximum |x| = %9.6g m\n",xdisp);
+    printf("x:(%9.6g, %9.6g)   y:(%9.6g, %9.6g)   z:(%9.6g, %9.6g)\n",xmin,xmax,ymin,ymax,zmin,zmax);
 
     // count the errors
     int errors = 0;
