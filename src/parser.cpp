@@ -28,6 +28,7 @@
 #include "parser.h"
 #include "undulator.h"
 #include "vector.h"
+#include "wave.h"
 
 InputParser::InputParser(const pugi::xml_node node)
 {
@@ -149,6 +150,22 @@ int InputParser::parseLattice(Lattice *lattice)
             }
             else
                 throw(IOexception("InputParser::parseLattice(Lattice - unknown undulator type."));
+            count++;
+        }
+        else if (type == "wave")
+        {
+            type = element.attribute("type").value();
+            name = element.attribute("name").value();
+            if (type == "gaussian")
+            {
+                if (teufel::rank==0) std::cout << name << "::GaussianWave" << std::endl;
+                // the undulator object parses its own input
+                // we provide a reference to the parser
+                GaussianWave *wave = new GaussianWave(element, this);
+                lattice->addElement(wave);
+            }
+            else
+                throw(IOexception("InputParser::parseLattice(Lattice - unknown wave type."));
             count++;
         }
         else

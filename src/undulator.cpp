@@ -42,7 +42,7 @@ PlanarUndulator::PlanarUndulator(const pugi::xml_node node, InputParser *parser)
     parser->parseCalcChildren(node);
     pugi::xml_node position = node.child("position");
     if (!position)
-        throw(IOexception("InputParser::PlanarUndulator - uundulator <position> not found."));
+        throw(IOexception("InputParser::PlanarUndulator - undulator <position> not found."));
     else
     {
         double x, y, z;
@@ -53,7 +53,7 @@ PlanarUndulator::PlanarUndulator(const pugi::xml_node node, InputParser *parser)
     }
     pugi::xml_node field = node.child("field");
     if (!field)
-        throw(IOexception("InputParser::PlanarUndulator - uundulator <field> not found."));
+        throw(IOexception("InputParser::PlanarUndulator - undulator <field> not found."));
     else
     {
         double B = parser->parseValue(field.attribute("B"));

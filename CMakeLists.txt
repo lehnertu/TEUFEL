@@ -70,7 +70,7 @@ list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/teufel_mpi.cpp)
 # files not yet finished and not included in the build
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/cavity.cpp)
 # list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/simulation.cpp)
-list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/wave.cpp)
+# list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/wave.cpp)
 message(STATUS "Found source files ${lib_sources}")
 add_library(${PROJECT_NAME}lib ${lib_sources})
 
@@ -156,6 +156,13 @@ if(BUILD_TESTS)
                              ${ZLIB_LIBRARY_RELEASE} )
     add_executable(teufel.EcrossB ${PROJECT_TESTS_DIR}/teufel.EcrossB.cpp)
     target_link_libraries(teufel.EcrossB ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIBRARIES}
+                             ${ZLIB_LIBRARY_RELEASE} )
+    add_executable(teufel.RadPush ${PROJECT_TESTS_DIR}/teufel.RadPush.cpp)
+    target_link_libraries(teufel.RadPush ${PROJECT_NAME}lib
+                             ${PUGIXML_LIBRARIES}
+                             ${MUPARSER_LIBRARY}
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
                              ${ZLIB_LIBRARY_RELEASE} )

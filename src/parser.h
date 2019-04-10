@@ -24,7 +24,6 @@
 #include <vector>
 
 #include "pugixml.hpp"
-#include "beam.h"
 #include "muParser.h"
 #include "beam.h"
 #include "fields.h"

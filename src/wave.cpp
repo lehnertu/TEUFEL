@@ -1,0 +1,100 @@
+/*=========================================================================
+ * 
+ *  Program:   TEUFEL - THz Emission from Undulators and Free-Electron Lasers
+ * 
+ *  Copyright (c) 2017 U. Lehnert
+ * 
+ *  This program is free software: you can redistribute it and/or modify
+ *  it under the terms of the GNU General Public License as published by
+ *  the Free Software Foundation, either version 3 of the License, or
+ *  (at your option) any later version.
+ * 
+ *  This program is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ *  GNU General Public License for more details.
+ * 
+ *  You should have received a copy of the GNU General Public License
+ *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ * 
+ * =========================================================================*/
+
+#include "wave.h"
+#include "global.h"
+
+#include <math.h>
+
+GaussianWave::GaussianWave() :
+    ExternalField()
+{
+    Setup(1.0, complex<double>(0.0, 0.0), 1.0);
+}
+
+GaussianWave::GaussianWave(Vector pos) :
+    ExternalField(pos)
+{
+    Setup(1.0, complex<double>(0.0, 0.0), 1.0);
+}
+
+GaussianWave::GaussianWave(const pugi::xml_node node, InputParser *parser) :
+    ExternalField()
+{
+    parser->parseCalcChildren(node);
+    pugi::xml_node position = node.child("position");
+    if (!position)
+        throw(IOexception("InputParser::GaussianWave - wave <position> not found."));
+    else
+    {
+        double x, y, z;
+        x = parser->parseValue(position.attribute("x"));
+        y = parser->parseValue(position.attribute("y"));
+        z = parser->parseValue(position.attribute("z"));
+        origin = Vector(x,y,z);
+    }
+    pugi::xml_node field = node.child("field");
+    if (!field)
+        throw(IOexception("InputParser::GaussianWave - wave <field> not found."));
+    else
+    {
+        double Ar = parser->parseValue(field.attribute("ReA"));
+        double Ai = parser->parseValue(field.attribute("ImA"));
+        double l = parser->parseValue(field.attribute("lambda"));
+        double r = parser->parseValue(position.attribute("rayleigh"));
+        Setup(l, complex<double>(Ar,Ai), r);
+    }
+}
+
+void GaussianWave::Setup(
+        double lda,
+        complex<double> amplitude,
+        double range
+    )
+{
+    lambda = lda;
+    k = 2.0*Pi/lambda;
+    A = amplitude;
+    zR = range;
+    w0 = sqrt(lambda*zR/Pi);
+    double I0 = norm(A)/2.0*EpsNull*SpeedOfLight;
+    double Ptot = Pi/2.0 * I0*w0*w0;
+    if (teufel::rank==0)
+        std::cout << "gaussian wave  E0 = " << sqrt(norm(A)) << " V/m   w0 = " << w0 << " m   Ptot = " << Ptot << " W" << std::endl;
+}
+
+ElMagField GaussianWave::LocalField(double t, Vector X)
+{
+    // cylindrical coordinates
+    double z = X.z;
+    double r = Vector(X.x,X.y,0.0).norm();
+    // mode size
+    double w = w0 * sqrt(1.0+pow(z/zR,2.0));
+	// curvature radius
+	double R = z + zR*zR/z;
+	// field density fraction
+	// the phase factor is missing because it is contained in the complex amplitude
+	complex<double> dens = exp(complex<double>(-pow(r/w,2.0), -k*z -Pi*r*r/lambda/R));
+	Vector E = Vector( (A*dens).real(), 0.0, 0.0 );
+	Vector B = Vector(0,0,0);
+    return ElMagField(E, B);
+}
+
