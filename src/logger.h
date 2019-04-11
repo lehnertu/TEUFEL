@@ -32,6 +32,7 @@
  * 
  * This class handles the computation and storage of beam parameters
  * accessible during the tracking.
+ * @todo specialization for beam still missing, only for bunch implemented
  */
 template <class objectT>
 class TrackingLogger

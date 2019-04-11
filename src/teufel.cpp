@@ -39,9 +39,6 @@
     preiod length. The particles start at z=0, the undulator is centered at z=2.0m.
     At z=10m the produced radiation is observed.
     
-    The program generates a trajectory dump elbe-u300_trajectory.sdds which
-    can be used to plot the elctron trajectory.
-    
     At c*t=2.0m a snapshot of the particle distribution and the local fields is generated.
 
 */

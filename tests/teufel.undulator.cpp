@@ -129,8 +129,8 @@ int main()
     double xdisp = 0;    //maximum displacement in + direction
     for (int i=0; i<NOTS; i++)
     {
-	electron->StepVay(lattice);
-	// look for the maximum displacement
+		electron->StepVay(lattice);
+		// look for the maximum displacement
         Vector XP = electron->getPosition();
         if (XP.z > lambda && XP.z < N * lambda - lambda && xdisp < XP.x) xdisp = XP.x;
     };

@@ -22,34 +22,22 @@
 =========================================================================*/
 
 /*!
-    \brief Homogeneous magnetic field test case
+    \brief Radiation push of a free electron
 
     @author Ulf Lehnert
-    @author Vipul Joshi
-    @date 10.2.2017
-    @file teufel.magnet.cpp
+    @date 10.4.2019
+    @file teufel.RadPush.cpp
     
-    This test case tracks a single electron in a homogeneous magnetic field.
-    The electron moves on an periodic circular trajectory.
-    The cyclotron frequency and trajectory radius are compared to known values.
-    \f[
-	R_{gyro} = \beta \gamma \frac{m_0 c}{e B}
-    \f]
-    \f[
-	\Omega_{c} = \frac{e B}{\gamma m_0}
-    \f]
-
-    The program computes the trajectory of the electron starting at the coordinate system origin
-    with a velocity perpendicular to the field. The magnitude of the velocity is choosen such that
-    it is relativistic with \f$\gamma = 10.0\f$. The trajectory radius should be R=0.169613 m in
-    a magnetic field with B=0.1 T. The electron ist tracked for an amount of time
-    corresponding to one revolution which is 3.57273 ns. After that it is checked that :
-    @li the time is correct
-    @li the maximum distance from the origin is twice the trajectory radius
-    @li the particle has arrived back at the origin
-    @li the kinetic energy has not changed
+    This test case tracks a single electron in a gaussian electromagnetic wave.
+    The wavelength is 1 micron, the field strength choosen such that \f$ a_0 = 1 \f$.
+    @li The particle should oscillate with an amplitude of \f$ a_0 / k \f$.
+    @li The particle should be accelerated to \f$ \beta \gamma = 1 \f$ in the field direction.
+    @li Due to the magnetic field component it should move in positive z direction
+    with a speed of \f$ \beta \gamma = a_0^2 / 4 \f$
+    <br>
     
-    Using the Vay algorithm, the tracking reaches the required accuracy for 1000 Steps.
+    For plotting the trajectory a log file rad_push_log.sdds is created.
+    <br>
     
     @return The number of errors encountered in the above list of checks is reported.
     
@@ -62,11 +50,12 @@
 #include <string.h>
 
 #include "global.h"
+#include "logger.h"
 #include "particle.h"
 #include "fields.h"
 #include "wave.h"
 
-int NOTS = 1000;                // number of time steps
+int NOTS = 2000;                // number of time steps
 
 int main ()
 {
@@ -74,23 +63,27 @@ int main ()
     printf("\nTEUFEL - radiation push testcase\n");
 
 	GaussianWave *wave = new GaussianWave();
-	wave->Setup(1.0e-6, complex<double>(3.23e8,0.0), 1.0);
+	wave->Setup(1.0e-6, complex<double>(3.2107e12,0.0), 1.0);
 	ElMagField F = wave->Field(0.0, Vector(0.0, 0.0, 0.0));
-    Vector ObsE = F.E();
-    printf("E =  (%9.6g,%9.6g,%9.6g) V/m\n",ObsE.x,ObsE.y,ObsE.z);
-    double I0 = dot(ObsE,ObsE)/2.0*EpsNull*SpeedOfLight;
-    printf("I0 =  %9.6g W/cm²\n",1e4*I0);
+    double Ex = F.E().x;
+    double I0 = (Ex*Ex)/2.0*EpsNull*SpeedOfLight;
+    printf("I0 =  %9.6g W/cm²\n",1e-4*I0);
     double lambda = wave->getWavelength();
     printf("lambda =  %9.6g µm\n",1e6*lambda);
-	double a0 = 0.85e-9*1e6*lambda*sqrt(1e4*I0);
-    printf("a0=%9.6g\n",a0);
-	
+    double omega = 2*Pi*SpeedOfLight / wave->getWavelength();
+    printf("omega =  %9.6g Hz\n",omega);
+	double a0 = Ex / (mecsquared/SpeedOfLight*omega);
+    double a0_k = SpeedOfLight*a0/omega;
+    printf("a0 = %9.6g    a0/k = %9.6g\n",a0,a0_k);
+    
     // a simple lattice with just the inpinging wave
     Lattice *lattice = new Lattice;
     lattice->addElement(wave);
     
     // one single electron
     ChargedParticle *electron = new ChargedParticle();
+    Bunch *bunch = new Bunch();
+    bunch->Add(electron);
     
     // initial position at the origin
     Vector X0 = Vector(0.0, 0.0, 0.0);
@@ -99,36 +92,63 @@ int main ()
     Vector A0 = Vector(0.0, 0.0, 0.0);
     electron->initTrajectory(0.0, X0, P0, A0);
     
+    // count the errors
+    int errors = 0;
+    
     // Track the particle for 10 cycles of the wave
     double tau = wave->getWavelength() / SpeedOfLight;
+    printf("simulation running %9.6g s\n",10.0*tau);
     double deltaT = 10*tau / NOTS;
-    electron->InitVay(deltaT, lattice);
+    bunch->InitVay(deltaT, lattice);
+    TrackingLogger<Bunch> *log = new TrackingLogger<Bunch>(bunch);
+    log->update();
+    
     // record maximum displacement in x-direction
     double xmin = 0.0;
     double xmax = 0.0;
-    double ymin = 0.0;
-    double ymax = 0.0;
-    double zmin = 0.0;
-    double zmax = 0.0;
+    double bgxmin = 0.0;
+    double bgxmax = 0.0;
     for (int i=0; i<NOTS; i++)
     {
-    	electron->StepVay(lattice);
+    	bunch->StepVay(lattice);
+    	log->update();
     	Vector x = electron->getPosition();
     	if (x.x<xmin) xmin = x.x;
     	if (x.x>xmax) xmax = x.x;
-    	if (x.y<ymin) ymin = x.y;
-    	if (x.y>ymax) ymax = x.y;
-    	if (x.z<zmin) zmin = x.z;
-    	if (x.z>zmax) zmax = x.z;
+    	Vector bgx = electron->getMomentum();
+    	if (bgx.x<bgxmin) bgxmin = bgx.x;
+    	if (bgx.x>bgxmax) bgxmax = bgx.x;
     };
     double t = electron->getTime();
     Vector XP = electron->getPosition();
     printf("x(%9.6g s) =  (%9.6g,%9.6g,%9.6g) m\n",t,XP.x,XP.y,XP.z);
-    printf("x:(%9.6g, %9.6g)   y:(%9.6g, %9.6g)   z:(%9.6g, %9.6g)\n",xmin,xmax,ymin,ymax,zmin,zmax);
+    double xamp = xmax-xmin;
 
-    // count the errors
-    int errors = 0;
-    
+    if (fabs(xamp-2*a0_k)/a0_k > 1e-3) {
+		errors++;
+		printf("error in oscillation amplitude %9.6g m - \033[1;31m test failed!\033[0m\n", xamp);
+    } else {
+		printf("oscillation amplitude %9.6g m - \033[1;32m OK\033[0m\n", xamp);
+    }
+
+    if ( fabs(bgxmin+1)>1e-3 || fabs(bgxmax-1)>1e-3) {
+		errors++;
+		printf("error in beta*gamma : (%9.6g, %9.6g) - \033[1;31m test failed!\033[0m\n", bgxmin, bgxmax);
+    } else {
+		printf("beta*gamma : (%9.6g, %9.6g) - \033[1;32m OK\033[0m\n", bgxmin,bgxmax);
+    }
+
+	double beta_z = (electron->getPosition()).z / (10*tau*SpeedOfLight);
+    if ( fabs(beta_z-0.25)>1e-3 ) {
+		errors++;
+		printf("error in average beta = %9.6g - \033[1;31m test failed!\033[0m\n", beta_z);
+    } else {
+		printf("average beta = %9.6g - \033[1;32m OK\033[0m\n", beta_z);
+    }
+
+	int res = log->WriteBeamParametersSDDS("rad_push_log.sdds");
+	errors += res;
+	
     // clean up
     delete lattice;
     delete electron;

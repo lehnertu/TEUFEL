@@ -11,7 +11,7 @@ import matplotlib.pyplot as plt
 mu0 = 4*np.pi*1e-7
 
 parser = argparse.ArgumentParser()
-parser.add_argument('files', default=[], nargs='+', help='file name(s) for the stored population(s)')
+parser.add_argument('files', default=[], nargs='+', help='SDDS file name for the stored trajectory')
 # parser.add_argument('file', help='the name of the SDDS file with the observation field data')
 parser.add_argument('--list_params', dest='listpar',
   action='store_const', const=True, default=False, help='list all parameters available in the file')

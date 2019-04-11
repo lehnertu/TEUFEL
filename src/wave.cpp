@@ -72,6 +72,7 @@ void GaussianWave::Setup(
 {
     lambda = lda;
     k = 2.0*Pi/lambda;
+    omega = k*SpeedOfLight;
     A = amplitude;
     zR = range;
     w0 = sqrt(lambda*zR/Pi);
@@ -92,7 +93,9 @@ ElMagField GaussianWave::LocalField(double t, Vector X)
 	double R = z + zR*zR/z;
 	// field density fraction
 	// the phase factor is missing because it is contained in the complex amplitude
-	complex<double> dens = exp(complex<double>(-pow(r/w,2.0), -k*z -Pi*r*r/lambda/R));
+	complex<double> dens = exp(complex<double>(-pow(r/w,2.0), omega*t -k*z -Pi*r*r/lambda/R));
+	// std::cout << "z=" << z << " m    r=" << r << " m   ";
+	// std::cout << "fac=(" << dens.real() << ", " << dens.imag() << ")" << std::endl;
 	Vector E = Vector( (A*dens).real(), 0.0, 0.0 );
 	Vector B = Vector(0.0, (A*dens).real()/SpeedOfLight, 0.0);
     return ElMagField(E, B);
