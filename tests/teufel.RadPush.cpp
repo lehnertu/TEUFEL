@@ -33,7 +33,7 @@
     @li The particle should oscillate with an amplitude of \f$ a_0 / k \f$.
     @li The particle should be accelerated to \f$ \beta \gamma = 1 \f$ in the field direction.
     @li Due to the magnetic field component it should move in positive z direction
-    with a speed of \f$ \beta \gamma = a_0^2 / 4 \f$
+    with a peak momentum of \f$ \beta \gamma = a_0^2 / 2 \f$
     <br>
     
     For plotting the trajectory a log file rad_push_log.sdds is created.
@@ -108,6 +108,7 @@ int main ()
     double xmax = 0.0;
     double bgxmin = 0.0;
     double bgxmax = 0.0;
+    double bgzmax = 0.0;
     for (int i=0; i<NOTS; i++)
     {
     	bunch->StepVay(lattice);
@@ -115,9 +116,10 @@ int main ()
     	Vector x = electron->getPosition();
     	if (x.x<xmin) xmin = x.x;
     	if (x.x>xmax) xmax = x.x;
-    	Vector bgx = electron->getMomentum();
-    	if (bgx.x<bgxmin) bgxmin = bgx.x;
-    	if (bgx.x>bgxmax) bgxmax = bgx.x;
+    	Vector bg = electron->getMomentum();
+    	if (bg.x<bgxmin) bgxmin = bg.x;
+    	if (bg.x>bgxmax) bgxmax = bg.x;
+    	if (bg.z>bgzmax) bgzmax = bg.z;
     };
     double t = electron->getTime();
     Vector XP = electron->getPosition();
@@ -138,12 +140,11 @@ int main ()
 		printf("beta*gamma : (%9.6g, %9.6g) - \033[1;32m OK\033[0m\n", bgxmin,bgxmax);
     }
 
-	double beta_z = (electron->getPosition()).z / (10*tau*SpeedOfLight);
-    if ( fabs(beta_z-0.25)>1e-3 ) {
+    if ( fabs(bgzmax-0.5)>1e-3 ) {
 		errors++;
-		printf("error in average beta = %9.6g - \033[1;31m test failed!\033[0m\n", beta_z);
+		printf("error in peak beta*gamma = %9.6g - \033[1;31m test failed!\033[0m\n", bgzmax);
     } else {
-		printf("average beta = %9.6g - \033[1;32m OK\033[0m\n", beta_z);
+		printf("peak beta*gamma = %9.6g - \033[1;32m OK\033[0m\n", bgzmax);
     }
 
 	int res = log->WriteBeamParametersSDDS("rad_push_log.sdds");
