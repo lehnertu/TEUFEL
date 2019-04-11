@@ -59,7 +59,7 @@ GaussianWave::GaussianWave(const pugi::xml_node node, InputParser *parser) :
         double Ar = parser->parseValue(field.attribute("ReA"));
         double Ai = parser->parseValue(field.attribute("ImA"));
         double l = parser->parseValue(field.attribute("lambda"));
-        double r = parser->parseValue(position.attribute("rayleigh"));
+        double r = parser->parseValue(field.attribute("rayleigh"));
         Setup(l, complex<double>(Ar,Ai), r);
     }
 }

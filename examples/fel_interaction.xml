@@ -1,0 +1,46 @@
+<?xml version="1.0"?>
+<teufel description="FEL interaction of an electron with an electromagnetic wave inside an undulator"
+    author="Ulf Lehnert 11.4.2019">
+    <calc print="beam energy [eV] = " var="E_beam" eq="26.0e6" />
+    <calc print="gamma = " var="gamma" eq="E_beam/_mec2"/>
+    <!-- set desired output frequency -->
+    <calc print="resonance wavelength [m] = " var="lambda_R" eq="20.0e-6"/>
+    <calc var="lambda_U" eq="0.037" />
+    <lattice>
+        <undulator name="U37" type="planar">
+            <!-- compute undulator setting from desired output frequency -->
+            <calc print="K_rms(U37) = " var="K_rms" eq="sqrt(lambda_R/lambda_U*2*gamma*gamma-1)" />
+            <!-- setup the undulator -->
+            <field B="K_rms*sqrt(2)/_c*2*_pi*_mec2/lambda_U"
+                   period="lambda_U" N="54" />
+            <position x="0.0" y="0.0" z="2.0"/>
+        </undulator>
+        <wave name="seed" type="gaussian">
+        	<calc print="seed wavelength [m] = " var="lambda_S" eq="lambda_R*1.011"/>
+        	<position x="0.0" y="0.0" z="2.0"/>
+        	<!-- compute the seed field -->
+        	<calc print="seed power [W] = " var="P0" eq="1e6"/>
+			<calc print="Rayleigh range [m] = " var="zR" eq="1.0"/>
+			<calc print="waist radius w0 [m] = " var="w0" eq="sqrt(lambda_S*zR/_pi)"/>
+			<calc print="peak intensity I0 [W/m²] = " var="I0" eq="2.0*P0/(_pi*w0*w0)"/>
+			<calc print="peak field E0 [V/m] = " var="E0" eq="sqrt(2*I0/_eps0/_c)"/>
+        	<field lambda="lambda_S" ReA="E0" ImA="0.0" rayleigh="zR"/>
+        </wave>
+    </lattice>
+    <beam>
+        <bunch gamma="gamma" charge="_e*5000" cmr="-1.0" n="5000" >
+            <position x="0.0" y="0.0" z="0.0" zrms="lambda_R" />
+            <momentum x="0.0" y="0.0" z="1.0" delta="0.001" />
+        </bunch>
+    </beam>
+    <calc print="tracking length [m] = " var="total_L" eq="4.0" />
+    <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
+    <calc print="dt = " var="dt" eq="total_t/4000" />
+    <tracking method="Vay" delta_t="dt" n="4000" >
+        <watch step="0" file="fel-u37_inital.h5" />
+        <watch step="2000" file="fel-u37_center.h5" />
+        <watch step="4000" file="fel-u37_final.h5" />
+    </tracking>
+    <observer>
+    </observer>
+</teufel>
