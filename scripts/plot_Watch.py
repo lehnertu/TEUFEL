@@ -4,7 +4,7 @@ import sys, time
 import os.path
 import argparse
 import numpy as np
-import tables
+import h5py
 import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter
 
@@ -58,11 +58,14 @@ if not bunOK:
 print "reading ",bunfile
 
 # Open the file for reading
-hdf = tables.open_file(bunfile, mode="r")
+print "reading ",bunfile
+hdf = h5py.File(bunfile, "r")
 print hdf
-# Get the root group
-root = hdf.root
-a = root.electrons.read()
+print
+
+# Get the group
+electrons = hdf['electrons']
+a = np.array(electrons)
 hdf.close()
 
 data = a.transpose()
