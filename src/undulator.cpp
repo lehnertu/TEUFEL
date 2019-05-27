@@ -114,8 +114,8 @@ ElMagField PlanarUndulator::LocalField(double t, Vector X)
     // ramp in over one LambdaU
     if (z1 <= X.z && X.z < z1+LambdaU)
     {
-	B.y = ((X.z - z1) / LambdaU) * BPeak * sin(kz * X.z) * cosh(kz * X.y);
-	B.z = ((X.z - z1) / LambdaU) * BPeak * cos(kz * X.z) * sinh(kz * X.y);
+        B.y = ((X.z - z1) / LambdaU) * BPeak * sin(kz * X.z) * cosh(kz * X.y);
+        B.z = ((X.z - z1) / LambdaU) * BPeak * cos(kz * X.z) * sinh(kz * X.y);
     }
     // central part of the field
     if (z1+LambdaU <= X.z && X.z < z2-LambdaU)
@@ -126,8 +126,8 @@ ElMagField PlanarUndulator::LocalField(double t, Vector X)
     // ramp out over one LambdaU
     if (z2-LambdaU <= X.z && X.z <= z2)
     {
-	B.y = ((z2 - X.z) / LambdaU) * BPeak * sin(kz * X.z) * cosh(kz * X.y);
-	B.z = ((z2 - X.z) / LambdaU) * BPeak * cos(kz * X.z) * sinh(kz * X.y);
+        B.y = ((z2 - X.z) / LambdaU) * BPeak * sin(kz * X.z) * cosh(kz * X.y);
+        B.z = ((z2 - X.z) / LambdaU) * BPeak * cos(kz * X.z) * sinh(kz * X.y);
     }
     return ElMagField(E, B);
 }

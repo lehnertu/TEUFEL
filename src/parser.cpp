@@ -240,6 +240,7 @@ int InputParser::parseBeam(Beam *beam)
                 pugi::xml_node posnode = entry.child("position");
                 if (!posnode)
                     throw(IOexception("InputParser::parseBeam - <bunch> <position> not found."));
+                parseCalcChildren(posnode);
                 x = parseValue(posnode.attribute("x"));
                 y = parseValue(posnode.attribute("y"));
                 z = parseValue(posnode.attribute("z"));
@@ -257,19 +258,19 @@ int InputParser::parseBeam(Beam *beam)
                 pugi::xml_node momnode = entry.child("momentum");
                 if (!momnode)
                     throw(IOexception("InputParser::parseBeam - <bunch> <momentum> not found."));
+                parseCalcChildren(momnode);
                 x = parseValue(momnode.attribute("x"));
                 y = parseValue(momnode.attribute("y"));
                 z = parseValue(momnode.attribute("z"));
-                pugi::xml_attribute xpatt = momnode.attribute("xprms");
+                pugi::xml_attribute xpatt = momnode.attribute("xrms");
                 if (xpatt) xprms=parseValue(xpatt);
-                pugi::xml_attribute ypatt = momnode.attribute("yprms");
+                pugi::xml_attribute ypatt = momnode.attribute("yrms");
                 if (ypatt) yprms=parseValue(ypatt);
                 pugi::xml_attribute delatt = momnode.attribute("delta");
                 if (delatt) delta=parseValue(delatt);
                 Vector dir = Vector(x, y, z);
                 dir.normalize();
-                parseCalcChildren(posnode);
-                // now we have all information - create the bunch
+                // create the bunch particle distribution
                 Distribution *dist = new Distribution(6, NoP);
                 dist->generateGaussian(pos.x, xrms, 0);
                 dist->generateGaussian(pos.y, yrms, 1);
@@ -277,9 +278,44 @@ int InputParser::parseBeam(Beam *beam)
                 dist->generateGaussian(betagamma*dir.x, betagamma*xprms, 3);
                 dist->generateGaussian(betagamma*dir.y, betagamma*yprms, 4);
                 dist->generateGaussian(betagamma*dir.z, betagamma*delta, 5);
-                // particles are "back transported" by 2m (undulator center to start)
-                // dist->addCorrelation(3, 0, -2.0/betagamma);
-                // dist->addCorrelation(4, 1, -0.8/betagamma);
+                // parse and add correlations
+                pugi::xml_node corrnode = entry.child("correlations");
+                if (corrnode)
+                {
+                    parseCalcChildren(corrnode);
+                    // all children are handled in sequence
+                    for (pugi::xml_node_iterator cit = corrnode.begin(); cit != corrnode.end(); ++cit)
+                    {
+                        pugi::xml_node cn = *cit;
+                        std::string ctype = cn.name();
+                        if (ctype == "linear")
+                        {
+                            int ind = 0;
+                            int dep = 0;
+                            double fac = 0.0;
+                            pugi::xml_attribute indatt = cn.attribute("indep");
+                            if (indatt)
+                                ind = int(parseValue(indatt));
+                            else
+                                throw(IOexception("InputParser::parseBeam - correlation indep not found."));
+                            pugi::xml_attribute depatt = cn.attribute("dep");
+                            if (depatt)
+                                dep = int(parseValue(depatt));
+                            else
+                                throw(IOexception("InputParser::parseBeam - correlation dep not found."));
+                            pugi::xml_attribute facatt = cn.attribute("factor");
+                            if (facatt)
+                                fac = parseValue(facatt);
+                            else
+                                throw(IOexception("InputParser::parseBeam - correlation factor not found."));
+                            // std::cout << "correlation " << fac << " " << ind << " -> " << dep << " added" << endl;
+                            dist->addCorrelation(ind, dep, fac);
+                        } else {
+                            throw(IOexception("InputParser::parseBeam - unknown type of correlation."));
+                        }
+                    };
+                };
+                // now we can create particles according to the coordinate distribution
                 Bunch *bunch = new Bunch(dist, -charge/(double)NoP, charge/cmr/(double)NoP);
                 // add the bunch to the beam
                 beam->Add(bunch);

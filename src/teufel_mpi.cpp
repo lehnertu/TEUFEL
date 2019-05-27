@@ -293,7 +293,7 @@ int main(int argc, char *argv[])
     // do the tracking of the beam
     for (int step=0; step<trackedBeam->getNOTS(); step++)
     {
-//         // do a step
+        // do a step
         trackedBeam->doStep(lattice);
         // handle watch points
         for (int iw=0; iw<(int)watches.size(); iw++)

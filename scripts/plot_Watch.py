@@ -69,7 +69,7 @@ a = np.array(electrons)
 hdf.close()
 
 data = a.transpose()
-print data
+# print data
 
 x = data[0]
 y = data[1]
@@ -100,7 +100,7 @@ ex_rms = 1.0e6 * betagamma * np.sqrt((np.dot(x,x)*np.dot(xp,xp)-pow(np.dot(x,xp)
 ey_rms = 1.0e6 * betagamma * np.sqrt((np.dot(y,y)*np.dot(yp,yp)-pow(np.dot(y,yp),2))/pow(float(Np),2))
 ez_rms = 1.0e15 * np.sqrt((np.dot(dE,dE)*np.dot(dt,dt)-pow(np.dot(dE,dt),2))/pow(float(Np),2))
 
-string = r'$E_{beam}$ = %4.2f MeV' % E0 + '\n' + \
+string = r'$E_{beam}$ = %7.3f MeV' % E0 + '\n' + \
   '%d particles' % Np + '\n' + \
   r'$\sigma_E$ = %4.1f keV' % erms + '\n' + \
   r'$\sigma_t$ = %1.3f ps' % tau + '\n' + \

@@ -75,6 +75,8 @@ public:
     /*! Add a correlation between two axis.
      *  The value of the independent coordinate multiplied with a factor
      *  is added to the dependent axis coordinate value.
+     *
+     *  The method is safeguarded against illegal corrdinate indexes.
      */
     void addCorrelation(int independent, int dependent, double factor);
     
