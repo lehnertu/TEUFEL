@@ -46,6 +46,7 @@ def PlotPS(x, y, xlabel='x', ylabel='y', rect_dens = [0.15, 0.1, 0.8, 0.8], cent
 parser = argparse.ArgumentParser()
 parser.add_argument('file', help='the file name of the watch point HDF5 file')
 parser.add_argument('-pix', help="the number of pixels for the plots", dest="pix", type=int)
+parser.add_argument('-img', help="output not to screen but image file", dest="img")
 
 args = parser.parse_args()
 if (args.pix != None): pixels = args.pix
@@ -121,4 +122,7 @@ PlotPS(1e12*dt,1000*dE-chirp*1e12*dt,"$dt$ [ps]", "$dE [keV]$", rect_dens = [0.6
 #              ha="left", va="bottom",
 #              )
 
-plt.show()
+if (args.img != None):
+    plt.savefig(args.img)
+else:
+    plt.show()
