@@ -27,12 +27,15 @@
             <calc var="betay" eq="0.3" />
             <position x="0.0" y="0.0" z="0.0" xrms="sqrt(emit*betax)" yrms="sqrt(emit*betay)" zrms="1e-12*_c" />
             <momentum x="0.0" y="0.0" z="1.0" xrms="sqrt(emit/betax)" yrms="sqrt(emit/betay)" delta="1e-3" />
-            <!-- above definition is valid at the waist
+            <!-- Above definition is valid at the waist
                  so back propagate the x-distribution 1 m from undulator center to start
-                 and the y-distribution for 0.2m undulator entrance to start -->
+                 and the y-distribution for 0.2m undulator entrance to start.
+                 And we add a correlated chirp.
+              -->
             <correlations>
                 <linear indep="3" dep="0" factor="-1.0/gamma"/>
                 <linear indep="4" dep="1" factor="-0.2/gamma"/>
+                <linear indep="2" dep="5" factor="0.01*gamma/(1e-12*_c)"/>
             </correlations>
         </bunch>
     </beam>
