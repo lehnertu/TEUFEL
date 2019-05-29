@@ -185,7 +185,7 @@ void TransverseGradientUndulator::Setup(
     if (teufel::rank==0)
     {
         std::cout << "transverse gradient undulator  N = " << NPeriods << ",  lambda = " << LambdaU << " m" << std::endl;
-        std::cout << "  K(rms) = " << Krms << ",  Bpeak = " << BPeak << " T,  grad = " << BPeak/kx << " T/m" << std::endl;
+        std::cout << "  K(rms) = " << Krms << ",  Bpeak = " << BPeak << " T,  grad = " << BPeak*kx << " T/m" << std::endl;
     }
     kz = 2.0 * Pi / LambdaU;
     ky = sqrt(kz*kz+kx*kx);

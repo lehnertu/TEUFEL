@@ -1,0 +1,93 @@
+<?xml version="1.0"?>
+<teufel description="large bandwidth THz emission from the DALI TGU200 transverse gradient undulator"
+    author="Ulf Lehnert 29.5.2019">
+    <calc print="gamma = " var="gamma" eq="80.0"/>
+    <calc print="beam energy [eV] = " var="E_beam" eq="gamma*_mec2" />
+    <calc print="charge [nC] = " var="charge" eq="-1.0" />
+    <!-- set desired output frequency -->
+    <calc print="center frequency [Hz] = " var="f" eq="7.5e12"/>
+    <calc print="lambda [m] = " var="lambda" eq="_c/f"/>
+    <calc var="lambda_U" eq="0.200" />
+    <lattice>
+        <undulator name="U200" type="transverse gradient">
+            <!-- compute undulator setting from desired output frequency -->
+            <calc print="K_rms(TGU200) = " var="K_rms" eq="sqrt(lambda/lambda_U*2*gamma*gamma-1)" />
+            <!-- setup the undulator -->
+            <calc var="Bpeak" eq="K_rms*sqrt(2)/_c*2*_pi*_mec2/lambda_U" />
+            <field B="Bpeak" period="lambda_U" N="8" kx="1/0.02" />
+            <position x="0.0" y="0.0" z="1.0"/>
+        </undulator>
+    </lattice>
+    <beam>
+        <bunch gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" n="1000" >
+            <!-- compute beam parameters -->
+            <calc var="nemit" eq="5e-6" />
+            <calc var="emit" eq="nemit/gamma" />
+            <calc var="betax" eq="1.0" />
+            <calc var="betay" eq="0.3" />
+            <position x="0.0" y="0.0" z="0.0" xrms="sqrt(emit*betax)" yrms="sqrt(emit*betay)" zrms="1e-12*_c" />
+            <momentum x="0.0" y="0.0" z="1.0" xrms="sqrt(emit/betax)" yrms="sqrt(emit/betay)" delta="1e-3" />
+            <!-- above definition is valid at the waist
+                 so back propagate the x-distribution 1 m from undulator center to start
+                 and the y-distribution for 0.2m undulator entrance to start -->
+            <correlations>
+                <linear indep="3" dep="0" factor="-1.0/gamma"/>
+                <linear indep="4" dep="1" factor="-0.2/gamma"/>
+            </correlations>
+        </bunch>
+    </beam>
+    <calc print="tracking length [m] = " var="total_L" eq="2.0" />
+    <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
+    <calc print="dt = " var="dt" eq="total_t/4000" />
+    <tracking method="Vay" delta_t="dt" n="4000" >
+        <watch step="0" file="dali-tgu200_00.h5" />
+        <watch step="100" file="dali-tgu200_01.h5" />
+        <watch step="200" file="dali-tgu200_02.h5" />
+        <watch step="300" file="dali-tgu200_03.h5" />
+        <watch step="400" file="dali-tgu200_04.h5" />
+        <watch step="500" file="dali-tgu200_05.h5" />
+        <watch step="600" file="dali-tgu200_06.h5" />
+        <watch step="700" file="dali-tgu200_07.h5" />
+        <watch step="800" file="dali-tgu200_08.h5" />
+        <watch step="900" file="dali-tgu200_09.h5" />
+        <watch step="1000" file="dali-tgu200_10.h5" />
+        <watch step="1100" file="dali-tgu200_11.h5" />
+        <watch step="1200" file="dali-tgu200_12.h5" />
+        <watch step="1300" file="dali-tgu200_13.h5" />
+        <watch step="1400" file="dali-tgu200_14.h5" />
+        <watch step="1500" file="dali-tgu200_15.h5" />
+        <watch step="1600" file="dali-tgu200_16.h5" />
+        <watch step="1700" file="dali-tgu200_17.h5" />
+        <watch step="1800" file="dali-tgu200_18.h5" />
+        <watch step="1900" file="dali-tgu200_19.h5" />
+        <watch step="2000" file="dali-tgu200_20.h5" />
+        <watch step="2100" file="dali-tgu200_21.h5" />
+        <watch step="2200" file="dali-tgu200_22.h5" />
+        <watch step="2300" file="dali-tgu200_23.h5" />
+        <watch step="2400" file="dali-tgu200_24.h5" />
+        <watch step="2500" file="dali-tgu200_25.h5" />
+        <watch step="2600" file="dali-tgu200_26.h5" />
+        <watch step="2700" file="dali-tgu200_27.h5" />
+        <watch step="2800" file="dali-tgu200_28.h5" />
+        <watch step="2900" file="dali-tgu200_29.h5" />
+        <watch step="3000" file="dali-tgu200_30.h5" />
+        <watch step="3100" file="dali-tgu200_31.h5" />
+        <watch step="3200" file="dali-tgu200_32.h5" />
+        <watch step="3300" file="dali-tgu200_33.h5" />
+        <watch step="3400" file="dali-tgu200_34.h5" />
+        <watch step="3500" file="dali-tgu200_35.h5" />
+        <watch step="3600" file="dali-tgu200_36.h5" />
+        <watch step="3700" file="dali-tgu200_37.h5" />
+        <watch step="3800" file="dali-tgu200_38.h5" />
+        <watch step="3900" file="dali-tgu200_39.h5" />
+        <watch step="4000" file="dali-tgu200_40.h5" />
+    </tracking>
+    <observer>
+        <calc print="screen position z0 = " var="z0" eq="10.0"/>
+        <calc print="screen start time t0 = " var="t0" eq="z0/_c"/>
+        <point file="elbe-u300_obs_10m.sdds">
+            <position x="0.0" y="0.0" z="z0" />
+            <time t0="t0" dt="1e-13" n="300" />
+        </point>
+    </observer>
+</teufel>
