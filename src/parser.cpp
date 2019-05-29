@@ -114,7 +114,7 @@ double InputParser::parseValue(const pugi::xml_attribute attr)
     {
         if (teufel::rank==0)
         {
-            std::cout << "InputParser::parseValue : can't evaluate " << attr.value() << std::endl;
+            std::cout << "InputParser::parseValue : can't evaluate " << attr.name() << " from " << attr.value() << std::endl;
             std::cout << e.GetMsg() << endl;
         }
     }
@@ -146,6 +146,14 @@ int InputParser::parseLattice(Lattice *lattice)
                 // the undulator object parses its own input
                 // we provide a reference to the parser
                 PlanarUndulator* Undu = new PlanarUndulator(element, this);
+                lattice->addElement(Undu);
+            }
+            else if (type == "transverse gradient")
+            {
+                if (teufel::rank==0) std::cout << name << "::TransverseGradientUndulator" << std::endl;
+                // the undulator object parses its own input
+                // we provide a reference to the parser
+                TransverseGradientUndulator* Undu = new TransverseGradientUndulator(element, this);
                 lattice->addElement(Undu);
             }
             else

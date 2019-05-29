@@ -111,23 +111,133 @@ ElMagField PlanarUndulator::LocalField(double t, Vector X)
     // outside the range (z1, z2) the field is zero
     double z1 = -(NPeriods+1)*LambdaU/2.0;
     double z2 = (NPeriods+1)*LambdaU/2.0;
-    // ramp in over one LambdaU
-    if (z1 <= X.z && X.z < z1+LambdaU)
+    // non-zero part of the field
+    if (z1 <= X.z && X.z < z2)
     {
-        B.y = ((X.z - z1) / LambdaU) * BPeak * sin(kz * X.z) * cosh(kz * X.y);
-        B.z = ((X.z - z1) / LambdaU) * BPeak * cos(kz * X.z) * sinh(kz * X.y);
-    }
-    // central part of the field
-    if (z1+LambdaU <= X.z && X.z < z2-LambdaU)
-    {
+        B.x = 0.0;
         B.y = BPeak * sin(kz * X.z) * cosh(kz * X.y);
         B.z = BPeak * cos(kz * X.z) * sinh(kz * X.y);
-    }
-    // ramp out over one LambdaU
-    if (z2-LambdaU <= X.z && X.z <= z2)
+        // ramp in over one LambdaU
+        if (X.z < z1+LambdaU) B *= (X.z - z1) / LambdaU;
+        // ramp out over one LambdaU
+        if (z2-LambdaU <= X.z) B *= (z2 - X.z) / LambdaU;
+    };
+    return ElMagField(E, B);
+}
+
+TransverseGradientUndulator::TransverseGradientUndulator() :
+    ExternalField()
+{
+    Setup(0.0, 1.0, 0.0, 1.0, 1);
+}
+
+TransverseGradientUndulator::TransverseGradientUndulator(Vector pos) :
+    ExternalField(pos)
+{
+    Setup(0.0, 1.0, 0.0, 1.0, 1);
+}
+
+TransverseGradientUndulator::TransverseGradientUndulator(const pugi::xml_node node, InputParser *parser) :
+    ExternalField()
+{
+    parser->parseCalcChildren(node);
+    pugi::xml_node position = node.child("position");
+    if (!position)
+        throw(IOexception("InputParser::TransverseGradientUndulator - undulator <position> not found."));
+    else
     {
-        B.y = ((z2 - X.z) / LambdaU) * BPeak * sin(kz * X.z) * cosh(kz * X.y);
-        B.z = ((z2 - X.z) / LambdaU) * BPeak * cos(kz * X.z) * sinh(kz * X.y);
+        double x, y, z;
+        x = parser->parseValue(position.attribute("x"));
+        y = parser->parseValue(position.attribute("y"));
+        z = parser->parseValue(position.attribute("z"));
+        origin = Vector(x,y,z);
     }
+    pugi::xml_node field = node.child("field");
+    if (!field)
+        throw(IOexception("InputParser::TransverseGradientUndulator - undulator <field> not found."));
+    else
+    {
+        double B = parser->parseValue(field.attribute("B"));
+        double kx = parser->parseValue(field.attribute("kx"));
+        double B2 = 0.0;
+        pugi::xml_attribute b2att = field.attribute("DipoleB");
+        if (b2att) B2=parser->parseValue(b2att);
+        double period = parser->parseValue(field.attribute("period"));
+        int N = field.attribute("N").as_int(0);
+        Setup(B, kx, B2, period, N);
+    }
+}
+
+void TransverseGradientUndulator::Setup(
+    double B,
+    double grad,
+    double B2,
+    double lambda,
+    int N
+    )
+{
+    BPeak = B;
+    kx = grad;
+    DipoleB = B2;
+    LambdaU = lambda;
+    NPeriods = N;
+    Krms = LambdaU * SpeedOfLight * BPeak / (2.0 * Pi * mecsquared) / sqrt(2.0);
+    if (teufel::rank==0)
+    {
+        std::cout << "transverse gradient undulator  N = " << NPeriods << ",  lambda = " << LambdaU << " m" << std::endl;
+        std::cout << "  K(rms) = " << Krms << ",  Bpeak = " << BPeak << " T,  grad = " << BPeak/kx << " T/m" << std::endl;
+    }
+    kz = 2.0 * Pi / LambdaU;
+    ky = sqrt(kz*kz+kx*kx);
+}
+
+double TransverseGradientUndulator::GetBPeak()
+{
+    return BPeak;
+}
+
+double TransverseGradientUndulator::GetLambdaU()
+{
+    return LambdaU;
+}
+
+int TransverseGradientUndulator::GetNPeriods()
+{
+    return NPeriods;
+}
+
+double TransverseGradientUndulator::GetKpeak()
+{
+    return Krms * sqrt(2.0);
+}
+
+double TransverseGradientUndulator::GetKrms()
+{
+    return Krms;
+}
+
+ElMagField TransverseGradientUndulator::LocalField(double t, Vector X)
+{
+    Vector E = Vector(0.0, 0.0, 0.0);
+    Vector B = Vector(0.0, 0.0, 0.0);
+    // outside the range (z1, z2) the field is zero
+    double z1 = -(NPeriods+1)*LambdaU/2.0;
+    double z2 = (NPeriods+1)*LambdaU/2.0;
+    // non-zero part of the field
+    if (z1 <= X.z && X.z < z2)
+    {
+        // planar undulator field
+        B.x = 0.0;
+        B.y = BPeak * sin(kz * X.z) * cosh(kz * X.y);
+        B.z = BPeak * cos(kz * X.z) * sinh(kz * X.y);
+        // add gradient field
+        B.x += BPeak * kx/ky * cos(kx * X.x) * sinh(ky * X.y) * sin(kz * X.z);
+        B.y += BPeak * sin(kx * X.x) * cosh(ky * X.y) * sin(kz * X.z);
+        B.z += BPeak * kz/ky * sin(kx * X.x) * sinh(ky * X.y) * cos(kz * X.z);
+        // ramp in over one LambdaU
+        if (X.z < z1+LambdaU) B *= (X.z - z1) / LambdaU;
+        // ramp out over one LambdaU
+        if (z2-LambdaU <= X.z) B *= (z2 - X.z) / LambdaU;
+    };
     return ElMagField(E, B);
 }
