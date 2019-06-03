@@ -115,19 +115,19 @@ int main()
     Distribution *dist = new Distribution(6, NOP);
     // set the initial positions and momenta of the particles
     // transverse emittance 0.416µm (geometric) 20µm (normalized)
-    dist->generateGaussian(0.000, 0.000483, 0);	// x gaussian with sigma=1.0mm
-    dist->generateGaussian(0.000, 0.000483, 1);	// y gaussian with sigma=0.7mm
-    dist->generateGaussian(0.000, sigma_z, 2);	// z gaussian with sigma_z
-    dist->generateGaussian(0.000, 0.000407*betagamma, 3);	// px gaussian px/pz=0.4mrad
-    dist->generateGaussian(0.000, 0.000407*betagamma, 4);	// py gaussian py/pz=0.6mrad
-    dist->generateGaussian(betagamma, 0.001*betagamma, 5);	// pz gaussian 0.1% energy spread
+    dist->generateGaussian(0.000483, 0);	// x gaussian with sigma=1.0mm
+    dist->generateGaussian(0.000483, 1);	// y gaussian with sigma=0.7mm
+    dist->generateGaussian(sigma_z, 2);	// z gaussian with sigma_z
+    dist->generateGaussian(0.000407*betagamma, 3);	// px gaussian px/pz=0.4mrad
+    dist->generateGaussian(0.000407*betagamma, 4);	// py gaussian py/pz=0.6mrad
+    dist->generateGaussian(0.001*betagamma, 5);	// pz gaussian 0.1% energy spread
     // particles are "back transported" by 2m (undulator center to start)
     // by adding a -2 m/rad correlated position change
     dist->addCorrelation(3, 0, -2.0/betagamma);
     // particles are "back transported" by 0.8m (undulator entrance to start)
     // by adding a -0.8 m/rad correlated position change
     dist->addCorrelation(4, 1, -0.8/betagamma);
-    Bunch *bunch = new Bunch(dist, -ch, ch);
+    Bunch *bunch = new Bunch(dist, 0.0, Vector(0.0,0.0,0.0), Vector(0.0,0.0,betagamma), -ch, ch);
 
     // Tracking should be done for 3.4 m in lab space corresponding to tau [s].
     // Inside the undulator we have an additional pathlength of one radiation

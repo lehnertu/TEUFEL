@@ -2,6 +2,7 @@
 <teufel description="large bandwidth THz emission from the DALI TGU200 transverse gradient undulator"
     author="Ulf Lehnert 29.5.2019">
     <calc print="gamma = " var="gamma" eq="80.0"/>
+    <calc print="beta*gamma = " var="betagamma" eq="sqrt(gamma*gamma-1)"/>
     <calc print="beam energy [eV] = " var="E_beam" eq="gamma*_mec2" />
     <calc print="charge [nC] = " var="charge" eq="-1.0" />
     <!-- set desired output frequency -->
@@ -14,7 +15,7 @@
             <calc print="K_rms(TGU200) = " var="K_rms" eq="sqrt(lambda/lambda_U*2*gamma*gamma-1)" />
             <!-- setup the undulator -->
             <calc var="Bpeak" eq="K_rms*sqrt(2)/_c*2*_pi*_mec2/lambda_U" />
-            <field B="Bpeak" period="lambda_U" N="8" kx="1/0.02" />
+            <field B="Bpeak" period="lambda_U" N="8" kx="1/0.02" DipoleB="-0.00162"/>
             <position x="0.0" y="0.0" z="1.0"/>
         </undulator>
     </lattice>
@@ -22,20 +23,22 @@
         <bunch gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" n="1000" >
             <!-- compute beam parameters -->
             <calc var="nemit" eq="5e-6" />
-            <calc var="emit" eq="nemit/gamma" />
+            <calc var="emit" eq="nemit/betagamma" />
             <calc var="betax" eq="1.0" />
             <calc var="betay" eq="0.3" />
             <position x="0.0" y="0.0" z="0.0" xrms="sqrt(emit*betax)" yrms="sqrt(emit*betay)" zrms="1e-12*_c" />
             <momentum x="0.0" y="0.0" z="1.0" xrms="sqrt(emit/betax)" yrms="sqrt(emit/betay)" delta="1e-3" />
-            <!-- Above definition is valid at the waist
-                 so back propagate the x-distribution 1 m from undulator center to start
-                 and the y-distribution for 0.2m undulator entrance to start.
-                 And we add a correlated chirp.
+            <!-- Above definition is valid at the waist, so
+                 (1) back propagate the x-distribution 1 m from undulator center to start
+                 (2) back propagate the y-distribution for 0.2m undulator entrance to start.
+                 (3) Add a correlated chirp.
+                 (4) Add a horizontal dispersion of 1m (1mm for delta=1e-3).
               -->
             <correlations>
-                <linear indep="3" dep="0" factor="-1.0/gamma"/>
-                <linear indep="4" dep="1" factor="-0.2/gamma"/>
-                <linear indep="2" dep="5" factor="0.01*gamma/(1e-12*_c)"/>
+                <linear indep="3" dep="0" factor="-1.0/betagamma" />
+                <linear indep="4" dep="1" factor="-0.2/betagamma" />
+                <linear indep="2" dep="5" factor="0.01*gamma/(1e-12*_c)" />
+                <linear indep="5" dep="0" factor="1.0" />
             </correlations>
         </bunch>
     </beam>
@@ -88,7 +91,7 @@
     <observer>
         <calc print="screen position z0 = " var="z0" eq="10.0"/>
         <calc print="screen start time t0 = " var="t0" eq="z0/_c"/>
-        <point file="elbe-u300_obs_10m.sdds">
+        <point file="dali-tgu200_obs_10m.sdds">
             <position x="0.0" y="0.0" z="z0" />
             <time t0="t0" dt="1e-13" n="300" />
         </point>

@@ -280,12 +280,12 @@ int InputParser::parseBeam(Beam *beam)
                 dir.normalize();
                 // create the bunch particle distribution
                 Distribution *dist = new Distribution(6, NoP);
-                dist->generateGaussian(pos.x, xrms, 0);
-                dist->generateGaussian(pos.y, yrms, 1);
-                dist->generateGaussian(pos.z, zrms, 2);
-                dist->generateGaussian(betagamma*dir.x, betagamma*xprms, 3);
-                dist->generateGaussian(betagamma*dir.y, betagamma*yprms, 4);
-                dist->generateGaussian(betagamma*dir.z, betagamma*delta, 5);
+                dist->generateGaussian(xrms, 0);
+                dist->generateGaussian(yrms, 1);
+                dist->generateGaussian(zrms, 2);
+                dist->generateGaussian(betagamma*xprms, 3);
+                dist->generateGaussian(betagamma*yprms, 4);
+                dist->generateGaussian(betagamma*delta, 5);
                 // parse and add correlations
                 pugi::xml_node corrnode = entry.child("correlations");
                 if (corrnode)
@@ -324,7 +324,7 @@ int InputParser::parseBeam(Beam *beam)
                     };
                 };
                 // now we can create particles according to the coordinate distribution
-                Bunch *bunch = new Bunch(dist, -charge/(double)NoP, charge/cmr/(double)NoP);
+                Bunch *bunch = new Bunch(dist, 0.0, pos, dir*betagamma, -charge/(double)NoP, charge/cmr/(double)NoP);
                 // add the bunch to the beam
                 beam->Add(bunch);
                 count++;

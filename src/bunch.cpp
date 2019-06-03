@@ -39,7 +39,7 @@ Distribution::Distribution(int dim, int nop)
     std::random_device rd;
     // pseudo-random generator of 32-bit numbers with a state size of 19937 bits
     std::mt19937 mt(rd());
-    std::uniform_real_distribution<double> dist(0.0, 1.0);
+    std::uniform_real_distribution<double> dist(-1.0, 1.0);
     for (int i=0; i<DIM*NOP; i++)
 	A[i] = dist(mt);
 }
@@ -58,7 +58,7 @@ int Distribution::getNOP()
 {
     return NOP;
 }
-void Distribution::generateGaussian(double mean, double sigma, int dim)
+void Distribution::generateGaussian(double sigma, int dim)
 {
     if (dim>=0 && dim<DIM)
     {
@@ -66,7 +66,7 @@ void Distribution::generateGaussian(double mean, double sigma, int dim)
         std::random_device rd;
         // pseudo-random generator of 32-bit numbers with a state size of 19937 bits
         std::mt19937 mt(rd());
-        std::normal_distribution<double> dist(mean, sigma);
+        std::normal_distribution<double> dist(0.0, sigma);
         for (int i=0; i<NOP; i++)
             A[i*DIM+dim] = dist(mt);
     }
@@ -157,20 +157,22 @@ Bunch::Bunch(Bunch* origin)
     }
 }
 
-Bunch::Bunch(Distribution *dist, double charge, double mass)
+Bunch::Bunch(Distribution *dist, double reftime, Vector refpos, Vector refmom, double charge, double mass)
 {
     NOP = dist->getNOP();
     time = 0.0;
     for(int i=0; i<NOP; i++)
     {
         ChargedParticle *p = new ChargedParticle(charge,mass);
-        double t0 = dist->getCoordinate(i,6);
-        Vector X0 = Vector(dist->getCoordinate(i,0),
-                dist->getCoordinate(i,1),
-                dist->getCoordinate(i,2));
-        Vector P0 = Vector(dist->getCoordinate(i,3),
-                dist->getCoordinate(i,4),
-                dist->getCoordinate(i,5));
+        double t0 = reftime + dist->getCoordinate(i,6);
+        Vector X0 = refpos +
+            Vector(dist->getCoordinate(i,0),
+                   dist->getCoordinate(i,1),
+                   dist->getCoordinate(i,2));
+        Vector P0 = refmom +
+            Vector(dist->getCoordinate(i,3),
+                   dist->getCoordinate(i,4),
+                   dist->getCoordinate(i,5));
         Vector A0 = Vector(0,0,0);
         p->initTrajectory(t0, X0, P0, A0);
         P.push_back(p);

@@ -234,6 +234,11 @@ ElMagField TransverseGradientUndulator::LocalField(double t, Vector X)
         B.x += BPeak * kx/ky * cos(kx * X.x) * sinh(ky * X.y) * sin(kz * X.z);
         B.y += BPeak * sin(kx * X.x) * cosh(ky * X.y) * sin(kz * X.z);
         B.z += BPeak * kz/ky * sin(kx * X.x) * sinh(ky * X.y) * cos(kz * X.z);
+        // add dipole field
+        B.y += DipoleB;
+        // add quadrupole field (dipole gradient)
+        B.x += DipoleB * kx * X.y;
+        B.y += DipoleB * kx * X.x;
         // ramp in over one LambdaU
         if (X.z < z1+LambdaU) B *= (X.z - z1) / LambdaU;
         // ramp out over one LambdaU

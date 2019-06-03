@@ -56,8 +56,6 @@ if not bunOK:
   print "file not found"
   sys.exit()
 
-print "reading ",bunfile
-
 # Open the file for reading
 print "reading ",bunfile
 hdf = h5py.File(bunfile, "r")

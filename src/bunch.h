@@ -39,6 +39,13 @@ using namespace std;
  *    of particles in phase space. It is meant for the creation of 6D
  *    coordinate distributions which can be used by the bunch class
  *    to initialize particles for tracking.
+ *
+ *    The distribution is meant to define the particle coordinates
+ *    with respect to a reference particle (or set of reference coordinates).
+ *    Therefore the mean of the distribution is kept zero.
+ *    This facilitates an easy addition of linear correlations.
+ *    All displacements of the mean have to be added when generating
+ *    a particle bunch from the distribution.
  */
 class Distribution
 {
@@ -46,7 +53,7 @@ class Distribution
 public:
     
     /*! By default the distribution is initalized with particles
-     *  uniformly distributed over the range [0.0, 1.0) in all coordinates.
+     *  uniformly distributed over the range [-1.0, 1.0) in all coordinates.
      *  The number of dimensions of the phase space and the number of particles
      *  to be created must be given.
      */
@@ -70,7 +77,7 @@ public:
      *  @todo: This should generate a strictly sequential Gaussian.
      *  The present code shoud be renamed generateNormalDist()
      */
-    void generateGaussian(double mean, double sigma, int dim);
+    void generateGaussian(double sigma, int dim);
     
     /*! Add a correlation between two axis.
      *  The value of the independent coordinate multiplied with a factor
@@ -165,8 +172,10 @@ public:
      * coordinates are initalized as 0 which can be used to start all
      * particles at zero time.
      * 
+     * The given distribution contains the offsets from the given
+     * reference position, momentum and time.
      */
-    Bunch(Distribution *dist, double charge, double mass);
+    Bunch(Distribution *dist, double reftime, Vector refpos, Vector refmom, double charge, double mass);
     
     /*!
      * copy constructor:

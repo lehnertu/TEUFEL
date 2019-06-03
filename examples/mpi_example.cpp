@@ -133,22 +133,22 @@ int main(int argc, char *argv[])
         printf("\n");
         // set the initial positions and momenta of the particles
         // transverse emittance 0.051µm (geometric) 10µm (normalized)
-        dist->generateGaussian(0.000, 0.000483, 0);	// x gaussian with sigma=1.0mm
-        dist->generateGaussian(0.000, 0.000407*betagamma, 3);	// px gaussian px/pz=0.131mrad
+        dist->generateGaussian(0.000483, 0);	// x gaussian with sigma=1.0mm
+        dist->generateGaussian(0.000407*betagamma, 3);	// px gaussian px/pz=0.131mrad
         // particles are "back transported" by 2m (undulator center to start)
         // by adding a -2 m/rad correlated position change
         dist->addCorrelation(3, 0, -2.0/betagamma);
-        dist->generateGaussian(0.000, 0.000483, 1);	// y gaussian with sigma=0.7mm
-        dist->generateGaussian(0.000, 0.000407*betagamma, 4);	// py gaussian py/pz=0.131mrad
+        dist->generateGaussian(0.000483, 1);	// y gaussian with sigma=0.7mm
+        dist->generateGaussian(0.000407*betagamma, 4);	// py gaussian py/pz=0.131mrad
         // particles are "back transported" by 0.8m (undulator entrance to start)
         // by adding a -0.8 m/rad correlated position change
         dist->addCorrelation(4, 1, -0.8/betagamma);
-        dist->generateGaussian(0.000, sigma_z, 2);	// z gaussian with sigma_z
-        dist->generateGaussian(betagamma, 0.001*betagamma, 5);	// pz gaussian 0.1% energy spread
+        dist->generateGaussian(sigma_z, 2);	// z gaussian with sigma_z
+        dist->generateGaussian(0.001*betagamma, 5);	// pz gaussian 0.1% energy spread
         // the master node knows the distribution and fills its buffer
         dist->bufferData(buffer,bufsize);
         // generate a bunch of all particles for output only
-        Bunch *all = new Bunch(dist, -ch, ch);
+        Bunch *all = new Bunch(dist, 0.0, Vector(0.0,0.0,0.0), Vector(0.0,0.0,betagamma), -ch, ch);
         if (0 != all->WriteWatchPointSDDS("MPI_node0_all_particles_generated.sdds"))
         {
           	printf("SDDS write \033[1;31m failed!\033[0m\n");
@@ -200,7 +200,7 @@ int main(int argc, char *argv[])
     }
     Distribution *mydist = dist->subDist(index, bunchsize);
     printf("Node #%d computing %d particles starting at index %d\n",teufel::rank,bunchsize,index);
-    Bunch *bunch = new Bunch(mydist, -ch, ch);
+    Bunch *bunch = new Bunch(mydist, 0.0, Vector(0.0,0.0,0.0), Vector(0.0,0.0,betagamma), -ch, ch);
 
     // every node creates a dump o the initial particle distribution
     /*
