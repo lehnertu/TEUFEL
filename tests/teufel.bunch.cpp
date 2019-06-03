@@ -59,12 +59,12 @@ int main ()
     double gamma = 50.0;
     double betagamma = sqrt(gamma * gamma - 1.0);
     Distribution *dist = new Distribution(6, NOP);
-    dist->generateGaussian(0.002, 0);	// x gaussian displaced 1mm with sigma=2mm
-    dist->generateGaussian(0.001, 1);	// y gaussian with sigma=1mm
-    dist->generateGaussian(0.0003, 2);	// z gaussian with sigma=0.3mm
-    dist->generateGaussian(0.001, 3);	// px gaussian
-    dist->generateGaussian(0.001, 4);	// py gaussian
-    dist->generateGaussian(0.001, 5);	// pz gaussian
+    dist->generateGaussian(0, 0.002);	// x gaussian displaced 1mm with sigma=2mm
+    dist->generateGaussian(1, 0.001);	// y gaussian with sigma=1mm
+    dist->generateGaussian(2, 0.0003);	// z gaussian with sigma=0.3mm
+    dist->generateGaussian(3, 0.001);	// px gaussian
+    dist->generateGaussian(4, 0.001);	// py gaussian
+    dist->generateGaussian(5, 0.001);	// pz gaussian
     Bunch *B = new Bunch(dist, 0.0, Vector(0.001,0.0,0.0), Vector(0.0,0.0,betagamma), -1.0, 1.0);
 
     for (int i=0; i<6; i++)

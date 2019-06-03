@@ -73,11 +73,15 @@ public:
     //! report number of points
     int getNOP();
     
+    /*! scale one of the dimensions by a given factor
+     */
+    void scale( int dim, double factor);
+    
     /*! generate a gaussian distribution for one of the dimensions
      *  @todo: This should generate a strictly sequential Gaussian.
      *  The present code shoud be renamed generateNormalDist()
      */
-    void generateGaussian(double sigma, int dim);
+    void generateGaussian( int dim, double sigma);
     
     /*! Add a correlation between two axis.
      *  The value of the independent coordinate multiplied with a factor

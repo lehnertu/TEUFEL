@@ -115,12 +115,12 @@ int main()
     Distribution *dist = new Distribution(6, NOP);
     // set the initial positions and momenta of the particles
     // transverse emittance 0.416µm (geometric) 20µm (normalized)
-    dist->generateGaussian(0.000483, 0);	// x gaussian with sigma=1.0mm
-    dist->generateGaussian(0.000483, 1);	// y gaussian with sigma=0.7mm
-    dist->generateGaussian(sigma_z, 2);	// z gaussian with sigma_z
-    dist->generateGaussian(0.000407*betagamma, 3);	// px gaussian px/pz=0.4mrad
-    dist->generateGaussian(0.000407*betagamma, 4);	// py gaussian py/pz=0.6mrad
-    dist->generateGaussian(0.001*betagamma, 5);	// pz gaussian 0.1% energy spread
+    dist->generateGaussian(0, 0.000483);	// x gaussian with sigma=1.0mm
+    dist->generateGaussian(1, 0.000483);	// y gaussian with sigma=0.7mm
+    dist->generateGaussian(2, sigma_z);	// z gaussian with sigma_z
+    dist->generateGaussian(3, 0.000407*betagamma);	// px gaussian px/pz=0.4mrad
+    dist->generateGaussian(4, 0.000407*betagamma);	// py gaussian py/pz=0.6mrad
+    dist->generateGaussian(5, 0.001*betagamma);	// pz gaussian 0.1% energy spread
     // particles are "back transported" by 2m (undulator center to start)
     // by adding a -2 m/rad correlated position change
     dist->addCorrelation(3, 0, -2.0/betagamma);

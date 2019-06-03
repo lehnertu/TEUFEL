@@ -58,7 +58,17 @@ int Distribution::getNOP()
 {
     return NOP;
 }
-void Distribution::generateGaussian(double sigma, int dim)
+
+void Distribution::scale( int dim, double factor)
+{
+    if (dim>=0 && dim<DIM)
+    {
+        for (int i=0; i<NOP; i++)
+            A[i*DIM+dim] *= factor;
+    }
+}
+
+void Distribution::generateGaussian(int dim, double sigma)
 {
     if (dim>=0 && dim<DIM)
     {

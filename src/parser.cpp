@@ -245,20 +245,25 @@ int InputParser::parseBeam(Beam *beam)
                 double xrms = 0.0;
                 double yrms = 0.0;
                 double zrms = 0.0;
+                double zft = 0.0;
                 pugi::xml_node posnode = entry.child("position");
                 if (!posnode)
                     throw(IOexception("InputParser::parseBeam - <bunch> <position> not found."));
                 parseCalcChildren(posnode);
+                // parse mean position
                 x = parseValue(posnode.attribute("x"));
                 y = parseValue(posnode.attribute("y"));
                 z = parseValue(posnode.attribute("z"));
+                Vector pos = Vector(x, y, z);
+                // parse position distribution
                 pugi::xml_attribute xrmsatt = posnode.attribute("xrms");
                 if (xrmsatt) xrms=parseValue(xrmsatt);
                 pugi::xml_attribute yrmsatt = posnode.attribute("yrms");
                 if (yrmsatt) yrms=parseValue(yrmsatt);
                 pugi::xml_attribute zrmsatt = posnode.attribute("zrms");
                 if (zrmsatt) zrms=parseValue(zrmsatt);
-                Vector pos = Vector(x, y, z);
+                pugi::xml_attribute zftatt = posnode.attribute("zft");
+                if (zftatt) zft=parseValue(zftatt);
                 // parse momentum
                 double xprms = 0.0;
                 double yprms = 0.0;
@@ -267,25 +272,28 @@ int InputParser::parseBeam(Beam *beam)
                 if (!momnode)
                     throw(IOexception("InputParser::parseBeam - <bunch> <momentum> not found."));
                 parseCalcChildren(momnode);
+                // parse mean direction of momentum
                 x = parseValue(momnode.attribute("x"));
                 y = parseValue(momnode.attribute("y"));
                 z = parseValue(momnode.attribute("z"));
+                Vector dir = Vector(x, y, z);
+                dir.normalize();
+                // parse momentum distribution
                 pugi::xml_attribute xpatt = momnode.attribute("xrms");
                 if (xpatt) xprms=parseValue(xpatt);
                 pugi::xml_attribute ypatt = momnode.attribute("yrms");
                 if (ypatt) yprms=parseValue(ypatt);
                 pugi::xml_attribute delatt = momnode.attribute("delta");
                 if (delatt) delta=parseValue(delatt);
-                Vector dir = Vector(x, y, z);
-                dir.normalize();
                 // create the bunch particle distribution
                 Distribution *dist = new Distribution(6, NoP);
-                dist->generateGaussian(xrms, 0);
-                dist->generateGaussian(yrms, 1);
-                dist->generateGaussian(zrms, 2);
-                dist->generateGaussian(betagamma*xprms, 3);
-                dist->generateGaussian(betagamma*yprms, 4);
-                dist->generateGaussian(betagamma*delta, 5);
+                dist->generateGaussian(0, xrms);
+                dist->generateGaussian(1, yrms);
+                if (zrms != 0.0) dist->generateGaussian(2, zrms);
+                if (zft != 0.0) dist->scale(2, zft);
+                dist->generateGaussian(3, betagamma*xprms);
+                dist->generateGaussian(4, betagamma*yprms);
+                dist->generateGaussian(5, betagamma*delta);
                 // parse and add correlations
                 pugi::xml_node corrnode = entry.child("correlations");
                 if (corrnode)
