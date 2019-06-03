@@ -15,7 +15,7 @@
             <calc print="K_rms(TGU200) = " var="K_rms" eq="sqrt(lambda/lambda_U*2*gamma*gamma-1)" />
             <!-- setup the undulator -->
             <calc var="Bpeak" eq="K_rms*sqrt(2)/_c*2*_pi*_mec2/lambda_U" />
-            <field B="Bpeak" period="lambda_U" N="8" kx="1/0.025" DipoleB="-0.0012"/>
+            <field B="Bpeak" period="lambda_U" N="8" kx="1/0.025" modulation="-0.025"/>
             <position x="0.0" y="0.0" z="1.0"/>
         </undulator>
     </lattice>

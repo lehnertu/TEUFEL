@@ -159,26 +159,26 @@ TransverseGradientUndulator::TransverseGradientUndulator(const pugi::xml_node no
     {
         double B = parser->parseValue(field.attribute("B"));
         double kx = parser->parseValue(field.attribute("kx"));
-        double B2 = 0.0;
-        pugi::xml_attribute b2att = field.attribute("DipoleB");
-        if (b2att) B2=parser->parseValue(b2att);
+        double mod = 0.0;
+        pugi::xml_attribute modatt = field.attribute("modulation");
+        if (modatt) mod=parser->parseValue(modatt);
         double period = parser->parseValue(field.attribute("period"));
         int N = field.attribute("N").as_int(0);
-        Setup(B, kx, B2, period, N);
+        Setup(B, kx, mod, period, N);
     }
 }
 
 void TransverseGradientUndulator::Setup(
     double B,
     double grad,
-    double B2,
+    double modu,
     double lambda,
     int N
     )
 {
     BPeak = B;
     kx = grad;
-    DipoleB = B2;
+    Modulation = modu;
     LambdaU = lambda;
     NPeriods = N;
     Krms = LambdaU * SpeedOfLight * BPeak / (2.0 * Pi * mecsquared) / sqrt(2.0);
@@ -228,17 +228,12 @@ ElMagField TransverseGradientUndulator::LocalField(double t, Vector X)
     {
         // planar undulator field
         B.x = 0.0;
-        B.y = BPeak * sin(kz * X.z) * cosh(kz * X.y);
-        B.z = BPeak * cos(kz * X.z) * sinh(kz * X.y);
+        B.y = BPeak * (1.0+Modulation*sin(kz*X.z)) * sin(kz * X.z) * cosh(kz * X.y);
+        B.z = BPeak * (1.0+Modulation*sin(kz*X.z)) * cos(kz * X.z) * sinh(kz * X.y);
         // add gradient field
-        B.x += BPeak * kx/ky * cos(kx * X.x) * sinh(ky * X.y) * sin(kz * X.z);
-        B.y += BPeak * sin(kx * X.x) * cosh(ky * X.y) * sin(kz * X.z);
-        B.z += BPeak * kz/ky * sin(kx * X.x) * sinh(ky * X.y) * cos(kz * X.z);
-        // add dipole field
-        B.y += DipoleB;
-        // add quadrupole field (dipole gradient)
-        B.x += DipoleB * kx * X.y;
-        B.y += DipoleB * kx * X.x;
+        B.x += BPeak * (1.0+Modulation*sin(kz*X.z)) * kx/ky * cos(kx * X.x) * sinh(ky * X.y) * sin(kz * X.z);
+        B.y += BPeak * (1.0+Modulation*sin(kz*X.z)) * sin(kx * X.x) * cosh(ky * X.y) * sin(kz * X.z);
+        B.z += BPeak * (1.0+Modulation*sin(kz*X.z)) * kz/ky * sin(kx * X.x) * sinh(ky * X.y) * cos(kz * X.z);
         // ramp in over one LambdaU
         if (X.z < z1+LambdaU) B *= (X.z - z1) / LambdaU;
         // ramp out over one LambdaU

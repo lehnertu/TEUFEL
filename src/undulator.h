@@ -156,7 +156,7 @@ public:
     void Setup(
         double B,                       // peak field [T]
         double grad,                    // transverse gradient scaling factor kx [1/m]
-        double B2,                      // on-axis dipole field [T]
+        double modu,                    // pole-strength modulation
         double lambda,                  // undulator period [m]
         int    N                        // number of undulator periods
         );
@@ -172,7 +172,7 @@ private:
     ElMagField LocalField(double t, Vector X);
 
     double  BPeak;                              // peak field [T]
-    double  DipoleB;                            // on-axis dipole field [T]
+    double  Modulation;                         // pole strength (fractional) deviation of positive and negative poles
     double  LambdaU;                            // undulator period [m]
     int     NPeriods;                           // number of undulator periods
     double  Krms;                               // undulator parameter
