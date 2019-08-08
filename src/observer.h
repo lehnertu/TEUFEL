@@ -58,10 +58,12 @@ public:
     /*!
      *  Integrate the observed fields along the tracked trajectories.
      *  This is a purely virtual method that must be overwritten by derived objects.
-     *  It is defined for Beam() and Bunch() as field sources.
+     *  It is defined for Beam(), Bunch() and Lattice() as field sources.
+
      */
     virtual void integrate(Beam *src) = 0;
     virtual void integrate(Bunch *src) = 0;
+    virtual void integrate(Lattice *src) = 0;
 
     /*! The method gives the size of the buffer necessary to store
      *  the complete field information as a number of doubles (not bytes!).
@@ -144,10 +146,11 @@ public:
      * 
      * \param[in] src The source generating the field.
      *
-     *  This method is defined for Beam() and Bunch() as field sources.
+     *  This method is defined for Beam(), Bunch() and Lattice() as field sources.
      */
     virtual void integrate(Beam *src);
     virtual void integrate(Bunch *src);
+    virtual void integrate(Lattice *src);
     
     /*! Return the field value stored in one grid cell with indices ix, iy.
      *  This method throws an exception in case of an out-of-range index.
@@ -295,10 +298,11 @@ public:
      * 
      * \param[in] src The source generating the field.
      *
-     *  This method is defined for Beam() and Bunch() as field sources.
+     *  This method is defined for Beam(), Bunch() and Lattice() as field sources.
      */
     virtual void integrate(Beam *src);
     virtual void integrate(Bunch *src);
+    virtual void integrate(Lattice *src);
 
     /*! Return the field value stored in one time slice
      */
@@ -440,10 +444,11 @@ public:
      * 
      * \param[in] src The source generating the field.
      *
-     *  This method is defined for Beam() and Bunch() as field sources.
+     *  This method is defined for Beam(), Bunch() and Lattice() as field sources.
      */
     virtual void integrate(Beam *src);
     virtual void integrate(Bunch *src);
+    virtual void integrate(Lattice *src);
     
     /*! Return the field value stored in one time slice
      *  with index it from the grid cell with indices ix, iy.

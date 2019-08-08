@@ -68,6 +68,13 @@ void SnapshotObserver::integrate(Bunch *src)
 	        FieldArray[ix][iy] = src->RetardedField(t_obs, CellPosition(ix, iy));
 }
 
+void SnapshotObserver::integrate(Lattice *src)
+{
+    for (unsigned int ix = 0; ix < Nx; ix++)
+    	for (unsigned int iy = 0; iy < Ny; iy++)
+	        FieldArray[ix][iy] = src->Field(t_obs, CellPosition(ix, iy));
+}
+
 ElMagField SnapshotObserver::getField(
         unsigned int ix,
         unsigned int iy)
@@ -306,6 +313,14 @@ void PointObserver::integrate(Bunch *src)
         Pos, t0_obs, dt_obs, NOTS, &TimeDomainField);
 }
 
+void PointObserver::integrate(Lattice *src)
+{
+    for (unsigned int it = 0; it < NOTS; it ++ )
+    {
+        TimeDomainField[it] += src->Field(t0_obs+it*dt_obs, Pos);
+    }
+}
+
 ElMagField PointObserver::getField(unsigned int idx)
 {
     ElMagField field;
@@ -499,6 +514,16 @@ void ScreenObserver::integrate(Bunch *src)
                 CellPosition(ix, iy), t0_obs, dt_obs, NOTS, &TimeDomainField[ix][iy]);
         };
     }
+}
+
+void ScreenObserver::integrate(Lattice *src)
+{
+    for (unsigned int ix = 0; ix < Nx; ix++)
+        for (unsigned int iy = 0; iy < Ny; iy++)
+            for (unsigned int it = 0; it < NOTS; it ++ )
+            {
+                TimeDomainField[ix][iy][it] += src->Field(t0_obs+it*dt_obs, CellPosition(ix, iy));
+            }
 }
 
 ElMagField ScreenObserver::getField(
