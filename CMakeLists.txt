@@ -211,5 +211,14 @@ if(BUILD_EXAMPLES)
                              ${PUGIXML_LIBRARIES}
                              ${MUPARSER_LIBRARY}
                              ${ZLIB_LIBRARY_RELEASE} )
+
+    add_executable(scattering ${PROJECT_EXAMPLES_DIR}/radiation_scattering.cpp)
+    target_link_libraries(scattering ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIBRARIES}
+                             ${PUGIXML_LIBRARIES}
+                             ${MUPARSER_LIBRARY}
+                             ${ZLIB_LIBRARY_RELEASE} )
+
 endif()
 

@@ -93,7 +93,7 @@ ElMagField GaussianWave::LocalField(double t, Vector X)
 	double R = z + zR*zR/z;
 	// field density fraction
 	// the phase factor is missing because it is contained in the complex amplitude
-	complex<double> dens = exp(complex<double>(-pow(r/w,2.0), omega*t -k*z -Pi*r*r/lambda/R));
+	complex<double> dens = w0/w * exp(complex<double>(-pow(r/w,2.0), omega*t -k*z -Pi*r*r/lambda/R));
 	// std::cout << "z=" << z << " m    r=" << r << " m   ";
 	// std::cout << "fac=(" << dens.real() << ", " << dens.imag() << ")" << std::endl;
 	Vector E = Vector( (A*dens).real(), 0.0, 0.0 );
@@ -162,8 +162,10 @@ void GaussianWavePacket::Setup(
     t0 = arrival;
     double I0 = norm(A)/2.0*EpsNull*SpeedOfLight;
     double Ptot = Pi/2.0 * I0*w0*w0;
-    if (teufel::rank==0)
+    if (teufel::rank==0) {
         std::cout << "gaussian wave packet  E_peak = " << sqrt(norm(A)) << " V/m   w0 = " << w0 << " m   P_peak = " << Ptot << " W" << std::endl;
+        std::cout << "t0 = " << t0 << " s   tau = " << tau << " s" << std::endl;
+    }
 }
 
 ElMagField GaussianWavePacket::LocalField(double t, Vector X)
@@ -177,8 +179,8 @@ ElMagField GaussianWavePacket::LocalField(double t, Vector X)
 	double R = z + zR*zR/z;
 	// field density fraction
 	// the phase factor is missing because it is contained in the complex amplitude
-	complex<double> dens =
-	    exp(complex<double>(-pow(r/w,2.0)-pow((t-t0)/tau,2.0), omega*t -k*z -Pi*r*r/lambda/R));
+	complex<double> dens = w0/w *
+	    exp(complex<double>(-pow(r/w,2.0)-pow((t-t0-z/SpeedOfLight)/tau,2.0), omega*(t-t0) -k*z -Pi*r*r/lambda/R));
 	// std::cout << "z=" << z << " m    r=" << r << " m   ";
 	// std::cout << "fac=(" << dens.real() << ", " << dens.imag() << ")" << std::endl;
 	Vector E = Vector( (A*dens).real(), 0.0, 0.0 );
