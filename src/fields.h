@@ -2,8 +2,6 @@
 
   Program:   TEUFEL - THz Emission from Undulators and Free-Electron Lasers
 
-  Module:    externalfield
-
   Copyright (c) 2017 U. Lehnert
 
   This program is free software: you can redistribute it and/or modify

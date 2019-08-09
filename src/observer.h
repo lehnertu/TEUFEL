@@ -59,7 +59,6 @@ public:
      *  Integrate the observed fields along the tracked trajectories.
      *  This is a purely virtual method that must be overwritten by derived objects.
      *  It is defined for Beam(), Bunch() and Lattice() as field sources.
-
      */
     virtual void integrate(Beam *src) = 0;
     virtual void integrate(Bunch *src) = 0;

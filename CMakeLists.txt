@@ -69,8 +69,6 @@ list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/teufel.cpp)
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/teufel_mpi.cpp)
 # files not yet finished and not included in the build
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/cavity.cpp)
-# list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/simulation.cpp)
-# list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/wave.cpp)
 message(STATUS "Found source files ${lib_sources}")
 add_library(${PROJECT_NAME}lib ${lib_sources})
 
