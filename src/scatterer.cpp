@@ -19,7 +19,7 @@
  * 
  * =========================================================================*/
 
-#include "scatter.h"
+#include "scatterer.h"
 
 #include <iostream>
 #include <math.h>

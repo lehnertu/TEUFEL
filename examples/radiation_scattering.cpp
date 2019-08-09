@@ -43,7 +43,7 @@
 #include "global.h"
 #include "wave.h"
 #include "observer.h"
-#include "scatter.h"
+#include "scatterer.h"
 #include <iostream>
 #include <fstream>
 #include <time.h>
