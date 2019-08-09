@@ -39,7 +39,7 @@
 #define SpeedOfLight 2.99792458e8               // [m/s]
 #define Pi 3.1415926535897932384626433832795029
 #define EpsNull 8.854187817e-12                 // vacuum permittivity [As/Vm] 1/c² = e0*µ0
-#define MuNull 4*Pi*1e-7                        // magnetic field constant [Vs/Am]
+#define MuNull (4*Pi*1e-7)                      // magnetic field constant [Vs/Am]
 #define InvRestMass 1.758820025e11              // 1 / m = c² / mc² [m²/s²/eV]
 
 // the electron rest mass in kg can be obtained as

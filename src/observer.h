@@ -277,7 +277,7 @@ public:
      * The total timespan covererd ends at \f$t0+n*dt\f$.
      * 
      * This class is templated and spezialized for
-     * Bunch() or Beam() being the field source.
+     * Bunch(), Beam() or Lattice() being the field source.
      * 
      * \param[in] filename The name of the generated output file.
      * \param[in] t0 Start time of the trace.

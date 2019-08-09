@@ -86,9 +86,36 @@ int main()
     }
     catch (exception& e) { cout << e.what() << endl;}
 
-    // define one observation screen at the origin
+    // define a point observer 1m downstream on axis
     double z0 = 1.0;
     double t0 = z0/SpeedOfLight - 5.0e-12;
+    PointObserver pointObs = PointObserver(
+        "scattering_onAxis_1m.sdds",
+        Vector(0.0, 0.0, z0),       // position
+        t0,
+        1.0e-14,                    // dt
+        1000);                      // NOTS
+    pointObs.integrate(lattice);
+    try
+    { 
+    	pointObs.generateOutput();
+    	printf("Point observer time domain field written - \033[1;32m OK\033[0m\n");
+    }
+    catch (exception& e) { cout << e.what() << endl;}
+    // compute the energy flow density at the observation point
+    Vector E(0.0, 0.0, 0.0);
+    for (unsigned int it=0; it<1000; it++)
+    {
+        ElMagField field = pointObs.getField(it);
+        // Poynting vector in V/m * (N/(A m)) / (N/A²) = W/m²
+        Vector S = cross(field.E(), field.B()) / MuNull;
+        // std::cout << "Radiation power density = (" << S.x << ", " << S.y << ", " << S.z << ") W/m²" << std::endl;
+        // integrate over time
+        E += S * 1.0e-14;
+    }
+    std::cout << "Radiation energy density = (" << E.x << ", " << E.y << ", " << E.z << ") Ws/m²" << std::endl;
+
+    // define one observation screen 1m downstream
     screenObs = ScreenObserver(
         "scattering_Screen_1m.h5",
     	Vector(0.0, 0.0, z0),		// position
@@ -97,7 +124,7 @@ int main()
     	41,				// unsigned int nx,
     	41,				// unsigned int ny,
     	t0,
-    	1.0e-14,			// double dt,
+    	1.0e-14,			// dt
     	1000);				// NOTS
     screenObs.integrate(lattice);
     try
