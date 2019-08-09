@@ -163,8 +163,8 @@ Lattice::~Lattice()
     // destroy all objects belonging to the lattice
     while (!elements.empty())
     {
-	delete elements.back();
-	elements.pop_back();
+        delete elements.back();
+        elements.pop_back();
     }
 }
 
@@ -182,7 +182,7 @@ ElMagField Lattice::Field(double t, Vector X)
     // sum up all elementary fields
     for (unsigned int i=0; i<elements.size(); i++)
     {
-	total += elements.at(i)->Field(t, X);
+        total += elements.at(i)->Field(t, X);
     };
     return total;
 }

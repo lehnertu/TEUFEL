@@ -23,6 +23,7 @@
 
 namespace teufel
 {
-    extern int rank(0);
+    // extern int rank(0);
+    int rank(0);
 }
 

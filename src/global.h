@@ -47,10 +47,13 @@
 
 namespace teufel
 {
-    /*! The MPI rank is kept as a global variable accessible from all modules.
+    /*! The rank denotes which of the many nodes of an MPI cluster the code is running on.
+     *  It is necessary to know the tasks this particular node has to accomplish
+     *  The MPI rank is kept as a global variable accessible from all modules.
      *  It is set to values different from 0 only by MPI executables.
+     *
      *  Must be set to zero for all non-MPI executables.
-     *  It is mainly intended to suppress unnecessary output from code
+     *  It is used to suppress unnecessary output from code
      *  executed by many nodes in parallel.
      */
     extern int rank;
