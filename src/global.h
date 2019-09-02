@@ -39,7 +39,7 @@
 #define SpeedOfLight 2.99792458e8               // [m/s]
 #define Pi 3.1415926535897932384626433832795029
 #define EpsNull 8.854187817e-12                 // vacuum permittivity [As/Vm] 1/c² = e0*µ0
-#define MuNull 4*Pi*1e-7                        // magnetic field constant [Vs/Am]
+#define MuNull (4*Pi*1e-7)                      // magnetic field constant [Vs/Am]
 #define InvRestMass 1.758820025e11              // 1 / m = c² / mc² [m²/s²/eV]
 
 // the electron rest mass in kg can be obtained as
@@ -47,10 +47,13 @@
 
 namespace teufel
 {
-    /*! The MPI rank is kept as a global variable accessible from all modules.
+    /*! The rank denotes which of the many nodes of an MPI cluster the code is running on.
+     *  It is necessary to know the tasks this particular node has to accomplish
+     *  The MPI rank is kept as a global variable accessible from all modules.
      *  It is set to values different from 0 only by MPI executables.
+     *
      *  Must be set to zero for all non-MPI executables.
-     *  It is mainly intended to suppress unnecessary output from code
+     *  It is used to suppress unnecessary output from code
      *  executed by many nodes in parallel.
      */
     extern int rank;

@@ -19,11 +19,33 @@
  * 
  * =========================================================================*/
 
-#include "global.h"
+#include "scatterer.h"
 
-namespace teufel
+#include <iostream>
+#include <math.h>
+
+Scatterer::Scatterer()
 {
-    // extern int rank(0);
-    int rank(0);
+}
+
+Scatterer::~Scatterer()
+{
+}
+
+void Scatterer::integrate(Beam *src)
+{
+}
+
+void Scatterer::integrate(Bunch *src)
+{
+}
+
+void Scatterer::integrate(Lattice *src)
+{
+}
+
+ElMagField Scatterer::Field(double t, Vector X)
+{
+    return ElMagField(Vector(0.0,0.0,0.0),Vector(0.0,0.0,0.0));
 }
 

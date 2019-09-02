@@ -59,7 +59,6 @@ public:
      *  Integrate the observed fields along the tracked trajectories.
      *  This is a purely virtual method that must be overwritten by derived objects.
      *  It is defined for Beam(), Bunch() and Lattice() as field sources.
-
      */
     virtual void integrate(Beam *src) = 0;
     virtual void integrate(Bunch *src) = 0;
@@ -277,7 +276,7 @@ public:
      * The total timespan covererd ends at \f$t0+n*dt\f$.
      * 
      * This class is templated and spezialized for
-     * Bunch() or Beam() being the field source.
+     * Bunch(), Beam() or Lattice() being the field source.
      * 
      * \param[in] filename The name of the generated output file.
      * \param[in] t0 Start time of the trace.
