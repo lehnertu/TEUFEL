@@ -229,10 +229,10 @@ ax1.set_ylabel(r'power density $dW/dA$ [$\mu$J/m$^2$]')
 
 fig3 = plt.figure(3,figsize=(12,9))
 ax3 = fig3.add_subplot(111)
-plt.contourf(fp, xp, 1e6*1e12*specdens, 15, cmap='CMRmap')
+plt.contourf(xp, fp, 1e6*1e12*specdens.transpose(), 15, cmap='CMRmap')
 plt.title('spectral energy density [$\mu$J/(m$^2$ THz]')
-plt.xlabel('f [THz]')
-plt.ylabel('pos [m]')
+plt.xlabel('pos [m]')
+plt.ylabel('f [THz]')
 cb=plt.colorbar()
 cb.set_label(r'spectral energy density [$\mu$J/(m$^2$ THz]')
 

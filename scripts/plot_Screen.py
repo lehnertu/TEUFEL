@@ -135,14 +135,18 @@ for ix in range(Nx):
     Bx = data[3]
     By = data[4]
     Bz = data[5]
-    spectE = np.fft.fft(Ex)[:nots/2]
-    spectB = np.fft.fft(By)[:nots/2]
-    totamp += np.real(spectE*np.conj(spectB)/mu0)*2*dt/(df*nf)
+    spectEx = np.fft.fft(Ex)[:nots/2]
+    spectEy = np.fft.fft(Ey)[:nots/2]
+    spectEz = np.fft.fft(Ez)[:nots/2]
+    spectBx = np.fft.fft(Bx)[:nots/2]
+    spectBy = np.fft.fft(By)[:nots/2]
+    spectBz = np.fft.fft(Bz)[:nots/2]
+    totamp += np.real(spectEx*np.conj(spectBy)/mu0)*2*dt/(df*nf)
     if args.circ != None:
       x = pos[ix,iy,0]
       y = pos[ix,iy,1]
       if x*x + y*y <= r2:
-        circamp += np.real(spectE*np.conj(spectB)/mu0)*2*dt/(df*nf)
+        circamp += np.real(spectEx*np.conj(spectBy)/mu0)*2*dt/(df*nf)
 
 dX = pos[1,0,0]-pos[0,0,0]
 dY = pos[0,1,1]-pos[0,0,1]
@@ -238,9 +242,13 @@ if roiOK:
         Bx = data[3]
         By = data[4]
         Bz = data[5]
-        spectE = np.fft.fft(Ex)[:nots/2]
-        spectB = np.fft.fft(By)[:nots/2]
-        amplit = np.real(spectE*np.conj(spectB)/mu0)*2*dt/(df*nf)
+        spectEx = np.fft.fft(Ex)[:nots/2]
+        spectEy = np.fft.fft(Ey)[:nots/2]
+        spectEz = np.fft.fft(Ez)[:nots/2]
+        spectBx = np.fft.fft(Bx)[:nots/2]
+        spectBy = np.fft.fft(By)[:nots/2]
+        spectBz = np.fft.fft(Bz)[:nots/2]
+        amplit = np.real(spectEx*np.conj(spectBy)-spectEy*np.conj(spectBx))/mu0*2*dt/(df*nf)
         Pz[ix,iy] = amplit[nf1:nf2].sum()*df
 
     dX = pos[1,0,0]-pos[0,0,0]
