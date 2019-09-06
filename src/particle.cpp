@@ -50,10 +50,10 @@ ChargedParticle::ChargedParticle(const ChargedParticle *origin)
     NP = origin->NP;
     if (NP > 0)
     {
-	Time = origin->Time;
-	X = origin->X;
-	P = origin->P;
-	A = origin->A;
+        Time = origin->Time;
+        X = origin->X;
+        P = origin->P;
+        A = origin->A;
     }
     dt = origin->dt;
     qm = origin->qm;
@@ -81,25 +81,25 @@ ChargedParticle::~ChargedParticle()
 double ChargedParticle::getTime()
 {
     if (NP>0)
-	return Time.back();
+        return Time.back();
     else
-	return 0.0;
+        return 0.0;
 }
 
 Vector ChargedParticle::getPosition()
 {
     if (NP>0)
-	return X.back();
+        return X.back();
     else
-	return Vector(0.0, 0.0, 0.0);
+        return Vector(0.0, 0.0, 0.0);
 }
 
 Vector ChargedParticle::getMomentum()
 {
     if (NP>0)
-	return P.back();
+        return P.back();
     else
-	return Vector(0.0, 0.0, 0.0);
+        return Vector(0.0, 0.0, 0.0);
 }
 
 void ChargedParticle::serialize(double *buffer)
@@ -140,7 +140,7 @@ double ChargedParticle::TrajTime(int step)
 {
     double t = 0.0;
     if (step >= 0 && step < NP)
-	t = Time[step];
+        t = Time[step];
     return t;
 }
 
@@ -148,7 +148,7 @@ Vector ChargedParticle::TrajPoint(int step)
 {
     Vector p = Vector(0.0, 0.0, 0.0);
     if (step >= 0 && step < NP)
-	p = X[step];
+        p = X[step];
     return p;
 }
 
@@ -156,7 +156,7 @@ Vector ChargedParticle::TrajMomentum(int step)
 {
     Vector p = Vector(0.0, 0.0, 0.0);
     if (step >= 0 && step < NP)
-	p = P[step];
+        p = P[step];
     return p;
 }
 
@@ -164,7 +164,7 @@ Vector ChargedParticle::TrajAccel(int step)
 {
     Vector a = Vector(0.0, 0.0, 0.0);
     if (step >= 0 && step < NP)
-	a = A[step];
+        a = A[step];
     return a;
 }
 
@@ -179,6 +179,30 @@ void ChargedParticle::initTrajectory(double t, Vector x, Vector p, Vector a)
     X.push_back(x);
     P.push_back(p);
     A.push_back(a);
+}
+
+void ChargedParticle::Mirror(Vector origin, Vector normal, double f_charge)
+{
+    // make sure the normal vector has unit length
+    normal.normalize();
+    for (int i=0; i<NP-1; i++)
+    {
+        // normal distance to mirror plane is added 2x to position
+        Vector position = X[i];
+        Vector dx = normal*dot(origin-position,normal);
+        X[i] = position + dx*2.0;
+        // normal momentum is reversed
+        Vector momentum = P[i];
+        Vector dp = normal*dot(momentum,normal);
+        P[i] = momentum - dp*2.0;
+        // normal acceleration is reversed
+        Vector acc = A[i];
+        Vector da = normal*dot(acc,normal);
+        A[i] = acc - da*2.0;
+    }
+    Charge *= f_charge;
+    qm *= f_charge;
+    qmt2 *= f_charge;
 }
 
 /*!
@@ -205,7 +229,7 @@ void ChargedParticle::InitVay(
 {
     // check prerequisites
     if (NP<1)
-	throw(RANGEexception("ChargedParticle::InitVay() - must initalize trajectory before tracking"));
+        throw(RANGEexception("ChargedParticle::InitVay() - must initalize trajectory before tracking"));
     // preset the fixed values
     dt = tstep;
     qm = Charge/Mass * InvRestMass;
@@ -293,9 +317,9 @@ void ChargedParticle::CoordinatesAtTime(double time, Vector *position, Vector *m
     // return zero if there is no trajectory
     if (NP<1)
     {
-	*position = Vector(1.0, 1.0, 1.0);
-	*momentum = Vector(0.0, 0.0, 0.0);
-	return;
+        *position = Vector(0.0, 0.0, 0.0);
+        *momentum = Vector(0.0, 0.0, 0.0);
+        return;
     };
     int i1 = 0;    // index of the first trajectory point
     double t1 = Time[i1];
@@ -304,33 +328,33 @@ void ChargedParticle::CoordinatesAtTime(double time, Vector *position, Vector *m
     if (time>=t1 && time<=t2)
     {
 	// reduce the interval until the trajectory segment is found
-	while (i2 - i1 > 1)
-	{
-	    int i = (i2 + i1) / 2;
-	    double t = Time[i];
-	    if (t < time)
-	    {
-		i1 = i;
-		t1 = t;
-	    } else {
-		i2 = i;
-		t2 = t;
-	    }
-	};
-	if (i2==i1)
-	{
-	    *position = X[i1];
-	    *momentum = P[i1];
-	} else {
-	    // interpolate the coordinates within the interval
-	    // interpolation could be improved using higher-order terms
-	    double frac = (time - t1) / (t2 - t1);
-	    *position = X[i1] * (1.0 - frac) + X[i2] * frac;
-	    *momentum = P[i1] * (1.0 - frac) + P[i2] * frac;
-	};
+        while (i2 - i1 > 1)
+        {
+            int i = (i2 + i1) / 2;
+            double t = Time[i];
+            if (t < time)
+            {
+                i1 = i;
+                t1 = t;
+            } else {
+                i2 = i;
+                t2 = t;
+            }
+        };
+        if (i2==i1)
+        {
+            *position = X[i1];
+            *momentum = P[i1];
+        } else {
+            // interpolate the coordinates within the interval
+            // interpolation could be improved using higher-order terms
+            double frac = (time - t1) / (t2 - t1);
+            *position = X[i1] * (1.0 - frac) + X[i2] * frac;
+            *momentum = P[i1] * (1.0 - frac) + P[i2] * frac;
+        };
     } else {
-	*position = Vector(2.0, 2.0, 2.0);
-	*momentum = Vector(0.0, 0.0, 0.0);
+        *position = Vector(0.0, 0.0, 0.0);
+        *momentum = Vector(0.0, 0.0, 0.0);
     }
 }
 

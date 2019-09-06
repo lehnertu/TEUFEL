@@ -57,30 +57,34 @@
 #include <fstream>
 #include <time.h>
 
-int NOTS = 2000;	// number of time steps
+int NOTS = 6000;	// number of time steps
+int NOM = 20;       // number of mirror reflections
 
 int main()
 {
-    double B = 0.5;
-    double lambda = 0.050;
-    double N = 40;
-    PlanarUndulator* Undu = new PlanarUndulator(Vector(0.0, 0.0, 2.0));
-    Undu->Setup(B, lambda, N);
-
-    printf("B =  %9.6g T\n", B);
-    printf("Undulator Period = %9.6g m\n", lambda);
-    printf("N = %9.6g\n", (double)N);
-    double gamma = 25.0;
+    double gamma = 14.0/0.511;
     double beta = sqrt(1.0 - 1.0 / (gamma * gamma));
     double betagamma = sqrt(gamma * gamma - 1.0);
-    double K = 0.934 * 100 * lambda * B;
-    double lambdar = (lambda / (2 * gamma * gamma)) * (1 + K * K / 2);
     printf("beta =  %12.9g\n", beta);
     printf("gamma =  %12.9g\n", gamma);
     printf("c*p =  %12.9g MeV\n", 1e-6 * mecsquared * betagamma);
-    printf("Radiation Wavelength =  %6.3f mm\n", lambdar * 1.0e3);
+
+    double lambdar = 0.01/85.0;
+    printf("Radiation Wavelength =  %6.3f µm\n", lambdar * 1.0e6);
+    printf("Radiation Wavenumber =  %6.3f 1/cm\n", 0.01/lambdar);
     printf("Radiation Frequency =  %6.3g THz\n", SpeedOfLight/lambdar*1.0e-12);
-    
+
+    double lambda = 0.110;
+    double N = 40;
+    printf("Undulator Period = %9.6g m\n", lambda);
+    printf("N = %9.6g\n", (double)N);
+    double Ksq = lambdar/lambda * 2*gamma*gamma;
+    double K = sqrt(2.0*(Ksq-1.0));
+    double B = K / 93.4 / lambda;
+    printf("B =  %9.6g T\n", B);
+    PlanarUndulator* Undu = new PlanarUndulator(Vector(0.0, 0.0, 3.0));
+    Undu->Setup(B, lambda, N);
+
     // a simple lattice with just the Undulator Field
     Lattice* lattice = new Lattice;
     lattice->addElement(Undu);
@@ -97,11 +101,11 @@ int main()
     Bunch *single = new Bunch();
     single->Add(electron);
     
-    // Tracking should be done for 3 m in lab space corresponding to tau [s].
+    // Tracking should be done for 5.5 m in lab space corresponding to tau [s].
     // Inside the undulator we have an additional pathlength of one radiation
     // wavelength per period. The radiation wavelength already includes the
     // velocity of the particles. Outside the undulator the electron moves with beta*SpeedOfLight
-    double tau = (double)N * (lambda + lambdar) / SpeedOfLight + (3.5 - (double)N * lambda) / (beta * SpeedOfLight);
+    double tau = (double)N * (lambda + lambdar) / SpeedOfLight + (5.5 - (double)N * lambda) / (beta * SpeedOfLight);
     double deltaT = tau / NOTS;
 
     // track a beam of one bunche
@@ -129,36 +133,20 @@ int main()
     double elapsed = stop_time.tv_sec-start_time.tv_sec + 1e-9*(stop_time.tv_nsec-start_time.tv_nsec);
     printf("time elapsed during tracking : %9.3f s\n",elapsed);
 	
-    // compute the radiation of the single electron on axis
-    double z0 = 4.0;
-    double t0 = z0/SpeedOfLight - 1.0e-12;
-    PointObserver singleObs = PointObserver(
-	    "Waveguide_ObsRadField.sdds", Vector(0.0, 0.0, z0), t0, 0.05e-13, 3000);
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
-    singleObs.integrate(single);
-    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop_time);
-    printf("finished on-axis radiation calculation.\n");
-    elapsed = stop_time.tv_sec-start_time.tv_sec + 1e-9*(stop_time.tv_nsec-start_time.tv_nsec);
-    printf("time elapsed : %9.3f s\n",elapsed);
-    // write field time traces
-    try
-    {
-    	singleObs.WriteTimeDomainFieldSDDS();
-	    printf("SDDS time domain field written - \033[1;32m OK\033[0m\n");
-    }
-    catch (exception& e) { cout << e.what() << endl;}
-	
-	// compute the radiation observed on a finite screen
+	// compute the radiation observed on a finite screen 3.0m downstream the undulator center
+	// this observer only sees the direct particle
+	double t0 = (6.0 - 10*lambdar) / SpeedOfLight;
+	double dt = lambdar / 12.0 / SpeedOfLight;
     ScreenObserver screenObs = ScreenObserver(
-        "Waveguide_Screen_ObsRadField.h5",
-    	Vector(0.0, 0.0, z0),       // position
-    	Vector(0.004, 0.0, 0.0),    // dx
+        "Waveguide_Screen_ObsRadField_direct.h5",
+    	Vector(0.0, 0.0, 6.0),      // position
+    	Vector(0.002, 0.0, 0.0),    // dx
     	Vector(0.0, 0.0002, 0.0),   // dy
     	101,                        // unsigned int nx,
     	51,                         // unsigned int ny,
     	t0,
-    	0.1e-13,                    // double dt,
-    	3000);                      // NOTS
+    	dt,
+    	4000);                      // NOTS
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
     screenObs.integrate(single);
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop_time);
@@ -172,12 +160,56 @@ int main()
     	printf("Screen observer time domain field written - \033[1;32m OK\033[0m\n");
     }
     catch (exception& e) { cout << e.what() << endl;}
-
+    
+    // create a bunch including mirror particles
+    ChargedParticle *e0 = new ChargedParticle(electron);
+    Bunch *mirrored = new Bunch();
+    mirrored->Add(e0);
+	// the waveguide of 10mm height extends up to infinity
+	// mirror planes are at y= +/- 5mm, 10mm, 15mm, ... with alternating polarity
+	double polarity = 1.0;
+	for (int m=1; m<=NOM; m++)
+	{
+	    polarity *= -1.0;
+        ChargedParticle *e1 = new ChargedParticle(electron);
+        e1->Mirror(Vector(0.0,0.005*m,0.0), Vector(0.0,1.0,0.0), polarity);
+        mirrored->Add(e1);
+        ChargedParticle *e2 = new ChargedParticle(electron);
+        e2->Mirror(Vector(0.0,-0.005*m,0.0), Vector(0.0,-1.0,0.0), polarity);
+        mirrored->Add(e2);
+    }
+	// compute the radiation observed on a finite screen 3.0m downstream the undulator center
+	// this observer sees the mirror particles in addition
+    ScreenObserver mirrorObs = ScreenObserver(
+        "Waveguide_Screen_ObsRadField_with_mirrors.h5",
+    	Vector(0.0, 0.0, 6.0),      // position
+    	Vector(0.002, 0.0, 0.0),    // dx
+    	Vector(0.0, 0.0002, 0.0),   // dy
+    	101,                        // unsigned int nx,
+    	51,                         // unsigned int ny,
+    	t0,
+    	dt,
+    	4000);                      // NOTS
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
+    mirrorObs.integrate(mirrored);
+    clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop_time);
+    printf("finished radiation calculation on screen.\n");
+    elapsed = stop_time.tv_sec-start_time.tv_sec + 1e-9*(stop_time.tv_nsec-start_time.tv_nsec);
+    printf("time elapsed : %9.3f s\n",elapsed);
+    // write screen time traces
+    try
+    { 
+    	mirrorObs.WriteTimeDomainFieldHDF5();
+    	printf("Screen observer time domain field written - \033[1;32m OK\033[0m\n");
+    }
+    catch (exception& e) { cout << e.what() << endl;}
+    
     // clean up
     delete lattice;
     // deleting the beam automatically
     // deletes all bunches and particles belonging to it
     delete beam;
-    
+    delete mirrored;
+   
     return 0;
 }

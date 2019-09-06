@@ -133,6 +133,12 @@ public:
      */
     void initTrajectory(double t, Vector x, Vector p, Vector a);
     
+    /*! Mirror the trajectory about a given plane.
+     *  The plane is defined by a vector origin and its normal vector.
+     *  The charge is scaled by an additional given factor which is also applied to qm and qmt2.
+     */
+    void Mirror(Vector origin, Vector normal, double f_charge);
+    
     /*! @brief Setup for tracking the particle using the Vay algorithm.
      * 
      *  The algorithm follows J.-L.Vay PHYSICS OF PLASMAS 15, 056701 (2008).
