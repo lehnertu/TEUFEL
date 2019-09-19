@@ -289,8 +289,13 @@ int InputParser::parseBeam(Beam *beam)
                 Distribution *dist = new Distribution(6, NoP);
                 dist->generateGaussian(0, xrms);
                 dist->generateGaussian(1, yrms);
-                if (zrms != 0.0) dist->generateGaussian(2, zrms);
-                if (zft != 0.0) dist->scale(2, zft);
+                if (zft != 0.0)
+                    dist->scale(2, zft);
+                else
+                    {
+                        if (zrms != 0.0) dist->generateGaussian(2, zrms);
+                        else dist->scale(2, 0.0);
+                    };
                 dist->generateGaussian(3, betagamma*xprms);
                 dist->generateGaussian(4, betagamma*yprms);
                 dist->generateGaussian(5, betagamma*delta);
