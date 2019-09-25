@@ -133,6 +133,11 @@ public:
      */
     void initTrajectory(double t, Vector x, Vector p, Vector a);
     
+    /*! Shift the trajectory by a given displacement vector.
+     *  The charge is scaled by an additional given factor which is also applied to qm and qmt2.
+     */
+    void Shift(Vector delta, double f_charge);
+    
     /*! Mirror the trajectory about a given plane.
      *  The plane is defined by a vector origin and its normal vector.
      *  The charge is scaled by an additional given factor which is also applied to qm and qmt2.

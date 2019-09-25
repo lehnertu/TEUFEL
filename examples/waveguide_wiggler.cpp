@@ -58,7 +58,7 @@
 #include <time.h>
 
 int NOTS = 6000;	// number of time steps
-int NOM = 20;       // number of mirror reflections
+int NOM = 40;       // number of mirror reflections
 
 int main()
 {
@@ -146,7 +146,7 @@ int main()
     	51,                         // unsigned int ny,
     	t0,
     	dt,
-    	4000);                      // NOTS
+    	6000);                      // NOTS
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
     screenObs.integrate(single);
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop_time);
@@ -166,16 +166,23 @@ int main()
     Bunch *mirrored = new Bunch();
     mirrored->Add(e0);
 	// the waveguide of 10mm height extends up to infinity
-	// mirror planes are at y= +/- 5mm, 10mm, 15mm, ... with alternating polarity
-	double polarity = 1.0;
+	// mirror planes are at y= +/- 5mm, 10mm, 15mm, ... with reversed polarity
+	// even numbers of mirrors constitute a shift without polarity change
 	for (int m=1; m<=NOM; m++)
 	{
-	    polarity *= -1.0;
         ChargedParticle *e1 = new ChargedParticle(electron);
-        e1->Mirror(Vector(0.0,0.005*m,0.0), Vector(0.0,1.0,0.0), polarity);
-        mirrored->Add(e1);
         ChargedParticle *e2 = new ChargedParticle(electron);
-        e2->Mirror(Vector(0.0,-0.005*m,0.0), Vector(0.0,-1.0,0.0), polarity);
+        if (m%2 == 0)
+        {
+            e1->Shift(Vector(0.0,0.010*m,0.0), 1.0);
+            e2->Shift(Vector(0.0,-0.010*m,0.0), 1.0);
+        }
+        else
+        {
+            e1->Mirror(Vector(0.0,0.005*m,0.0), Vector(0.0,1.0,0.0), -1.0);
+            e2->Mirror(Vector(0.0,-0.005*m,0.0), Vector(0.0,-1.0,0.0), -1.0);
+        };
+        mirrored->Add(e1);
         mirrored->Add(e2);
     }
 	// compute the radiation observed on a finite screen 3.0m downstream the undulator center

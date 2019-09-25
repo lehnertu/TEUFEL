@@ -181,6 +181,18 @@ void ChargedParticle::initTrajectory(double t, Vector x, Vector p, Vector a)
     A.push_back(a);
 }
 
+void ChargedParticle::Shift(Vector delta, double f_charge)
+{
+    for (int i=0; i<NP-1; i++)
+    {
+        Vector position = X[i];
+        X[i] = position + delta;
+    }
+    Charge *= f_charge;
+    qm *= f_charge;
+    qmt2 *= f_charge;
+}
+
 void ChargedParticle::Mirror(Vector origin, Vector normal, double f_charge)
 {
     // make sure the normal vector has unit length
