@@ -104,21 +104,29 @@ target_link_libraries(teufel_mpi ${PROJECT_NAME}lib
                              ${ZLIB_LIBRARY_RELEASE} )
 
 # for building the documentation
-option(BUILD_DOCUMENTATION "Generate doxygen documentation" OFF)
-find_package(Doxygen)
-    if(NOT DOXYGEN_FOUND)
-        message(FATAL_ERROR "Doxygen is not installed or not properly configured")
-    endif(NOT DOXYGEN_FOUND)
+option(BUILD_DOCUMENTATION "Generate documentation" ON)
 if(BUILD_DOCUMENTATION)
+    find_package(Doxygen)
+        if(NOT DOXYGEN_FOUND)
+            message(FATAL_ERROR "Doxygen is not installed or not properly configured")
+        endif(NOT DOXYGEN_FOUND)
+    find_package(LATEX COMPONENTS PDFLATEX)
+        if(NOT LATEX_FOUND)
+            message(FATAL_ERROR "LaTeX is not installed or not properly configured")
+        endif(NOT LATEX_FOUND)
     add_custom_target(docs ALL
                       ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/setup.dox
                       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
                       COMMENT "Generating API documentation with Doxygen")
-else()
-    add_custom_target(docs
-                      ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/setup.dox
-                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-                      COMMENT "Generating API documentation with Doxygen")
+                      SET(LATEX_OUTPUT_PATH doc)
+    add_custom_target(man
+                      # we first compile with LaTeX to generate all indices
+                      ${LATEX_COMPILER} ${CMAKE_CURRENT_SOURCE_DIR}/doc/UserManual.tex 
+                      # then we use PDFLATEX to generate the final output
+                      COMMAND ${PDFLATEX_COMPILER} ${CMAKE_CURRENT_SOURCE_DIR}/doc/UserManual.tex
+                      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/doc
+                      COMMENT "Generating user manual with LaTeX"
+                      )
 endif()
 
 # for building test binaries
