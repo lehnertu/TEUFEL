@@ -1,0 +1,81 @@
+\documentclass[11pt]{article}
+%\usepackage[german]{babel}
+\usepackage[utf8]{inputenc}
+\inputencoding{utf8}
+\usepackage[T1]{fontenc}
+\usepackage{graphicx}
+\usepackage{geometry}
+\geometry{a4paper, top=1cm, body={16cm,24cm}}
+\special{papersize=8.5in,11in}
+
+\usepackage{listings}
+\usepackage{xcolor}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+\lstdefinestyle{mystyle}{
+    backgroundcolor=\color{backcolour},   
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    keepspaces=true,                 
+    numbers=none,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+\lstset{style=mystyle}
+
+\sloppy
+
+\title{User Manual for TEUFEL - THz Emission from Undulators and Free-Electron Lasers}
+
+\author{U. Lehnert\\
+\footnotesize{Helmholtz-Center Dresden-Rossendorf}
+\footnotesize{Institute of Radiation Physics}\\
+\footnotesize{PF 510119, D-01314 Dresden}\\
+\footnotesize{e-mail : U.Lehnert@fzd.de}}
+
+\date{\today\\[1cm]}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+
+\section{Physics model and code description}
+
+\subsection{Parallelization}
+
+\subsection{Installation}
+
+\section{Input files}
+
+The input to TEUFEL consists of a human readable XML file. The content should follow
+the template given here. The code would complain if any of the essential sections
+listed here were missing. Some example input files are contained in the \verb|examples/| folder.
+
+\begin{lstlisting}
+<?xml version="1.0"?>
+<teufel description="description of the simulation case"
+    author="author name and date of creation">
+    <lattice />
+    <beam />
+    <tracking method="Vay" delta_t="0.001/_c" n="4000" />
+    <observer />
+</teufel>
+\end{lstlisting}
+
+\subsection{Lattice description}
+
+\subsection{Beam description}
+
+\subsection{Definition of Observations}
+
+\subsection{The calculator}
+
+\section{Scrips for output visualization}
+
+\end{document}
+
+
