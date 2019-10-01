@@ -526,6 +526,40 @@ void ScreenObserver::integrate(Lattice *src)
             }
 }
 
+void ScreenObserver::integrate_mp(Beam *src, unsigned int NumCores, unsigned int CoreId)
+{
+    for (unsigned int ix = 0; ix < Nx; ix++)
+    	for (unsigned int iy = 0; iy < Ny; iy++)
+    	    if (CoreId == (ix*Ny+iy) % NumCores)
+    	    {
+	            src->integrateFieldTrace(
+	        	    CellPosition(ix, iy), t0_obs, dt_obs, NOTS, &TimeDomainField[ix][iy]);
+	        };
+}
+
+void ScreenObserver::integrate_mp(Bunch *src, unsigned int NumCores, unsigned int CoreId)
+{
+    for (unsigned int ix = 0; ix < Nx; ix++)
+        for (unsigned int iy = 0; iy < Ny; iy++)
+    	    if (CoreId == (ix*Ny+iy) % NumCores)
+            {
+                src->integrateFieldTrace(
+                    CellPosition(ix, iy), t0_obs, dt_obs, NOTS, &TimeDomainField[ix][iy]);
+            };
+}
+
+void ScreenObserver::integrate_mp(Lattice *src, unsigned int NumCores, unsigned int CoreId)
+{
+    for (unsigned int ix = 0; ix < Nx; ix++)
+        for (unsigned int iy = 0; iy < Ny; iy++)
+    	    if (CoreId == (ix*Ny+iy) % NumCores) {
+                for (unsigned int it = 0; it < NOTS; it ++ )
+                {
+                    TimeDomainField[ix][iy][it] += src->Field(t0_obs+it*dt_obs, CellPosition(ix, iy));
+                };
+            };
+}
+
 ElMagField ScreenObserver::getField(
 	unsigned int ix,
 	unsigned int iy,
