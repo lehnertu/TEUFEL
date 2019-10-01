@@ -76,6 +76,14 @@ public:
      */
     ChargedParticle(double *buffer);
     
+    /*! Constructor from buffer including trajectory:<br>
+     *  Take the data stored with serializeTraj() and recreate this
+     *  as a new particle including all trajectory data.
+     *  There is no check of buffer size.
+     *  The number of trajectory points must be known beforehand.
+     */
+    ChargedParticle(double *buffer, int nTraj);
+    
     /*! Destructor: free all memory. */
     virtual ~ChargedParticle();
     
@@ -115,6 +123,34 @@ public:
      *  There is no check for sufficient buffer size.
      */
     void serialize(double *buffer);
+    
+    /*! Return the size of a buffer (number of doubles)
+     *  that can hold all particle data including all trajectory points.
+     *  This buffer size is needed to call serializeTraj()
+     */
+    int TrajBufSize();
+    
+    /*! Copy all current information about the particle into one buffer
+     *  of double type. This can be used to transfer the particle to a different
+     *  MPI node. Only the number of trajectory points is not serialized
+     *  and must be known beforehand to restore the particle from the buffer.
+     *  The serialized properties include:
+     *  @item double Charge
+     *  @item double Mass
+     *  @item double dt
+     *  @item double qm
+     *  @item double qmt2
+     *  @item double VY_p_i1
+     *  @item double VY_gamma_i1
+     *  and for all trajectory points:
+     *  @item double Time
+     *  @item double[3] X
+     *  @item double[3] P
+     *  @item double[3] A
+     *  The buffer must have a size given by TrajBufSize()
+     *  There is no check for sufficient buffer size.
+     */
+    void serializeTraj(double *buffer);
     
     /*! Return the time [s] for one point of the trajectory */
     double TrajTime(int step);

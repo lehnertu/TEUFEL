@@ -74,6 +74,44 @@ ChargedParticle::ChargedParticle(double *buffer)
     initTrajectory(t, x, p, a);
 }
 
+ChargedParticle::ChargedParticle(double *buffer, int nTraj)
+{
+    NP = nTraj;
+    double *b = buffer;
+    Charge = *b++;
+    Mass = *b++;
+    dt = *b++;
+    qm = *b++;
+    qmt2 = *b++;
+    double vx = *b++;
+    double vy = *b++;
+    double vz = *b++;
+    VY_p_i1 = Vector(vx,vy,vz);
+    VY_gamma_i1 = *b++;
+    // now restore the trajectory data
+    Time.clear();
+    X.clear();
+    P.clear();
+    A.clear();
+    for (int n=0; n<NP; n++)
+    {
+        double t = *b++;
+        Time.push_back(t);
+        double xx = *b++;
+        double xy = *b++;
+        double xz = *b++;
+        X.push_back(Vector(xx,xy,xz));
+        double px = *b++;
+        double py = *b++;
+        double pz = *b++;
+        P.push_back(Vector(px,py,pz));
+        double ax = *b++;
+        double ay = *b++;
+        double az = *b++;
+        A.push_back(Vector(ax,ay,az));
+    }
+}
+
 ChargedParticle::~ChargedParticle()
 {
 }
@@ -134,6 +172,42 @@ void ChargedParticle::serialize(double *buffer)
         *b++ = 0.0;
         *b++ = 0.0;
     }
+}
+
+int ChargedParticle::TrajBufSize()
+{
+    return(9+10*NP);
+}
+
+void ChargedParticle::serializeTraj(double *buffer)
+{
+    double *b = buffer;
+    *b++ = Charge;
+    *b++ = Mass;
+    *b++ = dt;
+    *b++ = qm;
+    *b++ = qmt2;
+    *b++ = VY_p_i1.x;
+    *b++ = VY_p_i1.y;
+    *b++ = VY_p_i1.z;
+    *b++ = VY_gamma_i1;
+    if (NP>0)
+        for (int n=0; n<NP; n++)
+        {
+            *b++ = Time[n];
+            Vector x = X[n];
+            Vector p = P[n];
+            Vector a = A[n];
+            *b++ = x.x;
+            *b++ = x.y;
+            *b++ = x.z;
+            *b++ = p.x;
+            *b++ = p.y;
+            *b++ = p.z;
+            *b++ = a.x;
+            *b++ = a.y;
+            *b++ = a.z;
+        }
 }
 
 double ChargedParticle::TrajTime(int step)
