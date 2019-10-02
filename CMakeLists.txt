@@ -240,10 +240,10 @@ if(BUILD_EXAMPLES)
                              ${MUPARSER_LIBRARY}
                              ${ZLIB_LIBRARY_RELEASE} )
 
-    add_executable(waveguide ${PROJECT_EXAMPLES_DIR}/waveguide_wiggler.cpp)
+    add_executable(waveguide ${PROJECT_EXAMPLES_DIR}/waveguide_wiggler_mpi.cpp)
     set_target_properties(waveguide PROPERTIES
         COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
-    set_target_properties(waveguide PROPERTIES
+    set_target_properties(mpi_example PROPERTIES
         LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
     target_link_libraries(waveguide ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
@@ -252,7 +252,7 @@ if(BUILD_EXAMPLES)
                              ${PUGIXML_LIBRARIES}
                              ${MUPARSER_LIBRARY}
                              ${ZLIB_LIBRARY_RELEASE} )
-
+                             
     add_executable(scattering ${PROJECT_EXAMPLES_DIR}/radiation_scattering.cpp)
     target_link_libraries(scattering ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
