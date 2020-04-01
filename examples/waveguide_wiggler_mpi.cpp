@@ -55,10 +55,13 @@
 #include "fields.h"
 #include "undulator.h"
 
+int NOP = 100;      // number of particles
 int NOTS = 6000;	// number of time steps for tracking
 int NOM = 50;       // number of mirror reflections
-int NX = 11;       // screen size in horizontal direction
-int NY = 5;        // screen size in vertical direction
+int NX = 51;        // screen size in horizontal direction
+double dX = 0.005;  // screen pixel size [m] in horizontal direction
+int NY = 101;       // screen size in vertical direction
+double dY = 0.0001; // screen pixel size [m] in vertical direction
 int NOSTS = 6000;	// number of time steps for the screen
 
 int main(int argc, char *argv[])
@@ -111,17 +114,45 @@ int main(int argc, char *argv[])
     Lattice* lattice = new Lattice;
     lattice->addElement(Undu);
 
-    // setup a bunch with 
+    // setup a bunch with 1nC charge
+    double ch = 1.0e-9 / ElementaryCharge;
+    
+    /*
     // one single particle of 1nC
     // positioned at the origin (by default)
-    double ch = 1.0e-9 / ElementaryCharge;
     ChargedParticle *electron = new ChargedParticle(-ch,ch);
     electron->initTrajectory(0.0,
-        Vector(0.0,0.002,0.0),
+        Vector(0.0,0.0,0.0),
         Vector(0.0,0.0,betagamma),
         Vector(0.0,0.0,0.0));
     Bunch *primary = new Bunch();
     primary->Add(electron);
+    */
+
+    // setup a bunch with many particles but zero bunchlength
+    // match transverse beam properties to undulator for 50 mm mrad normalized emittance
+    Distribution *dist = new Distribution(6, NOP);
+    // set the initial positions and momenta of the particles
+    double lambda_b = gamma*sqrt(2.0)/K * lambda;
+    double sig_y = sqrt(50e-6/betagamma * lambda_b/(2.0*M_PI));
+    double sig_yp = 50e-6/betagamma / sig_y;
+    if (teufel::rank==0)
+    {
+        printf("Betatron Period = %9.6g m\n", lambda_b);
+        printf("matched beam size sigma_y = %f mm\n",sig_y*1000.0);
+        printf("matched beam momentum sigma_yp = %f mrad\n",sig_yp*1000.0);
+    }
+    // transverse emittance 1.83µm (geometric) 50µm (normalized)
+    dist->generateGaussian(0, 0.0);	    // x gaussian
+    dist->generateGaussian(1, sig_y);	// y gaussian
+    dist->generateGaussian(2, 0.0);	    // z gaussian
+    dist->generateGaussian(3, 0.0);	    // px gaussian
+    dist->generateGaussian(4, sig_yp*betagamma);	// py gaussian
+    dist->generateGaussian(5, 0.0);	    // pz gaussian
+    // particles are "back transported" by 0.8m (undulator entrance to start)
+    // by adding a -0.8 m/rad correlated position change (4 acts on 1)
+    dist->addCorrelation(4, 1, -0.8/betagamma);
+    Bunch *primary = new Bunch(dist, 0.0, Vector(0.0,0.0,0.0), Vector(0.0,0.0,betagamma), -ch, ch);
     
     // Tracking should be done for 5.5 m in lab space corresponding to tau [s].
     // Inside the undulator we have an additional pathlength of one radiation
@@ -133,6 +164,21 @@ int main(int argc, char *argv[])
     // setup for the tracking procedure
     primary->InitVay(deltaT, lattice);
 
+    // create a particle dump of the initial distribution
+    if (teufel::rank==0)
+    {
+        if (0 != primary->WriteWatchPointSDDS("Waveguide_initial.sdds"))
+        {
+	        printf("SDDS write \033[1;31m failed!\033[0m\n");
+        }
+        else
+        {
+        	printf("SDDS file written - \033[1;32m OK\033[0m\n");
+        }
+    };
+    // log the Parameters of the bunch
+    TrackingLogger<Bunch> *bunchLog = new TrackingLogger<Bunch>(primary);
+
     // do the tracking of the beam
     if (teufel::rank==0) printf("tracking particles ...\n");
     if (teufel::rank==0) fflush(stdout);
@@ -142,6 +188,8 @@ int main(int argc, char *argv[])
     for (int step=0; step<NOTS; step++)
     {
     	primary->StepVay(lattice);
+    	// log every 10th step
+	    if (step % 10 == 0) bunchLog->update();
     }
     
     MPI_Barrier(MPI_COMM_WORLD);
@@ -152,44 +200,33 @@ int main(int argc, char *argv[])
     double elapsed = stop_time.tv_sec-start_time.tv_sec + 1e-9*(stop_time.tv_nsec-start_time.tv_nsec);
     if (teufel::rank==0) printf("time elapsed during tracking : %9.3f s\n",elapsed);
 
-    // ===============================================================
-    // Compute radiation emitted by the primary beam
-    // without any parallelization
-    // ===============================================================
-
-	// compute the radiation observed on a finite screen 3.0m downstream the undulator center
-	// this observer only sees the direct particle
-	double t0 = (6.0 - 10*lambdar) / SpeedOfLight;
-	double dt = lambdar / 12.0 / SpeedOfLight;
-    ScreenObserver primaryObs = ScreenObserver(
-        "Waveguide_MPI_primary.h5",
-    	Vector(0.0, 0.0, 6.0),      // position
-    	Vector(0.002, 0.0, 0.0),    // dx
-    	Vector(0.0, 0.0002, 0.0),   // dy
-    	NX,                         // unsigned int nx,
-    	NY,                         // unsigned int ny,
-    	t0,
-    	dt,
-    	NOSTS);                     // number of time steps
-    if (teufel::rank == 0)
+    // create a particle dump of the final distribution
+    if (teufel::rank==0)
     {
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
-        primaryObs.integrate(primary);
-        clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop_time);
-        printf("finished radiation calculation on screen.\n");
-        elapsed = stop_time.tv_sec-start_time.tv_sec + 1e-9*(stop_time.tv_nsec-start_time.tv_nsec);
-        printf("time elapsed : %9.3f s\n",elapsed);
-        try
+        if (0 != primary->WriteWatchPointSDDS("Waveguide_final.sdds"))
         {
-            primaryObs.WriteTimeDomainFieldHDF5();
+	        printf("SDDS write \033[1;31m failed!\033[0m\n");
         }
-        catch (exception& e)
+        else
         {
-            cout << e.what() << endl;
-        };
-      	printf("primary ScreenObserver time domain field written - \033[1;32m OK\033[0m\n");
+        	printf("SDDS file written - \033[1;32m OK\033[0m\n");
+        }
     };
-    
+
+    // create a tracking parameter dump fo the bunch
+    if (teufel::rank==0)
+    {
+        int retval = bunchLog->WriteBeamParametersSDDS("Waveguide_BeamParam.sdds");
+        if (0 != retval)
+        {
+	        printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
+        }
+        else
+        {
+            printf("SDDS file written - \033[1;32m OK\033[0m\n");
+        }
+    };
+
     // ===============================================================
     // The beam of the node rank 0 is distributed to all nodes
     // so the nodes can do independent computations on an
@@ -199,8 +236,9 @@ int main(int argc, char *argv[])
     // buffers for MPI communication
     // we rely on all particles having equal trajectory length
     int nop = primary->getNOP();
-    int trajsize = electron->getNP();
-    int bufsize = electron->TrajBufSize();
+    ChargedParticle *p = primary->getParticle(0);
+    int trajsize = p->getNP();
+    int bufsize = p->TrajBufSize();
     double *particlebuffer = new double[bufsize];
     if (teufel::rank == 0) printf("broadcasting %d particles\n",nop);
 
@@ -209,7 +247,7 @@ int main(int argc, char *argv[])
     // all nodes synchronously loop over the beam
     for (int j=0; j<nop; j++)
     {
-        ChargedParticle *p = primary->getParticle(j);
+        p = primary->getParticle(j);
         // in principle only root would have to buffer its particle trajectory
         p->serializeTraj(particlebuffer);
         // broadcast the buffer from root to all nodes
@@ -228,18 +266,20 @@ int main(int argc, char *argv[])
     
 	// compute the radiation observed on a finite screen 3.0m downstream the undulator center
 	// this observer only sees the direct particle
-    ScreenObserver parallelObs = ScreenObserver(
-        "Waveguide_MPI_parallel.h5",
+	double t0 = (6.0 - 10*lambdar) / SpeedOfLight;
+	double dt = lambdar / 12.0 / SpeedOfLight;
+    ScreenObserver *directObs = new ScreenObserver(
+        "Waveguide_MPI_direct.h5",
     	Vector(0.0, 0.0, 6.0),      // position
-    	Vector(0.002, 0.0, 0.0),    // dx
-    	Vector(0.0, 0.0002, 0.0),   // dy
+    	Vector(dX, 0.0, 0.0),       // dx
+    	Vector(0.0, dY, 0.0),       // dy
     	NX,                         // unsigned int nx,
     	NY,                         // unsigned int ny,
     	t0,
     	dt,
     	NOSTS);                     // number of time steps
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
-    parallelObs.integrate_mp(trackedBunch, NumberOfCores, teufel::rank);
+    directObs->integrate_mp(trackedBunch, NumberOfCores, teufel::rank);
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop_time);
     if (teufel::rank==0)
     {
@@ -247,14 +287,13 @@ int main(int argc, char *argv[])
         elapsed = stop_time.tv_sec-start_time.tv_sec + 1e-9*(stop_time.tv_nsec-start_time.tv_nsec);
         printf("time elapsed : %9.3f s\n",elapsed);
     }
-
     MPI_Barrier(MPI_COMM_WORLD);
     
     // collect all the field computed on the individual nodes into the root node
-    unsigned int count = parallelObs.getBufferSize();
+    unsigned int count = directObs->getBufferSize();
     std::cout << "Node " << teufel::rank << " allocating buffers for "<< count << " doubles" << std::endl;
     // fill the buffer and get its address
-    double* nodeBuffer = parallelObs.getBuffer();
+    double* nodeBuffer = directObs->getBuffer();
     if (nodeBuffer==0)
     {
         std::cout << "MPI_Reduce for Obsserver : node " << teufel::rank << " was unable to get the node buffer." << std::endl;
@@ -264,11 +303,14 @@ int main(int argc, char *argv[])
     double* reduceBuffer = new double[count];
     if (reduceBuffer==0)
     {
-        std::cout << "MPI_Reduce for Obsserver : node " << teufel::rank << " was unable to get the recude buffer." << std::endl;
+        std::cout << "MPI_Reduce for Obsserver : node " << teufel::rank << " was unable to get the reduce buffer." << std::endl;
         throw(IOexception("memory allocation error"));
     };
+    MPI_Barrier(MPI_COMM_WORLD);
+    std::cout << "node " << teufel::rank << " : nodeBuffer " << nodeBuffer << " reduceBuffer " << reduceBuffer << std::endl;
     if (teufel::rank == 0)
         std::cout << std::endl << "All buffers allocated." << std::endl;
+    MPI_Barrier(MPI_COMM_WORLD);
     MPI_Reduce(
         nodeBuffer,                 // send buffer
         reduceBuffer,               // receive buffer
@@ -278,32 +320,34 @@ int main(int argc, char *argv[])
         0,                          // rank of the root process
         MPI_COMM_WORLD              // communicator
     );
-    if (teufel::rank == 0)
-        std::cout << "Reduce finished." << std::endl;
-    // the root node copies the data from the reduce buffer into the Observer
-    if (teufel::rank == 0) parallelObs.fromBuffer(reduceBuffer,count);
-    delete reduceBuffer;
-    delete nodeBuffer;
-
     MPI_Barrier(MPI_COMM_WORLD);
-
     // the root node writes the output file    
     if (teufel::rank==0)
     {
+        std::cout << "Reduce finished." << std::endl;
+        // the root node copies the data from the reduce buffer into the Observer
+        directObs->fromBuffer(reduceBuffer,count);
         // write screen time traces
         try
         { 
-        	parallelObs.WriteTimeDomainFieldHDF5();
+        	directObs->WriteTimeDomainFieldHDF5();
         	printf("Screen observer time domain field written - \033[1;32m OK\033[0m\n");
         }
         catch (exception& e) { cout << e.what() << endl;}
     };
     
+    delete reduceBuffer;
+    delete nodeBuffer;
+    delete directObs;
+    MPI_Barrier(MPI_COMM_WORLD);
+
     // ===============================================================
     // Create a bunch containing all mirror particles needed to simulate
     // waveguided emission in addition to the tracked particles.
     // ===============================================================
 
+    MPI_Barrier(MPI_COMM_WORLD);
+    if (teufel::rank==0) printf("computing mirror particles.\n");
     nop = trackedBunch->getNOP();
     Bunch *mirrorBunch = new Bunch();
     for (int j=0; j<nop; j++)
@@ -333,6 +377,7 @@ int main(int argc, char *argv[])
             mirrorBunch->Add(e2);
         }
     }
+    MPI_Barrier(MPI_COMM_WORLD);
 
     // ===============================================================
     // Compute radiation emitted by the mirror beam distributed over all nodes.
@@ -340,20 +385,21 @@ int main(int argc, char *argv[])
     // Only the root node then writes the output file.
     // ===============================================================
 
+    if (teufel::rank==0) printf("computing radiation on screen including mirror particles.\n");
 	// compute the radiation observed on a finite screen 3.0m downstream the undulator center
 	// this observer only sees the direct particle
-    ScreenObserver mirrorObs = ScreenObserver(
+    ScreenObserver *mirrorObs = new ScreenObserver(
         "Waveguide_MPI_mirror.h5",
     	Vector(0.0, 0.0, 6.0),      // position
-    	Vector(0.002, 0.0, 0.0),    // dx
-    	Vector(0.0, 0.0002, 0.0),   // dy
+    	Vector(dX, 0.0, 0.0),       // dx
+    	Vector(0.0, dY, 0.0),       // dy
     	NX,                         // unsigned int nx,
     	NY,                         // unsigned int ny,
     	t0,
     	dt,
     	NOSTS);                     // number of time steps
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &start_time);
-    mirrorObs.integrate_mp(mirrorBunch, NumberOfCores, teufel::rank);
+    mirrorObs->integrate_mp(mirrorBunch, NumberOfCores, teufel::rank);
     clock_gettime(CLOCK_PROCESS_CPUTIME_ID, &stop_time);
     if (teufel::rank==0)
     {
@@ -365,10 +411,10 @@ int main(int argc, char *argv[])
     MPI_Barrier(MPI_COMM_WORLD);
     
     // collect all the field computed on the individual nodes into the root node
-    count = mirrorObs.getBufferSize();
+    count = mirrorObs->getBufferSize();
     std::cout << "Node " << teufel::rank << " allocating buffers for "<< count << " doubles" << std::endl;
     // fill the buffer and get its address
-    nodeBuffer = mirrorObs.getBuffer();
+    nodeBuffer = mirrorObs->getBuffer();
     if (nodeBuffer==0)
     {
         std::cout << "MPI_Reduce for Obsserver : node " << teufel::rank << " was unable to get the node buffer." << std::endl;
@@ -381,8 +427,11 @@ int main(int argc, char *argv[])
         std::cout << "MPI_Reduce for Obsserver : node " << teufel::rank << " was unable to get the recude buffer." << std::endl;
         throw(IOexception("memory allocation error"));
     };
+    MPI_Barrier(MPI_COMM_WORLD);
+    std::cout << "node " << teufel::rank << " : nodeBuffer " << nodeBuffer << " reduceBuffer " << reduceBuffer << std::endl;
     if (teufel::rank == 0)
         std::cout << std::endl << "All buffers allocated." << std::endl;
+    MPI_Barrier(MPI_COMM_WORLD);
     MPI_Reduce(
         nodeBuffer,                 // send buffer
         reduceBuffer,               // receive buffer
@@ -392,26 +441,27 @@ int main(int argc, char *argv[])
         0,                          // rank of the root process
         MPI_COMM_WORLD              // communicator
     );
-    if (teufel::rank == 0)
-        std::cout << "Reduce finished." << std::endl;
-    // the root node copies the data from the reduce buffer into the Observer
-    if (teufel::rank == 0) mirrorObs.fromBuffer(reduceBuffer,count);
-    delete reduceBuffer;
-    delete nodeBuffer;
 
     MPI_Barrier(MPI_COMM_WORLD);
-
     // the root node writes the output file    
     if (teufel::rank==0)
     {
+        std::cout << "Reduce finished." << std::endl;
+        // the root node copies the data from the reduce buffer into the Observer
+        mirrorObs->fromBuffer(reduceBuffer,count);
         // write screen time traces
         try
         { 
-        	mirrorObs.WriteTimeDomainFieldHDF5();
+        	mirrorObs->WriteTimeDomainFieldHDF5();
         	printf("Screen observer time domain field written - \033[1;32m OK\033[0m\n");
         }
         catch (exception& e) { cout << e.what() << endl;}
     };
+    
+    delete reduceBuffer;
+    delete nodeBuffer;
+    delete mirrorObs;
+    MPI_Barrier(MPI_COMM_WORLD);
 
     // clean up
     delete lattice;
