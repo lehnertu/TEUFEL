@@ -27,12 +27,19 @@
 
 #include <iostream>
 #include <math.h>
-#include "SDDS.h"
 #include "hdf5.h"
 
 MeshedScreen::MeshedScreen(std::string filename)
 {
     FileName = filename;
+}
+
+void MeshedScreen::init()
+{
+}
+
+MeshedScreen::~MeshedScreen()
+{
 }
 
 void MeshedScreen::integrate(Beam *src)

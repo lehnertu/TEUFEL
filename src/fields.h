@@ -55,6 +55,9 @@ public:
     /*! Magnetic field report */
     Vector B();
 
+    /* Poynting vector - energy flow density */
+    Vector Poynting();
+    
     /*! Sum of two fields */
     ElMagField operator+ (ElMagField other);
 
@@ -64,8 +67,20 @@ public:
     /*! Difference of two fields */
     ElMagField operator- (ElMagField other);
 
+    /*! In-place difference of two fields */
+    ElMagField& operator-= (ElMagField other);
+
     /*! Multiplication of the field with a real factor */
     ElMagField operator* (double factor);
+
+    /*! Division of the field by a real factor */
+    ElMagField operator/ (double factor);
+
+    /*! In-place multiplication of the field with a real factor */
+    ElMagField& operator*= (double factor);
+
+    /*! in-place division of the field by a real factor */
+    ElMagField& operator/= (double factor);
 
 private:
 

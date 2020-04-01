@@ -30,8 +30,16 @@
 #include "bunch.h"
 #include "global.h"
 #include "fields.h"
+#include "fieldtrace.h"
 #include "observer.h"
 #include "vector.h"
+
+/*! data type for tringle references */
+struct tri_ref {
+    int p1;
+    int p2;
+    int p3;
+};
 
 /*!
  * \class MeshedScreen
@@ -54,7 +62,7 @@ class MeshedScreen : public Observer
     
 public:
     
-    /*! Standard constructor:<br>
+    /*! Constructor for MeshedScreen objects from an HDF5 file:<br>
      *
      * The geometry and recording time information of the mesh
      * are read from the given file. The file format is identical to
@@ -80,9 +88,21 @@ public:
      *      type: array Np double
      *      content: t0 for every trace
      */
-    MeshedScreen(
-        std::string filename);
+    MeshedScreen(std::string filename);
     
+    /*! This method computes a number of internal data
+     *  like cell areas, normals and performs some sanity checks.
+     *  It should be called whenever a new screen object has been constructed.
+     *
+     *  A local coordinate system is set up for every mesh cell.
+     *  The direction vectors (xi, eta, n) form a right-handed cartesic system.
+     */
+    void init();
+    
+    /*! Default destructor:<br>
+     */
+    ~MeshedScreen();
+
     /*! Integrate the fields emitted by the source
      *  during all of its history, falling onto the time frame
      *  of observation.
@@ -153,5 +173,43 @@ private:
     
     //! file name for the input and final output
     std::string FileName;
+
+    /*! number of corner points of the grid cells */
+    int Ncp;
+    
+    /*! number of the grid cells / field observation positions */
+    int Np;
+
+    /*! number of the time steps per trace */
+    int Nt;
+    
+    /*! time-step value */
+    double dt;
+
+    /*! starting time of all the traces */
+    std::vector<double> t0;
+
+    /*! the coordinates of the mesh corner points */
+    std::vector<Vector> triangle_points;
+    
+    /*! lists of references which points belong to the triangles */
+    std::vector<tri_ref> triangles;
+    
+    /*! the coordinates of the mesh center points where fields are defined */
+    std::vector<Vector> field_points;
+
+    /*! the local coordinate system of the cells - computed by init() */
+    std::vector<Vector> xi;
+    std::vector<Vector> eta;
+    std::vector<Vector> normal;
+
+    /*! the cell areas - computed by init() */
+    std::vector<double> area;
+    
+    /*! the total screen area - computed by init() */
+    double total_area;
+
+    /*! pointers to the field traces for every mesh cell */
+    std::vector<FieldTrace*> A;
 
 };

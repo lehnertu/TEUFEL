@@ -66,6 +66,9 @@ class Vector
     /*! Difference of two vectors */
     Vector operator- (Vector v2);
 
+    /*! In-place difference of two vectors */
+    Vector& operator-= (Vector v2);
+
     /*! The negative of a vector */
     Vector operator- ();
 
@@ -90,7 +93,10 @@ class Vector
     /*! Make the vector unit length */
     void normalize();
 
-  private:
+    /*! Transform the vector into another coordinate system.
+     *  The vectors ex, ey and ez are supposed to form a right-handed cartesian system.
+     */
+    void transform(Vector ex, Vector ey, Vector ez);
 
 };
 
