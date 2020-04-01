@@ -28,6 +28,9 @@
 #include "beam.h"
 #include "fields.h"
 #include "observer.h"
+#include "point_observer.h"
+#include "screen.h"
+#include "snapshot.h"
 
 using namespace std;
 

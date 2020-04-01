@@ -68,7 +68,7 @@
 #include "particle.h"
 #include "bunch.h"
 #include "fields.h"
-#include "observer.h"
+#include "point_observer.h"
 
 int NOTS = 100;                // number of time steps
 
