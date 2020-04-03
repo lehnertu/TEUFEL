@@ -61,6 +61,13 @@ echo ''
 echo '==============================================================================='
 echo ''
 
+./build/teufel.diffraction; rc=$?
+num=$(($num + $rc))
+
+echo ''
+echo '==============================================================================='
+echo ''
+
 if [ $num = "0" ]
 then
     echo -e "$green no errors - all tests passed.$nc"

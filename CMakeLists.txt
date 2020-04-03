@@ -199,6 +199,11 @@ if(BUILD_TESTS)
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
                              ${ZLIB_LIBRARY_RELEASE} )
+    add_executable(teufel.diffraction ${PROJECT_TESTS_DIR}/teufel.DiffractionScreen.cpp)
+    target_link_libraries(teufel.diffraction ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIBRARIES}
+                             ${ZLIB_LIBRARY_RELEASE} )
 endif()
 
 # for building examples
