@@ -196,6 +196,8 @@ class MeshedField():
     def WriteMeshedField(self, filename):
         """
         Write the fields on a meshed geometry to an HDF5 file.
+        The ObservationTime and ElMagField datasets are only written
+        if there are data of correct shape available.
         """
         hf = h5py.File(filename, 'w')
         h5p = hf.create_dataset('MeshCornerPoints', data=self.points, dtype='f8')
@@ -204,10 +206,12 @@ class MeshedField():
         h5p.attrs['Ntri'] = self.Np
         h5p = hf.create_dataset('ObservationPosition', data=self.pos, dtype='f8')
         h5p.attrs['Np'] = self.Np
-        h5p = hf.create_dataset('ObservationTime',data=self.t0, dtype='f8')
-        h5p.attrs['Nt'] = self.Nt
-        h5p.attrs['dt'] = self.dt
-        h5p = hf.create_dataset('ElMagField', data=self.A, dtype='f8')
+        if self.t0.shape == (self.Np,):
+            h5p = hf.create_dataset('ObservationTime',data=self.t0, dtype='f8')
+            h5p.attrs['Nt'] = self.Nt
+            h5p.attrs['dt'] = self.dt
+        if self.A.shape == (self.Np,self.Nt,6):
+            h5p = hf.create_dataset('ElMagField', data=self.A, dtype='f8')
         hf.close()
 
     def ShowMeshedField(self, highlight=[], scalars=[], scalarTitle="",
