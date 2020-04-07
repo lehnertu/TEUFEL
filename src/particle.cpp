@@ -756,9 +756,93 @@ void ChargedParticle::integrateFieldTrace(
     double t0 = trace->get_t0();
     double dt = trace->get_dt();
     int nots = trace->get_N();
-    std::vector<ElMagField> buffer(nots);
-    for (int it=0; it<nots; it++) buffer[it] = trace->get_field(it);
-    integrateFieldTrace(ObservationPoint, t0, dt, nots, &buffer);
-    for (int it=0; it<nots; it++) trace->set(it,buffer[it]);
+    // the FieldTrace spans the time from tmin to tmax
+    double tmin=t0-dt*0.5;
+    double tmax=t0+dt*((double)nots-0.5);
+    // if there is no trajectory of at least one step we do nothing
+    if (NP<2) return;
+    // loop index i over the time steps of the trajectory
+    for (int i=0; i<NP-1; i++)
+    {
+        // handle one trajectory time step ts1...ts2 with span dts at the observation point
+	    double ts1 = RetardedTime(i,ObservationPoint);
+	    double ts2 = RetardedTime(i+1,ObservationPoint);
+	    double dts = ts2-ts1;
+	    // field component to be added to the trace fields
+	    ElMagField field;
+	    if ((ts2>tmin) && (ts1<tmax))
+	    // else - time step is completely outside observation range
+	    {
+	        // these are the fields observed at the ends of the trajectory segment
+	        ElMagField f1 = RetardedField(i,ObservationPoint);
+	        ElMagField f2 = RetardedField(i+1,ObservationPoint);
+	        if (ts1<=tmin)
+		    // if (ts2<=tmax) time step starts before but enters the observation range
+		    // else time step is covering the entire observation range
+		    // both cases are handled with the same code
+	        {
+		        // observation bucket in which the step end falls
+		        int idx2 = round((ts2-t0)/dt);
+		        if (idx2>nots) idx2=nots;
+		        // handle all fully covered buckets
+		        for (int idx=0; idx<idx2; idx++)
+		        {
+		            // center time of the bucket
+		            double t_center = t0+idx*dt;
+		            field = f1*((ts2-t_center)/dts) + f2*((t_center-ts1)/dts);
+		            trace->add(idx,field);
+		        };
+		        // handle the last (partially covered) bucket
+		        if (idx2<nots)
+		        {
+		            // start time of the bucket
+		            double t_start = t0+(idx2-0.5)*dt;
+		            ElMagField f_start = f1*((ts2-t_start)/dts) + f2*((t_start-ts1)/dts);
+		            field = (f_start+f2)*0.5*((ts2-t_start)/dt);
+		            trace->add(idx2,field);
+		        };
+	        }
+	        else
+		    // if (ts2<=tmax) time step is fully inside observation range
+		    // else time step is leaving the observation range
+		    // both cases are handled with the same code
+	        {
+		        // observation bucket in which the step start falls
+		        int idx1 = round((ts1-t0)/dt);
+		        // observation bucket in which the step end falls
+		        int idx2 = round((ts2-t0)/dt);
+		        if (idx2>nots) idx2=nots;
+		        if (idx1==idx2)
+		        // time step if fully within one bucket
+		        {
+		            field = (f1+f2)*0.5*(dts/dt);
+		            trace->add(idx1,field);
+		        }
+		        else
+		        {
+		            // handle the first (partially covered) bucket
+		            double t_end = t0+(idx1+0.5)*dt;
+		            ElMagField f_end = f1*((ts2-t_end)/dts) + f2*((t_end-ts1)/dts);
+		            field = (f1+f_end)*0.5*((t_end-ts1)/dt);
+		            trace->add(idx1,field);
+		            // handle all fully covered buckets
+		            for (int idx=idx1+1; idx<idx2; idx++)
+		            {
+			            double t_center = t0+idx*dt;
+			            field = f1*((ts2-t_center)/dts) + f2*((t_center-ts1)/dts);
+			            trace->add(idx,field);
+		            };
+		            // handle the last (partially covered) bucket
+		            if (idx2<nots)
+		            {
+			            double t_start = t0+(idx2-0.5)*dt;
+			            ElMagField f_start = f1*((ts2-t_start)/dts) + f2*((t_start-ts1)/dts);
+			            field = (f_start+f2)*0.5*((ts2-t_start)/dt);
+			            trace->add(idx2,field);
+		            };
+		        }
+	        };
+	    };
+    };
 }
 

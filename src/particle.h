@@ -294,11 +294,15 @@ public:
      * All field contributions are just added to the field referenced
      * by ObservationField. The caller may choose to start with a zero field
      * or to use this to sum up the fields of multiple particles.
-     * 
-     * This method linearly interpolates over time, assuming the time
-     * step for the trajectory integration is choosen small enough.
-     * Thus, the field-time integral is exactly preserved when mapping
-     * the retarded time-steps of the trajectory onto the observation trace.
+     *
+     * This method is supposed to conserve the time integral of the fields.
+     * The methods steps over the time-steps of the trajectory
+     * and distributes the observed fields into the FieldTrace according
+     * to its arrival time. The sampling points of the FieldTrace are
+     * considered the centers of dt long buckets. The field of the source
+     * is linearly interpolated and distributed onto te buckets accordingly.
+     * This way short field spikes falling into the interior of one time step
+     * are not overlooked as it would be in a simple sampling algorithm.
      * 
      * \param[in] ObservationPoint The position [m] of the observer.
      * \param[out] trace Electromagnetic field integrals at the observation point.

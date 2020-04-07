@@ -121,6 +121,9 @@ public:
      */
     ElMagField get_field(double time);
     
+    /*! Add some field to the value recorded for a particular time step */
+    void add(int index, ElMagField f) { trace[index] += f; };
+    
     /*! Poynting vector - time-integrated energy flow density */
     Vector Poynting();
     
