@@ -127,6 +127,13 @@ void FieldTrace::set(int index, ElMagField f)
     trace[index] = f;
 }
 
+void FieldTrace::get_buffer(ElMagField *buffer, int Nb)
+{
+    if (Nb != N) throw(IOexception("FieldTrace::set - size mismatch."));
+    ElMagField *buf = buffer;
+    for (int it=0; it<N; it++) *buf++ = get_field(it);
+}
+
 void FieldTrace::set(ElMagField *buffer, int Nb)
 {
     if (Nb != N) throw(IOexception("FieldTrace::set - size mismatch."));

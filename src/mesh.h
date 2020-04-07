@@ -21,9 +21,6 @@
 
 #pragma once
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <iostream>
 #include <vector>
 
 #include "beam.h"
@@ -71,22 +68,32 @@ public:
      * These fields are recreated empty and can be filled by subsequently
      * calculating the received radiation. 
      *
-     * For definition of the mesh 3 data sets are read from the file:
+     * For definition of the mesh 5 datasets are read from the file:
      * 
      *   "MeshCornerPoints"
      *      attributes: Ncp
      *      type: array Ncp*3 double
      *      content: point coordinates
      *
+     *   "ObservationPosition"
+     *      attributes: Np
+     *      type: array Np*3 double
+     *      content: point coordinates
+     *
      *   "MeshTriangles"
-     *      attributes: Ntri
-     *      type: array Ntri*3 uint32
+     *      type: array Np*3 uint32
      *      content: for every triangle references to the 3 corner points
      *
      *   "ObservationTime"
      *      attributes: Nt, dt
      *      type: array Np double
      *      content: t0 for every trace
+     *      It is no error if this dataset is missing - intialize to zero.
+     *
+     *   "ElMagField"
+     *      type: array Np*Nt*6 double
+     *      content: fields for every trace
+     *      It is no error if this dataset is missing - intialize to zero.
      */
     MeshedScreen(std::string filename);
     
@@ -102,6 +109,17 @@ public:
     /*! Default destructor:<br>
      */
     ~MeshedScreen();
+
+    /*! Get the position of one grid cell */
+    Vector get_point(int ip) { return field_points[ip]; }
+
+    /*! Get the start time of one trace */
+    double get_t0(int ip) { return t0[ip]; }
+
+    /*! Get the cell-local coordinate system */
+    Vector get_xi(int ip) { return xi[ip]; }
+    Vector get_eta(int ip) { return eta[ip]; }
+    Vector get_normal(int ip) { return normal[ip]; }
 
     /*! Integrate the fields emitted by the source
      *  during all of its history, falling onto the time frame
@@ -143,7 +161,7 @@ public:
     virtual unsigned int getBufferSize();
     
     /*! Return all field values in a newly allocated buffer.
-     *  Memory for the buffer is allocated by this method and must be freeed
+     *  Memory for the buffer is allocated by this method and must be freed
      *  by the caller. Returns a pointer to the allocated memory.
      *  An exception is thrown if the alloaction of the buffer fails.
      */
@@ -162,7 +180,18 @@ public:
      * 
      * @throws IOexception
      */
-    void WriteMeshedField();
+    void writeFile();
+
+    /*! Compute the total electromagnetic energy flowing through the screen
+     *  Energy flow vectors opposite the normal vector are counted positive.
+     */
+    double totalEnergy();
+
+    /*! Write a report of the screen geometry and parameters
+     *  including some summary field data
+     *  onto an output stream
+     */
+    void writeReport(std::ostream *st);
 
     /*! Generate the output file(s) from this observation.
      *  The present code just calls  WriteTimeDomainFieldHDF()

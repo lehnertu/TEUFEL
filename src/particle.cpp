@@ -749,3 +749,16 @@ void ChargedParticle::integrateFieldTrace(
     // cout << endl;
 }
 
+void ChargedParticle::integrateFieldTrace(
+        Vector ObservationPoint,
+        FieldTrace *trace)
+{
+    double t0 = trace->get_t0();
+    double dt = trace->get_dt();
+    int nots = trace->get_N();
+    std::vector<ElMagField> buffer(nots);
+    for (int it=0; it<nots; it++) buffer[it] = trace->get_field(it);
+    integrateFieldTrace(ObservationPoint, t0, dt, nots, &buffer);
+    for (int it=0; it<nots; it++) trace->set(it,buffer[it]);
+}
+

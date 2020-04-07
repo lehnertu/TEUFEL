@@ -106,17 +106,22 @@ int main ()
     Vector XP = electrons->getPosition();
     printf("x(%9.6g s) =  (%9.6g,%9.6g,%9.6g) m\n",t_final,XP.x,XP.y,XP.z);
 
+    // check final particle position
     if (fabs(XP.z-2.0) > 1e-6) {
 		errors++;
 		printf("error in final position %9.6g m - \033[1;31m test failed!\033[0m\n", XP.z);
     };
     
-    // create the screen
+    // record fields on the screen
     try
     {
         // read the screen setup from file
         MeshedScreen* screen = new MeshedScreen(FILENAME);
-        
+        screen->init();
+        // accumulate the fields
+        screen->integrate(bunch);
+        // write data
+        screen->writeReport(&cout);
         // clean up
         delete screen;
     }

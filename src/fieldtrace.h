@@ -66,6 +66,11 @@ public:
     /*! Set one of the entries of a field trace */
     void set(int index, ElMagField f);
 
+    /*! Copy all entries of a field trace into a buffer.
+     *  The number of elements in the buffer needs to be provided for checking.
+     */
+    void get_buffer(ElMagField *buffer, int Nb);
+
     /*! Set all entries of a field trace from a buffer.
      *  The number of elements in the buffer needs to be provided for checking.
      */
