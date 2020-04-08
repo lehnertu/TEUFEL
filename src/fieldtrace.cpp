@@ -24,7 +24,7 @@
 #include "global.h"
 #include "fieldtrace.h"
 
-FieldTrace::FieldTrace(double t0_p, double dt_p, int N_p)
+FieldTrace::FieldTrace(double t0_p, double dt_p, std::size_t N_p)
 {
     t0 = t0_p;
     dt = dt_p;
@@ -42,7 +42,7 @@ FieldTrace::FieldTrace(FieldTrace *original)
 
 void FieldTrace::zero()
 {
-    for (int i=0; i<N; i++)
+    for (std::size_t i=0; i<N; i++)
         trace[i] = ElMagField(Vector(0.0,0.0,0.0),Vector(0.0,0.0,0.0));
 }
 
@@ -76,7 +76,7 @@ FieldTrace & FieldTrace::operator=(const FieldTrace &t)
 FieldTrace FieldTrace::operator* (double factor)
 {
     FieldTrace temp = *this;
-    for (int i=0; i<temp.N; i++)
+    for (std::size_t i=0; i<temp.N; i++)
         temp.trace[i] *= factor;
     return(temp);
 }
@@ -84,7 +84,7 @@ FieldTrace FieldTrace::operator* (double factor)
 FieldTrace FieldTrace::operator/ (double factor)
 {
     FieldTrace temp = *this;
-    for (int i=0; i<temp.N; i++)
+    for (std::size_t i=0; i<temp.N; i++)
         temp.trace[i] /= factor;
     return(temp);
 }
@@ -95,7 +95,7 @@ FieldTrace FieldTrace::operator+ (FieldTrace other)
     if (t0 != other.t0) throw(IOexception("FieldTrace::operator+ - start time mismatch."));
     if (dt != other.dt) throw(IOexception("FieldTrace::operator+ - time step mismatch."));
     FieldTrace temp = *this;
-    for (int i=0; i<N; i++)
+    for (std::size_t i=0; i<N; i++)
         temp.trace[i] = trace[i] + other.trace[i];
     return (temp);
 }
@@ -105,7 +105,7 @@ FieldTrace& FieldTrace::operator+= (FieldTrace other)
     if (N != other.N) throw(IOexception("FieldTrace::operator+= - size mismatch."));
     if (t0 != other.t0) throw(IOexception("FieldTrace::operator+= - start time mismatch."));
     if (dt != other.dt) throw(IOexception("FieldTrace::operator+= - time step mismatch."));
-    for (int i=0; i<N; i++)
+    for (std::size_t i=0; i<N; i++)
         trace[i] += other.trace[i];
     return (*this);
 }
@@ -116,40 +116,45 @@ FieldTrace FieldTrace::operator- (FieldTrace other)
     if (t0 != other.t0) throw(IOexception("FieldTrace::operator- - start time mismatch."));
     if (dt != other.dt) throw(IOexception("FieldTrace::operator- - time step mismatch."));
     FieldTrace temp = *this;
-    for (int i=0; i<N; i++)
+    for (std::size_t i=0; i<N; i++)
         temp.trace[i] = trace[i] - other.trace[i];
     return (temp);
 }
 
-void FieldTrace::set(int index, ElMagField f)
+void FieldTrace::set(std::size_t index, ElMagField f)
 {
-    if (index<0 || index>=N) throw(IOexception("FieldTrace::set - index out of range."));
+    if (index<0 || index>=N)
+        throw(IOexception("FieldTrace::set - index out of range."));
     trace[index] = f;
 }
 
-void FieldTrace::get_buffer(ElMagField *buffer, int Nb)
+void FieldTrace::get_buffer(ElMagField *buffer, std::size_t Nb)
 {
-    if (Nb != N) throw(IOexception("FieldTrace::set - size mismatch."));
+    if (Nb != N)
+        throw(IOexception("FieldTrace::get_buffer - size mismatch."));
     ElMagField *buf = buffer;
-    for (int it=0; it<N; it++) *buf++ = get_field(it);
+    for (std::size_t it=0; it<N; it++) *buf++ = get_field(it);
 }
 
-void FieldTrace::set(ElMagField *buffer, int Nb)
+void FieldTrace::set(ElMagField *buffer, std::size_t Nb)
 {
-    if (Nb != N) throw(IOexception("FieldTrace::set - size mismatch."));
+    if (Nb != N)
+        throw(IOexception("FieldTrace::set - size mismatch."));
     ElMagField *buf = buffer;
-    for (int it=0; it<N; it++) set(it, *buf++);
+    for (std::size_t it=0; it<N; it++) set(it, *buf++);
 }
 
-double FieldTrace::get_time(int index)
+double FieldTrace::get_time(std::size_t index)
 {
-    if (index<0 || index>=N) throw(IOexception("FieldTrace::get_time - index out of range."));
+    if (index<0 || index>=N)
+        throw(IOexception("FieldTrace::get_time - index out of range."));
     return t0+index*dt;
 }
 
-ElMagField FieldTrace::get_field(int index)
+ElMagField FieldTrace::get_field(std::size_t index)
 {
-    if (index<0 || index>=N) throw(IOexception("FieldTrace::get_field - index out of range."));
+    if (index<0 || index>=N)
+        throw(IOexception("FieldTrace::get_field - index out of range."));
     return trace[index];
 }
 
@@ -159,16 +164,16 @@ ElMagField FieldTrace::get_field(double time)
     int index = (int)floor(ref);
     double frac = ref-(double)index;
     ElMagField f1(Vector(0.0,0.0,0.0),Vector(0.0,0.0,0.0));
-    if ((index>=0) && (index<N)) f1=trace[index];
+    if ((index>=0) && (index<(int)N)) f1=trace[(std::size_t)index];
     ElMagField f2(Vector(0.0,0.0,0.0),Vector(0.0,0.0,0.0));
-    if ((index+1>=0) && (index+1<N)) f2=trace[index+1];
+    if ((index+1>=0) && (index+1<(int)N)) f2=trace[(std::size_t)(index+1)];
     return(f1*(1.0-frac)+f2*frac);
 }
 
 Vector FieldTrace::Poynting()
 {
     Vector sum(0.0,0.0,0.0);
-    for (int i=0; i<N; i++)
+    for (std::size_t i=0; i<N; i++)
         sum += trace[i].Poynting();
     return(sum*dt);
 }
@@ -177,7 +182,7 @@ FieldTrace FieldTrace::derivative()
 {
     FieldTrace temp = *this;
     temp.trace[0] = (trace[1]-trace[0])/dt;
-    for (int i=1; i<N-1; i++)
+    for (std::size_t i=1; i<N-1; i++)
         temp.trace[i] = (trace[i+1]-trace[i-1])/(2.0*dt);
     temp.trace[N-1] = (trace[N-1]-trace[N-2])/dt;
     return(temp);
@@ -185,7 +190,7 @@ FieldTrace FieldTrace::derivative()
 
 void FieldTrace::retard(double delta_t, FieldTrace *target)
 {
-    for (int i=0; i<target->get_N(); i++)
+    for (std::size_t i=0; i<target->get_N(); i++)
     {
         double t = target->get_time(i) - delta_t;
         target->trace[i] = get_field(t);
@@ -205,7 +210,7 @@ void FieldTrace::retard(double delta_t, FieldTrace *target)
 
 void FieldTrace::transform(Vector ex, Vector ey, Vector ez)
 {
-    for (int i=0; i<N; i++)
+    for (std::size_t i=0; i<N; i++)
     {
         Vector E = trace[i].E();
         Vector B = trace[i].B();

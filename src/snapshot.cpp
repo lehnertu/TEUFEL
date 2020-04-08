@@ -100,11 +100,6 @@ void SnapshotObserver::setField(
 	    throw(IOexception("SnapshotObserver::setField() - requested index out of range."));
 }
 
-unsigned int SnapshotObserver::getBufferSize()
-{
-    return Nx*Ny*6;
-}
-
 double* SnapshotObserver::getBuffer()
 {
     double* buffer = new double[getBufferSize()];
@@ -128,7 +123,7 @@ double* SnapshotObserver::getBuffer()
     return buffer;
 }
 
-void SnapshotObserver::fromBuffer(double *buffer, unsigned int size)
+void SnapshotObserver::fromBuffer(double *buffer, std::size_t size)
 {
     if (size==Nx*Ny*6)
     {

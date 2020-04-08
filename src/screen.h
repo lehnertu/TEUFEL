@@ -152,7 +152,7 @@ public:
     /*! The method gives the size of the buffer necessary to store
      *  the complete field information as a number of doubles (not bytes!).
      */
-    virtual unsigned int getBufferSize();
+    virtual std::size_t getBufferSize() { return Nx*Ny*NOTS*6; };
     
     /*! Return all field values in a newly allocated buffer.
      *  Memory for the buffer is allocated by this method and must be freeed
@@ -165,7 +165,7 @@ public:
      *  The count value gives the size of the buffer as a number of doubles.
      *  An exception is thrown if it doesn't match the actual field size.
      */
-    virtual void fromBuffer(double *buffer, unsigned int size);
+    virtual void fromBuffer(double *buffer, std::size_t size);
 
     /*! @brief Write all the time-domain field traces into an HDF5 file.
      * 

@@ -30,6 +30,7 @@
 #include "bunch.h"
 #include "global.h"
 #include "fields.h"
+#include "fieldtrace.h"
 #include "observer.h"
 #include "vector.h"
 
@@ -42,6 +43,7 @@
  * This class handles the computation and storage of emitted electromagnetic
  * radiation from different sources (particles, bunches and beams).
  * It provides a time-trace of electromagnetic field values.
+ * It adds position information and file I/O to the FieldTrace:
  */
 class PointObserver : public Observer
 {
@@ -52,10 +54,7 @@ public:
      * Compute the electromagnetic field radiated by a given source.
      * 
      * The observer is placed at a given position in space.
-     * The field is recorded in time domain
-     * starting at t0 with nots equidistant time steps of dt length.
-     * The first time step starts at \f$t0\f$ and ends at \f$t0+dt\f$.
-     * The total timespan covererd ends at \f$t0+n*dt\f$.
+     * The field is recorded in time domain as a FieldTrace:
      * 
      * This class is templated and spezialized for
      * Bunch(), Beam() or Lattice() being the field source.
@@ -70,7 +69,10 @@ public:
         Vector position,
         double t0,
         double dt,
-        unsigned int nots);
+        std::size_t nots);
+
+    /*! Destructor */
+    virtual ~PointObserver();
 
     /*! Integrate the fields emitted by the source
      *  during all of its history, falling onto the time frame
@@ -87,22 +89,20 @@ public:
 
     /*! Return the field value stored in one time slice
      */
-    ElMagField getField(unsigned int idx);
+    ElMagField getField(std::size_t idx) { return trace->get_field(idx); };
     
     /*! Set one particular field value stored in one time slice with index it.
      *  This method throws an exception in case of an out-of-range index.
      *  This exception should not be caught as it represents an internal
      *  coding error (should never happen).
      */
-    void setField(
-        unsigned int it,
-        ElMagField field);
+    void setField(std::size_t idx, ElMagField field) { trace->set(idx,field); };
 
-    /*! The method gives the size of the buffer necessary to store
-     *  the complete field information as a number of doubles (not bytes!).
+    /*! Get the number of doubles (not bytes!) for a buffer
+     *  holding the trace data
      */
-    virtual unsigned int getBufferSize();
-    
+    virtual std::size_t getBufferSize() { return 6*trace->get_N(); };
+
     /*! Return all field values in a newly allocated buffer.
      *  Memory for the buffer is allocated by this method and must be freeed
      *  by the caller. Returns a pointer to the allocated memory.
@@ -114,7 +114,7 @@ public:
      *  The count value gives the size of the buffer as a number of doubles.
      *  An exception is thrown if it doesn't match the actual field size.
      */
-    virtual void fromBuffer(double *buffer, unsigned int size);
+    virtual void fromBuffer(double *buffer, std::size_t size);
 
     /*! @brief Write the time-domain field trace into an SDDS file.
      * 
@@ -145,17 +145,8 @@ private:
     //! the position of the observer
     Vector Pos;
 
-    //! number of time steps in the interpolated trace
-    unsigned int NOTS;
-
-    //! the start of the field trace
-    double t0_obs;
-
-    //! the step of the field trace
-    double dt_obs;
-
     //! the interpolated electromagnetic field
-    std::vector<ElMagField> TimeDomainField;
+    FieldTrace *trace;
 
 };
 

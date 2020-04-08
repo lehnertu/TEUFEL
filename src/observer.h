@@ -68,7 +68,7 @@ public:
      *  the complete field information as a number of doubles (not bytes!).
      *  This is a purely virtual method that must be overwritten by derived objects.
      */
-    virtual unsigned int getBufferSize() = 0;
+    virtual std::size_t getBufferSize() = 0;
     
     /*! Return all field values in a newly allocated buffer.
      *  Memory for the buffer is allocated by this method and must be freed
@@ -83,7 +83,7 @@ public:
      *  An exception is thrown if it doesn't match the actual field size.
      *  This is a purely virtual method that must be overwritten by derived objects.
      */
-    virtual void fromBuffer(double *buffer, unsigned int size) = 0;
+    virtual void fromBuffer(double *buffer, std::size_t size) = 0;
 
     /*!
      *  Generate whatever output the special observer has to deliver.

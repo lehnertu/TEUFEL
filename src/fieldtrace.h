@@ -44,7 +44,7 @@ public:
      *  Allocate memory for N samples
      *  and initialize all components to zero.
      */
-    FieldTrace(double t0_p, double dt_p, int N_p);
+    FieldTrace(double t0_p, double dt_p, std::size_t N_p);
 
     /*! Copy constructor:<br>
      */
@@ -63,18 +63,28 @@ public:
      */
     FieldTrace & operator=(const FieldTrace &t);
 
-    /*! Set one of the entries of a field trace */
-    void set(int index, ElMagField f);
+    /*! Set one of the entries of a field trace.
+     *  This method throws an exception in case of an out-of-range index.
+     *  This exception should not be caught as it represents an internal
+     *  coding error (should never happen).
+     */
+    void set(std::size_t index, ElMagField f);
+
+    /*! Get the number of doubles (not bytes!) for a buffer
+     *  holding the trace data
+     */
+    // int getBufferSize() { return 6*N; };
 
     /*! Copy all entries of a field trace into a buffer.
-     *  The number of elements in the buffer needs to be provided for checking.
+     *  The memory has to be allocated by the caller beforehand.
+     *  The number of elements (ElMagField) in the buffer needs to be provided for checking.
      */
-    void get_buffer(ElMagField *buffer, int Nb);
+    void get_buffer(ElMagField *buffer, std::size_t Nb);
 
     /*! Set all entries of a field trace from a buffer.
-     *  The number of elements in the buffer needs to be provided for checking.
+     *  The number of elements (ElMagField) in the buffer needs to be provided for checking.
      */
-    void set(ElMagField *buffer, int Nb);
+    void set(ElMagField *buffer, std::size_t Nb);
 
     /*! Multiplication of the field with a real factor */
     FieldTrace operator* (double factor);
@@ -104,17 +114,24 @@ public:
     /*! Get the sampling definitions
      *  These are not expected to be changed, so, no setter routines are provoded */
     double get_dt() { return dt; };
-    int get_N() { return N; };
+    std::size_t get_N() { return N; };
     
     /*! Get the center time of the trace */
     double get_tCenter() { return t0+0.5*dt*(double)N; }
     
     /*! Get the time of one point of the trace */
-    double get_time(int index);
+    double get_time(std::size_t index);
     
     /*! Get the field at one point of the trace */
-    ElMagField get_field(int index);
+    ElMagField get_field(std::size_t index);
     
+    /*! Set one particular field value stored in one time slice with index it.
+     *  This method throws an exception in case of an out-of-range index.
+     *  This exception should not be caught as it represents an internal
+     *  coding error (should never happen).
+     */
+    void set_field(std::size_t index, ElMagField field);
+
     /*! Get the field at one point in time.
         This interpolates linearly between samples.
         Outside the covered trace length zero is returned.
@@ -122,7 +139,7 @@ public:
     ElMagField get_field(double time);
     
     /*! Add some field to the value recorded for a particular time step */
-    void add(int index, ElMagField f) { trace[index] += f; };
+    void add(std::size_t index, ElMagField f) { trace[index] += f; };
     
     /*! Poynting vector - time-integrated energy flow density */
     Vector Poynting();
@@ -147,7 +164,7 @@ public:
     
 private:
 
-    int N;
+    std::size_t N;
     double t0;
     double dt;
     std::vector<ElMagField> trace;

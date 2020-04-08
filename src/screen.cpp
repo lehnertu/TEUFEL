@@ -162,11 +162,6 @@ void ScreenObserver::setField(
 	    throw(IOexception("ScreenObserver::setField() - requested index out of range."));
 }
 
-unsigned int ScreenObserver::getBufferSize()
-{
-    return Nx*Ny*NOTS*6;
-}
-
 double* ScreenObserver::getBuffer()
 {
     double* buffer = new double[getBufferSize()];
@@ -191,7 +186,7 @@ double* ScreenObserver::getBuffer()
     return buffer;
 }
 
-void ScreenObserver::fromBuffer(double *buffer, unsigned int size)
+void ScreenObserver::fromBuffer(double *buffer, std::size_t size)
 {
     if (size==Nx*Ny*NOTS*6)
     {

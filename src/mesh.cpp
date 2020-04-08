@@ -265,6 +265,8 @@ MeshedScreen::~MeshedScreen()
 
 void MeshedScreen::integrate(Beam *src)
 {
+    for (int i=0; i<Np; i++)
+        src->integrateFieldTrace(get_point(i), A[i]);
 }
 
 void MeshedScreen::integrate(Bunch *src)
@@ -275,21 +277,46 @@ void MeshedScreen::integrate(Bunch *src)
 
 void MeshedScreen::integrate(Lattice *src)
 {
+    for (int i=0; i<Np; i++)
+    {
+        Vector pos = get_point(i);
+        for (int it=0; it<Nt; it++)
+        {
+            FieldTrace *trace = A[i];
+            trace->add(it,src->Field(trace->get_time(it),pos));
+        }
+    }
 }
 
 void MeshedScreen::integrate_mp(Beam *src, unsigned int NumCores, unsigned int CoreId)
 {
+    for (int i=0; i<Np; i++)
+        if (CoreId == i % NumCores)
+            src->integrateFieldTrace(get_point(i), A[i]);
 }
 
 void MeshedScreen::integrate_mp(Bunch *src, unsigned int NumCores, unsigned int CoreId)
 {
+    for (int i=0; i<Np; i++)
+        if (CoreId == i % NumCores)
+            src->integrateFieldTrace(get_point(i), A[i]);
 }
 
 void MeshedScreen::integrate_mp(Lattice *src, unsigned int NumCores, unsigned int CoreId)
 {
+    for (int i=0; i<Np; i++)
+        if (CoreId == i % NumCores)
+        {
+            Vector pos = get_point(i);
+            for (int it=0; it<Nt; it++)
+            {
+                FieldTrace *trace = A[i];
+                trace->add(it,src->Field(trace->get_time(it),pos));
+            }
+        }
 }
 
-unsigned int MeshedScreen::getBufferSize()
+std::size_t MeshedScreen::getBufferSize()
 {
     return Np*Nt*6;
 }
@@ -304,7 +331,7 @@ double* MeshedScreen::getBuffer()
         for (int i=0; i<Np; i++)
         {
             FieldTrace* trace = A[i];
-            for (int it=0; it<Nt; it++)
+            for (std::size_t it=0; it<trace->get_N(); it++)
             {
                 ElMagField field = trace->get_field(it);
         		*bp++ = field.E().x;
@@ -319,12 +346,14 @@ double* MeshedScreen::getBuffer()
     return buffer;
 }
 
-void MeshedScreen::fromBuffer(double *buffer, unsigned int size)
+void MeshedScreen::fromBuffer(double *buffer, std::size_t size)
 {
+    // TODO:
 }
 
 void MeshedScreen::writeFile()
 {
+    // TODO:
 }
 
 double MeshedScreen::totalEnergy()
