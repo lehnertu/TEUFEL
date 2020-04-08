@@ -190,7 +190,6 @@ void ScreenObserver::fromBuffer(double *buffer, std::size_t size)
 {
     if (size==Nx*Ny*NOTS*6)
     {
-        ElMagField field;
         double *bp = buffer;
         for (unsigned int ix = 0; ix < Nx; ix++)
         	for (unsigned int iy = 0; iy < Ny; iy++)

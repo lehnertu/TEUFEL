@@ -96,7 +96,7 @@ public:
      *  This exception should not be caught as it represents an internal
      *  coding error (should never happen).
      */
-    void setField(std::size_t idx, ElMagField field) { trace->set(idx,field); };
+    void setField(std::size_t idx, ElMagField field) { trace->set_field(idx,field); };
 
     /*! Get the number of doubles (not bytes!) for a buffer
      *  holding the trace data

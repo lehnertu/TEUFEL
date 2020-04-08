@@ -158,7 +158,7 @@ public:
     /*! The method gives the size of the buffer necessary to store
      *  the complete field information as a number of doubles (not bytes!).
      */
-    virtual std::size_t getBufferSize();
+    virtual std::size_t getBufferSize() { return Np*Nt*6; };
     
     /*! Return all field values in a newly allocated buffer.
      *  Memory for the buffer is allocated by this method and must be freed

@@ -121,13 +121,6 @@ FieldTrace FieldTrace::operator- (FieldTrace other)
     return (temp);
 }
 
-void FieldTrace::set(std::size_t index, ElMagField f)
-{
-    if (index<0 || index>=N)
-        throw(IOexception("FieldTrace::set - index out of range."));
-    trace[index] = f;
-}
-
 void FieldTrace::get_buffer(ElMagField *buffer, std::size_t Nb)
 {
     if (Nb != N)
@@ -136,12 +129,12 @@ void FieldTrace::get_buffer(ElMagField *buffer, std::size_t Nb)
     for (std::size_t it=0; it<N; it++) *buf++ = get_field(it);
 }
 
-void FieldTrace::set(ElMagField *buffer, std::size_t Nb)
+void FieldTrace::set_buffer(ElMagField *buffer, std::size_t Nb)
 {
     if (Nb != N)
         throw(IOexception("FieldTrace::set - size mismatch."));
     ElMagField *buf = buffer;
-    for (std::size_t it=0; it<N; it++) set(it, *buf++);
+    for (std::size_t it=0; it<N; it++) set_field(it, *buf++);
 }
 
 double FieldTrace::get_time(std::size_t index)
@@ -156,6 +149,13 @@ ElMagField FieldTrace::get_field(std::size_t index)
     if (index<0 || index>=N)
         throw(IOexception("FieldTrace::get_field - index out of range."));
     return trace[index];
+}
+
+void FieldTrace::set_field(std::size_t index, ElMagField f)
+{
+    if (index>=N)
+        throw(IOexception("FieldTrace::set - index out of range."));
+    trace[index] = f;
 }
 
 ElMagField FieldTrace::get_field(double time)

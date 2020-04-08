@@ -92,7 +92,7 @@ void PointObserver::fromBuffer(double *buffer, std::size_t size)
             B.x = *bp++;
             B.y = *bp++;
             B.z = *bp++;
-            trace->set(it,ElMagField(E,B));
+            trace->set_field(it,ElMagField(E,B));
         };
     } else {
         throw(IOexception("PointObserver::fromBuffer() - buffer size mismatch."));
@@ -101,7 +101,6 @@ void PointObserver::fromBuffer(double *buffer, std::size_t size)
 
 void PointObserver::WriteTimeDomainFieldSDDS()
 {
-    // TODO:
     cout << "writing SDDS file " << FileName << endl;
     unsigned int NOTS = trace->get_N();
     SDDS_DATASET data;

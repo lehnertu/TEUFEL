@@ -63,13 +63,6 @@ public:
      */
     FieldTrace & operator=(const FieldTrace &t);
 
-    /*! Set one of the entries of a field trace.
-     *  This method throws an exception in case of an out-of-range index.
-     *  This exception should not be caught as it represents an internal
-     *  coding error (should never happen).
-     */
-    void set(std::size_t index, ElMagField f);
-
     /*! Get the number of doubles (not bytes!) for a buffer
      *  holding the trace data
      */
@@ -84,7 +77,7 @@ public:
     /*! Set all entries of a field trace from a buffer.
      *  The number of elements (ElMagField) in the buffer needs to be provided for checking.
      */
-    void set(ElMagField *buffer, std::size_t Nb);
+    void set_buffer(ElMagField *buffer, std::size_t Nb);
 
     /*! Multiplication of the field with a real factor */
     FieldTrace operator* (double factor);

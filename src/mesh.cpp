@@ -191,7 +191,7 @@ MeshedScreen::MeshedScreen(std::string filename)
         for (int ip=0; ip<Np; ip++)
         {   
             trace.set_t0(t0[ip]);
-            trace.set(buf,Nt);
+            trace.set_buffer(buf,Nt);
             buf += Nt;
             FieldTrace* tr = new FieldTrace(trace);
             if (tr==0) throw(IOexception("MeshedScreen - error allocating memory."));
@@ -316,11 +316,6 @@ void MeshedScreen::integrate_mp(Lattice *src, unsigned int NumCores, unsigned in
         }
 }
 
-std::size_t MeshedScreen::getBufferSize()
-{
-    return Np*Nt*6;
-}
-
 double* MeshedScreen::getBuffer()
 {
     double* buffer = new double[getBufferSize()];
@@ -348,7 +343,27 @@ double* MeshedScreen::getBuffer()
 
 void MeshedScreen::fromBuffer(double *buffer, std::size_t size)
 {
-    // TODO:
+    if (size==getBufferSize())
+    {
+        double *bp = buffer;
+        for (int i=0; i<Np; i++)
+        {
+            FieldTrace* trace = A[i];
+    	    for (std::size_t it=0; it<trace->get_N(); it++)
+    	    {
+                Vector E, B;
+                E.x = *bp++;
+                E.y = *bp++;
+                E.z = *bp++;
+                B.x = *bp++;
+                B.y = *bp++;
+                B.z = *bp++;
+        		trace->set_field(it,ElMagField(E,B));
+    	    };
+	    };
+    } else {
+	    throw(IOexception("MeshedScreen::fromBuffer() - buffer size mismatch."));
+    }
 }
 
 void MeshedScreen::writeFile()
