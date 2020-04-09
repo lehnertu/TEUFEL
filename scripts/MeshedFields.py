@@ -91,15 +91,20 @@ class MeshedField():
         hdf = h5py.File(filename, "r")
         dataset = hdf['MeshCornerPoints']
         points = np.array(dataset)
+        print("corner points : ",points.shape)
         dataset = hdf['MeshTriangles']
         triangles = np.array(dataset)
+        print("triangles : ",triangles.shape)
         mf = cls(points,triangles)
         dataset = hdf['ObservationTime']
-        mf.dt = dataset.attrs.get('dt')
         mf.Nt = dataset.attrs.get('Nt')
+        mf.dt = dataset.attrs.get('dt')
+        print("Nt = %s   dt = %s " % (mf.Nt, mf.dt))
         mf.t0 = np.array(dataset)
+        print("t0 : ",mf.t0.shape)
         dataset = hdf['ElMagField']
         mf.A = np.array(dataset)
+        print("field : ",mf.A.shape)
         hdf.close()
         return mf
 
