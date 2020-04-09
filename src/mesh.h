@@ -114,7 +114,7 @@ public:
     Vector get_point(int ip) { return field_points[ip]; }
 
     /*! Get the start time of one trace */
-    double get_t0(int ip) { return t0[ip]; }
+    double get_t0(int ip) { return A[ip]->get_t0(); }
 
     /*! Get the cell-local coordinate system */
     Vector get_xi(int ip) { return xi[ip]; }
@@ -173,8 +173,13 @@ public:
      */
     virtual void fromBuffer(double *buffer, std::size_t size);
 
-    /*! @brief Write all data of the object into an HDF5 file.
+    /*! Write all data of the object into an HDF5 file.
      * 
+     * @throws IOexception
+     */
+    void writeFile(std::string filename);
+
+    /*! Write all data of the object into an HDF5 file.
      *  The file name was defined when creating the observer object.
      *  The existing file is overwritten.
      * 
@@ -214,9 +219,6 @@ private:
     
     /*! time-step value */
     double dt;
-
-    /*! starting time of all the traces */
-    std::vector<double> t0;
 
     /*! the coordinates of the mesh corner points */
     std::vector<Vector> triangle_points;

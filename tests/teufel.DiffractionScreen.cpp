@@ -61,8 +61,9 @@
 #define NOTS 20000
 
 // the test is supposed to be run by the script in the teufel root directory
-// the file to be used
-#define FILENAME "tests/DiffractionScreen.h5"
+// the files to be used
+#define INFILE "tests/DiffractionScreen.h5"
+#define OUTFILE "tests/DiffractionScreenWithFields.h5"
 
 int main ()
 {
@@ -116,12 +117,17 @@ int main ()
     try
     {
         // read the screen setup from file
-        MeshedScreen* screen = new MeshedScreen(FILENAME);
+        MeshedScreen* screen = new MeshedScreen(INFILE);
         screen->init();
+        screen->writeReport(&cout);
         // accumulate the fields
+        // TODO: set fields to zero before computation,
+        // otherwise we will add to the possibly already existing fields
+        printf("computing fields ...\n");
         screen->integrate(bunch);
         // write data
         screen->writeReport(&cout);
+        screen->writeFile(OUTFILE);
         // clean up
         delete screen;
     }
