@@ -204,6 +204,11 @@ MeshedScreen::MeshedScreen(std::string filename)
     if (status<0) throw(IOexception("MeshedScreen - error closing the file."));
 }
 
+MeshedScreen::~MeshedScreen()
+{
+    for (int i=0; i<Np; i++) delete A[i];
+}
+
 void MeshedScreen::init()
 {
     area = std::vector<double>(Np);
@@ -258,9 +263,10 @@ void MeshedScreen::init()
     }
 }
 
-MeshedScreen::~MeshedScreen()
+void MeshedScreen::zero()
 {
-    for (int i=0; i<Np; i++) delete A[i];
+    for (int i=0; i<Np; i++)
+        A[i]->zero();
 }
 
 void MeshedScreen::integrate(Beam *src)

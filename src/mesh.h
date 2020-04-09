@@ -97,6 +97,10 @@ public:
      */
     MeshedScreen(std::string filename);
     
+    /*! Default destructor:<br>
+     */
+    ~MeshedScreen();
+
     /*! This method computes a number of internal data
      *  like cell areas, normals and performs some sanity checks.
      *  It should be called whenever a new screen object has been constructed.
@@ -106,9 +110,11 @@ public:
      */
     void init();
     
-    /*! Default destructor:<br>
+    /*! Set all fields to zero not touching any other variables.
+     *  This is needed when computing impinging fields with the integrate()
+     *  methods because these just add to the pre-existing (i.e. loaded) fields.
      */
-    ~MeshedScreen();
+    void zero();
 
     /*! Get the position of one grid cell */
     Vector get_point(int ip) { return field_points[ip]; }

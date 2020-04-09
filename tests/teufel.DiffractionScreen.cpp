@@ -119,6 +119,7 @@ int main ()
         // read the screen setup from file
         MeshedScreen* screen = new MeshedScreen(INFILE);
         screen->init();
+        screen->zero();
         screen->writeReport(&cout);
         // accumulate the fields
         // TODO: set fields to zero before computation,
