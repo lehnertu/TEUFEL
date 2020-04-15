@@ -170,6 +170,13 @@ ElMagField FieldTrace::get_field(double time)
     return(f1*(1.0-frac)+f2*frac);
 }
 
+void FieldTrace::add(std::size_t index, ElMagField f)
+{
+    if (index>=N)
+        throw(IOexception("FieldTrace::add - index out of range."));
+    trace[index] += f;
+};
+
 Vector FieldTrace::Poynting()
 {
     Vector sum(0.0,0.0,0.0);

@@ -215,8 +215,12 @@ class MeshedField():
             h5p = hf.create_dataset('ObservationTime',data=self.t0, dtype='f8')
             h5p.attrs['Nt'] = self.Nt
             h5p.attrs['dt'] = self.dt
+        else:
+            print("not writing ObservationTime dataset")
         if self.A.shape == (self.Np,self.Nt,6):
             h5p = hf.create_dataset('ElMagField', data=self.A, dtype='f8')
+        else:
+            print("not writing ElMagField dataset")
         hf.close()
 
     def ShowMeshedField(self, highlight=[], scalars=[], scalarTitle="",

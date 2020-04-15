@@ -33,9 +33,8 @@
     It is generated from a Jupyter notebook (Python) CreateDiffractionScreen.ipynb
     provided in the scripts/ folder.
     
-    This test case tracks a single electron from the origin until it has crossed
-    the plane of a diffraction screen at (0,0,1)m. The screen is angled 45 deg
-    to the incoming beam as to reflect radiation into the x direction.
+    This test case tracks a single electron from (0,0,-10) m moving in positive z direction
+    until 10 m after it has crossed the plane of a diffraction screen at th origin.
     The geometry is read from the file and after recording the fields
     all data is written back to the same file (which increases in size).
     
@@ -71,7 +70,7 @@ int main ()
     printf("\nTEUFEL - diffraction screen testcase\n");
 
     // charge [C] of the particle
-    double charge = -100e-12;
+    double charge = 100e-12;
 
     // energy of the particle
     double gamma = 20.0;
@@ -80,35 +79,49 @@ int main ()
     Lattice *lattice = new Lattice;
     
     // one bunch containing a single charge representing many electrons
-    ChargedParticle *electrons = new ChargedParticle(charge/ElementaryCharge,charge/ElementaryCharge);
+    ChargedParticle *electrons = new ChargedParticle(-charge/ElementaryCharge,charge/ElementaryCharge);
     Bunch *bunch = new Bunch();
     bunch->Add(electrons);
     
-    // initial position at the origin
-    Vector X0 = Vector(0.0, 0.0, 0.0);
+    // initial position 10m before the origin
+    Vector X0 = Vector(0.0, 0.0, -10.0);
     // initial momentum of the particle
     double beta = sqrt(1.0-1.0/(gamma*gamma));
     double betagamma = sqrt(gamma * gamma - 1.0);
     Vector P0 = Vector(0.0, 0.0, betagamma);
     Vector A0 = Vector(0.0, 0.0, 0.0);
-    electrons->initTrajectory(0.0, X0, P0, A0);
+    // start time such that the electron passes the origin at t=0
+    double t0 = -10.0/(beta*SpeedOfLight);
+    electrons->initTrajectory(t0, X0, P0, A0);
     
     // count the errors
     int errors = 0;
 
-    // track for 2 m
-    double duration = 2.0/(beta*SpeedOfLight);
+    // track for 10 m
+    double duration = 20.0/(beta*SpeedOfLight);
     double dt = duration / NOTS;
 
     // track the particle
     bunch->InitVay(dt, lattice);
     for (int i=0; i<NOTS; i++) bunch->StepVay(lattice);
-    double t_final = electrons->getTime();
-    Vector XP = electrons->getPosition();
-    printf("x(%9.6g s) =  (%9.6g,%9.6g,%9.6g) m\n",t_final,XP.x,XP.y,XP.z);
+    printf("done tracking.\n");
+    
+    // check particle time
+    double t_start = electrons->TrajTime(0);
+    if (fabs(t_start+10.0/(beta*SpeedOfLight)) > 1e-6) {
+		errors++;
+		printf("error in start time %9.6g s - \033[1;31m test failed!\033[0m\n", t_start);
+    };
+    double t_final = electrons->TrajTime(NOTS-1);
+    if (fabs(t_final-10.0/(beta*SpeedOfLight)) > 1e-6) {
+		errors++;
+		printf("error in final time %9.6g s - \033[1;31m test failed!\033[0m\n", t_final);
+    };
 
     // check final particle position
-    if (fabs(XP.z-2.0) > 1e-6) {
+    Vector XP = electrons->getPosition();
+    printf("x(%9.6g s) =  (%9.6g,%9.6g,%9.6g) m\n",t_final,XP.x,XP.y,XP.z);
+    if (fabs(XP.z-10.0) > 1e-6) {
 		errors++;
 		printf("error in final position %9.6g m - \033[1;31m test failed!\033[0m\n", XP.z);
     };
