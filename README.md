@@ -86,6 +86,7 @@ A few libraries are required to build the TEUFEL executable.
   cd lib
   git clone https://github.com/beltoforion/muparser.git
   cd muparser/
+  mkdir build
   cd build/
   cmake ..
   make
