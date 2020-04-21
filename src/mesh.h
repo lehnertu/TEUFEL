@@ -122,6 +122,9 @@ public:
     /* Get the number of time steps per trace */
     int get_Nt() { return Nt; }
 
+    /* Get the length of the time steps */
+    int get_dt() { return dt; }
+
     // TODO: all index operations should be range-checked
     /*! Get the position of one grid cell */
     Vector get_point(int ip) { return field_points[ip]; }
@@ -209,6 +212,11 @@ public:
      * @throws IOexception
      */
     void writeFile();
+
+    /*! Get the energy flow density vector of one trace
+     *  integrated over time
+     */
+    Vector Poynting(int ip) { return A[ip]->Poynting(); };
 
     /*! Compute the total electromagnetic energy flowing through the screen
      *  Energy flow vectors opposite the normal vector are counted positive.

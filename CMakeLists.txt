@@ -136,6 +136,19 @@ target_link_libraries(propagate ${PROJECT_NAME}lib
                              ${MUPARSER_LIBRARY}
                              ${ZLIB_LIBRARY_RELEASE} )
 
+add_executable(reflection ${PROJECT_SOURCE_DIR}/src/reflection.cpp)
+set_target_properties(reflection PROPERTIES
+    COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
+set_target_properties(reflection PROPERTIES
+    LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
+target_link_libraries(reflection ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIBRARIES}
+                             Eigen3::Eigen
+                             ${PUGIXML_LIBRARIES}
+                             ${MUPARSER_LIBRARY}
+                             ${ZLIB_LIBRARY_RELEASE} )
+
 # for building the documentation
 option(BUILD_DOCUMENTATION "Generate makefiles for documentation" ON)
 option(BUILD_DOCUMENTATION_DEFAULT "Build documentation by default" OFF)
