@@ -66,6 +66,8 @@ A few libraries are required to build the TEUFEL executable.
   
   ```git clone https://gitlab.com/libeigen/eigen.git```
   
+  No build process is required for this library.
+  
   A cmake script is provided which will find the library in either case.
 
 - We use [PugiXML](https://pugixml.org/) to parse the XML input files for TEUFEL.
