@@ -438,7 +438,7 @@ class MyInteractor(vtk.vtkInteractorStyleTrackballCamera):
         id = picker.GetCellId()
         text = "Cell index : %d\n" % id
         if (len(self.scalars)>id) and (id>=0):
-            text += "scalar : %9.6f\n" % self.scalars[id]
+            text += "scalar : %7.4g\n" % self.scalars[id]
         self.text.SetInput(text)
         if self.pickAction != None: self.pickAction(id)
         self.OnLeftButtonDown()

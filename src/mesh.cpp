@@ -698,6 +698,32 @@ double MeshedScreen::totalEnergy()
     return total;
 }
 
+int MeshedScreen::get_Neighbourhood(int index, int *buffer)
+{
+    // the indexed triangle
+    int i1 = triangles[index].p1;
+    int i2 = triangles[index].p2;
+    int i3 = triangles[index].p3;
+    int count=0;
+    int *buf = buffer;
+    for (int i=0; i<Np; i++)
+    {
+        // test triangle
+        int ti1 = triangles[i].p1;
+        int ti2 = triangles[i].p2;
+        int ti3 = triangles[i].p3;
+        // if there are any common points
+        if ( (ti1==i1) || (ti1==i2) || (ti1==i3) ||
+             (ti2==i1) || (ti2==i2) || (ti2==i3) ||
+             (ti3==i1) || (ti3==i2) || (ti3==i3) )
+        {
+            *buf++ = i;
+            count++;
+        }
+    }
+    return count;
+}
+
 void MeshedScreen::writeReport(std::ostream *st)
 {
     *st << std::endl;

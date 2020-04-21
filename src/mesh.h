@@ -116,6 +116,13 @@ public:
      */
     void zero();
 
+    /* Get the number of mesh cells (observation points) */
+    int get_Np() { return Np; }
+
+    /* Get the number of time steps per trace */
+    int get_Nt() { return Nt; }
+
+    // TODO: all index operations should be range-checked
     /*! Get the position of one grid cell */
     Vector get_point(int ip) { return field_points[ip]; }
 
@@ -127,6 +134,16 @@ public:
     Vector get_eta(int ip) { return eta[ip]; }
     Vector get_normal(int ip) { return normal[ip]; }
 
+    /*! Get the area of one cell */
+    double get_area(int ip) { return area[ip]; }
+
+    /*! Get the fields of one cell */
+    FieldTrace get_trace(int ip) { return *A[ip]; }
+
+    // TODO: that is not clean - at least one has to delete the old trace and to do some sanity checks
+    /*! Set the fields of one cell */
+    void set_trace(int ip, FieldTrace trace) { *A[ip]=trace; };
+    
     /*! Integrate the fields emitted by the source
      *  during all of its history, falling onto the time frame
      *  of observation.
@@ -198,6 +215,13 @@ public:
      */
     double totalEnergy();
 
+    /*! Determine the neighbourhood of a cell with given index.
+     *  These are all cells that share at least one common point with the indexed cell.
+     *  A buffer of sufficient size to hold the cell indices (up to 20) has to be provided.
+     *  Return value is the number of cells in the neighbourhood (including the indexed cell).
+     */
+    int get_Neighbourhood(int index, int *buffer);
+    
     /*! Write a report of the screen geometry and parameters
      *  including some summary field data
      *  onto an output stream

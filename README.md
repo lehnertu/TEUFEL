@@ -58,6 +58,16 @@ A few libraries are required to build the TEUFEL executable.
 
   ```export HDF5_ROOT=_path_to_library```
 
+- For linear algebra calculations we use the [Eigen3](http://eigen.tuxfamily.org) library.
+  It should preferably be installed through the systems package management system.
+  In case this is not possible (i.e. no root access) it can be used from the git repository.
+  
+  ```cd lib/```
+  
+  ```git clone https://gitlab.com/libeigen/eigen.git```
+  
+  A cmake script is provided which will find the library in either case.
+
 - We use [PugiXML](https://pugixml.org/) to parse the XML input files for TEUFEL.
   On most systems this can be installed from the distribution repositories. For Linux-X86 systems we
   provide part of the library in teufel/lib/pugixml.

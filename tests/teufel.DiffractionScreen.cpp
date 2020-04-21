@@ -120,11 +120,14 @@ int main ()
 
     // check final particle position
     Vector XP = electrons->getPosition();
-    printf("x(%9.6g s) =  (%9.6g,%9.6g,%9.6g) m\n",t_final,XP.x,XP.y,XP.z);
+    printf("x(%9.6g s) =  (%9.6g,%9.6g,%9.6g) m",t_final,XP.x,XP.y,XP.z);
     if (fabs(XP.z-10.0) > 1e-6) {
 		errors++;
-		printf("error in final position %9.6g m - \033[1;31m test failed!\033[0m\n", XP.z);
-    };
+		printf("\nerror in final position %9.6g m - \033[1;31m test failed!\033[0m\n", XP.z);
+    } else {
+	    printf("   \033[1;32m OK\033[0m\n");
+    }
+
     
     // record fields on the screen
     try
@@ -135,10 +138,17 @@ int main ()
         screen->zero();
         screen->writeReport(&cout);
         // accumulate the fields
-        // TODO: set fields to zero before computation,
-        // otherwise we will add to the possibly already existing fields
         printf("computing fields ...\n");
         screen->integrate(bunch);
+        // check the computed radiation intensity
+        double EuJ = screen->totalEnergy()*1.0e6;
+        double EuJ_th = 0.463;
+        if (fabs(EuJ-EuJ_th) > 0.020) {
+	        errors++;
+	        printf("radiation energy = %8.3g µJ (should be %8.3g µJ) - \033[1;31m test failed!\033[0m\n", EuJ, EuJ_th);
+        } else {
+	        printf("radiation energy = %8.3g µJ (should be %8.3g µJ) - \033[1;32m OK\033[0m\n", EuJ, EuJ_th);
+        };
         // write data
         screen->writeReport(&cout);
         screen->writeFile(OUTFILE);

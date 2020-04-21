@@ -2,7 +2,7 @@
 
   Program:   TEUFEL - THz Emission from Undulators and Free-Electron Lasers
 
-  Module:    undulator test case
+  Module:    main executable for particle tracking and radiation emission
 
   Copyright (c) 2018 U. Lehnert
 
