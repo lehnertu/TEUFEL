@@ -26,14 +26,14 @@
     
     @author Ulf Lehnert
     @date 21.11.2019
-    @file propagate.cpp
+    @file reflection.cpp
     
     The input beam is read from a HDF5 file defining the field traces on a meshed screen.
     The surface of the screen is considered a perfect electric conductor reflecting
     the incident fields. The reflected beam is propagated to an output screen.
     The geometry of the output screen is read from a second HDF5 file.
-    From this second file only the geometry information is used, it will be
-    rewritten with the computed output fields.
+    From this second file only the geometry information is used.
+    the computed output fields will be written to a third file.
 
 */
 
@@ -63,20 +63,21 @@ int main(int argc, char* argv[])
     std::cout << std::endl;
     std::cout << "Propagate Screen to Screen" << std::endl << std::endl;
     
-    if (argc<3)
+    if (argc<4)
     {
         std::cout << "Usage: Propagate infile outfile" << std::endl;
         return 1;
     }
-    std::string infile(argv[1]);
-    std::string outfile(argv[2]);
+    std::string sourcefile(argv[1]);
+    std::string infile(argv[2]);
+    std::string outfile(argv[3]);
 
     // **************************************
     // load the input field from a file
     // **************************************
 
     std::cout << std::endl << "=== Source Screen ===" << std::endl;
-    MeshedScreen *source = new MeshedScreen(infile);
+    MeshedScreen *source = new MeshedScreen(sourcefile);
     source->init();
     // print report
     source->writeReport(&cout);
@@ -384,7 +385,7 @@ int main(int argc, char* argv[])
     // **************************************
 
     std::cout << std::endl << "=== Target Screen ===" << std::endl;
-    MeshedScreen *target = new MeshedScreen(outfile);
+    MeshedScreen *target = new MeshedScreen(infile);
     target->init();
     // print report
     target->writeReport(&cout);
