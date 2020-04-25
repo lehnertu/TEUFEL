@@ -305,6 +305,7 @@ int main(int argc, char* argv[])
     std::cout << std::endl << "=== Target Screen ===" << std::endl;
     MeshedScreen *target = new MeshedScreen(infile);
     target->init();
+    target->zero();
     // print report
     target->writeReport(&cout);
     

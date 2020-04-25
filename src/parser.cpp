@@ -526,6 +526,9 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                     throw(IOexception("InputParser::parseObservers - <mesh> attribute file not found."));                
                 parseCalcChildren(obs);
                 MeshedScreen *meshObs = new MeshedScreen(fn.as_string());
+                meshObs->init();
+                meshObs->zero();
+                meshObs->writeReport(&cout);
                 listObservers->push_back(meshObs);
             }
             else if (type == "point")
