@@ -51,7 +51,9 @@
 #include "logger.h"
 #include "observer.h"
 #include "particle.h"
+#include "point_observer.h"
 #include "fields.h"
+#include "screen.h"
 #include "undulator.h"
 #include <iostream>
 #include <fstream>

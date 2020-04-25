@@ -59,6 +59,7 @@
 #include "observer.h"
 #include "particle.h"
 #include "fields.h"
+#include "screen.h"
 #include "undulator.h"
 
 #include <mpi.h>

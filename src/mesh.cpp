@@ -271,12 +271,16 @@ void MeshedScreen::zero()
 
 void MeshedScreen::integrate(Beam *src)
 {
+    if (DEBUGLEVEL>=2) cout << "MeshedScreen::integrate(Beam)" << std::endl;
+    if (DEBUGLEVEL>=2) cout << "beam number of particles = " << src->getNOP() << std::endl;
     for (int i=0; i<Np; i++)
         src->integrateFieldTrace(get_point(i), A[i]);
 }
 
 void MeshedScreen::integrate(Bunch *src)
 {
+    if (DEBUGLEVEL>=2) cout << "MeshedScreen::integrate(Bunch)" << std::endl;
+    if (DEBUGLEVEL>=2) cout << "bunch number of particles = " << src->getNOP() << std::endl;
     for (int i=0; i<Np; i++)
         src->integrateFieldTrace(get_point(i), A[i]);
 }
