@@ -95,7 +95,7 @@ int main(int argc, char* argv[])
     std::cout << "case : " << description << std::endl;
     std::cout << "by : " << author << std::endl << std::endl;
     
-    // Further parsing of the input document is done by the simulation object
+    // Further parsing of the input document is done by the Parser object
     InputParser *parse = new InputParser(root);
     
     // We create an empty lattice object.

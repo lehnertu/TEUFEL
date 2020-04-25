@@ -32,8 +32,8 @@ area = screen.MeshArea()
 S = [np.linalg.norm(screen.EnergyFlowVector(i)) for i in range(screen.Np)]
 Pz = [screen.NormalEnergyFlow(i) for i in range(screen.Np)]
 
-print("peak energy density = %.6f J/m²" % np.max(S))
-print("total pulse energy = %.1f µJ" % (1e6*np.dot(area,Pz)))
+print("peak energy density = %.6g J/m²" % np.max(S))
+print("total pulse energy = %.6g µJ" % (1e6*np.dot(area,Pz)))
 
 print()
 print("VTK display")

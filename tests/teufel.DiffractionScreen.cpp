@@ -97,7 +97,7 @@ int main ()
     // count the errors
     int errors = 0;
 
-    // track for 10 m
+    // track for 20 m
     double duration = 20.0/(beta*SpeedOfLight);
     double dt = duration / NOTS;
 
@@ -145,9 +145,9 @@ int main ()
         double EuJ_th = 0.463;
         if (fabs(EuJ-EuJ_th) > 0.020) {
 	        errors++;
-	        printf("radiation energy = %8.3g µJ (should be %8.3g µJ) - \033[1;31m test failed!\033[0m\n", EuJ, EuJ_th);
+	        printf("radiation energy = %8.4g µJ (should be %8.4g µJ) - \033[1;31m test failed!\033[0m\n", EuJ, EuJ_th);
         } else {
-	        printf("radiation energy = %8.3g µJ (should be %8.3g µJ) - \033[1;32m OK\033[0m\n", EuJ, EuJ_th);
+	        printf("radiation energy = %8.4g µJ (should be %8.4g µJ) - \033[1;32m OK\033[0m\n", EuJ, EuJ_th);
         };
         // write data
         screen->writeReport(&cout);
