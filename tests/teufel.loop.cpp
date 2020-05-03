@@ -68,7 +68,7 @@
 #include "particle.h"
 #include "bunch.h"
 #include "fields.h"
-#include "observer.h"
+#include "point_observer.h"
 
 int NOTS = 100;                // number of time steps
 
@@ -172,7 +172,7 @@ int main ()
     }
 
     // just one time slice of (essentially) zero duration at t=tau
-    PointObserver Obs = PointObserver("teufel.loop_field.sdds", Vector(-Radius,0.0,0.0), tau, 1.0e-15, 1);
+    PointObserver Obs = PointObserver("teufel.loop_field.sdds", Vector(-Radius,0.0,0.0), tau-1.0e-15, 2.0e-15, 2);
     Obs.integrate(bunch);
     
     // check the field value

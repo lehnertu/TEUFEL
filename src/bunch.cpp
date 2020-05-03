@@ -418,3 +418,12 @@ void Bunch::integrateFieldTrace(
         P[i]->integrateFieldTrace(ObservationPoint, t0, dt, nots, ObservationField);
     // cout << endl;
 }
+
+void Bunch::integrateFieldTrace(
+        Vector ObservationPoint,
+        FieldTrace *trace)
+{
+    for (int i=0; i<NOP; i++)
+        P[i]->integrateFieldTrace(ObservationPoint, trace);
+}
+

@@ -256,3 +256,13 @@ void Beam::integrateFieldTrace(
         B[i]->integrateFieldTrace(ObservationPoint,t0,dt,nots,ObservationField);
     }
 }
+
+void Beam::integrateFieldTrace(
+        Vector ObservationPoint,
+        FieldTrace *trace)
+{
+    // just do the summation over all the bunches
+    for(int i=0; i<NOB; i++)
+        B[i]->integrateFieldTrace(ObservationPoint, trace);
+}
+

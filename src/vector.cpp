@@ -73,6 +73,14 @@ Vector Vector::operator- (Vector v2)
   return (temp);
 }
 
+Vector& Vector::operator-= (Vector v2)
+{
+  x-=v2.x;
+  y-=v2.y;
+  z-=v2.z;
+  return (*this);
+}
+
 Vector Vector::operator- ()
 {
   Vector temp;
@@ -132,6 +140,14 @@ void Vector::normalize()
   x /= abs;
   y /= abs;
   z /= abs;
+}
+
+void Vector::transform(Vector ex, Vector ey, Vector ez)
+{
+  Vector temp = *this;
+  x = dot(temp,ex);
+  y = dot(temp,ey);
+  z = dot(temp,ez);
 }
 
 double dot(Vector a, Vector b)

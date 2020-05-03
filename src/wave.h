@@ -43,7 +43,7 @@
  * The transverse mode size is defined by the Rayleigh length.
  * 
  * The radiation power is constant all along the beam with the
- * field amplitude varying accordin to the mode size. It is defined through
+ * field amplitude varying according to the mode size. It is defined through
  * the amlitude at the waist given as a complex value of the electric field  strength.
  * The real part describes the \f$ cos(\omega t) \f$ terms, the imaginary part
  * the  \f$ sin(\omega t) \f$ terms, thus, defining the phase at the waist.

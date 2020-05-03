@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<teufel description="Diffraction radiation example recreating the test case"
+    author="Ulf Lehnert 25.4.2020">
+    <calc print="gamma = " var="gamma" eq="20.0"/>
+    <calc print="beta = " var="beta" eq="sqrt(1.0-1.0/(gamma*gamma))"/>
+    <calc print="charge [nC] = " var="charge" eq="-0.1" />
+    <lattice>
+    </lattice>
+    <beam>
+        <particle gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" n="1" >
+            <calc print="start at z0 [m] = " var="z0" eq="-10.0" />
+            <calc print="start at t0 [s] = " var="t0" eq="z0/(beta*_c)" />
+            <time t0="t0" />
+            <position x="0.0" y="0.0" z="z0" />
+            <momentum x="0.0" y="0.0" z="1.0" />
+        </particle>
+    </beam>
+    <calc print="tracking length [m] = " var="total_L" eq="20.0" />
+    <calc print="tracking total time [s] = " var="total_t" eq="total_L/(beta*_c)" />
+    <calc print="dt = " var="dt" eq="total_t/20000" />
+    <tracking method="Vay" delta_t="dt" n="20000" >
+    </tracking>
+    <observer>
+        <mesh file="DiffractionScreen.h5">
+        </mesh>
+    </observer>
+</teufel>

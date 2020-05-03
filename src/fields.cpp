@@ -20,6 +20,7 @@
  * =========================================================================*/
 
 #include "fields.h"
+#include "global.h"
 
 // ********** ElMagField **********
 
@@ -44,6 +45,8 @@ Vector ElMagField::E() { return vecE; }
 
 Vector ElMagField::B() { return vecB; }
 
+Vector ElMagField::Poynting() { return cross(vecE, vecB) / MuNull; }
+
 ElMagField ElMagField::operator+ (ElMagField other)
 {
     ElMagField temp;
@@ -67,12 +70,41 @@ ElMagField ElMagField::operator- (ElMagField other)
     return (temp);
 }
 
+ElMagField& ElMagField::operator-= (ElMagField other)
+{
+    vecE -= other.vecE;
+    vecB -= other.vecB;
+    return (*this);
+}
+
 ElMagField ElMagField::operator* (double factor)
 {
     ElMagField temp;
     temp.vecE = vecE*factor;
     temp.vecB = vecB*factor;
     return (temp);
+}
+
+ElMagField ElMagField::operator/ (double factor)
+{
+    ElMagField temp;
+    temp.vecE = vecE/factor;
+    temp.vecB = vecB/factor;
+    return (temp);
+}
+
+ElMagField& ElMagField::operator*= (double factor)
+{
+    vecE *= factor;
+    vecB *= factor;
+    return (*this);
+}
+
+ElMagField& ElMagField::operator/= (double factor)
+{
+    vecE /= factor;
+    vecB /= factor;
+    return (*this);
 }
 
 // ********** ElMagObs **********

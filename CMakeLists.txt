@@ -2,8 +2,8 @@ cmake_minimum_required (VERSION 2.6)
 project (TEUFEL)
 
 set (TEUFEL_VERSION_MAJOR 0)
-set (TEUFEL_VERSION_MINOR 9)
-set (TEUFEL_VERSION_PATCH 0)
+set (TEUFEL_VERSION_MINOR 10)
+set (TEUFEL_VERSION_PATCH 1)
 
 # where to find modules
 # we add teufel/lib to the search path
@@ -44,6 +44,25 @@ if(SDDS_INCLUDE_DIR)
     message(STATUS "SDDS includes found in ${SDDS_INCLUDE_DIR}")
 endif()
 
+# EIGEN library
+find_package (Eigen3 3.3 REQUIRED)
+find_package (Eigen3)
+if (EIGEN3_FOUND)
+    message(STATUS "Eigen3 includes ${EIGEN3_INCLUDE_DIR}")
+else (EIGEN3_FOUND)
+    message(STATUS "Eigen3 not found")
+endif (EIGEN3_FOUND)
+
+# Open-MP
+include(FindOpenMP)
+if(OPENMP_FOUND)
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS}")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+else(OPENMP_FOUND)
+  message("ERROR: OpenMP could not be found.")
+endif(OPENMP_FOUND)
+
 # MPI library
 find_package(MPI COMPONENTS CXX REQUIRED)
 if (MPI_CXX_FOUND)
@@ -55,7 +74,8 @@ endif ()
 
 # where to find header files
 include_directories( ${PROJECT_BINARY_DIR}
-                     ${PROJECT_SOURCE_DIR}/src 
+                     ${PROJECT_SOURCE_DIR}/src
+                     ${EIGEN3_INCLUDE_DIR}
                      ${HDF5_INCLUDE_DIRS}
                      ${PUGIXML_INCLUDE_DIR}
                      ${MUPARSER_INCLUDE_DIR}
@@ -99,6 +119,32 @@ target_link_libraries(teufel_mpi ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
                              ${MPI_CXX_LIBRARIES}
+                             ${PUGIXML_LIBRARIES}
+                             ${MUPARSER_LIBRARY}
+                             ${ZLIB_LIBRARY_RELEASE} )
+
+add_executable(propagate ${PROJECT_SOURCE_DIR}/src/propagate.cpp)
+set_target_properties(propagate PROPERTIES
+    COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
+set_target_properties(propagate PROPERTIES
+    LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
+target_link_libraries(propagate ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIBRARIES}
+                             Eigen3::Eigen
+                             ${PUGIXML_LIBRARIES}
+                             ${MUPARSER_LIBRARY}
+                             ${ZLIB_LIBRARY_RELEASE} )
+
+add_executable(reflection ${PROJECT_SOURCE_DIR}/src/reflection.cpp)
+set_target_properties(reflection PROPERTIES
+    COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
+set_target_properties(reflection PROPERTIES
+    LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
+target_link_libraries(reflection ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIBRARIES}
+                             Eigen3::Eigen
                              ${PUGIXML_LIBRARIES}
                              ${MUPARSER_LIBRARY}
                              ${ZLIB_LIBRARY_RELEASE} )
@@ -196,6 +242,11 @@ if(BUILD_TESTS)
                              ${ZLIB_LIBRARY_RELEASE} )
     add_executable(teufel.electrostatic ${PROJECT_TESTS_DIR}/teufel.electrostatic.cpp)
     target_link_libraries(teufel.electrostatic ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIBRARIES}
+                             ${ZLIB_LIBRARY_RELEASE} )
+    add_executable(teufel.diffraction ${PROJECT_TESTS_DIR}/teufel.DiffractionScreen.cpp)
+    target_link_libraries(teufel.diffraction ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
                              ${ZLIB_LIBRARY_RELEASE} )

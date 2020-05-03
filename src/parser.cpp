@@ -25,7 +25,11 @@
 
 #include "fields.h"
 #include "global.h"
+#include "mesh.h"
 #include "parser.h"
+#include "point_observer.h"
+#include "screen.h"
+#include "snapshot.h"
 #include "undulator.h"
 #include "vector.h"
 #include "wave.h"
@@ -205,6 +209,12 @@ int InputParser::parseBeam(Beam *beam)
                 double charge = parseValue(entry.attribute("charge"))/ElementaryCharge;
                 double cmr = parseValue(entry.attribute("cmr"));
                 parseCalcChildren(entry);
+                double t0;
+                pugi::xml_node timenode = entry.child("time");
+                if (!timenode)
+                    t0 = 0.0;
+                else
+                    t0 = parseValue(timenode.attribute("t0"));
                 pugi::xml_node posnode = entry.child("position");
                 if (!posnode)
                     throw(IOexception("InputParser::parseBeam - <particle> <position> not found."));
@@ -213,9 +223,9 @@ int InputParser::parseBeam(Beam *beam)
                 y = parseValue(posnode.attribute("y"));
                 z = parseValue(posnode.attribute("z"));
                 Vector pos = Vector(x, y, z);
-                pugi::xml_node dirnode = entry.child("direction");
+                pugi::xml_node dirnode = entry.child("momentum");
                 if (!dirnode)
-                    throw(IOexception("InputParser::parseBeam - <particle> <direction> not found."));
+                    throw(IOexception("InputParser::parseBeam - <particle> <momentum> not found."));
                 x = parseValue(dirnode.attribute("x"));
                 y = parseValue(dirnode.attribute("y"));
                 z = parseValue(dirnode.attribute("z"));
@@ -225,7 +235,7 @@ int InputParser::parseBeam(Beam *beam)
                 Vector acc = Vector(0.0, 0.0, 0.0);
                 // now we have all information - create a particle
                 ChargedParticle *p = new ChargedParticle(charge,cmr*charge);
-                p->initTrajectory(0.0, pos, mom, acc);
+                p->initTrajectory(t0, pos, mom, acc);
                 // create a bunch with just this particle and add it to the beam
                 Bunch *single = new Bunch();
                 single->Add(p);
@@ -508,6 +518,18 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                     nv.as_int(),
                     t0, dt, nt.as_int() );
                 listObservers->push_back(screenObs);
+            }
+            else if (type == "mesh")
+            {
+                pugi::xml_attribute fn = obs.attribute("file");
+                if (!fn)
+                    throw(IOexception("InputParser::parseObservers - <mesh> attribute file not found."));                
+                parseCalcChildren(obs);
+                MeshedScreen *meshObs = new MeshedScreen(fn.as_string());
+                meshObs->init();
+                meshObs->zero();
+                meshObs->writeReport(&cout);
+                listObservers->push_back(meshObs);
             }
             else if (type == "point")
             {

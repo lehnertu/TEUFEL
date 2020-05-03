@@ -43,7 +43,9 @@
 #include "global.h"
 #include "wave.h"
 #include "observer.h"
+#include "point_observer.h"
 #include "scatterer.h"
+#include "screen.h"
 #include <iostream>
 #include <fstream>
 #include <time.h>

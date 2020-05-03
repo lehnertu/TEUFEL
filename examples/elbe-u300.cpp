@@ -51,11 +51,13 @@
 
 #include "bunch.h"
 #include "beam.h"
+#include "fields.h"
 #include "global.h"
 #include "logger.h"
 #include "observer.h"
 #include "particle.h"
-#include "fields.h"
+#include "point_observer.h"
+#include "screen.h"
 #include "undulator.h"
 #include <iostream>
 #include <fstream>
