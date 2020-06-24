@@ -102,20 +102,12 @@ configure_file (
 # compiler flags
 add_definitions(-std=c++11 -Wall -g0 -m64 -pthread)
 
-add_executable(teufel ${PROJECT_SOURCE_DIR}/src/teufel.cpp)
-target_link_libraries(teufel ${PROJECT_NAME}lib
-                             ${HDF5_LIBRARIES}
-                             ${SDDS_LIBRARIES}
-                             ${PUGIXML_LIBRARIES}
-                             ${MUPARSER_LIBRARY}
-                             ${ZLIB_LIBRARY_RELEASE} )
-
-add_executable(teufel_mpi ${PROJECT_SOURCE_DIR}/src/teufel_mpi.cpp)
-set_target_properties(teufel_mpi PROPERTIES
+add_executable(teufel ${PROJECT_SOURCE_DIR}/src/teufel_mpi.cpp)
+set_target_properties(teufel PROPERTIES
     COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
-set_target_properties(teufel_mpi PROPERTIES
+set_target_properties(teufel PROPERTIES
     LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
-target_link_libraries(teufel_mpi ${PROJECT_NAME}lib
+target_link_libraries(teufel ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
                              ${MPI_CXX_LIBRARIES}

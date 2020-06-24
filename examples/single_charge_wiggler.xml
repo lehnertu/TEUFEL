@@ -21,7 +21,7 @@
     <beam>
         <particle gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" >
             <position x="0.0" y="0.0" z="0.0" />
-            <direction x="0.0" y="0.0" z="1.0" />
+            <momentum x="0.0" y="0.0" z="1.0" />
         </particle>
     </beam>
     <calc print="tracking length [m] = " var="total_L" eq="4.0" />
