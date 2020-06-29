@@ -142,6 +142,7 @@ int InputParser::parseLattice(Lattice *lattice)
             parseCalc(element);
         else if (type == "undulator")
         {
+            parseCalcChildren(element);
             type = element.attribute("type").value();
             name = element.attribute("name").value();
             if (type == "planar")
@@ -166,6 +167,7 @@ int InputParser::parseLattice(Lattice *lattice)
         }
         else if (type == "wave")
         {
+            parseCalcChildren(element);
             type = element.attribute("type").value();
             name = element.attribute("name").value();
             if (type == "gaussian")
@@ -178,6 +180,32 @@ int InputParser::parseLattice(Lattice *lattice)
             }
             else
                 throw(IOexception("InputParser::parseLattice(Lattice - unknown wave type."));
+            count++;
+        }
+        else if (type == "background")
+        {
+            parseCalcChildren(element);
+            double x, y, z;
+            pugi::xml_node Enode = element.child("E");
+            Vector E;
+            if (Enode)
+            {
+                x = parseValue(Enode.attribute("x"));
+                y = parseValue(Enode.attribute("y"));
+                z = parseValue(Enode.attribute("z"));
+                E = Vector(x, y, z);
+            }
+            pugi::xml_node Bnode = element.child("B");
+            Vector B;
+            if (Bnode)
+            {
+                x = parseValue(Bnode.attribute("x"));
+                y = parseValue(Bnode.attribute("y"));
+                z = parseValue(Bnode.attribute("z"));
+                B = Vector(x, y, z);
+            }
+            HomogeneousField *background = new HomogeneousField(E,B);
+            lattice->addElement(background);
             count++;
         }
         else
