@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding=UTF-8
 
 import sys, time
@@ -17,43 +17,43 @@ parser = argparse.ArgumentParser()
 parser.add_argument('file', help='the file name of the screen output HDF5 file')
 parser.add_argument('-xy', help="indeces of plot point", dest="xy", type=int, nargs=2)
 
-print
+print()
 args = parser.parse_args()
 
 radfile = args.file
 radOK = os.path.isfile(radfile)
 if not radOK:
-  print "file not found"
+  print("file not found")
   sys.exit()
 
 # Open the file for reading
-print "reading ",radfile
+print("reading ",radfile)
 hdf = h5py.File(radfile, "r")
-print hdf
-print
+print(hdf)
+print()
 
 # Get the groups
 pos = hdf['ObservationPosition']
 Nx = pos.attrs.get('Nx')
 Ny = pos.attrs.get('Ny')
-print "Nx=%d Ny=%d" % (Nx,Ny)
-print pos
+print("Nx=%d Ny=%d" % (Nx,Ny))
+print(pos)
 field = hdf['ElMagField']
-print field
+print(field)
 t0 = field.attrs.get('t0')
 dt = field.attrs.get('dt')
 nots = field.attrs.get('NOTS')
-print "t0=%g dt=%g NOTS=%d" % (t0, dt, nots)
+print("t0=%g dt=%g NOTS=%d" % (t0, dt, nots))
 pos = np.array(pos)
 a = np.array(field)
 hdf.close()
-print
+print()
 
-xcenter = (Nx-1)/2
-ycenter = (Ny-1)/2
-print "center = (",xcenter,",",ycenter,")"
+xcenter = (Nx-1)//2
+ycenter = (Ny-1)//2
+print("center = (",xcenter,",",ycenter,")")
 centerposition = pos[xcenter][ycenter]
-print "center position = ",centerposition
+print("center position = ",centerposition)
 
 onaxis = a[xcenter][ycenter]
 data = onaxis.transpose()
@@ -71,7 +71,7 @@ BVec = np.array([Bx, By, Bz]).transpose()
 SVec = np.cross(EVec, BVec) / mu0
 # t = 1e9*np.arange(t0,t0+(nots-1)*dt,dt)
 t = 1e9*np.linspace(t0,t0+(nots-1)*dt,nots)
-print 'on axis energy flow density = ', 1e6*SVec.sum(axis=0)*dt, " µJ/m²"
+print('on axis energy flow density = ', 1e6*SVec.sum(axis=0)*dt, " µJ/m²")
 
 # first figure with the time-trace of the fields on axis
 
@@ -110,9 +110,9 @@ if args.xy != None:
 
     xi = args.xy[0]
     yi = args.xy[1]
-    print "index = (",xi,",",yi,")"
+    print("index = (",xi,",",yi,")")
     position = pos[xi][yi]
-    print "off-axis position = ",position
+    print("off-axis position = ",position)
 
     offaxis = a[xi][yi]
     data = offaxis.transpose()
@@ -130,7 +130,7 @@ if args.xy != None:
     SVec = np.cross(EVec, BVec) / mu0
     # t = 1e9*np.arange(t0,t0+(nots-1)*dt,dt)
     t = 1e9*np.linspace(t0,t0+(nots-1)*dt,nots)
-    print 'off axis energy flow density = ', 1e6*SVec.sum(axis=0)*dt, " µJ/m²"
+    print('off axis energy flow density = ', 1e6*SVec.sum(axis=0)*dt, " µJ/m²")
 
     # second figure with the time-trace of the fields off axis
 
