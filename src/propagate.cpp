@@ -60,11 +60,11 @@ int main(int argc, char* argv[])
     volatile int counter;
 
     std::cout << std::endl;
-    std::cout << "Propagate Screen to Screen" << std::endl << std::endl;
+    std::cout << "Propagate Radiation from Screen to Screen" << std::endl << std::endl;
     
     if (argc<3)
     {
-        std::cout << "Usage: Propagate source_file target_in target_out" << std::endl;
+        std::cout << "Usage: propagate sourcefile targetfile outfile" << std::endl;
         return 1;
     }
     std::string sourcefile(argv[1]);
