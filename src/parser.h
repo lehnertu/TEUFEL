@@ -27,6 +27,7 @@
 #include "muParser.h"
 #include "beam.h"
 #include "fields.h"
+#include "logger.h"
 #include "observer.h"
 
 using namespace std;
@@ -105,10 +106,13 @@ public:
      * 
      *  Every entry in the beam section creates a single bunch.
      *  Also for each <particle> entry an individual bunch is created.
-     * 
+     *
+     *  If requested in the parsed entry a logger to be updated
+     *  while tracking the beam will be added to the given list
+     *
      *  @return The number of bunches is returned.
      */
-    int parseBeam(Beam *beam);
+    int parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs);
     
     /*! Parse the input file and setup for tracking particles.
      *  If there is no child <tracking> under the root node

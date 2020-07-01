@@ -137,19 +137,24 @@ int main(int argc, char *argv[])
     if (teufel::rank==0) std::cout << "lattice of " << NoE << " elements created." << std::endl;
     
     // We create an empty beam object.
-    // Then we call the parser to fill in the necessary information
-    // from the input file.
-    Beam *beam = new Beam();
-    int NoB = parse->parseBeam(beam);
+    // Then we call the parser to fill in the necessary information from the input file.
+    // The structure of this beam shall then be preserved troughout the tracking procedure.
+    // That is necessary to keep the references to the contained bunches for logging
+    // or other bunch-related procedures.
+    // Whenever necessary, the current particle information distributed over
+    // the compute nodes will be re-gathered into this object on the master node.
+    Beam *masterBeam = new Beam();
+    std::vector<TrackingLogger<Bunch>*> listLoggers;
+    int NoB = parse->parseBeam(masterBeam, &listLoggers);
     if (teufel::rank==0) std::cout << std::endl;
     if (teufel::rank==0) std::cout << "beam of " << NoB << " bunches created." << std::endl;
-    if (teufel::rank==0) std::cout << "total number of particles : " << beam->getNOP() << std::endl;
-    if (teufel::rank==0) std::cout << "total charge : " << beam->getTotalCharge()*ElementaryCharge*1.0e9 << "nC" << std::endl;
+    if (teufel::rank==0) std::cout << "total number of particles : " << masterBeam->getNOP() << std::endl;
+    if (teufel::rank==0) std::cout << "total charge : " << masterBeam->getTotalCharge()*ElementaryCharge*1.0e9 << "nC" << std::endl;
     if (teufel::rank==0) std::cout << std::endl;
 
     // get all tracking information from the input file
     std::vector<watch_t> watches;
-    parse->parseTracking(beam, &watches);
+    parse->parseTracking(masterBeam, &watches);
     if (teufel::rank==0) std::cout << "defined " << (int)watches.size() << " watch points." << std::endl;
     if (teufel::rank==0) std::cout << std::endl;
     
@@ -177,14 +182,16 @@ int main(int argc, char *argv[])
     int pc_total = 0;
     int *pc_node = new int[NumberOfCores];
     
+    // this is the bunch every compute node will actually track
     Bunch *trackedBunch = new Bunch();
     if (teufel::rank == 0) std::cout << "distribute particles..." << std::endl;
     // all nodes synchronously traverse the beam
+    // while copying the particle data from the master to the compute node
     for (int i=0; i<NumberOfCores; i++) pc_node[i]=0;
-    int nob = beam->getNOB();
+    int nob = masterBeam->getNOB();
     for (int i=0; i<nob; i++)
     {
-        Bunch *b = beam->getBunch(i);
+        Bunch *b = masterBeam->getBunch(i);
         int nop = b->getNOP();
         for (int j=0; j<nop; j++)
         {
@@ -224,10 +231,10 @@ int main(int argc, char *argv[])
     // this is the beam we will actually track
     Beam *trackedBeam = new Beam();
     trackedBeam->Add(trackedBunch);
-    // copy the tracking information
-    trackedBeam->setTrackingMethod(beam->getTrackingMethod());
-    trackedBeam->setTimeStep(beam->getTimeStep());
-    trackedBeam->setNOTS(beam->getNOTS());
+    // copy the tracking information from the master beam
+    trackedBeam->setTrackingMethod(masterBeam->getTrackingMethod());
+    trackedBeam->setTimeStep(masterBeam->getTimeStep());
+    trackedBeam->setNOTS(masterBeam->getNOTS());
     // prepare the tracking of the beam
     trackedBeam->setupTracking(lattice);
     
@@ -242,6 +249,7 @@ int main(int argc, char *argv[])
     MPI_Barrier(MPI_COMM_WORLD);
 
     // handle watch point of initial particle distribution if requested
+    /* watches commented out while coding the logging
     for (int iw=0; iw<(int)watches.size(); iw++)
     {
         watch_t w = watches.at(iw);
@@ -285,6 +293,7 @@ int main(int argc, char *argv[])
             beam->clear();
         }
     }
+    */
 
     // record the start time
     double start_time = MPI_Wtime();
@@ -293,9 +302,12 @@ int main(int argc, char *argv[])
     // do the tracking of the beam
     for (int step=0; step<trackedBeam->getNOTS(); step++)
     {
+    
         // do a step
         trackedBeam->doStep(lattice);
+        
         // handle watch points
+        /* watches commented out while coding the logging
         for (int iw=0; iw<(int)watches.size(); iw++)
         {
             watch_t w = watches.at(iw);
@@ -339,7 +351,17 @@ int main(int argc, char *argv[])
                 beam->clear();
             }
         }
+        */
+        
+        // handle tracking loggers
+        if (listLoggers.size()>0)
+        {
+            if (teufel::rank == 0)
+                std::cout << "gathering data for logging" << std::endl;
+            // we use the initial masterBeam object to gather the particle information
 
+        }
+        
         // make a print once every 10s
         if (teufel::rank == 0)
         {
@@ -452,7 +474,7 @@ int main(int argc, char *argv[])
     delete lattice;
     
     // deleting the beam automatically deletes all bunches and particles belonging to it
-    delete beam;
+    delete masterBeam;
     delete trackedBeam;
 
     delete sendbuffer;

@@ -29,7 +29,7 @@
 #include "SDDS.h"
 
 template <class objectT>
-TrackingLogger<objectT>::TrackingLogger(objectT *obj)
+TrackingLogger<objectT>::TrackingLogger(objectT *obj, const char *filename)
 {
     Beam = obj;
     NOTS = 0;

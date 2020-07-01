@@ -214,7 +214,7 @@ int InputParser::parseLattice(Lattice *lattice)
     return count;
 }
 
-int InputParser::parseBeam(Beam *beam)
+int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs)
 {
     int count = 0;
     pugi::xml_node beamnode = root.child("beam");
@@ -264,9 +264,19 @@ int InputParser::parseBeam(Beam *beam)
                 // now we have all information - create a particle
                 ChargedParticle *p = new ChargedParticle(charge,cmr*charge);
                 p->initTrajectory(t0, pos, mom, acc);
-                // create a bunch with just this particle and add it to the beam
+                // create a bunch with just this particle
                 Bunch *single = new Bunch();
                 single->Add(p);
+                // create a logger for this bunch if defined in the input file
+                pugi::xml_node lognode = entry.child("log");
+                if (lognode)
+                {
+                    pugi::xml_attribute fn = lognode.attribute("file");
+                    if (!fn) throw(IOexception("InputParser::parseBeam - <particle> filename for log not found."));
+                    TrackingLogger<Bunch>* logger = new TrackingLogger<Bunch>(single, fn.as_string());
+                    logs->push_back(logger);
+                }
+                // add this bunch to the beam
                 beam->Add(single);
                 count++;
             }

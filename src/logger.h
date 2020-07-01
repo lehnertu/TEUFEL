@@ -47,8 +47,9 @@ public:
      * Bunch() or Beam() being observed.
      * 
      * \param[in] obj The object (bunch or beam) to be observed.
+     * \param[in] filename The name of the file to write.
      */
-    TrackingLogger(objectT *obj);
+    TrackingLogger(objectT *obj, const char *filename);
 
     /*! The source has advanced one time step.
      *  Compute and store the quantities of interest.
