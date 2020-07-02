@@ -237,7 +237,7 @@ void Bunch::InitVay(double tstep,
 {
     dt = tstep;
     time = avgTime();
-    std::cout << "Bunch::InitVay() : t=" << time << "  dt=" << dt << std::endl;
+    // std::cout << "Bunch::InitVay() : t=" << time << "  dt=" << dt << std::endl;
     for(int i=0; i<NOP; i++)
     {
         P[i]->InitVay(dt, field);
