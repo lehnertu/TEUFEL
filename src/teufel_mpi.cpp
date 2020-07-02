@@ -425,8 +425,9 @@ int main(int argc, char *argv[])
     };
 
     // write the logged tracking data
-    for (int i=0; i<(int)listLoggers.size(); i++)
-        listLoggers.at(i)->WriteBeamParametersSDDS();
+    if (teufel::rank == 0)
+        for (int i=0; i<(int)listLoggers.size(); i++)
+            listLoggers.at(i)->WriteBeamParametersSDDS();
 
     // ===============================================================
     // compute the radiation observations
