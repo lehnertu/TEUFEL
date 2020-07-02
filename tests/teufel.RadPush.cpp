@@ -147,7 +147,7 @@ int main ()
 		printf("peak beta*gamma = %9.6g - \033[1;32m OK\033[0m\n", bgzmax);
     }
 
-	int res = log->WriteBeamParametersSDDS("rad_push_log.sdds");
+	int res = log->WriteBeamParametersSDDS();
 	errors += res;
 	
     // clean up
