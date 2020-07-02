@@ -37,10 +37,10 @@ for file in args.files:
 
     fileOK = os.path.isfile(file)
     if not fileOK:
-	print "file not found"
+	print("file not found")
 	sys.exit()
 
-    print "reading ",file
+    print("reading ",file)
     data = sdds.SDDS(0)
     data.load(file)
     if args.listpar:
