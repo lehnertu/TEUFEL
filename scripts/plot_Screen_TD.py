@@ -81,7 +81,7 @@ rect2 = [left, 0.08, width, 0.40]
 fig = plt.figure(1,figsize=(12,9))
 
 ax1 = fig.add_axes(rect1)
-ax4 = fig.add_axes(rect2, sharex=ax1)
+ax2 = fig.add_axes(rect2, sharex=ax1)
 
 l1 = ax1.plot(t, Ex, "r-", label=r'$E_x$')
 l2 = ax1.plot(t, Ey, "b-", label=r'$E_y$')
@@ -95,16 +95,16 @@ for label in ax1.get_xticklabels():
     label.set_visible(False)
 ax1.grid(True)
 
-l4 = ax4.plot(t, Bx, "r-", label=r'$B_x$')
-l5 = ax4.plot(t, By, "b-", label=r'$B_y$')
-l6 = ax4.plot(t, Bz, "g-", label=r'$B_z$')
+l4 = ax2.plot(t, Bx, "r-", label=r'$B_x$')
+l5 = ax2.plot(t, By, "b-", label=r'$B_y$')
+l6 = ax2.plot(t, Bz, "g-", label=r'$B_z$')
 
-ax4.set_ylabel(r'$B$ [T]')
-ax4.set_xlabel(r't [ns]')
+ax2.set_ylabel(r'$B$ [T]')
+ax2.set_xlabel(r't [ns]')
 lines = l4 + l5 +l6
 labels = [l.get_label() for l in lines]
-ax4.legend(lines,labels,loc='upper right')
-ax4.grid(True)
+ax2.legend(lines,labels,loc='upper right')
+ax2.grid(True)
 
 if args.xy != None:
 
@@ -136,30 +136,30 @@ if args.xy != None:
 
     fig2 = plt.figure(2,figsize=(12,9))
     
-    ax21 = fig2.add_axes(rect1)
-    ax24 = fig2.add_axes(rect2, sharex=ax1)
+    ax3 = fig2.add_axes(rect1)
+    ax4 = fig2.add_axes(rect2, sharex=ax3)
     
-    l21 = ax21.plot(t, Ex, "r-", label=r'$E_x$')
-    l22 = ax21.plot(t, Ey, "b-", label=r'$E_y$')
-    l23 = ax21.plot(t, Ez, "g-", label=r'$E_z$')
+    l21 = ax3.plot(t, Ex, "r-", label=r'$E_x$')
+    l22 = ax3.plot(t, Ey, "b-", label=r'$E_y$')
+    l23 = ax3.plot(t, Ez, "g-", label=r'$E_z$')
     
-    ax21.set_ylabel(r'$E$ [V/m]')
+    ax3.set_ylabel(r'$E$ [V/m]')
     lines = l21 + l22 + l23
     labels = [l.get_label() for l in lines]
-    ax21.legend(lines,labels,loc='upper right')
-    for label in ax21.get_xticklabels():
+    ax3.legend(lines,labels,loc='upper right')
+    for label in ax3.get_xticklabels():
         label.set_visible(False)
-    ax21.grid(True)
+    ax3.grid(True)
 
-    l24 = ax24.plot(t, Bx, "r-", label=r'$B_x$')
-    l25 = ax24.plot(t, By, "b-", label=r'$B_y$')
-    l26 = ax24.plot(t, Bz, "g-", label=r'$B_z$')
+    l24 = ax4.plot(t, Bx, "r-", label=r'$B_x$')
+    l25 = ax4.plot(t, By, "b-", label=r'$B_y$')
+    l26 = ax4.plot(t, Bz, "g-", label=r'$B_z$')
     
-    ax24.set_ylabel(r'$B$ [T]')
-    ax24.set_xlabel(r't [ns]')
+    ax4.set_ylabel(r'$B$ [T]')
+    ax4.set_xlabel(r't [ns]')
     lines = l24 + l25 +l26
     labels = [l.get_label() for l in lines]
-    ax24.legend(lines,labels,loc='upper right')
-    ax24.grid(True)
+    ax4.legend(lines,labels,loc='upper right')
+    ax4.grid(True)
 
 plt.show()
