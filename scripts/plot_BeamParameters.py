@@ -38,18 +38,18 @@ for file in args.files:
     fileOK = os.path.isfile(file)
     if not fileOK:
         print("file not found")
-	sys.exit()
+        sys.exit()
 
     print("reading ",file)
     data = sdds.SDDS(0)
     data.load(file)
     if args.listpar:
-	data.listParameters()
+        data.listParameters()
     if args.listcol:
-	data.listColumns()
+        data.listColumns()
 
     if ("t" in data.columnName):
-	t = np.array(data.getColumnData("t"))*1e9
+        t = np.array(data.getColumnData("t"))*1e9
 
     x = np.array(data.getColumnData("x_av"))
     y = np.array(data.getColumnData("y_av"))
@@ -68,17 +68,17 @@ for file in args.files:
     ax1.set_ylabel(r'position [m]')
     ax1.ticklabel_format(useOffset=False)
     for label in ax1.get_xticklabels():
-	label.set_visible(False)
+    	label.set_visible(False)
     ax2.set_ylabel(r'z position [m]', color="g")
     ax2.tick_params('y', colors='g')
     ax2.ticklabel_format(useOffset=False)
     for label in ax2.get_xticklabels():
-	label.set_visible(False)
+	    label.set_visible(False)
     lines = l1 + l2 + l3
     labels = [l.get_label() for l in lines]
     ax2.legend(lines,labels,loc='upper right')
     for label in ax1.get_xticklabels():
-	label.set_visible(False)
+	    label.set_visible(False)
     ax1.grid(True)
 
     l4 = ax4.plot(t, bgx, "r-", label=r'$\beta_x\gamma$')
@@ -88,12 +88,12 @@ for file in args.files:
     ax4.set_ylabel(r'$\beta\gamma$')
     ax4.ticklabel_format(useOffset=False)
     for label in ax4.get_xticklabels():
-	label.set_visible(False)
+	    label.set_visible(False)
     ax5.set_ylabel(r'$\beta_z\gamma$', color="g")
     ax5.tick_params('y', colors='g')
     ax5.ticklabel_format(useOffset=False)
     for label in ax5.get_xticklabels():
-	label.set_visible(False)
+	    label.set_visible(False)
     lines = l4 + l5 +l6
     labels = [l.get_label() for l in lines]
     ax5.legend(lines,labels,loc='upper right')
