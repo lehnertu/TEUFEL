@@ -262,7 +262,7 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                 mom *= betagamma;
                 Vector acc = Vector(0.0, 0.0, 0.0);
                 // now we have all information - create a particle
-                ChargedParticle *p = new ChargedParticle(charge,cmr*charge);
+                ChargedParticle *p = new ChargedParticle(charge,charge/cmr);
                 p->initTrajectory(t0, pos, mom, acc);
                 // create a bunch with just this particle
                 Bunch *single = new Bunch();
@@ -385,7 +385,16 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                     };
                 };
                 // now we can create particles according to the coordinate distribution
-                Bunch *bunch = new Bunch(dist, 0.0, pos, dir*betagamma, -charge/(double)NoP, charge/cmr/(double)NoP);
+                Bunch *bunch = new Bunch(dist, 0.0, pos, dir*betagamma, charge/(double)NoP, charge/cmr/(double)NoP);
+                // create a logger for this bunch if defined in the input file
+                pugi::xml_node lognode = entry.child("log");
+                if (lognode)
+                {
+                    pugi::xml_attribute fn = lognode.attribute("file");
+                    if (!fn) throw(IOexception("InputParser::parseBeam - <bunch> filename for log not found."));
+                    TrackingLogger<Bunch>* logger = new TrackingLogger<Bunch>(bunch, fn.as_string());
+                    logs->push_back(logger);
+                }
                 // add the bunch to the beam
                 beam->Add(bunch);
                 count++;

@@ -348,6 +348,10 @@ void ChargedParticle::InitVay(
     double gamma_h = sqrt(P.back().abs2nd() + 1.0);
     Vector beta_h = P.back() / gamma_h;
     A.back() = (cross(beta_h, B_h) + E_h / SpeedOfLight) * qm;
+    std::cout << "Particle::InitVay() : t=" << Time[0] << "  dt=" << dt << "  NP=" << NP  << "  qm=" << qm << std::endl;
+    std::cout << "  X = (" << X[0].x << ", " << X[0].y << ", " << X[0].z << ") m" << std::endl;
+    std::cout << "  P = (" << P[0].x << ", " << P[0].y << ", " << P[0].z << ")" << std::endl;
+    std::cout << "  B = (" << B_h.x << ", " << B_h.y << ", " << B_h.z << ") T" << std::endl;
 }
 
 /*!
@@ -402,6 +406,14 @@ void ChargedParticle::StepVay(GeneralField* field)
     X.push_back(x_h);
     P.push_back(p_h);
     A.push_back((cross(beta_h, B_h) + E_h / SpeedOfLight) * qm);
+    if (NP==2)
+    {
+        std::cout << "Particle::StepVay() : t=" << t_h << "  dt=" << dt  << "  NP=" << NP << std::endl;
+        std::cout << "  X = (" << x_h.x << ", " << x_h.y << ", " << x_h.z << ") m" << std::endl;
+        std::cout << "  P = (" << p_h.x << ", " << p_h.y << ", " << p_h.z << ")" << std::endl;
+        std::cout << "  A = (" << A.back().x << ", " << A.back().y << ", " << A.back().z << ")" << std::endl;
+        std::cout << "  B = (" << B_h.x << ", " << B_h.y << ", " << B_h.z << ") T" << std::endl;
+    }
     // keep track of the number of stored trajectory points
     NP++;
 }

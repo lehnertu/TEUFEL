@@ -33,6 +33,7 @@ TrackingLogger<objectT>::TrackingLogger(objectT *obj, const char *filename)
 {
     Beam = obj;
     NOTS = 0;
+    fn = filename;
     // no need to initalize the (static) fields
 }
 
@@ -40,7 +41,7 @@ template <class objectT>
 void TrackingLogger<objectT>::update()
 {
     NOTS++;
-    Time.push_back(Beam->getTime());
+    Time.push_back(Beam->avgTime());
     Pos.push_back(Beam->avgPosition());
     BG.push_back(Beam->avgMomentum());
     PosRMS.push_back(Beam->rmsPosition());
@@ -49,12 +50,11 @@ void TrackingLogger<objectT>::update()
 }
 
 template <class objectT>
-int TrackingLogger<objectT>::WriteBeamParametersSDDS(const char *filename)
+int TrackingLogger<objectT>::WriteBeamParametersSDDS()
 {
-    cout << "writing SDDS file " << filename << endl;
+    cout << "writing SDDS file " << fn << endl;
     SDDS_DATASET data;
-    // if (1 != SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,filename))
-    if (1 != SDDS_InitializeOutput(&data,SDDS_ASCII,1,NULL,NULL,filename))
+    if (1 != SDDS_InitializeOutput(&data,SDDS_ASCII,1,NULL,NULL,fn))
     {
 	cout << "WriteSDDS - error initializing output\n";
 	return 1;

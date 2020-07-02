@@ -81,12 +81,15 @@ public:
      *	9  -  error in SDDS_Terminate \n
      * 
      */
-    int WriteBeamParametersSDDS(const char *filename);
+    int WriteBeamParametersSDDS();
 
 private:
 
     //! the observed beam object
     objectT *Beam;
+    
+    //! the file name
+    const char* fn;
 
     //! the number of stored datasets
     unsigned int NOTS;

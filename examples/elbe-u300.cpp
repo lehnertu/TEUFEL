@@ -192,7 +192,7 @@ int main()
     printf("time elapsed during tracking : %9.3f s\n",elapsed);
 	
     // create a tracking parameter dump fo the bunch
-    int retval = bunchLog->WriteBeamParametersSDDS("elbe-u300_BeamParam.sdds");
+    int retval = bunchLog->WriteBeamParametersSDDS();
     if (0 != retval)
     {
 	    printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);
