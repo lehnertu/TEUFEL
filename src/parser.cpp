@@ -288,12 +288,20 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                 double cmr = parseValue(entry.attribute("cmr"));
                 int NoP = entry.attribute("n").as_int(1);
                 parseCalcChildren(entry);
-                // parse position
+                double t0 = 0.0;
                 double x, y, z;
                 double xrms = 0.0;
                 double yrms = 0.0;
                 double zrms = 0.0;
                 double zft = 0.0;
+                // parse start time
+                pugi::xml_node timenode = entry.child("time");
+                if (timenode)
+                {
+                    parseCalcChildren(timenode);
+                    t0 = parseValue(timenode.attribute("t0"));
+                }
+                // parse position
                 pugi::xml_node posnode = entry.child("position");
                 if (!posnode)
                     throw(IOexception("InputParser::parseBeam - <bunch> <position> not found."));
@@ -385,7 +393,7 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                     };
                 };
                 // now we can create particles according to the coordinate distribution
-                Bunch *bunch = new Bunch(dist, 0.0, pos, dir*betagamma, charge/(double)NoP, charge/cmr/(double)NoP);
+                Bunch *bunch = new Bunch(dist, t0, pos, dir*betagamma, charge/(double)NoP, charge/cmr/(double)NoP);
                 // create a logger for this bunch if defined in the input file
                 pugi::xml_node lognode = entry.child("log");
                 if (lognode)
