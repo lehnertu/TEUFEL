@@ -48,9 +48,13 @@ public:
      * 
      * \param[in] obj The object (bunch or beam) to be observed.
      * \param[in] filename The name of the file to write.
+     * \param[in] the logging frequency in tracking steps
      */
-    TrackingLogger(objectT *obj, const char *filename);
+    TrackingLogger(objectT *obj, const char *filename, int step);
 
+    /*! Check whether the given tracking step should be logged */
+    bool log_requested(int step) { return 0 == (step % stepsize); };
+    
     /*! The source has advanced one time step.
      *  Compute and store the quantities of interest.
      */
@@ -93,6 +97,9 @@ private:
 
     //! the number of stored datasets
     unsigned int NOTS;
+    
+    //! the logging frequency in tracking steps
+    unsigned int stepsize;
     
     //! the observation time
     std::vector<double> Time;

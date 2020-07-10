@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
         }
     };
     // log the Parameters of the bunch
-    TrackingLogger<Bunch> *bunchLog = new TrackingLogger<Bunch>(primary, "Waveguide_BeamParam.sdds");
+    TrackingLogger<Bunch> *bunchLog = new TrackingLogger<Bunch>(primary, "Waveguide_BeamParam.sdds", 1);
 
     // do the tracking of the beam
     if (teufel::rank==0) printf("tracking particles ...\n");

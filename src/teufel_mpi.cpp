@@ -262,6 +262,11 @@ int main(int argc, char *argv[])
             }
         }
 
+    // update loggers with initial particle distribution
+    if (teufel::rank == 0)
+        for (int il=0; il<(int)listLoggers.size(); il++)
+            listLoggers.at(il)->update();
+                    
     // record the start time
     double start_time = MPI_Wtime();
     double print_time = start_time;
@@ -278,7 +283,8 @@ int main(int argc, char *argv[])
         
         // check whether we need all particle data
         bool need_particle_data = false;
-        if (listLoggers.size()>0) need_particle_data = true;
+        for (int il=0; il<(int)listLoggers.size(); il++)
+            if (listLoggers.at(il)->log_requested(step+1)) need_particle_data = true;
         for (int iw=0; iw<(int)watches.size(); iw++)
             if (watches.at(iw).step == step+1) need_particle_data = true;
 
@@ -332,8 +338,8 @@ int main(int argc, char *argv[])
             // now we have all data on the master node and can update the loggers
             if (teufel::rank == 0)
             {
-                for (int i=0; i<(int)listLoggers.size(); i++)
-                    listLoggers.at(i)->update();
+                for (int il=0; il<(int)listLoggers.size(); il++)
+                    if (listLoggers.at(il)->log_requested(step+1)) listLoggers.at(il)->update();
             }
                     
             // handle watch points

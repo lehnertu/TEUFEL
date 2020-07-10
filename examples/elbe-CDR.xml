@@ -4,10 +4,11 @@
 
     <calc print="beam energy [eV] = " var="E_beam" eq="26.0e6" />
     <calc print="gamma = " var="gamma" eq="E_beam/_mec2"/>
+    <calc var="betagamma" eq="sqrt(gamma*gamma-1)"/>
     <calc print="charge [nC] = " var="charge" eq="-1.0" />
 
     <lattice>
-        <calc print="chicane field [T] = " var="B" eq="0.1" />
+        <calc print="chicane field [T] = " var="B" eq="0.11" />
         <dipole name="MD1" type="hard edge">
             <B x="0.0" y="-B" z="0.0" />
             <p1 x="0.0" y="0.0" z="0.000" />
@@ -40,8 +41,14 @@
 
     <beam>
         <bunch gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" n="1000" >
-            <position x="0.0" y="0.0" z="-1.0" xrms="0.001" yrms="0.001" zrms="1e-12*_c" />
-            <momentum x="0.0" y="0.0" z="1.0" delta="1e-2" />
+            <position x="0.0" y="0.0" z="-1.0" xrms="0.001" yrms="0.001" zrms="2.0e-12*_c" />
+            <momentum x="0.0" y="0.0" z="1.0" xrms="0.0001" yrms="0.0001" delta="1.2e-3" />
+            <log file="elbe-CDR.sdds" step="100" />
+            <correlations>
+                <linear indep="0" dep="3" factor="-0.3*betagamma" />
+                <linear indep="1" dep="4" factor="-0.3*betagamma" />
+                <linear indep="2" dep="5" factor="-21.0*gamma" />
+            </correlations>
         </bunch>
     </beam>
 

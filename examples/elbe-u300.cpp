@@ -159,7 +159,7 @@ int main()
     beam->InitVay(lattice);
 
     // log the Parameters of the bunch
-    TrackingLogger<Bunch> *bunchLog = new TrackingLogger<Bunch>(bunch, "elbe-u300_BeamParam.sdds");
+    TrackingLogger<Bunch> *bunchLog = new TrackingLogger<Bunch>(bunch, "elbe-u300_BeamParam.sdds", 1);
     
     // do the tracking of the beam
     printf("tracking particles ...\n");

@@ -29,11 +29,12 @@
 #include "SDDS.h"
 
 template <class objectT>
-TrackingLogger<objectT>::TrackingLogger(objectT *obj, const char *filename)
+TrackingLogger<objectT>::TrackingLogger(objectT *obj, const char *filename, int step)
 {
     Beam = obj;
     NOTS = 0;
     fn = filename;
+    stepsize = step;
     // no need to initalize the (static) fields
 }
 

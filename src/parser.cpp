@@ -291,7 +291,10 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                 {
                     pugi::xml_attribute fn = lognode.attribute("file");
                     if (!fn) throw(IOexception("InputParser::parseBeam - <particle> filename for log not found."));
-                    TrackingLogger<Bunch>* logger = new TrackingLogger<Bunch>(single, fn.as_string());
+                    int step = 1;
+                    pugi::xml_attribute st = lognode.attribute("step");
+                    if (fn) step = st.as_int();
+                    TrackingLogger<Bunch>* logger = new TrackingLogger<Bunch>(single, fn.as_string(), step);
                     logs->push_back(logger);
                 }
                 // add this bunch to the beam
@@ -418,7 +421,10 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                 {
                     pugi::xml_attribute fn = lognode.attribute("file");
                     if (!fn) throw(IOexception("InputParser::parseBeam - <bunch> filename for log not found."));
-                    TrackingLogger<Bunch>* logger = new TrackingLogger<Bunch>(bunch, fn.as_string());
+                    int step = 1;
+                    pugi::xml_attribute st = lognode.attribute("step");
+                    if (fn) step = st.as_int();
+                    TrackingLogger<Bunch>* logger = new TrackingLogger<Bunch>(bunch, fn.as_string(), step);
                     logs->push_back(logger);
                 }
                 // add the bunch to the beam
