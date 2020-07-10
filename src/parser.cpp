@@ -23,6 +23,7 @@
 #include <iomanip>
 #include <math.h>
 
+#include "dipole.h"
 #include "fields.h"
 #include "global.h"
 #include "mesh.h"
@@ -180,6 +181,23 @@ int InputParser::parseLattice(Lattice *lattice)
             }
             else
                 throw(IOexception("InputParser::parseLattice(Lattice - unknown wave type."));
+            count++;
+        }
+        else if (type == "dipole")
+        {
+            parseCalcChildren(element);
+            type = element.attribute("type").value();
+            name = element.attribute("name").value();
+            if (type == "hard edge")
+            {
+                if (teufel::rank==0) std::cout << name << "::HardEdgeDipole" << std::endl;
+                // the dipole object parses its own input
+                // we provide a reference to the parser
+                HardEdgeDipole* dipole = new HardEdgeDipole(element, this);
+                lattice->addElement(dipole);
+            }
+            else
+                throw(IOexception("InputParser::parseLattice(Lattice - unknown dipole type."));
             count++;
         }
         else if (type == "background")
