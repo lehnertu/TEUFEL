@@ -66,9 +66,9 @@ print("trace step size = %g s" % screen.dt)
 print("FFT max. frequency = %g Hz" % fmax)
 print("FFT bin width = %g Hz" % df)
 if roiOK:
-  nf1 = np.ceil(f1/df).astype('int')
-  nf2 = np.floor(f2/df).astype('int')
-print("FFT ROI = [%d ... %d]" % (nf1,nf2))
+    nf1 = np.ceil(f1/df).astype('int')
+    nf2 = np.floor(f2/df).astype('int')
+    print("FFT ROI = [%d ... %d]" % (nf1,nf2))
 print()
 
 amp_tot = np.zeros(nf//2)
