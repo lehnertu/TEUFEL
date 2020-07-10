@@ -97,7 +97,7 @@ for index in range(screen.Np):
     # compute the component of the Poyntig vector against the direction of the average normal
     amp_norm = np.array([ np.dot( np.array([ax,ay,az]), -average_normal ) for (ax,ay,az) in zip(amp_x,amp_y,amp_z)])
     amp_tot += amp_norm * 2*screen.dt/(df*nf) * area[index]
-    Pz_roi[index] = amp_norm[nf1:nf2].sum() * 2*screen.dt/(df*nf) * area[index]
+    if roiOK: Pz_roi[index] = amp_norm[nf1:nf2].sum() * 2*screen.dt/(df*nf) * area[index]
 
 print("integrated spectrum = %g µJ" % (1e6*np.trapz(amp_tot)*df))
 if roiOK: print("integrated spectrum in ROI = %g µJ" % (1e6*Pz_roi.sum()*df))
