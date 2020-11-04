@@ -68,6 +68,18 @@ listed here were missing. Some example input files are contained in the \verb|ex
 
 \subsection{Lattice description}
 
+The lattice node describes all external fields acting on the beam.
+
+\subsubsection{Background fields}
+Homogeneous, time-constant background fields can be defined as either electrical or magnetic
+fields or both.
+\begin{lstlisting}
+<background>
+    <E x="..." y="..." z="..." />
+    <B x="..." y="..." z="..." />
+</background>
+\end{lstlisting}
+
 %undulator
 %    planar
 %    transverse gradient

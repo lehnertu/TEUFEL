@@ -174,7 +174,7 @@ int InputParser::parseLattice(Lattice *lattice)
             if (type == "gaussian")
             {
                 if (teufel::rank==0) std::cout << name << "::GaussianWave" << std::endl;
-                // the undulator object parses its own input
+                // the wave object parses its own input
                 // we provide a reference to the parser
                 GaussianWave *wave = new GaussianWave(element, this);
                 lattice->addElement(wave);
