@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 import sys, time
 import os.path
@@ -53,14 +53,14 @@ if (args.pix != None): pixels = args.pix
 bunfile = args.file
 bunOK = os.path.isfile(bunfile)
 if not bunOK:
-  print "file not found"
+  print("file not found")
   sys.exit()
 
 # Open the file for reading
-print "reading ",bunfile
+print("reading ",bunfile)
 hdf = h5py.File(bunfile, "r")
-print hdf
-print
+print(hdf)
+print()
 
 # Get the group
 electrons = hdf['electrons']
@@ -68,7 +68,7 @@ a = np.array(electrons)
 hdf.close()
 
 data = a.transpose()
-# print data
+# print(data)
 
 x = data[0]
 y = data[1]

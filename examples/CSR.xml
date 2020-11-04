@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<teufel description="Coherent synchrotron radiation from a homogeneous dipole"
+    author="Ulf Lehnert 29.6.2020">
+    <calc print="beam energy [eV] = " var="E_beam" eq="50.0e6" />
+    <calc print="gamma = " var="gamma" eq="E_beam/_mec2"/>
+    <calc print="beta*gamma = " var="betagamma" eq="sqrt(gamma*gamma-1.0)"/>
+    <calc print="beta = " var="beta" eq="sqrt(1.0-1.0/(gamma*gamma))"/>
+    <calc print="charge [nC] = " var="charge" eq="-1.0" />
+    <calc print="r [m] = " var="radius" eq="0.3"/>
+    <lattice>
+        <background>
+            <!-- compute field setting from bending radius -->
+            <calc print="B*r [T m] = " var="Brho" eq="betagamma*_mec2/_c"/>
+            <calc print="B [T] = " var="By" eq="Brho/radius"/>
+            <B x="0.0" y="By" z="0.0" />
+        </background>
+    </lattice>
+    <beam>
+        <!-- a single particle moving in the x-z plane crosses the origin at t=0 -->
+        <particle gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" >
+            <position x="radius*(1.0-1.0/sqrt(2))" y="0.0" z="-radius/sqrt(2)" />
+            <momentum x="-1.0/sqrt(2)" y="0.0" z="1.0/sqrt(2)" />
+        </particle>
+    </beam>
+    <calc print="tracking length [m] = " var="total_L" eq="radius*_pi/2.0" />
+    <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
+    <calc print="dt = " var="dt" eq="total_t/1000" />
+    <tracking method="Vay" delta_t="dt" n="1000" >
+    </tracking>
+    <observer>
+        <calc print="flight time [s] = " var="tof" eq="_pi/4.0*radius/(beta*_c)" />
+        <calc print="screen position z0 = " var="z0" eq="1.0"/>
+        <calc print="screen center time t0 = " var="tscreen" eq="tof+z0/_c"/>
+        <screen file="CSR_screen_1m.h5">
+            <position x="0.0" y="0.0" z="z0" />
+            <hpitch x="0.005" y="0.0" z="0.0" n="41" />
+            <vpitch x="0.0" y="0.005" z="0.0" n="41" />
+            <time t0="tscreen-0.02e-10" dt="0.5e-14" n="5000" />
+        </screen>
+    </observer>
+</teufel>

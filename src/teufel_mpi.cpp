@@ -137,19 +137,24 @@ int main(int argc, char *argv[])
     if (teufel::rank==0) std::cout << "lattice of " << NoE << " elements created." << std::endl;
     
     // We create an empty beam object.
-    // Then we call the parser to fill in the necessary information
-    // from the input file.
-    Beam *beam = new Beam();
-    int NoB = parse->parseBeam(beam);
+    // Then we call the parser to fill in the necessary information from the input file.
+    // The structure of this beam shall then be preserved troughout the tracking procedure.
+    // That is necessary to keep the references to the contained bunches for logging
+    // or other bunch-related procedures.
+    // Whenever necessary, the current particle information distributed over
+    // the compute nodes will be re-gathered into this object on the master node.
+    Beam *masterBeam = new Beam();
+    std::vector<TrackingLogger<Bunch>*> listLoggers;
+    int NoB = parse->parseBeam(masterBeam, &listLoggers);
     if (teufel::rank==0) std::cout << std::endl;
     if (teufel::rank==0) std::cout << "beam of " << NoB << " bunches created." << std::endl;
-    if (teufel::rank==0) std::cout << "total number of particles : " << beam->getNOP() << std::endl;
-    if (teufel::rank==0) std::cout << "total charge : " << beam->getTotalCharge()*ElementaryCharge*1.0e9 << "nC" << std::endl;
+    if (teufel::rank==0) std::cout << "total number of particles : " << masterBeam->getNOP() << std::endl;
+    if (teufel::rank==0) std::cout << "total charge : " << masterBeam->getTotalCharge()*ElementaryCharge*1.0e9 << "nC" << std::endl;
     if (teufel::rank==0) std::cout << std::endl;
 
     // get all tracking information from the input file
     std::vector<watch_t> watches;
-    parse->parseTracking(beam, &watches);
+    parse->parseTracking(masterBeam, &watches);
     if (teufel::rank==0) std::cout << "defined " << (int)watches.size() << " watch points." << std::endl;
     if (teufel::rank==0) std::cout << std::endl;
     
@@ -177,14 +182,16 @@ int main(int argc, char *argv[])
     int pc_total = 0;
     int *pc_node = new int[NumberOfCores];
     
+    // this is the bunch every compute node will actually track
     Bunch *trackedBunch = new Bunch();
     if (teufel::rank == 0) std::cout << "distribute particles..." << std::endl;
     // all nodes synchronously traverse the beam
+    // while copying the particle data from the master to the compute node
     for (int i=0; i<NumberOfCores; i++) pc_node[i]=0;
-    int nob = beam->getNOB();
+    int nob = masterBeam->getNOB();
     for (int i=0; i<nob; i++)
     {
-        Bunch *b = beam->getBunch(i);
+        Bunch *b = masterBeam->getBunch(i);
         int nop = b->getNOP();
         for (int j=0; j<nop; j++)
         {
@@ -224,10 +231,10 @@ int main(int argc, char *argv[])
     // this is the beam we will actually track
     Beam *trackedBeam = new Beam();
     trackedBeam->Add(trackedBunch);
-    // copy the tracking information
-    trackedBeam->setTrackingMethod(beam->getTrackingMethod());
-    trackedBeam->setTimeStep(beam->getTimeStep());
-    trackedBeam->setNOTS(beam->getNOTS());
+    // copy the tracking information from the master beam
+    trackedBeam->setTrackingMethod(masterBeam->getTrackingMethod());
+    trackedBeam->setTimeStep(masterBeam->getTimeStep());
+    trackedBeam->setNOTS(masterBeam->getNOTS());
     // prepare the tracking of the beam
     trackedBeam->setupTracking(lattice);
     
@@ -242,50 +249,24 @@ int main(int argc, char *argv[])
     MPI_Barrier(MPI_COMM_WORLD);
 
     // handle watch point of initial particle distribution if requested
-    for (int iw=0; iw<(int)watches.size(); iw++)
-    {
-        watch_t w = watches.at(iw);
-        if (w.step == 0)
+    if (teufel::rank == 0)
+        for (int iw=0; iw<(int)watches.size(); iw++)
         {
-            if (teufel::rank == 0)
-                std::cout << "gathering data for watch point " << w.filename << std::endl;
-            // we use the initial beam object to gather the particle information
-            beam->clear();
-            Bunch *outb = new Bunch();
-            Bunch *b = trackedBeam->getBunch(0);
-            // iterate over the nodes and particles
-            for (int n=0; n<NumberOfCores; n++)
-                for (int j=0; j<pc_node[n]; j++)
-                {
-                    if (teufel::rank == n)
-                    {
-                        ChargedParticle *p = b->getParticle(j);
-                        p->serialize(sendbuffer);
-                        MPI_Send(sendbuffer, PARTICLE_SERIALIZE_BUFSIZE, MPI_DOUBLE,
-                                 0, 42, MPI_COMM_WORLD);
-                    };
-                    if (teufel::rank == 0)
-                    {
-                        MPI_Recv(recbuffer, PARTICLE_SERIALIZE_BUFSIZE, MPI_DOUBLE,
-                                 n, 42, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                        ChargedParticle *outp = new ChargedParticle(recbuffer);
-                        outb->Add(outp);
-                    };
-                };
-            MPI_Barrier(MPI_COMM_WORLD);
-            if (teufel::rank == 0)
+            watch_t w = watches.at(iw);
+            if (w.step == 0)
             {
                 std::cout << "writing watch point " << w.filename << std::endl;
-                beam->Add(outb);
-                int nw = beam->WriteWatchPointHDF5(w.filename);
+                int nw = masterBeam->WriteWatchPointHDF5(w.filename);
                 std::cout << nw << " particles written." << std::endl;
                 std::cout << std::endl;
-            };
-            // this deletes all contained bunches and particles
-            beam->clear();
+            }
         }
-    }
 
+    // update loggers with initial particle distribution
+    if (teufel::rank == 0)
+        for (int il=0; il<(int)listLoggers.size(); il++)
+            listLoggers.at(il)->update();
+                    
     // record the start time
     double start_time = MPI_Wtime();
     double print_time = start_time;
@@ -293,53 +274,89 @@ int main(int argc, char *argv[])
     // do the tracking of the beam
     for (int step=0; step<trackedBeam->getNOTS(); step++)
     {
+    
         // do a step
         trackedBeam->doStep(lattice);
-        // handle watch points
+                
+        // if there are tracking loggers or a watch point we have to gather
+        // all current particle data back to the master node
+        
+        // check whether we need all particle data
+        bool need_particle_data = false;
+        for (int il=0; il<(int)listLoggers.size(); il++)
+            if (listLoggers.at(il)->log_requested(step+1)) need_particle_data = true;
         for (int iw=0; iw<(int)watches.size(); iw++)
-        {
-            watch_t w = watches.at(iw);
-            if (w.step == step+1)
-            {
-                if (teufel::rank == 0)
-                    std::cout << "gathering data for watch point " << w.filename << std::endl;
-                // we use the initial beam object to gather the particle information
-                beam->clear();
-                Bunch *outb = new Bunch();
-                Bunch *b = trackedBeam->getBunch(0);
-                // iterate over the nodes and particles
-                for (int n=0; n<NumberOfCores; n++)
-                    for (int j=0; j<pc_node[n]; j++)
-                    {
-                        if (teufel::rank == n)
-                        {
-                            ChargedParticle *p = b->getParticle(j);
-                            p->serialize(sendbuffer);
-                            MPI_Send(sendbuffer, PARTICLE_SERIALIZE_BUFSIZE, MPI_DOUBLE,
-                                    0, 42, MPI_COMM_WORLD);
-                        };
-                        if (teufel::rank == 0)
-                        {
-                            MPI_Recv(recbuffer, PARTICLE_SERIALIZE_BUFSIZE, MPI_DOUBLE,
-                                    n, 42, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                            ChargedParticle *outp = new ChargedParticle(recbuffer);
-                            outb->Add(outp);
-                        };
-                    };
-                MPI_Barrier(MPI_COMM_WORLD);
-                if (teufel::rank == 0)
-                {
-                    std::cout << "writing watch point " << w.filename << std::endl;
-                    beam->Add(outb);
-                    int nw = beam->WriteWatchPointHDF5(w.filename);
-                    std::cout << nw << " particles written." << std::endl;
-                    std::cout << std::endl;
-                };
-                // this deletes all contained bunches and particles
-                beam->clear();
-            }
-        }
+            if (watches.at(iw).step == step+1) need_particle_data = true;
 
+        if (need_particle_data)
+        {
+            // we use the initial masterBeam object to gather the particle information
+            int nob = masterBeam->getNOB();
+            // a counter running over the total number of particles
+            // determines the node on which the particle is tracked
+            int p_counter = 0;
+            // a counter which is individual on every node
+            // determines the particle index within the tracked bunch
+            int t_index = 0;
+            for (int i=0; i<nob; i++)
+            {
+                Bunch *mb = masterBeam->getBunch(i);
+                int nop = mb->getNOP();
+                for (int j=0; j<nop; j++)
+                {
+                    // all nodes in turn send the data of the corresponding
+                    // particle in its tracked bunch
+                    if (teufel::rank == (p_counter % NumberOfCores) )
+                    {
+                        ChargedParticle *p = trackedBunch->getParticle(t_index);
+                        t_index++;
+                        p->serialize(sendbuffer);
+                        // non-blocking send
+                        MPI_Issend(sendbuffer, PARTICLE_SERIALIZE_BUFSIZE, MPI_DOUBLE,
+                            0, 42, MPI_COMM_WORLD, &send_req);
+                    };
+                    // the root node receives particle information
+                    if (teufel::rank == 0)
+                    {
+                        MPI_Recv(recbuffer, PARTICLE_SERIALIZE_BUFSIZE, MPI_DOUBLE,
+                            p_counter % NumberOfCores, 42, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
+                        ChargedParticle *tp = new ChargedParticle(recbuffer);
+                        // the particle in the master beam is replaced by the tracked particle
+                        mb->replaceParticle(j, tp);
+                    };
+                    // the sending node waits for completion of the transfer
+                    if (teufel::rank == (p_counter % NumberOfCores) )
+                    {
+                        MPI_Wait(&send_req,MPI_STATUS_IGNORE);
+                    };
+                    p_counter++;
+                };
+            };
+
+            MPI_Barrier(MPI_COMM_WORLD);
+
+            // now we have all data on the master node and can update the loggers
+            if (teufel::rank == 0)
+            {
+                for (int il=0; il<(int)listLoggers.size(); il++)
+                    if (listLoggers.at(il)->log_requested(step+1)) listLoggers.at(il)->update();
+            }
+                    
+            // handle watch points
+            if (teufel::rank == 0)
+                for (int iw=0; iw<(int)watches.size(); iw++)
+                {
+                    watch_t w = watches.at(iw);
+                    if (w.step == step+1)
+                    {
+                        std::cout << "writing watch point " << w.filename << std::endl;
+                        int nw = masterBeam->WriteWatchPointHDF5(w.filename);
+                        std::cout << nw << " particles written." << std::endl;
+                        std::cout << std::endl;
+                    }
+                }
+        }
+        
         // make a print once every 10s
         if (teufel::rank == 0)
         {
@@ -359,6 +376,11 @@ int main(int argc, char *argv[])
         std::cout << "finished tracking particles." << std::endl;
         std::cout << "time elapsed during tracking : " << stop_time-start_time << " s" << std::endl;
     };
+
+    // write the logged tracking data
+    if (teufel::rank == 0)
+        for (int i=0; i<(int)listLoggers.size(); i++)
+            listLoggers.at(i)->WriteBeamParametersSDDS();
 
     // ===============================================================
     // compute the radiation observations
@@ -452,7 +474,7 @@ int main(int argc, char *argv[])
     delete lattice;
     
     // deleting the beam automatically deletes all bunches and particles belonging to it
-    delete beam;
+    delete masterBeam;
     delete trackedBeam;
 
     delete sendbuffer;

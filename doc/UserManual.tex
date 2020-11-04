@@ -3,6 +3,7 @@
 \usepackage[utf8]{inputenc}
 \inputencoding{utf8}
 \usepackage[T1]{fontenc}
+\usepackage{textcomp}
 \usepackage{graphicx}
 \usepackage{geometry}
 \geometry{a4paper, top=1cm, body={16cm,24cm}}
@@ -28,13 +29,12 @@
 
 \sloppy
 
-\title{User Manual for TEUFEL - THz Emission from Undulators and Free-Electron Lasers}
+\title{User Manual for TEUFEL \\ THz Emission from Undulators and Free-Electron Lasers}
 
 \author{U. Lehnert\\
-\footnotesize{Helmholtz-Center Dresden-Rossendorf}
-\footnotesize{Institute of Radiation Physics}\\
+\footnotesize{Helmholtz-Center Dresden-Rossendorf, Institute of Radiation Physics}\\
 \footnotesize{PF 510119, D-01314 Dresden}\\
-\footnotesize{e-mail : U.Lehnert@fzd.de}}
+\footnotesize{e-mail : U.Lehnert@hzdr.de}}
 
 \date{\today\\[1cm]}
 
@@ -68,13 +68,74 @@ listed here were missing. Some example input files are contained in the \verb|ex
 
 \subsection{Lattice description}
 
+The lattice node describes all external fields acting on the beam.
+
+\subsubsection{Background fields}
+Homogeneous, time-constant background fields can be defined as either electrical or magnetic
+fields or both.
+\begin{lstlisting}
+<background>
+    <E x="..." y="..." z="..." />
+    <B x="..." y="..." z="..." />
+</background>
+\end{lstlisting}
+
+%undulator
+%    planar
+%    transverse gradient
+%wave
+%    gaussian
+%dipole
+%    hard edge
+%background
+
 \subsection{Beam description}
+
+%particle
+%bunch
+
+\subsection{Tracking definitions}
+
+%method
+%watch
 
 \subsection{Definition of Observations}
 
+%snapshot
+%screen
+%mesh
+%point
+
 \subsection{The calculator}
 
-\section{Scrips for output visualization}
+A simple calculator and variable engine is integrated with
+the input parser. All numerical input values can be computed terms.
+Variable definitions can appear at any position within the file.
+All variable definitions are parsed first within a section of the input file
+regardless of their sequence with respect to other entries.
+However, definitions made within subsections become visible in
+the superior section only after the corresponding subsection has been parsed.
+
+A variable definition is made with the entry
+\begin{lstlisting}
+<calc var="name" eq="value" print="entity [unit] = " />
+\end{lstlisting}
+The value itself may be computed from already defined variables.
+At the time of the definition a printout of the given text along with the
+assigned value is generated. The print attribute can be omitted if no printout is desired.
+A few variables are pre-defined. All of those have names starting with an underscore.
+\\[1ex]
+\begin{tabular}{lll}
+\_c & 2.99792458e8 & speed of light [m/s] \\
+\_e & 1.6021766208e-19 & elementary charge [As] \\
+\_mec2 & 0.5109989461e6 & electron rest mass [eV] \\
+\_eps0 & 8.854187817e-12 & vacuum permittivity [As/Vm] \\
+\_pi & $\pi$ & $\pi$ \\
+\end{tabular}
+
+\section{Scripts for creating input files}
+
+\section{Scripts for output visualization}
 
 \end{document}
 

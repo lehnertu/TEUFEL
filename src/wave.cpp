@@ -39,7 +39,7 @@ GaussianWave::GaussianWave(Vector pos) :
 GaussianWave::GaussianWave(const pugi::xml_node node, InputParser *parser) :
     ExternalField()
 {
-    parser->parseCalcChildren(node);
+    // parser->parseCalcChildren(node);
     pugi::xml_node position = node.child("position");
     if (!position)
         throw(IOexception("InputParser::GaussianWave - wave <position> not found."));
@@ -118,7 +118,7 @@ GaussianWavePacket::GaussianWavePacket(Vector pos) :
 GaussianWavePacket::GaussianWavePacket(const pugi::xml_node node, InputParser *parser) :
     ExternalField()
 {
-    parser->parseCalcChildren(node);
+    // parser->parseCalcChildren(node);
     pugi::xml_node position = node.child("position");
     if (!position)
         throw(IOexception("InputParser::GaussianWave - wave <position> not found."));

@@ -223,14 +223,24 @@ ChargedParticle* Bunch::getParticle(int i)
     return p;
 }
 
+void Bunch::replaceParticle(int i, ChargedParticle* part)
+{
+    if (i>=0 && i<NOP)
+    {
+        delete P[i];
+        P[i] = part;
+    }
+}
+    
 void Bunch::InitVay(double tstep,
                     GeneralField *field)
 {
     dt = tstep;
-    time = 0.0;
+    time = avgTime();
+    // std::cout << "Bunch::InitVay() : t=" << time << "  dt=" << dt << std::endl;
     for(int i=0; i<NOP; i++)
     {
-        P[i]->InitVay(tstep, field);
+        P[i]->InitVay(dt, field);
     }
 }
 
@@ -246,6 +256,13 @@ void Bunch::StepVay(GeneralField *field)
 double Bunch::getTime()
 {
     return time;
+}
+
+double Bunch::avgTime()
+{
+    double t = 0.0;
+    for(int i=0; i<NOP; i++) t += P[i]->getTime();
+    return t/NOP;
 }
 
 Vector Bunch::avgPosition()

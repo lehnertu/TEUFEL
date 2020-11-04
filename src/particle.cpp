@@ -348,6 +348,10 @@ void ChargedParticle::InitVay(
     double gamma_h = sqrt(P.back().abs2nd() + 1.0);
     Vector beta_h = P.back() / gamma_h;
     A.back() = (cross(beta_h, B_h) + E_h / SpeedOfLight) * qm;
+    // std::cout << "Particle::InitVay() : t=" << Time[0] << "  dt=" << dt << "  NP=" << NP  << "  qm=" << qm << std::endl;
+    // std::cout << "  X = (" << X[0].x << ", " << X[0].y << ", " << X[0].z << ") m" << std::endl;
+    // std::cout << "  P = (" << P[0].x << ", " << P[0].y << ", " << P[0].z << ")" << std::endl;
+    // std::cout << "  B = (" << B_h.x << ", " << B_h.y << ", " << B_h.z << ") T" << std::endl;
 }
 
 /*!

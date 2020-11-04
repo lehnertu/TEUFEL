@@ -100,7 +100,7 @@ int main ()
     printf("simulation running %9.6g s\n",10.0*tau);
     double deltaT = 10*tau / NOTS;
     bunch->InitVay(deltaT, lattice);
-    TrackingLogger<Bunch> *log = new TrackingLogger<Bunch>(bunch);
+    TrackingLogger<Bunch> *log = new TrackingLogger<Bunch>(bunch, "rad_push_log.sdds", 1);
     log->update();
     
     // record maximum displacement in x-direction
@@ -147,7 +147,7 @@ int main ()
 		printf("peak beta*gamma = %9.6g - \033[1;32m OK\033[0m\n", bgzmax);
     }
 
-	int res = log->WriteBeamParametersSDDS("rad_push_log.sdds");
+	int res = log->WriteBeamParametersSDDS();
 	errors += res;
 	
     // clean up

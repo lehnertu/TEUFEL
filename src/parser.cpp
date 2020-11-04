@@ -23,6 +23,7 @@
 #include <iomanip>
 #include <math.h>
 
+#include "dipole.h"
 #include "fields.h"
 #include "global.h"
 #include "mesh.h"
@@ -142,6 +143,7 @@ int InputParser::parseLattice(Lattice *lattice)
             parseCalc(element);
         else if (type == "undulator")
         {
+            parseCalcChildren(element);
             type = element.attribute("type").value();
             name = element.attribute("name").value();
             if (type == "planar")
@@ -166,12 +168,13 @@ int InputParser::parseLattice(Lattice *lattice)
         }
         else if (type == "wave")
         {
+            parseCalcChildren(element);
             type = element.attribute("type").value();
             name = element.attribute("name").value();
             if (type == "gaussian")
             {
                 if (teufel::rank==0) std::cout << name << "::GaussianWave" << std::endl;
-                // the undulator object parses its own input
+                // the wave object parses its own input
                 // we provide a reference to the parser
                 GaussianWave *wave = new GaussianWave(element, this);
                 lattice->addElement(wave);
@@ -180,13 +183,56 @@ int InputParser::parseLattice(Lattice *lattice)
                 throw(IOexception("InputParser::parseLattice(Lattice - unknown wave type."));
             count++;
         }
+        else if (type == "dipole")
+        {
+            parseCalcChildren(element);
+            type = element.attribute("type").value();
+            name = element.attribute("name").value();
+            if (type == "hard edge")
+            {
+                if (teufel::rank==0) std::cout << name << "::HardEdgeDipole" << std::endl;
+                // the dipole object parses its own input
+                // we provide a reference to the parser
+                HardEdgeDipole* dipole = new HardEdgeDipole(element, this);
+                lattice->addElement(dipole);
+            }
+            else
+                throw(IOexception("InputParser::parseLattice(Lattice - unknown dipole type."));
+            count++;
+        }
+        else if (type == "background")
+        {
+            parseCalcChildren(element);
+            double x, y, z;
+            pugi::xml_node Enode = element.child("E");
+            Vector E;
+            if (Enode)
+            {
+                x = parseValue(Enode.attribute("x"));
+                y = parseValue(Enode.attribute("y"));
+                z = parseValue(Enode.attribute("z"));
+                E = Vector(x, y, z);
+            }
+            pugi::xml_node Bnode = element.child("B");
+            Vector B;
+            if (Bnode)
+            {
+                x = parseValue(Bnode.attribute("x"));
+                y = parseValue(Bnode.attribute("y"));
+                z = parseValue(Bnode.attribute("z"));
+                B = Vector(x, y, z);
+            }
+            HomogeneousField *background = new HomogeneousField(E,B);
+            lattice->addElement(background);
+            count++;
+        }
         else
             throw(IOexception("InputParser::parseLattice(Lattice - unknown lattice element."));
     }
     return count;
 }
 
-int InputParser::parseBeam(Beam *beam)
+int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs)
 {
     int count = 0;
     pugi::xml_node beamnode = root.child("beam");
@@ -234,11 +280,24 @@ int InputParser::parseBeam(Beam *beam)
                 mom *= betagamma;
                 Vector acc = Vector(0.0, 0.0, 0.0);
                 // now we have all information - create a particle
-                ChargedParticle *p = new ChargedParticle(charge,cmr*charge);
+                ChargedParticle *p = new ChargedParticle(charge,charge/cmr);
                 p->initTrajectory(t0, pos, mom, acc);
-                // create a bunch with just this particle and add it to the beam
+                // create a bunch with just this particle
                 Bunch *single = new Bunch();
                 single->Add(p);
+                // create a logger for this bunch if defined in the input file
+                pugi::xml_node lognode = entry.child("log");
+                if (lognode)
+                {
+                    pugi::xml_attribute fn = lognode.attribute("file");
+                    if (!fn) throw(IOexception("InputParser::parseBeam - <particle> filename for log not found."));
+                    int step = 1;
+                    pugi::xml_attribute st = lognode.attribute("step");
+                    if (fn) step = st.as_int();
+                    TrackingLogger<Bunch>* logger = new TrackingLogger<Bunch>(single, fn.as_string(), step);
+                    logs->push_back(logger);
+                }
+                // add this bunch to the beam
                 beam->Add(single);
                 count++;
             }
@@ -250,12 +309,20 @@ int InputParser::parseBeam(Beam *beam)
                 double cmr = parseValue(entry.attribute("cmr"));
                 int NoP = entry.attribute("n").as_int(1);
                 parseCalcChildren(entry);
-                // parse position
+                double t0 = 0.0;
                 double x, y, z;
                 double xrms = 0.0;
                 double yrms = 0.0;
                 double zrms = 0.0;
                 double zft = 0.0;
+                // parse start time
+                pugi::xml_node timenode = entry.child("time");
+                if (timenode)
+                {
+                    parseCalcChildren(timenode);
+                    t0 = parseValue(timenode.attribute("t0"));
+                }
+                // parse position
                 pugi::xml_node posnode = entry.child("position");
                 if (!posnode)
                     throw(IOexception("InputParser::parseBeam - <bunch> <position> not found."));
@@ -347,7 +414,19 @@ int InputParser::parseBeam(Beam *beam)
                     };
                 };
                 // now we can create particles according to the coordinate distribution
-                Bunch *bunch = new Bunch(dist, 0.0, pos, dir*betagamma, -charge/(double)NoP, charge/cmr/(double)NoP);
+                Bunch *bunch = new Bunch(dist, t0, pos, dir*betagamma, charge/(double)NoP, charge/cmr/(double)NoP);
+                // create a logger for this bunch if defined in the input file
+                pugi::xml_node lognode = entry.child("log");
+                if (lognode)
+                {
+                    pugi::xml_attribute fn = lognode.attribute("file");
+                    if (!fn) throw(IOexception("InputParser::parseBeam - <bunch> filename for log not found."));
+                    int step = 1;
+                    pugi::xml_attribute st = lognode.attribute("step");
+                    if (fn) step = st.as_int();
+                    TrackingLogger<Bunch>* logger = new TrackingLogger<Bunch>(bunch, fn.as_string(), step);
+                    logs->push_back(logger);
+                }
                 // add the bunch to the beam
                 beam->Add(bunch);
                 count++;

@@ -178,7 +178,7 @@ int main(int argc, char *argv[])
         }
     };
     // log the Parameters of the bunch
-    TrackingLogger<Bunch> *bunchLog = new TrackingLogger<Bunch>(primary);
+    TrackingLogger<Bunch> *bunchLog = new TrackingLogger<Bunch>(primary, "Waveguide_BeamParam.sdds", 1);
 
     // do the tracking of the beam
     if (teufel::rank==0) printf("tracking particles ...\n");
@@ -217,7 +217,7 @@ int main(int argc, char *argv[])
     // create a tracking parameter dump fo the bunch
     if (teufel::rank==0)
     {
-        int retval = bunchLog->WriteBeamParametersSDDS("Waveguide_BeamParam.sdds");
+        int retval = bunchLog->WriteBeamParametersSDDS();
         if (0 != retval)
         {
 	        printf("SDDS write \033[1;31m failed! - error %d\033[0m\n", retval);

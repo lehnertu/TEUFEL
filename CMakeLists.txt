@@ -159,7 +159,7 @@ if(BUILD_DOCUMENTATION)
     message(DOC_BUILD_DIR = ${DOC_BUILD_DIR})
     file(MAKE_DIRECTORY ${DOC_BUILD_DIR})
     if(BUILD_DOCUMENTATION_DEFAULT)
-        add_custom_target(docs ALL
+        add_custom_target(doc ALL
             ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/setup.dox
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             COMMENT "Generating API documentation with Doxygen")
@@ -173,7 +173,7 @@ if(BUILD_DOCUMENTATION)
             COMMENT "Generating user manual with LaTeX"
             )
     else()
-        add_custom_target(docs
+        add_custom_target(doc
             ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/setup.dox
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             COMMENT "Generating API documentation with Doxygen")
@@ -249,44 +249,10 @@ option(BUILD_EXAMPLES "Build binaries for the examples" ON)
 if(BUILD_EXAMPLES)
     set(PROJECT_EXAMPLES_DIR ${PROJECT_SOURCE_DIR}/examples)
     
-    add_executable(elbe-u300 ${PROJECT_EXAMPLES_DIR}/elbe-u300.cpp)
-    target_link_libraries(elbe-u300 ${PROJECT_NAME}lib
-                             ${HDF5_LIBRARIES}
-                             ${SDDS_LIBRARIES}
-                             ${PUGIXML_LIBRARIES}
-                             ${MUPARSER_LIBRARY}
-                             ${ZLIB_LIBRARY_RELEASE} )
-                             
-    add_executable(mpi_example ${PROJECT_EXAMPLES_DIR}/mpi_example.cpp)
-    set_target_properties(mpi_example PROPERTIES
-        COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
-    set_target_properties(mpi_example PROPERTIES
-        LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
-    target_link_libraries(mpi_example ${PROJECT_NAME}lib
-                             ${HDF5_LIBRARIES}
-                             ${SDDS_LIBRARIES}
-                             ${MPI_CXX_LIBRARIES}
-                             ${PUGIXML_LIBRARIES}
-                             ${MUPARSER_LIBRARY}
-                             ${ZLIB_LIBRARY_RELEASE} )
-
-    add_executable(single_electron ${PROJECT_EXAMPLES_DIR}/single_electron_wiggler.cpp)
-    set_target_properties(single_electron PROPERTIES
-        COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
-    set_target_properties(single_electron PROPERTIES
-        LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
-    target_link_libraries(single_electron ${PROJECT_NAME}lib
-                             ${HDF5_LIBRARIES}
-                             ${SDDS_LIBRARIES}
-                             ${MPI_CXX_LIBRARIES}
-                             ${PUGIXML_LIBRARIES}
-                             ${MUPARSER_LIBRARY}
-                             ${ZLIB_LIBRARY_RELEASE} )
-
     add_executable(waveguide ${PROJECT_EXAMPLES_DIR}/waveguide_wiggler_mpi.cpp)
     set_target_properties(waveguide PROPERTIES
         COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
-    set_target_properties(mpi_example PROPERTIES
+    set_target_properties(waveguide PROPERTIES
         LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
     target_link_libraries(waveguide ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
@@ -295,14 +261,5 @@ if(BUILD_EXAMPLES)
                              ${PUGIXML_LIBRARIES}
                              ${MUPARSER_LIBRARY}
                              ${ZLIB_LIBRARY_RELEASE} )
-                             
-    add_executable(scattering ${PROJECT_EXAMPLES_DIR}/radiation_scattering.cpp)
-    target_link_libraries(scattering ${PROJECT_NAME}lib
-                             ${HDF5_LIBRARIES}
-                             ${SDDS_LIBRARIES}
-                             ${PUGIXML_LIBRARIES}
-                             ${MUPARSER_LIBRARY}
-                             ${ZLIB_LIBRARY_RELEASE} )
-
 endif()
 

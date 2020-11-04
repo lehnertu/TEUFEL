@@ -212,6 +212,13 @@ public:
      * Returns a NULL pointer if the index is out of range.
      */
     ChargedParticle* getParticle(int i);
+    
+    /*!
+     * The particle with the given index is deleted and
+     * replaced by the given particle.
+     * No action is performed if the index does not point to an existing particle.
+     */
+    void replaceParticle(int i, ChargedParticle* part);
 
     /*! @brief Setup for tracking the whole bunch using the Vay algorithm.
      * 
@@ -238,6 +245,11 @@ public:
 
     //! @brief Current time of the bunch
     double getTime();
+    
+    /*! @brief Average time of all particles
+     *  The averiging gives equal weight to all particles
+     */
+    double avgTime();
     
     /*! @brief Average position of all particles
      *  The averiging gives equal weight to all particles

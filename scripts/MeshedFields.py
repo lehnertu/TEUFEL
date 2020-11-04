@@ -154,6 +154,12 @@ class MeshedField():
         zlim = (np.amin(z),np.amax(z))
         return (xlim,ylim,zlim)
     
+    def FieldTrace(self,id):
+        """
+        Return the field trace for one mesh cell
+        """
+        return self.A[id]
+
     def EnergyFlowVector(self,id):
         """
         Compute the Poynting vector (energy flow density) of a field trace
