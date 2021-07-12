@@ -68,6 +68,13 @@ echo ''
 echo '==============================================================================='
 echo ''
 
+mpiexec -n 4 ./build/teufel examples/elbe-u300.xml; rc=$?
+num=$(($num + $rc))
+
+echo ''
+echo '==============================================================================='
+echo ''
+
 ./build/reflection tests/DiffractionScreenWithFields.h5 tests/BackwardDiffractionScreen.h5 tests/BackwardDiffractionFields.h5; rc=$?
 num=$(($num + $rc))
 
