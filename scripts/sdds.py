@@ -110,20 +110,20 @@ class SDDS:
         val = self.parameterData
         numberOfParameters = len(self.parameterName)
         for i in range(numberOfParameters):
-            print "%20s" % names[i], "%20s" % str(val[i][0]), "%10s" % ("[%s]" % defs[i][1]), defs[i][2]
+            print("%20s" % names[i], "%20s" % str(val[i][0]), "%10s" % ("[%s]" % defs[i][1]), defs[i][2])
 
      def listColumns(self):
         names = self.columnName
         defs = self.columnDefinition
         numberOfColumns = len(self.columnName)
         for i in range(numberOfColumns):
-            print "%20s" % names[i], "%10s" % ("[%s]" % defs[i][1]), defs[i][2]
+            print("%20s" % names[i], "%10s" % ("[%s]" % defs[i][1]), defs[i][2])
 
      def getColumnData(self, name):
         """get the data of a named column in an SDDS file."""
         # see if we can find that column
         index = self.columnName.index(name)
-        # print "index = ", index
+        # print("index = ", index)
         data = self.columnData[index]
         return data[0]
 
@@ -131,7 +131,7 @@ class SDDS:
         """get the value of a named parameter in an SDDS file."""
         # see if we can find that parameter
         index = self.parameterName.index(name)
-        # print "index = ", index
+        # print("index = ", index)
         data = self.parameterData[index]
         return data[0]
 	 
