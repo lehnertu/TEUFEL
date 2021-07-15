@@ -201,6 +201,11 @@ public:
      */
     void Add(ChargedParticle *part);
 
+    /*! Remove all trajectory information from particles
+     * belonging to this bunch
+     */
+    void clearTrajectories();
+    
     //! Report the number of particles in the bunch.
     int getNOP();	
 
@@ -242,6 +247,33 @@ public:
      * @param field the field through which the bunch is tracked
      */
     void StepVay(GeneralField *field);
+
+    /*! @brief Buffer particle coordinates.
+     * 
+     * Particle coordinates (time,position,momentum,acceleration)
+     * of all particles belonging to the bunch are stored into one buffer.
+     * There is no memory check for the buffer size performed.
+     * 
+     * @param[in] buffer memory pointer of the buffer
+     * 
+     * @return the advanced buffer pointer
+     */
+    double *bufferStep(double *buffer);
+
+    /*! @brief Set particle coordinates from buffer.
+     * 
+     * Particle coordinates (time,position,momentum,acceleration)
+     * of all particles belonging to the bunch are read from one buffer.
+     * There is no memory check for the buffer size performed.
+     * For consecutively reading of many bunches the advanced buffer
+     * pointer is returned after reading, then pointing to the
+     * first particle of the next bunch (if existing)
+     * 
+     * @param[in] buffer memory pointer of the buffer
+     * 
+     * @return the advanced buffer pointer
+     */
+    double *setStepFromBuffer(double *buffer);
 
     //! @brief Current time of the bunch
     double getTime();

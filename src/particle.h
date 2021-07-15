@@ -88,6 +88,10 @@ public:
     /*! Destructor: free all memory. */
     virtual ~ChargedParticle();
     
+    /*! Remove all trajectory information from the particle
+     */
+    void clearTrajectory();
+
     /*! Return the number of points in the trajectory */
     int getNP() { return NP; };
 
@@ -109,6 +113,11 @@ public:
      */
     Vector getMomentum();
     
+    /*! Return the acceleration of the last stored trajectory point
+     *  or zero if there is no trajectory.
+     */
+    Vector getAccel();
+
     /*! Copy all current information about the particle into one buffer
      *  of double type. This can be used to transfer the particle to a different
      *  MPI node but looses the trajectory information.
@@ -202,6 +211,18 @@ public:
     void InitVay(double tstep,
 		 GeneralField* field);
 
+    /*! @brief add trajectory point
+     * 
+     * One trajectory point with the given coordinates is pushed
+     * onto the back of the existing paritcle trajectory.
+     * 
+     * @param[in] time time stamp of the trajectory point
+     * @param[in] pos position
+     * @param[in] mom momentum
+     * @param[in] acc accelearation
+     */
+    void setStep(double time, Vector pos, Vector mom, Vector acc);
+    
     /*! @brief Perform one tracking step using the Vay algorithm.
      * 
      *  The algorithm follows J.-L.Vay PHYSICS OF PLASMAS 15, 056701 (2008).

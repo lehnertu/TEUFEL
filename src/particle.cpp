@@ -116,6 +116,17 @@ ChargedParticle::~ChargedParticle()
 {
 }
 
+void ChargedParticle::clearTrajectory()
+{
+    // no trajectory points
+    NP = 0;
+    // no data
+    Time.clear();
+    X.clear();
+    P.clear();
+    A.clear();
+}
+
 double ChargedParticle::getTime()
 {
     if (NP>0)
@@ -139,6 +150,14 @@ Vector ChargedParticle::getMomentum()
     else
         return Vector(0.0, 0.0, 0.0);
 }
+
+Vector ChargedParticle::getAccel()
+{
+    if (NP>0)
+        return A.back();
+    else
+        return Vector(0.0, 0.0, 0.0);
+}    
 
 void ChargedParticle::serialize(double *buffer)
 {
@@ -354,6 +373,16 @@ void ChargedParticle::InitVay(
     // std::cout << "  B = (" << B_h.x << ", " << B_h.y << ", " << B_h.z << ") T" << std::endl;
 }
 
+void ChargedParticle::setStep(double time, Vector pos, Vector mom, Vector acc)
+{
+    Time.push_back(time);
+    X.push_back(pos);
+    P.push_back(mom);
+    A.push_back(acc);
+    // keep track of the number of stored trajectory points
+    NP++;
+}
+
 /*!
  * Implementation details:
  * ----------------------
@@ -402,12 +431,7 @@ void ChargedParticle::StepVay(GeneralField* field)
     // eq. (12)
     VY_p_i1 = (p_prime + t * dot(p_prime, t) + cross(p_prime, t)) / (1 + t.abs2nd());
     // store the trajectory data
-    Time.push_back(t_h);
-    X.push_back(x_h);
-    P.push_back(p_h);
-    A.push_back((cross(beta_h, B_h) + E_h / SpeedOfLight) * qm);
-    // keep track of the number of stored trajectory points
-    NP++;
+    setStep(t_h, x_h, p_h, (cross(beta_h, B_h) + E_h / SpeedOfLight) * qm);
 }
 
 void ChargedParticle::CoordinatesAtTime(double time, Vector *position, Vector *momentum)

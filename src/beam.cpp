@@ -53,6 +53,12 @@ void Beam::clear()
     B.clear();
 }
 
+void Beam::clearTrajectories()
+{
+    for(int i=0; i<NOB; i++)
+        B[i]->clearTrajectories();
+}
+
 Bunch* Beam::getBunch(int i)
 {
     Bunch *b = 0;
@@ -134,6 +140,31 @@ void Beam::StepVay(GeneralField *field)
     for(int i=0; i<NOB; i++)
     {
         B[i]->StepVay(field);
+    }
+}
+
+int Beam::getStepBufferSize()
+{
+    return getNOP()*10;
+}
+
+void Beam::bufferStep(double *buffer)
+{
+    double *buf = buffer;
+    for(int i=0; i<NOB; i++)
+    {
+        // the pointer is advanced as the bunch is filled into the buffer
+        buf = B[i]->bufferStep(buf);
+    }
+}
+
+void Beam::setStepFromBuffer(double *buffer)
+{
+    double *buf = buffer;
+    for(int i=0; i<NOB; i++)
+    {
+        // the pointer is advanced as the buffer is consumed
+        buf = B[i]->setStepFromBuffer(buf);
     }
 }
 

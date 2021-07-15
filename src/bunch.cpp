@@ -201,6 +201,12 @@ void Bunch::Add(ChargedParticle *part)
     P.push_back(part);
 }
 
+void Bunch::clearTrajectories()
+{
+    for(int i=0; i<NOP; i++)
+        P[i]->clearTrajectory();
+}
+
 int Bunch::getNOP()
 {
     return NOP;
@@ -251,6 +257,55 @@ void Bunch::StepVay(GeneralField *field)
     {
         P[i]->StepVay(field);
     }
+}
+
+double *Bunch::bufferStep(double *buffer)
+{
+    double *bp = buffer;
+    int nop = NOP;
+    for(int i=0; i<nop; i++)
+    {
+        double time = P[i]->getTime();
+        Vector X = P[i]->getPosition();
+        Vector BG = P[i]->getMomentum();
+        Vector A = P[i]->getAccel();
+        *bp++ = time;
+        *bp++ = X.x;
+        *bp++ = X.y;
+        *bp++ = X.z;
+        *bp++ = BG.x;
+        *bp++ = BG.y;
+        *bp++ = BG.z;
+        *bp++ = A.x;
+        *bp++ = A.y;
+        *bp++ = A.z;
+    }
+    return bp;
+}
+
+double *Bunch::setStepFromBuffer(double *buffer)
+{
+    double *bp = buffer;
+    int nop = NOP;
+    Vector X, BG, A;
+    for(int i=0; i<nop; i++)
+    {
+        // extract values from buffer
+        // time is global for the bunch
+        time = *bp++;
+        X.x = *bp++;
+        X.y = *bp++;
+        X.z = *bp++;
+        BG.x = *bp++;
+        BG.y = *bp++;
+        BG.z = *bp++;
+        A.x = *bp++;
+        A.y = *bp++;
+        A.z = *bp++;
+        // update the particle
+        P[i]->setStep(time, X, BG, A);
+    }
+    return bp;
 }
 
 double Bunch::getTime()
