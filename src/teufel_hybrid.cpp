@@ -96,6 +96,9 @@ int main(int argc, char *argv[])
         cout << std::endl <<" TEUFEL parallel computing on " << NumberOfNodes << " nodes." << std::endl;
         cout << std::endl;
     }
+    cout << std::flush;
+    MPI_Barrier(MPI_COMM_WORLD);
+    usleep(100000);
 
     char processor_name[MPI_MAX_PROCESSOR_NAME];
     int namelen;
@@ -120,10 +123,12 @@ int main(int argc, char *argv[])
     }        
     cout << "rank " << teufel::rank << " : " << processor_name;
     cout << " memory " << size_kB/1024 << " MB"  << std::endl;
-    
+    cout << std::flush;
     MPI_Barrier(MPI_COMM_WORLD);
-    usleep(1000000);
-    if (teufel::rank==0) cout << std::endl;
+    usleep(100000);
+    if (teufel::rank==0) cout << std::endl << std::flush;
+    MPI_Barrier(MPI_COMM_WORLD);
+    usleep(100000);
     
     // ===============================================================
     // parsing the input file by all nodes in parallel
@@ -172,9 +177,10 @@ int main(int argc, char *argv[])
     // Then we call the parser to fill in the necessary information from the input file.
     // The structure of this beam shall then be preserved troughout the tracking procedure.
     // That is necessary to keep the references to the contained bunches for logging
-    // or other bunch-related procedures.
-    // Whenever necessary, the current particle information distributed over
-    // the compute nodes will be re-gathered into this object on the master node.
+    // or other bunch-related procedures. This way it is possible to log information
+    // for inidividual bunches making up the total beam.
+    // After every tracking step, the current particle information distributed over
+    // the compute nodes will be re-gathered into this object on all nodes.
     Beam *masterBeam = new Beam();
     std::vector<TrackingLogger<Bunch>*> listLoggers;
     int NoB = parse->parseBeam(masterBeam, &listLoggers);
@@ -201,7 +207,9 @@ int main(int argc, char *argv[])
     if (teufel::rank==0) std::cout << "tracking for " << masterBeam->getNOTS() << " time steps." << std::endl;
     if (teufel::rank==0) std::cout << "memory for trajectory storage : "
         << (double)masterBeam->getNOP() * (double)masterBeam->getNOTS() *10.0 / 1048576.0 << " MB" << std::endl;
-    if (teufel::rank==0) std::cout << std::endl;
+    if (teufel::rank==0) cout << std::endl << std::flush;
+    MPI_Barrier(MPI_COMM_WORLD);
+    usleep(100000);
 
     // done parsing the input file
     delete parse;
@@ -210,13 +218,20 @@ int main(int argc, char *argv[])
     // broadcast the masterBeam to all nodes
     // ===============================================================
 
-    // write a watchpoint for the initial beam
-    if (teufel::rank==0) 
-        masterBeam->WriteWatchPointHDF5("master_beam.hdf5");
-    
+    // allocate communication buffers holding the required number of particles
+    // the master buffer must provide space for missing particles on some nodes
+    int MASTER_NOP = masterBeam->getNOP();
+    int TRACKING_NOP = (MASTER_NOP + NumberOfNodes -1) / NumberOfNodes;
+    int MASTER_BUFSIZE = TRACKING_NOP * NumberOfNodes * 10;
+    int TRACKING_BUFSIZE = TRACKING_NOP * 10;
+    if (MASTER_BUFSIZE < masterBeam->getStepBufferSize())
+    {
+        throw(IOexception("TEUFEL internal error: master buffer too small - aborting."));
+        return(-1);
+    };
     // buffer for MPI communication
-    int MASTER_BUFSIZE = masterBeam->getStepBufferSize();
     double *masterBuffer = new double[MASTER_BUFSIZE];
+    double *trackingBuffer = new double[TRACKING_BUFSIZE];
     
     // fill the send buffer on the master node
     masterBeam->bufferStep(masterBuffer);
@@ -225,47 +240,23 @@ int main(int argc, char *argv[])
     MPI_Bcast(masterBuffer, MASTER_BUFSIZE, MPI_DOUBLE,
         0, MPI_COMM_WORLD);
         
-    // update the beam from the buffer on all nodes
+    // update the beam from the buffer
     masterBeam->clearTrajectories();
     masterBeam->setStepFromBuffer(masterBuffer);
-
-    // write watchpoints for the beams after braodcasting (should be identical)
-    std::stringstream fn;
-    fn << "rank" << teufel::rank << "_initial_beam.hdf5";
-    masterBeam->WriteWatchPointHDF5(fn.str());
-    
-    // ===============================================================
-    //
-    // MARKER : code development has progressed until HERE.
-    //
-    // temporary premature exit while code development progresses
-    cout << "incomplete code - exiting program" << std::endl;
-    MPI_Finalize();
-    return 0;
-    // 
-    // ===============================================================
-
+    // now all nodes have an identical beam containig all particles
     
     // ===============================================================
     // re-distribute all particles into one bunch per node
     // all containing approximately equal numbers of particles
+    // (the last node may have less)
     // ===============================================================
 
-    // buffers for MPI communication
-    double *sendbuffer = new double[PARTICLE_SERIALIZE_BUFSIZE];
-    double *recbuffer = new double[PARTICLE_SERIALIZE_BUFSIZE];
-    // MPI_Request send_req;
-
-    // we keep track of the particle numbers per node
-    int pc_total = 0;
-    int *pc_node = new int[NumberOfNodes];
-    
     // this is the bunch every compute node will actually track
     Bunch *trackedBunch = new Bunch();
-    if (teufel::rank == 0) std::cout << "distribute particles..." << std::endl;
-    // all nodes synchronously traverse the beam
-    // while copying the particle data from the master to the compute node
-    for (int i=0; i<NumberOfNodes; i++) pc_node[i]=0;
+    if (teufel::rank == 0) std::cout << "distribute particles " << TRACKING_NOP << " per node" << std::endl;
+    // traverse the beam and copy particles
+    int current_node = 0;
+    int current_node_particles = 0;
     int nob = masterBeam->getNOB();
     for (int i=0; i<nob; i++)
     {
@@ -273,40 +264,29 @@ int main(int argc, char *argv[])
         int nop = b->getNOP();
         for (int j=0; j<nop; j++)
         {
-            // only the root node is sending particle information
-            if (teufel::rank == 0)
+            if (teufel::rank==current_node)
             {
-                ChargedParticle *p = b->getParticle(j);
-                p->serialize(sendbuffer);
-                // non-blocking send
-                MPI_Issend(sendbuffer, PARTICLE_SERIALIZE_BUFSIZE, MPI_DOUBLE,
-                    pc_total % NumberOfNodes, 42, MPI_COMM_WORLD, &send_req);
-            };
-            // all nodes in turn receive the particles
-            if (teufel::rank == (pc_total % NumberOfNodes) )
+                // create a new particle as an exact copy of the master beam particle
+                ChargedParticle *p = new ChargedParticle(b->getParticle(j));
+                trackedBunch->Add(p);
+            }
+            current_node_particles++;
+            if (current_node_particles==TRACKING_NOP)
             {
-                MPI_Recv(recbuffer, PARTICLE_SERIALIZE_BUFSIZE, MPI_DOUBLE,
-                    0, 42, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                ChargedParticle *tp = new ChargedParticle(recbuffer);
-                trackedBunch->Add(tp);
-            };
-            // the root node waits for completion of the transfer
-            if (teufel::rank == 0)
-            {
-                MPI_Wait(&send_req,MPI_STATUS_IGNORE);
-            };
-            pc_node[pc_total % NumberOfNodes]++;
-            pc_total++;
-        };
-    };
+                current_node_particles = 0;
+                current_node++;
+            }
+        }
+    }
     
     MPI_Barrier(MPI_COMM_WORLD);
+    usleep(100000);
 
     // ===============================================================
     // track the beam on all nodes in parallel
     // ===============================================================
 
-    // this is the beam we will actually track
+    // this is the beam we will actually track (private per node)
     Beam *trackedBeam = new Beam();
     trackedBeam->Add(trackedBunch);
     // copy the tracking information from the master beam
@@ -316,15 +296,11 @@ int main(int argc, char *argv[])
     // prepare the tracking of the beam
     trackedBeam->setupTracking(lattice);
     
-    if (trackedBeam->getNOP() != pc_node[teufel::rank])
-    {
-        std::cout << "node " << teufel::rank << " has wrong number of particles - should be" << pc_node[teufel::rank] << std::endl;
-        throw(IOexception("TEUFEL internal error - aborting."));
-    };
-    std::cout << "node " << teufel::rank << " tracking beam of " <<
+    std::cout << "node " << teufel::rank << " tracking a beam of " <<
         trackedBeam->getNOP() << " particles." << std::endl;
     
     MPI_Barrier(MPI_COMM_WORLD);
+    usleep(100000);
 
     // handle watch point of initial particle distribution if requested
     if (teufel::rank == 0)
@@ -355,85 +331,39 @@ int main(int argc, char *argv[])
     
         // do a step
         trackedBeam->doStep(lattice);
-                
-        // if there are tracking loggers or a watch point we have to gather
-        // all current particle data back to the master node
+            
+        // distribute the step result to all nodes
+        // each node buffers its own tracked bunch
+        trackedBeam->bufferStep(trackingBuffer);
+        // the buffers are gathered into the master buffer on all nodes
+        MPI_Allgather(trackingBuffer, TRACKING_BUFSIZE, MPI_DOUBLE,
+                      masterBuffer, TRACKING_BUFSIZE, MPI_DOUBLE, MPI_COMM_WORLD);
+        // each node updates the master beam from the master buffer
+        masterBeam->setStepFromBuffer(masterBuffer);
         
-        // check whether we need all particle data
-        bool need_particle_data = false;
-        for (int il=0; il<(int)listLoggers.size(); il++)
-            if (listLoggers.at(il)->log_requested(step+1)) need_particle_data = true;
-        for (int iw=0; iw<(int)watches.size(); iw++)
-            if (watches.at(iw).step == step+1) need_particle_data = true;
+        MPI_Barrier(MPI_COMM_WORLD);
+        // now we have all data available on all nodes
 
-        if (need_particle_data)
+        // update the loggers
+        if (teufel::rank == 0)
         {
-            // we use the initial masterBeam object to gather the particle information
-            int nob = masterBeam->getNOB();
-            // a counter running over the total number of particles
-            // determines the node on which the particle is tracked
-            int p_counter = 0;
-            // a counter which is individual on every node
-            // determines the particle index within the tracked bunch
-            int t_index = 0;
-            for (int i=0; i<nob; i++)
-            {
-                Bunch *mb = masterBeam->getBunch(i);
-                int nop = mb->getNOP();
-                for (int j=0; j<nop; j++)
-                {
-                    // all nodes in turn send the data of the corresponding
-                    // particle in its tracked bunch
-                    if (teufel::rank == (p_counter % NumberOfNodes) )
-                    {
-                        ChargedParticle *p = trackedBunch->getParticle(t_index);
-                        t_index++;
-                        p->serialize(sendbuffer);
-                        // non-blocking send
-                        MPI_Issend(sendbuffer, PARTICLE_SERIALIZE_BUFSIZE, MPI_DOUBLE,
-                            0, 42, MPI_COMM_WORLD, &send_req);
-                    };
-                    // the root node receives particle information
-                    if (teufel::rank == 0)
-                    {
-                        MPI_Recv(recbuffer, PARTICLE_SERIALIZE_BUFSIZE, MPI_DOUBLE,
-                            p_counter % NumberOfNodes, 42, MPI_COMM_WORLD, MPI_STATUS_IGNORE);
-                        ChargedParticle *tp = new ChargedParticle(recbuffer);
-                        // the particle in the master beam is replaced by the tracked particle
-                        mb->replaceParticle(j, tp);
-                    };
-                    // the sending node waits for completion of the transfer
-                    if (teufel::rank == (p_counter % NumberOfNodes) )
-                    {
-                        MPI_Wait(&send_req,MPI_STATUS_IGNORE);
-                    };
-                    p_counter++;
-                };
-            };
-
-            MPI_Barrier(MPI_COMM_WORLD);
-
-            // now we have all data on the master node and can update the loggers
-            if (teufel::rank == 0)
-            {
-                for (int il=0; il<(int)listLoggers.size(); il++)
-                    if (listLoggers.at(il)->log_requested(step+1)) listLoggers.at(il)->update();
-            }
-                    
-            // handle watch points
-            if (teufel::rank == 0)
-                for (int iw=0; iw<(int)watches.size(); iw++)
-                {
-                    watch_t w = watches.at(iw);
-                    if (w.step == step+1)
-                    {
-                        std::cout << "writing watch point " << w.filename << std::endl;
-                        int nw = masterBeam->WriteWatchPointHDF5(w.filename);
-                        std::cout << nw << " particles written." << std::endl;
-                        std::cout << std::endl;
-                    }
-                }
+            for (int il=0; il<(int)listLoggers.size(); il++)
+                if (listLoggers.at(il)->log_requested(step+1)) listLoggers.at(il)->update();
         }
+        
+        // handle watch points
+        if (teufel::rank == 0)
+            for (int iw=0; iw<(int)watches.size(); iw++)
+            {
+                watch_t w = watches.at(iw);
+                if (w.step == step+1)
+                {
+                    std::cout << "writing watch point " << w.filename << std::endl;
+                    int nw = masterBeam->WriteWatchPointHDF5(w.filename);
+                    std::cout << nw << " particles written." << std::endl;
+                    std::cout << std::endl;
+                }
+            }
         
         // make a print once every 10s
         if (teufel::rank == 0)
@@ -445,13 +375,20 @@ int main(int argc, char *argv[])
                 std::cout << "tracking step " << step << std::endl;
             };
         };
+        
     }
-
+    
+    MPI_Barrier(MPI_COMM_WORLD);
+    usleep(100000);
+    cout << "node " << teufel::rank << " finished tracking " << trackedBeam->getNOP() << " particles"
+        << " over " << trackedBeam->getNOTS() << " time steps" << std::endl;
+    MPI_Barrier(MPI_COMM_WORLD);
+    usleep(100000);
+    
     // record the finish time
     if (teufel::rank == 0)
     {
         double stop_time = MPI_Wtime();
-        std::cout << "finished tracking particles." << std::endl;
         std::cout << "time elapsed during tracking : " << stop_time-start_time << " s" << std::endl;
     };
 
@@ -467,79 +404,13 @@ int main(int argc, char *argv[])
     // ===============================================================
 
     MPI_Barrier(MPI_COMM_WORLD);
+    usleep(100000);
     
-    // compute all observations
-    for (int i=0; i<(int)listObservers.size(); i++)
-    {
-        double start_time = MPI_Wtime();
-        if (teufel::rank == 0)
-        {
-            std::cout << std::endl << "computing observer No. " << i+1 << std::endl;
-        };
-        Observer *obs = listObservers.at(i);
-        std::cout << "node " << teufel::rank << " integrating ... " << std::endl;
-        obs->integrate(trackedBeam);
-        double stop_time = MPI_Wtime();
-        if (teufel::rank == 0)
-        {
-            std::cout << "time elapsed : " << stop_time-start_time << " s" << std::endl;
-        };
-        
-        // collect all the field computed on the individual nodes into the master node
-        unsigned int count = obs->getBufferSize();
-        std::cout << "Node " << teufel::rank << " allocating buffers for "<< count << " doubles" << std::endl;
-        // fill the buffer and get its address
-        double* nodeBuffer = obs->getBuffer();
-        if (nodeBuffer==0)
-        {
-            std::cout << "MPI_Reduce for Obsserver : node " << teufel::rank << " was unable to get the node buffer." << std::endl;
-            throw(IOexception("memory allocation error"));
-        };
-        // we have to define a buffer for the sum on all nodes
-        double* reduceBuffer = new double[count];
-        if (reduceBuffer==0)
-        {
-            std::cout << "MPI_Reduce for Obsserver : node " << teufel::rank << " was unable to get the recude buffer." << std::endl;
-            throw(IOexception("memory allocation error"));
-        };
-        MPI_Barrier(MPI_COMM_WORLD);
-        if (teufel::rank == 0)
-            std::cout << std::endl << "All buffers allocated." << std::endl;
-        MPI_Reduce(
-            nodeBuffer,                 // send buffer
-            reduceBuffer,               // receive buffer
-            count,                      // number of values
-            MPI_DOUBLE,                 // data type
-            MPI_SUM,                    // operation
-            0,                          // rank of the root process
-            MPI_COMM_WORLD              // communicator
-        );
-        if (teufel::rank == 0)
-            std::cout << "Reduce finished." << std::endl;
-        // the root node copies the data from the reduce buffer into the Observer
-        // and writes it to the output file
-        if (teufel::rank == 0)
-        {
-            obs->fromBuffer(reduceBuffer,count);
-            try
-            { 
-                    obs->generateOutput();
-                    std::cout << "Observer output file written." << std::endl;
-            }
-            catch (exception& e) { cout << e.what() << endl;}
-        }
-        // if (teufel::rank == 0) delete reduceBuffer;
-        delete reduceBuffer;
-        delete nodeBuffer;
-    }
-        
+    // ===============================================================
+    // all computation done - clean up
+    // ===============================================================
 
-/*
-
-    // collect all the field computed on the individual nodes
-    // into the master node
-*/
-
+    /*
     // delete all observers
     for (int i=0; i<(int)listObservers.size(); i++)
         delete listObservers.at(i);
@@ -547,7 +418,8 @@ int main(int argc, char *argv[])
     
     // delete all watches
     watches.clear();
-
+    */
+    
     // deleting the lattice automatically deletes all lattice elments
     delete lattice;
     
@@ -555,9 +427,9 @@ int main(int argc, char *argv[])
     delete masterBeam;
     delete trackedBeam;
 
-    delete masterBuffer;
-    delete sendbuffer;
-    delete recbuffer;
+    // delete masterBuffer; -> fails
+    // delete trackingBuffer; -> fails
+
     MPI_Barrier(MPI_COMM_WORLD);
     
     if (teufel::rank==0)

@@ -87,6 +87,10 @@ aux_source_directory(${PROJECT_SOURCE_DIR}/src lib_sources )
 # the main program is not part of the library
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/teufel.cpp)
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/teufel_mpi.cpp)
+list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/teufel_hybrid.cpp)
+# stand-alone codes are not part of the library
+list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/propagate.cpp)
+list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/reflection.cpp)
 # files not yet finished and not included in the build
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/cavity.cpp)
 message(STATUS "Found source files ${lib_sources}")
