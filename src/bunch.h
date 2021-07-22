@@ -206,6 +206,11 @@ public:
      */
     void clearTrajectories();
     
+    /*! For all particles belonging to this bunch pre-allocate a number of trajectory points.
+     *  Note - this must be one more than the number of tracking steps
+     */
+    void preAllocate(int nTraj);
+
     //! Report the number of particles in the bunch.
     int getNOP();	
 

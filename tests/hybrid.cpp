@@ -1,7 +1,7 @@
 /*
  * 
  * compile with :
- *     mpicc -fopenmp hybrid.c -o hybrid
+ *     mpic++ -fopenmp hybrid.c -o hybrid
  * 
  * run with :
  *     export OMP_NUM_THREADS=4
@@ -9,7 +9,9 @@
  */
 
 #include <stdio.h>
+#include <iostream>
 #include <fstream>
+#include <string>
 #include <mpi.h>
 #include <omp.h>
 
@@ -23,17 +25,26 @@ int main(int argc, char *argv[]) {
     MPI_Comm_rank(MPI_COMM_WORLD, &rank);
     MPI_Get_processor_name(processor_name, &namelen);
 
-    if (rank=0)
+    if (rank==0)
     {
-        string line;
-        ifstream myfile;
+        std::string line;
+        std::string delimiter = ":";
+        std::ifstream myfile;
         myfile.open("/proc/meminfo");
         if(!myfile.is_open()) {
-            perror("Error open");
-            exit(EXIT_FAILURE);
-        }
-        while(getline(myfile, line)) {
-            cout << line << endl;
+            std::cout << "cannot access /proc/meminfo - memory size unknown." << std::endl;
+        } else {
+            while(getline(myfile, line)) {
+                // std::cout << line << std::endl;
+                size_t pos = line.find(delimiter);
+                std::string name = line.substr(0, pos);
+                std::string rest = line.erase(0,pos+1);
+                if (name=="MemTotal") {
+                    int size_kB = std::stoi(rest);
+                    std::cout << " available memory ";
+                    std::cout << size_kB/1024 << " MB" << std::endl;
+                }
+            }
         }        
     }
     

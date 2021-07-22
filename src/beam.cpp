@@ -29,6 +29,8 @@
 Beam::Beam()
 {
     NOB = 0;
+    NOTS = 0;
+    dt = 0.0;
     tracker = TRACKING_NONE;
 }
 
@@ -50,13 +52,21 @@ void Beam::clear()
     for(int i=0; i<NOB; i++)
         delete B[i];
     NOB = 0;
+    NOTS = 0;
     B.clear();
 }
 
 void Beam::clearTrajectories()
 {
+    NOTS = 0;
     for(int i=0; i<NOB; i++)
         B[i]->clearTrajectories();
+}
+
+void Beam::preAllocate(int nTraj)
+{
+    for(int i=0; i<NOB; i++)
+        B[i]->preAllocate(nTraj);
 }
 
 Bunch* Beam::getBunch(int i)
@@ -111,6 +121,7 @@ void Beam::setupTracking(GeneralField *field)
 
 void Beam::doStep(GeneralField *field)
 {
+    NOTS++;
     switch (tracker)
     {
         case TRACKING_NONE:
@@ -129,6 +140,7 @@ void Beam::doStep(GeneralField *field)
 
 void Beam::InitVay(GeneralField *field)
 {
+    NOTS = 0;
     for(int i=0; i<NOB; i++)
     {
         B[i]->InitVay(dt, field);

@@ -207,6 +207,12 @@ void Bunch::clearTrajectories()
         P[i]->clearTrajectory();
 }
 
+void Bunch::preAllocate(int nTraj)
+{
+    for(int i=0; i<NOP; i++)
+        P[i]->preAllocate(nTraj);
+}
+
 int Bunch::getNOP()
 {
     return NOP;

@@ -37,7 +37,10 @@
  * This class holds the data of a single charged particle with given mass and charge.
  * For tracking this class provides a number of algorithms to perform a single time-step.
  * The trajectory is stored comprising time [s], position [m], momentum [] and acceleration [1/s] in
- * the laboratory frame.
+ * the laboratory frame. While trajectories are typically computed step-by-step,
+ * the class also provides the possibility to pre-allocate the memory for a certain
+ * length of the trajectory in order to speed up the access and to reduce the number
+ * of memory allocations.
  * 
  * All charged particles are surrounded by electromagnetic fields and
  * accelerated particle produce radiation. The fields produced by the particle
@@ -65,6 +68,12 @@ public:
      */
     ChargedParticle(double charge, double mass);
     
+    /*! Standard constructor:<br>
+     * Charge is is given in units of elementary charge, mass im units of electron mass.
+     * Memory for a number (nTraj) of trajectory points is pre-allocated.
+     */
+    ChargedParticle(double charge, double mass, int nTraj);
+    
     /*! Copy constructor:<br>
      * Create a replication of a given particle.
      */
@@ -73,6 +82,7 @@ public:
     /*! Constructor from buffer:<br>
      *  Take the data stored with serialize() and recreate this
      *  as a new particle including initTrajectory().
+     *  The resulting particle will have one trajectory point and no pre-allocated memory.
      *  There is no check of buffer size.
      */
     ChargedParticle(double *buffer);
@@ -81,19 +91,28 @@ public:
      *  Take the data stored with serializeTraj() and recreate this
      *  as a new particle including all trajectory data.
      *  There is no check of buffer size.
-     *  The number of trajectory points must be known beforehand.
+     *  The number of trajectory points must be known beforehand
+     *  as well as the pre-allocated trajectory length.
      */
-    ChargedParticle(double *buffer, int nTraj);
+    ChargedParticle(double *buffer, int nTraj, int nPre);
     
     /*! Destructor: free all memory. */
     virtual ~ChargedParticle();
     
-    /*! Remove all trajectory information from the particle
+    /*! Remove all trajectory information from the particle.
      */
     void clearTrajectory();
 
+    /*! Pre-allocate a number of trajectory points.
+     *  Note - this must be one more than the number of tracking steps
+     */
+    void preAllocate(int nTraj);
+
     /*! Return the number of points in the trajectory */
     int getNP() { return NP; };
+
+    /*! Return the number of pre-allocated points in the trajectory */
+    int getNpre() { return Npre; };
 
     /*! Return the charge of the particle */
     double getCharge() { return Charge; };
@@ -362,6 +381,9 @@ protected:
     
 private:
     
+    //! the number of trajectory points that can be held in pre-allocated memory
+    int Npre;
+
     //! charge in units of ElementaryCharge
     double Charge;
     

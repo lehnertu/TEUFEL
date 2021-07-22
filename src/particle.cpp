@@ -32,6 +32,7 @@ ChargedParticle::ChargedParticle()
     dt = 0.0;
     // no trajectory points
     NP = 0;
+    Npre = 0;
 }
 
 ChargedParticle::ChargedParticle(double charge, double mass)
@@ -41,6 +42,18 @@ ChargedParticle::ChargedParticle(double charge, double mass)
     dt = 0.0;
     // no trajectory points
     NP = 0;
+    Npre = 0;
+}
+
+ChargedParticle::ChargedParticle(double charge, double mass, int nTraj)
+{
+    Charge = charge;
+    Mass = mass;
+    dt = 0.0;
+    // no trajectory points
+    NP = 0;
+    // pre-allocate memory
+    preAllocate(nTraj);
 }
 
 ChargedParticle::ChargedParticle(const ChargedParticle *origin)
@@ -48,6 +61,7 @@ ChargedParticle::ChargedParticle(const ChargedParticle *origin)
     Charge = origin->Charge;
     Mass = origin->Mass;
     NP = origin->NP;
+    Npre = origin->Npre;
     if (NP > 0)
     {
         Time = origin->Time;
@@ -55,6 +69,8 @@ ChargedParticle::ChargedParticle(const ChargedParticle *origin)
         P = origin->P;
         A = origin->A;
     }
+    if (Npre > NP)
+        preAllocate(Npre);
     dt = origin->dt;
     qm = origin->qm;
     qmt2 = origin->qmt2;
@@ -71,12 +87,14 @@ ChargedParticle::ChargedParticle(double *buffer)
     Vector x = Vector(buffer[3],buffer[4],buffer[5]);
     Vector p = Vector(buffer[6],buffer[7],buffer[8]);
     Vector a = Vector(buffer[9],buffer[10],buffer[11]);
+    // no memory pre-allocation
+    Npre = 0;
+    // here NP=1 is set
     initTrajectory(t, x, p, a);
 }
 
-ChargedParticle::ChargedParticle(double *buffer, int nTraj)
+ChargedParticle::ChargedParticle(double *buffer, int nTraj, int nPre)
 {
-    NP = nTraj;
     double *b = buffer;
     Charge = *b++;
     Mass = *b++;
@@ -89,12 +107,11 @@ ChargedParticle::ChargedParticle(double *buffer, int nTraj)
     VY_p_i1 = Vector(vx,vy,vz);
     VY_gamma_i1 = *b++;
     // now restore the trajectory data
-    Time.clear();
-    X.clear();
-    P.clear();
-    A.clear();
-    for (int n=0; n<NP; n++)
+    clearTrajectory();
+    if (nPre > 0) preAllocate(nPre);
+    for (int n=0; n<nTraj; n++)
     {
+        NP++;
         double t = *b++;
         Time.push_back(t);
         double xx = *b++;
@@ -125,6 +142,16 @@ void ChargedParticle::clearTrajectory()
     X.clear();
     P.clear();
     A.clear();
+}
+
+void ChargedParticle::preAllocate(int nTraj)
+{
+    Npre = nTraj;
+    // pre-allocate memory
+    Time.reserve(nTraj);
+    X.reserve(nTraj);
+    P.reserve(nTraj);
+    A.reserve(nTraj);
 }
 
 double ChargedParticle::getTime()
