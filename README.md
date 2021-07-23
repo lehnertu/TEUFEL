@@ -158,3 +158,9 @@ To check for memory leaks the tool [Valgrind](http://valgrind.org) is recommende
 For some testcases and examples python scripts for visualizing the data are
 provided in the scrips/ directory. For reading HDF5 files these scripts use the
 [h5py](http://www.h5py.org/) library which can be installed from the "python-h5py" package on most Linux systems.
+
+Known Issues
+------------
+- OpenMPI leaks memory (nothing we can do about it)
+- parseBeam leaks memory
+- masterBeam->WriteWatchPointHDF5 leaks memory

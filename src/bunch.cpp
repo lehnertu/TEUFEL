@@ -144,13 +144,11 @@ Distribution* Distribution::subDist(int index, int number)
 Bunch::Bunch()
 {
     NOP = 0;
-    time = 0.0;
 }
 
 Bunch::Bunch(int N, double charge, double mass)
 {
     NOP = N;
-    time = 0.0;
     for(int i=0; i<NOP; i++)
     {
         P.push_back(new ChargedParticle(charge,mass));
@@ -160,7 +158,6 @@ Bunch::Bunch(int N, double charge, double mass)
 Bunch::Bunch(Bunch* origin)
 {
     NOP = origin->getNOP();
-    time = origin->getTime();
     for(int i=0; i<NOP; i++)
     {
         P.push_back(new ChargedParticle(origin->getParticle(i)));
@@ -170,7 +167,6 @@ Bunch::Bunch(Bunch* origin)
 Bunch::Bunch(Distribution *dist, double reftime, Vector refpos, Vector refmom, double charge, double mass)
 {
     NOP = dist->getNOP();
-    time = 0.0;
     for(int i=0; i<NOP; i++)
     {
         ChargedParticle *p = new ChargedParticle(charge,mass);
@@ -248,8 +244,6 @@ void Bunch::InitVay(double tstep,
                     GeneralField *field)
 {
     dt = tstep;
-    time = avgTime();
-    // std::cout << "Bunch::InitVay() : t=" << time << "  dt=" << dt << std::endl;
     for(int i=0; i<NOP; i++)
     {
         P[i]->InitVay(dt, field);
@@ -258,7 +252,6 @@ void Bunch::InitVay(double tstep,
 
 void Bunch::StepVay(GeneralField *field)
 {
-    time += dt;
     for(int i=0; i<NOP; i++)
     {
         P[i]->StepVay(field);
@@ -293,11 +286,11 @@ double *Bunch::setStepFromBuffer(double *buffer)
 {
     double *bp = buffer;
     int nop = NOP;
+    double time;
     Vector X, BG, A;
     for(int i=0; i<nop; i++)
     {
         // extract values from buffer
-        // time is global for the bunch
         time = *bp++;
         X.x = *bp++;
         X.y = *bp++;
@@ -312,11 +305,6 @@ double *Bunch::setStepFromBuffer(double *buffer)
         P[i]->setStep(time, X, BG, A);
     }
     return bp;
-}
-
-double Bunch::getTime()
-{
-    return time;
 }
 
 double Bunch::avgTime()

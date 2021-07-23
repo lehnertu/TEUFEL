@@ -126,18 +126,28 @@ int main(int argc, char *argv[])
 
     cout << "node " << teufel::rank << " : " << processor_name
         << " PID=" << PID
-        << " total memory " << mem_size/1024.0 << " MB"
+        << " total memory " << mem_size/1e3 << " MB"
         << " using " << NumberOfThreads << " parallel threads"
         << std::endl;
 
     ss.str(std::string());
-    ss << "/proc/" << PID << "/statm";
+    ss << "/proc/" << PID << "/status";
     myfile.open(ss.str());
-    // getline(myfile, line);
-    for (int i=0; i<6; i++)
-        myfile >> mem_size;
-    myfile.close();
-    cout << "node " << teufel::rank << " memory usage : " << mem_size/1024.0 << " MB" << std::endl;
+    if(!myfile.is_open()) {
+        cout << "cannot access /proc/{PID}/status - memory usage unknown." << std::endl;
+    } else {
+        while(getline(myfile, line)) {
+            // std::cout << line << std::endl;
+            size_t pos = line.find(delimiter);
+            std::string name = line.substr(0, pos);
+            std::string rest = line.erase(0,pos+1);
+            if (name=="VmSize") {
+                mem_size = std::stoi(rest);
+            }
+        }
+        cout << "node " << teufel::rank << " memory usage : " << mem_size/1e3 << " MB" << std::endl;
+        myfile.close();
+    }
     
     MPI_Barrier(MPI_COMM_WORLD);
     usleep(100000);
@@ -224,9 +234,9 @@ int main(int argc, char *argv[])
     // initalizing the trajectories for actual tracking.
     int NOTS = masterBeam->getNOTS();
     if (teufel::rank==0) std::cout << "tracking for " << NOTS << " time steps." << std::endl;
-    if (teufel::rank==0) std::cout << "memory for trajectory storage : "
+    if (teufel::rank==0) std::cout << "master beam trajectory storage : "
         << (double)masterBeam->getNOP() * NOTS * 10.0 * sizeof(double) / 1e6
-        << " MB" << std::endl;
+        << " MB  for " << masterBeam->getNOP() << " particles" << std::endl;
     MPI_Barrier(MPI_COMM_WORLD);
     usleep(100000);
     if (teufel::rank==0) cout << std::endl << std::flush;
@@ -237,14 +247,23 @@ int main(int argc, char *argv[])
     delete parse;
 
     ss.str(std::string());
-    ss << "/proc/" << PID << "/statm";
+    ss << "/proc/" << PID << "/status";
     myfile.open(ss.str());
-    // getline(myfile, line);
-    for (int i=0; i<6; i++)
-        myfile >> mem_size;
-    myfile.close();
-    cout << "node " << teufel::rank << " memory usage : " << mem_size/1024.0 << " MB" << std::endl;
-    cout << std::flush;
+    if(!myfile.is_open()) {
+        cout << "cannot access /proc/{PID}/status - memory usage unknown." << std::endl;
+    } else {
+        while(getline(myfile, line)) {
+            // std::cout << line << std::endl;
+            size_t pos = line.find(delimiter);
+            std::string name = line.substr(0, pos);
+            std::string rest = line.erase(0,pos+1);
+            if (name=="VmSize") {
+                mem_size = std::stoi(rest);
+            }
+        }
+        cout << "node " << teufel::rank << " memory usage : " << mem_size/1e3 << " MB" << std::endl;
+        myfile.close();
+    }
     MPI_Barrier(MPI_COMM_WORLD);
     usleep(100000);
     if (teufel::rank==0) cout << std::endl << std::flush;
@@ -258,9 +277,9 @@ int main(int argc, char *argv[])
     int MASTER_NOP = masterBeam->getNOP();
     int TRACKING_NOP = (MASTER_NOP + NumberOfNodes -1) / NumberOfNodes;
     if (teufel::rank==0) std::cout << "tracking " << TRACKING_NOP << " particles per node." << std::endl;
-    if (teufel::rank==0) std::cout << "memory for trajectory storage : "
+    if (teufel::rank==0) std::cout << "tracking beam trajectory storage : "
         << (double)TRACKING_NOP * NOTS * 10.0 * sizeof(double) / 1e6
-        << " MB" << std::endl;
+        << " MB  for " << TRACKING_NOP << " particles" << std::endl;
     // allocate communication buffers holding the required number of particles
     // the master buffer must provide space for missing particles on some nodes
     int MASTER_BUFSIZE = TRACKING_NOP * NumberOfNodes * 10;
@@ -283,6 +302,8 @@ int main(int argc, char *argv[])
         
     // update the beam from the buffer
     masterBeam->clearTrajectories();
+    // we will use the master beam to store the gathered tracking data
+    // so we pre-allocate the necessary trajectory storage for every particle
     masterBeam->preAllocate(NOTS+1);
     masterBeam->setStepFromBuffer(masterBuffer);
     // now all nodes have an identical beam containig all particles
@@ -295,14 +316,23 @@ int main(int argc, char *argv[])
     MPI_Barrier(MPI_COMM_WORLD);
 
     ss.str(std::string());
-    ss << "/proc/" << PID << "/statm";
+    ss << "/proc/" << PID << "/status";
     myfile.open(ss.str());
-    // getline(myfile, line);
-    for (int i=0; i<6; i++)
-        myfile >> mem_size;
-    myfile.close();
-    cout << "node " << teufel::rank << " memory usage : " << mem_size/1024.0 << " MB" << std::endl;
-    cout << std::flush;
+    if(!myfile.is_open()) {
+        cout << "cannot access /proc/{PID}/status - memory usage unknown." << std::endl;
+    } else {
+        while(getline(myfile, line)) {
+            // std::cout << line << std::endl;
+            size_t pos = line.find(delimiter);
+            std::string name = line.substr(0, pos);
+            std::string rest = line.erase(0,pos+1);
+            if (name=="VmSize") {
+                mem_size = std::stoi(rest);
+            }
+        }
+        cout << "node " << teufel::rank << " memory usage : " << mem_size/1e3 << " MB" << std::endl;
+        myfile.close();
+    }
     MPI_Barrier(MPI_COMM_WORLD);
     usleep(100000);
     if (teufel::rank==0) cout << std::endl << std::flush;
@@ -329,10 +359,7 @@ int main(int argc, char *argv[])
         int nop = b->getNOP();
         for (int j=0; j<nop; j++)
         {
-            // we will use the master beam to store the gathered tracking data
-            // so we pre-allocate the necessary trajectory storage for every particle
             ChargedParticle *master_particle = b->getParticle(j);
-            master_particle->preAllocate(NOTS+1);
             // if the particle is for this node
             if (teufel::rank==current_node)
             {
@@ -367,13 +394,23 @@ int main(int argc, char *argv[])
     std::cout << "node " << teufel::rank << " tracking a beam of " <<
         trackedBeam->getNOP() << " particles." << std::endl;
     ss.str(std::string());
-    ss << "/proc/" << PID << "/statm";
+    ss << "/proc/" << PID << "/status";
     myfile.open(ss.str());
-    for (int i=0; i<6; i++)
-        myfile >> mem_size;
-    myfile.close();
-    cout << "node " << teufel::rank << " memory usage : " << mem_size/1024.0 << " MB" << std::endl;
-    cout << std::flush;
+    if(!myfile.is_open()) {
+        cout << "cannot access /proc/{PID}/status - memory usage unknown." << std::endl;
+    } else {
+        while(getline(myfile, line)) {
+            // std::cout << line << std::endl;
+            size_t pos = line.find(delimiter);
+            std::string name = line.substr(0, pos);
+            std::string rest = line.erase(0,pos+1);
+            if (name=="VmSize") {
+                mem_size = std::stoi(rest);
+            }
+        }
+        cout << "node " << teufel::rank << " memory usage : " << mem_size/1e3 << " MB" << std::endl;
+        myfile.close();
+    }
     
     MPI_Barrier(MPI_COMM_WORLD);
     usleep(100000);
@@ -412,7 +449,9 @@ int main(int argc, char *argv[])
         // do a step
         // we cannot just do trackedBeam->doStep(lattice)
         // because we want to track the particles in parallel
-        #pragma omp parallel for
+        // we know that there is only one bunch and copy its tracking method here
+        // pragma omp parallel for
+        //   temporarily disabled for debugging memory usage
         for (int i=0; i<trackedBunch->getNOP(); i++)
         {
             ChargedParticle *p = trackedBunch->getParticle(i);
@@ -457,13 +496,23 @@ int main(int argc, char *argv[])
         if (current_time-print_time > 10)
         {
             ss.str(std::string());
-            ss << "/proc/" << PID << "/statm";
+            ss << "/proc/" << PID << "/status";
             myfile.open(ss.str());
-            // getline(myfile, line);
-            for (int i=0; i<6; i++)
-                myfile >> mem_size;
-            myfile.close();
-            cout << "node " << teufel::rank << " memory usage : " << mem_size/1024.0 << " MB" << std::endl;
+            if(!myfile.is_open()) {
+                cout << "cannot access /proc/{PID}/status - memory usage unknown." << std::endl;
+            } else {
+                while(getline(myfile, line)) {
+                    // std::cout << line << std::endl;
+                    size_t pos = line.find(delimiter);
+                    std::string name = line.substr(0, pos);
+                    std::string rest = line.erase(0,pos+1);
+                    if (name=="VmSize") {
+                        mem_size = std::stoi(rest);
+                    }
+                }
+                cout << "node " << teufel::rank << " memory usage : " << mem_size/1e3 << " MB" << std::endl;
+                myfile.close();
+            }
             print_time = current_time;
             if (teufel::rank == 0)
             {
@@ -482,14 +531,23 @@ int main(int argc, char *argv[])
     MPI_Barrier(MPI_COMM_WORLD);
     
     ss.str(std::string());
-    ss << "/proc/" << PID << "/statm";
+    ss << "/proc/" << PID << "/status";
     myfile.open(ss.str());
-    // getline(myfile, line);
-    for (int i=0; i<6; i++)
-        myfile >> mem_size;
-    myfile.close();
-    cout << "node " << teufel::rank << " memory usage : " << mem_size/1024.0 << " MB" << std::endl;
-    cout << std::flush;
+    if(!myfile.is_open()) {
+        cout << "cannot access /proc/{PID}/status - memory usage unknown." << std::endl;
+    } else {
+        while(getline(myfile, line)) {
+            // std::cout << line << std::endl;
+            size_t pos = line.find(delimiter);
+            std::string name = line.substr(0, pos);
+            std::string rest = line.erase(0,pos+1);
+            if (name=="VmSize") {
+                mem_size = std::stoi(rest);
+            }
+        }
+        cout << "node " << teufel::rank << " memory usage : " << mem_size/1e3 << " MB" << std::endl;
+        myfile.close();
+    }
     MPI_Barrier(MPI_COMM_WORLD);
     usleep(100000);
     if (teufel::rank==0) cout << std::endl << std::flush;
@@ -521,7 +579,6 @@ int main(int argc, char *argv[])
     // all computation done - clean up
     // ===============================================================
 
-    /*
     // delete all observers
     for (int i=0; i<(int)listObservers.size(); i++)
         delete listObservers.at(i);
@@ -529,7 +586,6 @@ int main(int argc, char *argv[])
     
     // delete all watches
     watches.clear();
-    */
     
     // deleting the lattice automatically deletes all lattice elments
     delete lattice;
@@ -538,8 +594,8 @@ int main(int argc, char *argv[])
     delete masterBeam;
     delete trackedBeam;
 
-    // delete masterBuffer; -> fails
-    // delete trackingBuffer; -> fails
+    delete[] masterBuffer;
+    delete[] trackingBuffer;
 
     MPI_Barrier(MPI_COMM_WORLD);
     usleep(100000);

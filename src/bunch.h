@@ -280,9 +280,6 @@ public:
      */
     double *setStepFromBuffer(double *buffer);
 
-    //! @brief Current time of the bunch
-    double getTime();
-    
     /*! @brief Average time of all particles
      *  The averiging gives equal weight to all particles
      */
@@ -402,9 +399,6 @@ private:
     //! time step for tracking - this will remain constant after being set at the start of tracking
     double dt;
 
-    //! current time of the bunch (during tracking)
-    double time;
-    
     //! we store references to all particles
     vector<ChargedParticle*> P;
 
