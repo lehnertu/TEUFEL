@@ -429,6 +429,7 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                 }
                 // add the bunch to the beam
                 beam->Add(bunch);
+                delete dist;
                 count++;
             }
             else

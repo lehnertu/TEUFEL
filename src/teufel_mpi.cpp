@@ -455,12 +455,9 @@ int main(int argc, char *argv[])
         delete nodeBuffer;
     }
         
-
-/*
-
-    // collect all the field computed on the individual nodes
-    // into the master node
-*/
+    // ===============================================================
+    // done with the radiation observations - clean up
+    // ===============================================================
 
     // delete all observers
     for (int i=0; i<(int)listObservers.size(); i++)
@@ -470,6 +467,12 @@ int main(int argc, char *argv[])
     // delete all watches
     watches.clear();
 
+    // delete all loggers
+    // one has to delete all loggers by hand as the list only contains pointer references
+    for (int i=0; i<(int)listLoggers.size(); i++)
+        delete listLoggers.at(i);
+    listLoggers.clear();
+
     // deleting the lattice automatically deletes all lattice elments
     delete lattice;
     
@@ -477,8 +480,8 @@ int main(int argc, char *argv[])
     delete masterBeam;
     delete trackedBeam;
 
-    delete sendbuffer;
-    delete recbuffer;
+    delete[] sendbuffer;
+    delete[] recbuffer;
     MPI_Barrier(MPI_COMM_WORLD);
     
     if (teufel::rank==0)

@@ -580,12 +580,19 @@ int main(int argc, char *argv[])
     // ===============================================================
 
     // delete all observers
+    // one has to delete all observers by hand as the list only contains pointer references
     for (int i=0; i<(int)listObservers.size(); i++)
         delete listObservers.at(i);
     listObservers.clear();
     
     // delete all watches
     watches.clear();
+    
+    // delete all loggers
+    // one has to delete all loggers by hand as the list only contains pointer references
+    for (int i=0; i<(int)listLoggers.size(); i++)
+        delete listLoggers.at(i);
+    listLoggers.clear();
     
     // deleting the lattice automatically deletes all lattice elments
     delete lattice;
