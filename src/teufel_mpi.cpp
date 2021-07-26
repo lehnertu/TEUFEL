@@ -382,6 +382,8 @@ int main(int argc, char *argv[])
         for (int i=0; i<(int)listLoggers.size(); i++)
             listLoggers.at(i)->WriteBeamParametersSDDS();
 
+    delete[] pc_node;
+    
     // ===============================================================
     // compute the radiation observations
     // each node does the computation for it's own set of particles
@@ -451,8 +453,8 @@ int main(int argc, char *argv[])
             catch (exception& e) { cout << e.what() << endl;}
         }
         // if (teufel::rank == 0) delete reduceBuffer;
-        delete reduceBuffer;
-        delete nodeBuffer;
+        delete[] reduceBuffer;
+        delete[] nodeBuffer;
     }
         
     // ===============================================================
