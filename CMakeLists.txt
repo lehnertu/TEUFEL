@@ -104,7 +104,7 @@ configure_file (
   )
 
 # compiler flags
-add_definitions(-std=c++11 -Wall -g0 -m64 -pthread)
+add_definitions(-std=c++11 -Wall -m64 -pthread)
 
 add_executable(teufel ${PROJECT_SOURCE_DIR}/src/teufel_mpi.cpp)
 set_target_properties(teufel PROPERTIES
