@@ -66,9 +66,6 @@
 
 #include "pugixml.hpp"
 
-int NOP = 1e2;          // number of particles
-int NOTS = 4000;        // number of time steps
-
 int main(int argc, char *argv[])
 {
 
@@ -168,6 +165,11 @@ int main(int argc, char *argv[])
     // done parsing the input file
     delete parse;
 
+    // We register the number of time steps to track the beam.
+    // This has been set by the parser, but will be cleared when
+    // initalizing the trajectories for actual tracking.
+    int NOTS = masterBeam->getNOTS();
+
     // ===============================================================
     // re-distribute all particles into one bunch per node
     // all containing approximately equal numbers of particles
@@ -234,7 +236,6 @@ int main(int argc, char *argv[])
     // copy the tracking information from the master beam
     trackedBeam->setTrackingMethod(masterBeam->getTrackingMethod());
     trackedBeam->setTimeStep(masterBeam->getTimeStep());
-    trackedBeam->setNOTS(masterBeam->getNOTS());
     // prepare the tracking of the beam
     trackedBeam->setupTracking(lattice);
     
@@ -272,7 +273,7 @@ int main(int argc, char *argv[])
     double print_time = start_time;
 
     // do the tracking of the beam
-    for (int step=0; step<trackedBeam->getNOTS(); step++)
+    for (int step=0; step<NOTS; step++)
     {
     
         // do a step
