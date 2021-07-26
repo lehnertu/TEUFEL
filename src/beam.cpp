@@ -273,6 +273,7 @@ int Beam::WriteWatchPointHDF5(std::string filename)
     }
     // no errors have occured if we made it 'til here
     std::cout << "writing HDF5 done." << std::endl;
+    delete[] buffer;
     return nop;
 }
 
