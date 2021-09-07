@@ -608,7 +608,7 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                 MeshedScreen *meshObs = new MeshedScreen(fn.as_string());
                 meshObs->init();
                 meshObs->zero();
-                meshObs->writeReport(&cout);
+                if (teufel::rank==0) meshObs->writeReport(&cout);
                 listObservers->push_back(meshObs);
             }
             else if (type == "point")

@@ -261,23 +261,3 @@ if(BUILD_TESTS)
                              ${SDDS_LIBRARIES}
                              ${ZLIB_LIBRARY_RELEASE} )
 endif()
-
-# for building examples
-option(BUILD_EXAMPLES "Build binaries for the examples" ON)
-if(BUILD_EXAMPLES)
-    set(PROJECT_EXAMPLES_DIR ${PROJECT_SOURCE_DIR}/examples)
-    
-    add_executable(waveguide ${PROJECT_EXAMPLES_DIR}/waveguide_wiggler_mpi.cpp)
-    set_target_properties(waveguide PROPERTIES
-        COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
-    set_target_properties(waveguide PROPERTIES
-        LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
-    target_link_libraries(waveguide ${PROJECT_NAME}lib
-                             ${HDF5_LIBRARIES}
-                             ${SDDS_LIBRARIES}
-                             ${MPI_CXX_LIBRARIES}
-                             ${PUGIXML_LIBRARIES}
-                             ${MUPARSER_LIBRARY}
-                             ${ZLIB_LIBRARY_RELEASE} )
-endif()
-

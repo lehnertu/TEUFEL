@@ -105,27 +105,6 @@ public:
     virtual void integrate(Bunch *src);
     virtual void integrate(Lattice *src);
     
-    /*! Integrate the fields emitted by the source
-     *  during all of its history, falling onto the time frame
-     *  of observation.
-     *  Should be called once after tracking all particles.
-     *
-     *  This version is intended to be run on distributed systems.
-     *  The computation is distributed (based on the transverse
-     *  indices on the screen) over a number of calls (in parallel on
-     *  a number of cores). The fields obtained from all of these
-     *  cores have to be added up by an external routine.
-     * 
-     * \param[in] src The source generating the field.
-     * \param[in] NumCores The number of core over which to distribute the computation.
-     * \param[in] CoreId The index of the core [0...NumCores-1] for the present call.
-     *
-     *  This method is defined for Beam(), Bunch() and Lattice() as field sources.
-     */
-    virtual void integrate_mp(Beam *src, unsigned int NumCores, unsigned int CoreId);
-    virtual void integrate_mp(Bunch *src, unsigned int NumCores, unsigned int CoreId);
-    virtual void integrate_mp(Lattice *src, unsigned int NumCores, unsigned int CoreId);
-
     /*! Return the field value stored in one time slice
      *  with index it from the grid cell with indices ix, iy.
      *  This method throws an exception in case of an out-of-range index.

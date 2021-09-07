@@ -16,6 +16,10 @@ each track their own particles independently.
 Every particle stores its full trajectory data. All field computation is done
 after the tracking is finished. Every compute node computes the fields of
 its own particles which are then gatherd onto the root node for file output.
+In addition to the MPI-parallelization, the field computation is
+parallelized on the nodes using the OpenMP shared memory model.
+This requires that the full field storage of a single observer
+can be held in the node memory.
 
 Functionality
 -------------

@@ -23,14 +23,16 @@
 
 #include <iostream>
 #include <math.h>
+#include <omp.h>
 #include "hdf5.h"
 
 MeshedScreen::MeshedScreen(std::string filename)
 {
     FileName = filename;
+    if (teufel::rank==0) std::cout << "meshed screen observer : " << filename << std::endl;
     herr_t status;
     hid_t dataset, attr;
-    cout << "reading HDF5 file " << filename << endl;
+    if (teufel::rank==0) std::cout << "reading HDF5 file " << filename << endl;
     hid_t file = H5Fopen (filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
     if (file<0) throw(IOexception("MeshedScreen - error opening the file."));
     
@@ -157,6 +159,11 @@ MeshedScreen::MeshedScreen(std::string filename)
         status = H5Dclose(dataset);
         if (status<0) throw(IOexception("MeshedScreen - error reading dataset ObservationTime"));
         // now we have all information to create the field traces
+        if (teufel::rank==0)
+        {
+            std::cout << "allocating " << (double)(6*Np*Nt) * sizeof(double) / 1e6 << " MB of memory per node";
+            std::cout << std::endl << std::endl;
+        }    
         A.resize(Np);
         for (int ip=0; ip<Np; ip++)
         {
@@ -273,20 +280,27 @@ void MeshedScreen::integrate(Beam *src)
 {
     if (DEBUGLEVEL>=2) cout << "MeshedScreen::integrate(Beam)" << std::endl;
     if (DEBUGLEVEL>=2) cout << "beam number of particles = " << src->getNOP() << std::endl;
+    #pragma omp parallel for
     for (int i=0; i<Np; i++)
+    {
         src->integrateFieldTrace(get_point(i), A[i]);
+    };
 }
 
 void MeshedScreen::integrate(Bunch *src)
 {
     if (DEBUGLEVEL>=2) cout << "MeshedScreen::integrate(Bunch)" << std::endl;
     if (DEBUGLEVEL>=2) cout << "bunch number of particles = " << src->getNOP() << std::endl;
+    #pragma omp parallel for
     for (int i=0; i<Np; i++)
+    {
         src->integrateFieldTrace(get_point(i), A[i]);
+    };
 }
 
 void MeshedScreen::integrate(Lattice *src)
 {
+    #pragma omp parallel for
     for (int i=0; i<Np; i++)
     {
         Vector pos = get_point(i);
@@ -296,34 +310,6 @@ void MeshedScreen::integrate(Lattice *src)
             trace->add(it,src->Field(trace->get_time(it),pos));
         }
     }
-}
-
-void MeshedScreen::integrate_mp(Beam *src, unsigned int NumCores, unsigned int CoreId)
-{
-    for (int i=0; i<Np; i++)
-        if (CoreId == i % NumCores)
-            src->integrateFieldTrace(get_point(i), A[i]);
-}
-
-void MeshedScreen::integrate_mp(Bunch *src, unsigned int NumCores, unsigned int CoreId)
-{
-    for (int i=0; i<Np; i++)
-        if (CoreId == i % NumCores)
-            src->integrateFieldTrace(get_point(i), A[i]);
-}
-
-void MeshedScreen::integrate_mp(Lattice *src, unsigned int NumCores, unsigned int CoreId)
-{
-    for (int i=0; i<Np; i++)
-        if (CoreId == i % NumCores)
-        {
-            Vector pos = get_point(i);
-            for (int it=0; it<Nt; it++)
-            {
-                FieldTrace *trace = A[i];
-                trace->add(it,src->Field(trace->get_time(it),pos));
-            }
-        }
 }
 
 double* MeshedScreen::getBuffer()

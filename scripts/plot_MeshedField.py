@@ -9,6 +9,9 @@ import argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument('file', help='the file name of the watch point HDF5 file')
+parser.add_argument('-Ex', help="plot Ex at given time", dest="time_Ex", type=float)
+parser.add_argument('-Ey', help="plot Ey at given time", dest="time_Ey", type=float)
+parser.add_argument('-Ez', help="plot Ez at given time", dest="time_Ez", type=float)
 parser.add_argument('-fmax', help="plot range for the spectrum in Hz", dest="fmax", type=float)
 parser.add_argument('-roi', help="ROI for the spectrum in Hz", dest="roi", type=float, nargs=2)
 
@@ -74,6 +77,7 @@ print()
 amp_tot = np.zeros(nf//2)
 if roiOK: Pz_roi = np.zeros_like(Pz)
 
+print("integrating spectrum ...")
 # loop over the triangular cells of the screen
 for index in range(screen.Np):
     trace = screen.FieldTrace(index)
@@ -118,7 +122,8 @@ if args.fmax != None:
     ax1.set_xlim(0.0,1e-12*args.fmax)
 if roiOK:
   ax1.axvspan(1e-12*f1, 1e-12*f2, facecolor='#2ca02c', alpha=0.5)
-plt.show()
+print("close spectrum window to proceed")
+plt.pause(0.5)
 
 # --------------------------------------------------
 # generate a VTK visualization of the power density
@@ -140,7 +145,19 @@ def pick(id):
         print("pointing vector S=%s" % screen.EnergyFlowVector(id))
         screen.ShowFieldTrace(id)
 
-if roiOK:
+if args.time_Ex != None:
+    fields = screen.FieldsAtTime(args.time_Ex)
+    Ex = [f[0] for f in fields]
+    screen.ShowMeshedField(scalars=Ex,scalarTitle="Ex",showGrid=False,lut=phaseLUT(),pickAction=pick)
+elif args.time_Ey != None:
+    fields = screen.FieldsAtTime(args.time_Ey)
+    Ey = [f[1] for f in fields]
+    screen.ShowMeshedField(scalars=Ey,scalarTitle="Ey",showGrid=False,lut=phaseLUT(),pickAction=pick)
+elif args.time_Ez != None:
+    fields = screen.FieldsAtTime(args.time_Ez)
+    Ez = [f[2] for f in fields]
+    screen.ShowMeshedField(scalars=Ez,scalarTitle="Ez",showGrid=False,lut=phaseLUT(),pickAction=pick)
+elif roiOK:
     screen.ShowMeshedField(scalars=Pz_roi,scalarTitle="Pz(ROI)",pickAction=pick,showGrid=False)
 else:
     screen.ShowMeshedField(scalars=Pz,scalarTitle="Pz",pickAction=pick,showGrid=False)

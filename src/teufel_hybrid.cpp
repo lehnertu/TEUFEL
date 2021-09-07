@@ -443,20 +443,21 @@ int main(int argc, char *argv[])
     double current_time = start_time;
 
     // do the tracking of the beam
+    // Shared memory parallelization is used for field integration only.
+    // It may be emploeyed in the future during tracking for
+    // computing the interaction field between the particles.
+    // With a-priori fields tracking will only be MPI parallelized.
     for (int step=0; step<NOTS; step++)
     {
     
         // do a step
-        // we cannot just do trackedBeam->doStep(lattice)
-        // because we want to track the particles in parallel
-        // we know that there is only one bunch and copy its tracking method here
-        // pragma omp parallel for
-        //   temporarily disabled for debugging memory usage
-        for (int i=0; i<trackedBunch->getNOP(); i++)
-        {
-            ChargedParticle *p = trackedBunch->getParticle(i);
-            p->StepVay(lattice);
-        }
+        trackedBeam->doStep(lattice);
+
+        // for (int i=0; i<trackedBunch->getNOP(); i++)
+        // {
+        //     ChargedParticle *p = trackedBunch->getParticle(i);
+        //     p->StepVay(lattice);
+        // }
             
         // distribute the step result to all nodes
         // each node buffers its own tracked bunch
@@ -567,14 +568,84 @@ int main(int argc, char *argv[])
             listLoggers.at(i)->WriteBeamParametersSDDS();
 
     // ===============================================================
-    // compute the radiation observations
-    // each node does the computation for it's own set of particles
-    // the fields are combined before writing the files
+    // Compute the radiation observations :
+    // Each node does the computation for it's own set of particles.
+    // The fields are combined before writing the files.
     // ===============================================================
 
     MPI_Barrier(MPI_COMM_WORLD);
     usleep(100000);
+    if (teufel::rank==0) cout << std::endl << std::flush;
+    usleep(100000);
+    MPI_Barrier(MPI_COMM_WORLD);
     
+    // compute all observations
+    for (int i=0; i<(int)listObservers.size(); i++)
+    {
+        double start_time = MPI_Wtime();
+        if (teufel::rank == 0)
+        {
+            std::cout << std::endl << "computing observer No. " << i+1 << std::endl;
+        };
+        Observer *obs = listObservers.at(i);
+        std::cout << "node " << teufel::rank << " integrating ... " << std::endl;
+        // OpenMP parallelization is handled inside the observer object
+        obs->integrate(trackedBeam);
+        double stop_time = MPI_Wtime();
+        if (teufel::rank == 0)
+        {
+            std::cout << "time elapsed : " << stop_time-start_time << " s" << std::endl;
+        };
+        
+        // collect all the field computed on the individual nodes into the master node
+        unsigned int count = obs->getBufferSize();
+        std::cout << "Node " << teufel::rank << " allocating buffers for "<< count << " doubles" << std::endl;
+        // fill the buffer and get its address
+        double* nodeBuffer = obs->getBuffer();
+        if (nodeBuffer==0)
+        {
+            std::cout << "MPI_Reduce for Obsserver : node " << teufel::rank << " was unable to get the node buffer." << std::endl;
+            throw(IOexception("memory allocation error"));
+        };
+        // we have to define a buffer for the sum on all nodes
+        double* reduceBuffer = new double[count];
+        if (reduceBuffer==0)
+        {
+            std::cout << "MPI_Reduce for Obsserver : node " << teufel::rank << " was unable to get the recude buffer." << std::endl;
+            throw(IOexception("memory allocation error"));
+        };
+        MPI_Barrier(MPI_COMM_WORLD);
+        usleep(100000);
+        if (teufel::rank == 0)
+            std::cout << std::endl << "All buffers allocated." << std::endl;
+        MPI_Reduce(
+            nodeBuffer,                 // send buffer
+            reduceBuffer,               // receive buffer
+            count,                      // number of values
+            MPI_DOUBLE,                 // data type
+            MPI_SUM,                    // operation
+            0,                          // rank of the root process
+            MPI_COMM_WORLD              // communicator
+        );
+        if (teufel::rank == 0)
+            std::cout << "Reduce finished." << std::endl;
+        // the root node copies the data from the reduce buffer into the Observer
+        // and writes it to the output file
+        if (teufel::rank == 0)
+        {
+            obs->fromBuffer(reduceBuffer,count);
+            try
+            { 
+                    obs->generateOutput();
+                    std::cout << "Observer output file written." << std::endl;
+            }
+            catch (exception& e) { cout << e.what() << endl;}
+        }
+        // if (teufel::rank == 0) delete reduceBuffer;
+        delete[] reduceBuffer;
+        delete[] nodeBuffer;
+    }
+
     // ===============================================================
     // all computation done - clean up
     // ===============================================================

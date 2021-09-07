@@ -52,6 +52,12 @@ ScreenObserver::ScreenObserver(
     t0_obs = t0;
     dt_obs = dt;
     NOTS = nots;
+    if (teufel::rank==0)
+    {
+        std::cout << "screen observer : " << filename << std::endl;
+        std::cout << "allocating " << (double)(6*Nx*Ny*NOTS) * sizeof(double) / 1e6 << " MB of memory per node";
+        std::cout << std::endl << std::endl;
+    }    
     // set the field sizes and fill the field with zeros
     ElMagField field;
     TimeDomainField.resize(Nx);
@@ -100,40 +106,6 @@ void ScreenObserver::integrate(Lattice *src)
             {
                 TimeDomainField[ix][iy][it] += src->Field(t0_obs+it*dt_obs, CellPosition(ix, iy));
             }
-}
-
-void ScreenObserver::integrate_mp(Beam *src, unsigned int NumCores, unsigned int CoreId)
-{
-    for (unsigned int ix = 0; ix < Nx; ix++)
-    	for (unsigned int iy = 0; iy < Ny; iy++)
-    	    if (CoreId == (ix*Ny+iy) % NumCores)
-    	    {
-	            src->integrateFieldTrace(
-	        	    CellPosition(ix, iy), t0_obs, dt_obs, NOTS, &TimeDomainField[ix][iy]);
-	        };
-}
-
-void ScreenObserver::integrate_mp(Bunch *src, unsigned int NumCores, unsigned int CoreId)
-{
-    for (unsigned int ix = 0; ix < Nx; ix++)
-        for (unsigned int iy = 0; iy < Ny; iy++)
-    	    if (CoreId == (ix*Ny+iy) % NumCores)
-            {
-                src->integrateFieldTrace(
-                    CellPosition(ix, iy), t0_obs, dt_obs, NOTS, &TimeDomainField[ix][iy]);
-            };
-}
-
-void ScreenObserver::integrate_mp(Lattice *src, unsigned int NumCores, unsigned int CoreId)
-{
-    for (unsigned int ix = 0; ix < Nx; ix++)
-        for (unsigned int iy = 0; iy < Ny; iy++)
-    	    if (CoreId == (ix*Ny+iy) % NumCores) {
-                for (unsigned int it = 0; it < NOTS; it ++ )
-                {
-                    TimeDomainField[ix][iy][it] += src->Field(t0_obs+it*dt_obs, CellPosition(ix, iy));
-                };
-            };
 }
 
 ElMagField ScreenObserver::getField(
