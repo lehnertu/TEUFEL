@@ -141,6 +141,7 @@ set_target_properties(propagate PROPERTIES
 target_link_libraries(propagate ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
+                             ${MPI_CXX_LIBRARIES}
                              Eigen3::Eigen
                              ${PUGIXML_LIBRARIES}
                              ${MUPARSER_LIBRARY}
@@ -154,6 +155,7 @@ set_target_properties(reflection PROPERTIES
 target_link_libraries(reflection ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
+                             ${MPI_CXX_LIBRARIES}
                              Eigen3::Eigen
                              ${PUGIXML_LIBRARIES}
                              ${MUPARSER_LIBRARY}

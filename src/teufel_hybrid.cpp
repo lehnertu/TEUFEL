@@ -617,7 +617,7 @@ int main(int argc, char *argv[])
         MPI_Barrier(MPI_COMM_WORLD);
         usleep(100000);
         if (teufel::rank == 0)
-            std::cout << std::endl << "All buffers allocated." << std::endl;
+            std::cout << std::endl << "All buffers allocated." << std::endl << std::flush;
         MPI_Reduce(
             nodeBuffer,                 // send buffer
             reduceBuffer,               // receive buffer
@@ -627,8 +627,10 @@ int main(int argc, char *argv[])
             0,                          // rank of the root process
             MPI_COMM_WORLD              // communicator
         );
+        MPI_Barrier(MPI_COMM_WORLD);
+        usleep(100000);
         if (teufel::rank == 0)
-            std::cout << "Reduce finished." << std::endl;
+            std::cout << "Reduce finished." << std::endl << std::flush;
         // the root node copies the data from the reduce buffer into the Observer
         // and writes it to the output file
         if (teufel::rank == 0)
@@ -644,6 +646,13 @@ int main(int argc, char *argv[])
         // if (teufel::rank == 0) delete reduceBuffer;
         delete[] reduceBuffer;
         delete[] nodeBuffer;
+
+        MPI_Barrier(MPI_COMM_WORLD);
+        usleep(100000);
+        cout << "node " << teufel::rank << " done with observer " << i+1 << std::endl << std::flush;
+        usleep(100000);
+        MPI_Barrier(MPI_COMM_WORLD);
+
     }
 
     // ===============================================================
