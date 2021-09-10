@@ -19,6 +19,7 @@
  * 
  * =========================================================================*/
 
+#include "global.h"
 #include "mesh.h"
 
 #include <iostream>
@@ -280,10 +281,25 @@ void MeshedScreen::integrate(Beam *src)
 {
     if (DEBUGLEVEL>=2) cout << "MeshedScreen::integrate(Beam)" << std::endl;
     if (DEBUGLEVEL>=2) cout << "beam number of particles = " << src->getNOP() << std::endl;
-    #pragma omp parallel for
+    int counter = 0;
+    double now = current_time();
+    double print_time = now;
+    #pragma omp parallel for shared(counter)
     for (int i=0; i<Np; i++)
     {
+        #pragma omp atomic
+        counter++;
         src->integrateFieldTrace(get_point(i), A[i]);
+        if (omp_get_thread_num() == 0)
+        {
+            now = current_time();
+            if (now-print_time>60.0)
+            {
+                print_time = now;
+                std::cout << "node " << teufel::rank << " : computed ";
+                std::cout << counter << " of " << Np << " cells." << std::endl;
+            };
+        };
     };
 }
 
@@ -291,24 +307,54 @@ void MeshedScreen::integrate(Bunch *src)
 {
     if (DEBUGLEVEL>=2) cout << "MeshedScreen::integrate(Bunch)" << std::endl;
     if (DEBUGLEVEL>=2) cout << "bunch number of particles = " << src->getNOP() << std::endl;
+    int counter = 0;
+    double now = current_time();
+    double print_time = now;
     #pragma omp parallel for
     for (int i=0; i<Np; i++)
     {
+        #pragma omp atomic
+        counter++;
         src->integrateFieldTrace(get_point(i), A[i]);
+        if (omp_get_thread_num() == 0)
+        {
+            now = current_time();
+            if (now-print_time>60.0)
+            {
+                print_time = now;
+                std::cout << "node " << teufel::rank << " : computed ";
+                std::cout << counter << " of " << Np << " cells." << std::endl;
+            };
+        };
     };
 }
 
 void MeshedScreen::integrate(Lattice *src)
 {
+    int counter = 0;
+    double now = current_time();
+    double print_time = now;
     #pragma omp parallel for
     for (int i=0; i<Np; i++)
     {
+        #pragma omp atomic
+        counter++;
         Vector pos = get_point(i);
         for (int it=0; it<Nt; it++)
         {
             FieldTrace *trace = A[i];
             trace->add(it,src->Field(trace->get_time(it),pos));
         }
+        if (omp_get_thread_num() == 0)
+        {
+            now = current_time();
+            if (now-print_time>60.0)
+            {
+                print_time = now;
+                std::cout << "node " << teufel::rank << " : computed ";
+                std::cout << counter << " of " << Np << " cells." << std::endl << std::endl;
+            };
+        };
     }
 }
 

@@ -67,6 +67,9 @@ namespace teufel
     extern int rank;
 }
 
+//! time in seconds since the Epoch
+double current_time();
+
 /*! 
  * \class IOexception
  * \brief Class for exceptions returning a user-defined message.

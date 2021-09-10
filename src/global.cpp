@@ -20,6 +20,8 @@
  * =========================================================================*/
 
 #include "global.h"
+#include <time.h>
+#include <math.h>
 
 namespace teufel
 {
@@ -27,3 +29,9 @@ namespace teufel
     int rank(0);
 }
 
+double current_time()
+{
+    struct timespec _t;
+    clock_gettime(CLOCK_REALTIME, &_t);
+    return (double)_t.tv_sec + 1e-9*(double)_t.tv_nsec;
+};

@@ -19,11 +19,12 @@
         </undulator>
     </lattice>
     <beam>
-        <bunch gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" n="99" >
+        <bunch gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" n="999" >
             <!-- compute bunch length for a form factor of 0.5 -->
             <calc print="for F=0.5 bunchlength [s] = " var="tau" eq="0.1325/f"/>
             <position x="0.0" y="0.0" z="0.0" zrms="tau*_c" />
             <momentum x="0.0" y="0.0" z="1.0" delta="1e-3" />
+            <log file="elbe-u300.sdds" step="10" />
         </bunch>
     </beam>
     <calc print="tracking length [m] = " var="total_L" eq="4.0" />
