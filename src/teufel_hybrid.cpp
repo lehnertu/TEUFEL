@@ -588,16 +588,22 @@ int main(int argc, char *argv[])
             std::cout << std::endl << "computing observer No. " << i+1 << std::endl;
         };
         Observer *obs = listObservers.at(i);
+        MPI_Barrier(MPI_COMM_WORLD);
+        usleep(100000);
         std::cout << "node " << teufel::rank << " integrating ... " << std::endl;
         // OpenMP parallelization is handled inside the observer object
         obs->integrate(trackedBeam);
         double stop_time = MPI_Wtime();
+        MPI_Barrier(MPI_COMM_WORLD);
+        usleep(100000);
         if (teufel::rank == 0)
         {
             std::cout << "time elapsed : " << stop_time-start_time << " s" << std::endl;
         };
         
         // collect all the field computed on the individual nodes into the master node
+        // TODO: this should be done in chunks, otherwise we temporarily need
+        // 3 times the observer memory (original and 2 buffers).
         unsigned int count = obs->getBufferSize();
         std::cout << "Node " << teufel::rank << " allocating buffers for "<< count << " doubles" << std::endl;
         // fill the buffer and get its address
