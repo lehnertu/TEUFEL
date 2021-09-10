@@ -27,6 +27,7 @@
 
 #include <iostream>
 #include <math.h>
+#include <omp.h>
 #include "SDDS.h"
 #include "hdf5.h"
 
@@ -78,34 +79,91 @@ Vector ScreenObserver::CellPosition(int ix, int iy)
 
 void ScreenObserver::integrate(Beam *src)
 {
-    for (unsigned int ix = 0; ix < Nx; ix++) {
+    int counter = 0;
+    double now = current_time();
+    double print_time = now;
+    #pragma omp parallel shared(counter)
+    for (unsigned int ix = 0; ix < Nx; ix++)
+    {
+        #pragma omp for
     	for (unsigned int iy = 0; iy < Ny; iy++)
 	    {
+            #pragma omp atomic
+            counter++;
 	        src->integrateFieldTrace(
 	    	    CellPosition(ix, iy), t0_obs, dt_obs, NOTS, &TimeDomainField[ix][iy]);
 	    };
+        if (omp_get_thread_num() == 0)
+        {
+            now = current_time();
+            if (now-print_time>60.0)
+            {
+                print_time = now;
+                std::cout << "node " << teufel::rank << " : computed ";
+                std::cout << counter << " of " << Nx*Ny << " cells";
+                std::cout << " using " << omp_get_num_threads() << " threads." << std::endl;
+            };
+        };
     }
 }
 
 void ScreenObserver::integrate(Bunch *src)
 {
+    int counter = 0;
+    double now = current_time();
+    double print_time = now;
+    #pragma omp parallel shared(counter)
     for (unsigned int ix = 0; ix < Nx; ix++) {
+        #pragma omp for
         for (unsigned int iy = 0; iy < Ny; iy++)
         {
+            #pragma omp atomic
+            counter++;
             src->integrateFieldTrace(
                 CellPosition(ix, iy), t0_obs, dt_obs, NOTS, &TimeDomainField[ix][iy]);
+        };
+        if (omp_get_thread_num() == 0)
+        {
+            now = current_time();
+            if (now-print_time>60.0)
+            {
+                print_time = now;
+                std::cout << "node " << teufel::rank << " : computed ";
+                std::cout << counter << " of " << Nx*Ny << " cells";
+                std::cout << " using " << omp_get_num_threads() << " threads." << std::endl;
+            };
         };
     }
 }
 
 void ScreenObserver::integrate(Lattice *src)
 {
+    int counter = 0;
+    double now = current_time();
+    double print_time = now;
+    #pragma omp parallel shared(counter)
     for (unsigned int ix = 0; ix < Nx; ix++)
+        #pragma omp for
         for (unsigned int iy = 0; iy < Ny; iy++)
+        {
+            #pragma omp atomic
+            counter++;
             for (unsigned int it = 0; it < NOTS; it ++ )
             {
                 TimeDomainField[ix][iy][it] += src->Field(t0_obs+it*dt_obs, CellPosition(ix, iy));
             }
+            if (omp_get_thread_num() == 0)
+            {
+                now = current_time();
+                if (now-print_time>60.0)
+                {
+                    print_time = now;
+                    std::cout << "node " << teufel::rank << " : computed ";
+                    std::cout << counter << " of " << Nx*Ny << " cells";
+                    std::cout << " using " << omp_get_num_threads() << " threads." << std::endl;
+                };
+            };
+        };
 }
 
 ElMagField ScreenObserver::getField(

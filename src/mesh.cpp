@@ -297,7 +297,8 @@ void MeshedScreen::integrate(Beam *src)
             {
                 print_time = now;
                 std::cout << "node " << teufel::rank << " : computed ";
-                std::cout << counter << " of " << Np << " cells." << std::endl;
+                std::cout << counter << " of " << Np << " cells";
+                std::cout << " using " << omp_get_num_threads() << " threads." << std::endl;
             };
         };
     };
@@ -323,7 +324,8 @@ void MeshedScreen::integrate(Bunch *src)
             {
                 print_time = now;
                 std::cout << "node " << teufel::rank << " : computed ";
-                std::cout << counter << " of " << Np << " cells." << std::endl;
+                std::cout << counter << " of " << Np << " cells";
+                std::cout << " using " << omp_get_num_threads() << " threads." << std::endl;
             };
         };
     };
@@ -352,7 +354,8 @@ void MeshedScreen::integrate(Lattice *src)
             {
                 print_time = now;
                 std::cout << "node " << teufel::rank << " : computed ";
-                std::cout << counter << " of " << Np << " cells." << std::endl << std::endl;
+                std::cout << counter << " of " << Np << " cells";
+                std::cout << " using " << omp_get_num_threads() << " threads." << std::endl;
             };
         };
     }
