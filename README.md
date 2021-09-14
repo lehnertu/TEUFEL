@@ -31,6 +31,28 @@ Functionality
 - the trackig problem is defined by a human-readable XML file
 - a built-in calculator allows easy computation of input parameters within the input file
 
+Running TEUFEL
+--------------
+TEUFEL is designed to make use of clusters of multi-core nodes. The particles are
+distributed over the nodes (each tracking its own sub-set of particles) while
+the particle coordinates are communicated between the nodes after every tracking
+step using the message passing interface (OpenMPI).
+
+After the tracking every node computes the observed fields from its own set of particles.
+This is the most time-consuming step of the computation. It is addidionally parallelized
+using the shared-memory model Open-MP. This way all CPU's available on one node
+can cooperate to compute the fields. Only a single copy of the fields (which can be very large)
+needs to be held in memory. After very node has computed the fields from its own particles
+the total fields are gethered onto the master node (using MPI) and written to file.
+
+As an example, when running a problem on an 8-core workstation where the
+fields (and necessary communication buffers) fit into the memory twice,
+one would start TEUFEL with 2 nodes each using 5 CPU's
+
+```mpirun -n 2 --cpus-per-rank 5 --oversubscribe input.xml```
+
+On a cluster one would have to submit a batch job with te according information.
+
 Build and Installation
 ----------------------
 
