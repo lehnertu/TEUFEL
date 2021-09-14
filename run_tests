@@ -68,6 +68,14 @@ echo ''
 echo '==============================================================================='
 echo ''
 
+mpiexec -n 1 ./build/teufel examples/undulator_matching.xml
+./scripts/test_matching.py; rc=$?
+num=$(($num + $rc))
+
+echo ''
+echo '==============================================================================='
+echo ''
+
 mpiexec -n 4 ./build/teufel examples/elbe-u300.xml; rc=$?
 num=$(($num + $rc))
 
