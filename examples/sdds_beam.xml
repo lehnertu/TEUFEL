@@ -1,0 +1,14 @@
+<?xml version="1.0"?>
+<teufel description="Example - input particles from ELEGANT watch point"
+    author="Ulf Lehnert 15.9.2021">
+    <lattice>
+    </lattice>
+    <beam>
+        <SDDS file="" />
+    </beam>
+    <calc print="tracking length [m] = " var="total_L" eq="1.0" />
+    <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
+    <calc print="dt = " var="dt" eq="total_t/1000" />
+    <tracking method="Vay" delta_t="dt" n="1000" />
+    <observer />
+</teufel>

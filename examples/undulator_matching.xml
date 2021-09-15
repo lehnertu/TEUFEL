@@ -1,0 +1,48 @@
+<?xml version="1.0"?>
+<teufel description="Test case - beam matching to undulator"
+    author="Ulf Lehnert 14.9.2021">
+    <calc print="beam energy [eV] = " var="E_beam" eq="20.0e6" />
+    <calc print="gamma = " var="gamma" eq="E_beam/_mec2"/>
+    <calc print="beta*gamma = " var="betagamma" eq="sqrt(gamma*gamma-1)"/>
+    <!-- set desired output frequency -->
+    <calc print="freq [Hz] = " var="f" eq="1.0e12"/>
+    <calc print="lambda [m] = " var="lambda" eq="_c/f"/>
+    <calc var="lambda_U" eq="0.100" />
+    <lattice>
+        <undulator name="U100" type="planar">
+            <!-- compute undulator setting from desired output frequency -->
+            <calc print="K_rms(U100) = " var="K_rms" eq="sqrt(lambda/lambda_U*2*gamma*gamma-1)" />
+            <!-- setup the undulator -->
+            <field B="K_rms*sqrt(2)/_c*2*_pi*_mec2/lambda_U"
+                   period="lambda_U" N="10" />
+            <calc var="u100_center" eq="1.0"/>
+            <position x="0.0" y="0.0" z="u100_center"/>
+        </undulator>
+    </lattice>
+    <beam>
+        <bunch gamma="gamma" charge="-1.0e-9" cmr="-1.0" n="4000" >
+            <!-- compute beam parameters -->
+            <calc var="norm_emit" eq="10.0e-6" />
+            <calc print="geometric emittance [m rad] = " var="emit" eq="norm_emit/betagamma" />
+            <calc var="betax" eq="0.5" />
+            <calc print="matched beta_y [m] = " var="betay" eq="gamma*lambda_U/(2*_pi*K_rms)" />
+            <calc print="matched beam size y_rms [m] = " var="sigmay" eq="sqrt(emit*betay)" />
+            <position x="0.0" y="0.0" z="0.0" xrms="sqrt(emit*betax)" yrms="sigmay" />
+            <momentum x="0.0" y="0.0" z="1.0" xrms="sqrt(emit/betax)" yrms="sqrt(emit/betay)" />
+            <!-- Above definition is valid at the waist, so
+                 (1) back propagate the x-distribution 1 m from undulator center to start
+                 (2) back propagate the y-distribution for 0.5m undulator entrance to start.
+              -->
+            <correlations>
+                <linear indep="3" dep="0" factor="-1.0/betagamma" />
+                <linear indep="4" dep="1" factor="-0.515/betagamma" />
+            </correlations>
+            <log file="matching.sdds" step="10" />
+        </bunch>
+    </beam>
+    <calc print="tracking length [m] = " var="total_L" eq="2.0" />
+    <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
+    <calc print="dt = " var="dt" eq="total_t/4000" />
+    <tracking method="Vay" delta_t="dt" n="4000" />
+    <observer />
+</teufel>
