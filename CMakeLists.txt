@@ -87,6 +87,10 @@ aux_source_directory(${PROJECT_SOURCE_DIR}/src lib_sources )
 # the main program is not part of the library
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/teufel.cpp)
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/teufel_mpi.cpp)
+list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/teufel_hybrid.cpp)
+# stand-alone codes are not part of the library
+list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/propagate.cpp)
+list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/reflection.cpp)
 # files not yet finished and not included in the build
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/cavity.cpp)
 message(STATUS "Found source files ${lib_sources}")
@@ -100,7 +104,7 @@ configure_file (
   )
 
 # compiler flags
-add_definitions(-std=c++11 -Wall -g0 -m64 -pthread)
+add_definitions(-std=c++11 -Wall -m64 -pthread)
 
 add_executable(teufel ${PROJECT_SOURCE_DIR}/src/teufel_mpi.cpp)
 set_target_properties(teufel PROPERTIES
@@ -108,6 +112,20 @@ set_target_properties(teufel PROPERTIES
 set_target_properties(teufel PROPERTIES
     LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
 target_link_libraries(teufel ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIBRARIES}
+                             ${MPI_CXX_LIBRARIES}
+                             ${PUGIXML_LIBRARIES}
+                             ${MUPARSER_LIBRARY}
+                             ${ZLIB_LIBRARY_RELEASE} )
+
+add_executable(teufel_hybrid ${PROJECT_SOURCE_DIR}/src/teufel_hybrid.cpp)
+set_target_properties(teufel_hybrid PROPERTIES
+    COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
+set_target_properties(teufel_hybrid PROPERTIES
+    LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
+target_link_libraries(teufel_hybrid
+                             ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
                              ${MPI_CXX_LIBRARIES}
@@ -243,23 +261,3 @@ if(BUILD_TESTS)
                              ${SDDS_LIBRARIES}
                              ${ZLIB_LIBRARY_RELEASE} )
 endif()
-
-# for building examples
-option(BUILD_EXAMPLES "Build binaries for the examples" ON)
-if(BUILD_EXAMPLES)
-    set(PROJECT_EXAMPLES_DIR ${PROJECT_SOURCE_DIR}/examples)
-    
-    add_executable(waveguide ${PROJECT_EXAMPLES_DIR}/waveguide_wiggler_mpi.cpp)
-    set_target_properties(waveguide PROPERTIES
-        COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
-    set_target_properties(waveguide PROPERTIES
-        LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
-    target_link_libraries(waveguide ${PROJECT_NAME}lib
-                             ${HDF5_LIBRARIES}
-                             ${SDDS_LIBRARIES}
-                             ${MPI_CXX_LIBRARIES}
-                             ${PUGIXML_LIBRARIES}
-                             ${MUPARSER_LIBRARY}
-                             ${ZLIB_LIBRARY_RELEASE} )
-endif()
-

@@ -201,6 +201,16 @@ public:
      */
     void Add(ChargedParticle *part);
 
+    /*! Remove all trajectory information from particles
+     * belonging to this bunch
+     */
+    void clearTrajectories();
+    
+    /*! For all particles belonging to this bunch pre-allocate a number of trajectory points.
+     *  Note - this must be one more than the number of tracking steps
+     */
+    void preAllocate(int nTraj);
+
     //! Report the number of particles in the bunch.
     int getNOP();	
 
@@ -243,9 +253,33 @@ public:
      */
     void StepVay(GeneralField *field);
 
-    //! @brief Current time of the bunch
-    double getTime();
-    
+    /*! @brief Buffer particle coordinates.
+     * 
+     * Particle coordinates (time,position,momentum,acceleration)
+     * of all particles belonging to the bunch are stored into one buffer.
+     * There is no memory check for the buffer size performed.
+     * 
+     * @param[in] buffer memory pointer of the buffer
+     * 
+     * @return the advanced buffer pointer
+     */
+    double *bufferStep(double *buffer);
+
+    /*! @brief Set particle coordinates from buffer.
+     * 
+     * Particle coordinates (time,position,momentum,acceleration)
+     * of all particles belonging to the bunch are read from one buffer.
+     * There is no memory check for the buffer size performed.
+     * For consecutively reading of many bunches the advanced buffer
+     * pointer is returned after reading, then pointing to the
+     * first particle of the next bunch (if existing)
+     * 
+     * @param[in] buffer memory pointer of the buffer
+     * 
+     * @return the advanced buffer pointer
+     */
+    double *setStepFromBuffer(double *buffer);
+
     /*! @brief Average time of all particles
      *  The averiging gives equal weight to all particles
      */
@@ -365,9 +399,6 @@ private:
     //! time step for tracking - this will remain constant after being set at the start of tracking
     double dt;
 
-    //! current time of the bunch (during tracking)
-    double time;
-    
     //! we store references to all particles
     vector<ChargedParticle*> P;
 

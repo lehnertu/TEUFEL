@@ -71,6 +71,16 @@ public:
      */
     void clear();
     
+    /*! Remove all trajectory information from particles
+     *  belonging to this beam
+     */
+    void clearTrajectories();
+    
+    /*! For all particles belonging to this beam pre-allocate a number of trajectory points.
+     *  Note - this must be one more than the number of tracking steps
+     */
+    void preAllocate(int nTraj);
+    
     //! Report the number of bunches in the beam.
     int getNOB();       
 
@@ -143,6 +153,34 @@ public:
      * @param field the field through which the beam is tracked
      */
     void StepVay(GeneralField *field);
+    
+    /*! @brief Compute the buffer size for one step.
+     * 
+     * @return the number of doubles needed
+     */
+    int getStepBufferSize();
+    
+    /*! @brief Buffer particle coordinates.
+     * 
+     * Particle coordinates (time,position,momentum,acceleration)
+     * of all particles belonging to the beam are stored into one buffer.
+     * The necessary buffer size is given by getStepBufferSize().
+     * There is no memory check for the buffer size performed.
+     * 
+     * @param[in] buffer memory pointer of the buffer
+     */
+    void bufferStep(double *buffer);
+    
+    /*! @brief Set particle coordinates from buffer.
+     * 
+     * Particle coordinates (time,position,momentum,acceleration)
+     * of all particles belonging to the beam are read from one buffer.
+     * The necessary buffer size is given by getStepBufferSize().
+     * There is no memory check for the buffer size performed.
+     * 
+     * @param[in] buffer memory pointer of the buffer
+     */
+    void setStepFromBuffer(double *buffer);
     
     /*! Dump all particle information into an HDF5 file.
      *  The written quantities include:
@@ -232,7 +270,12 @@ private:
      */
     double dt;
 
-    //! number of time steps
+    /*! number of time steps
+     *  This is the number of time steps that have actually been performed during tracking the beam.
+     *  The value is initially set to the requested number when parsing, but zeroed when
+     *  tracking is initialized. Then it is incremented with every tracking step performed.
+     *  Note - it is by 1 smaller than the number of trajectory points stored for every particle.
+     */
     int NOTS;
     
     //! Method used for tracking

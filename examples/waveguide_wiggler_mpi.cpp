@@ -253,7 +253,7 @@ int main(int argc, char *argv[])
         p->serializeTraj(particlebuffer);
         // broadcast the buffer from root to all nodes
         MPI_Bcast(particlebuffer, bufsize, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-        ChargedParticle *copy = new ChargedParticle(particlebuffer, trajsize);
+        ChargedParticle *copy = new ChargedParticle(particlebuffer, trajsize, 0);
         trackedBunch->Add(copy);
     }
     if (teufel::rank == 0) std::cout << "broadcast finished." << std::endl;

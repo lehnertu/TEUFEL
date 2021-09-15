@@ -66,9 +66,6 @@
 
 #include "pugixml.hpp"
 
-int NOP = 1e2;          // number of particles
-int NOTS = 4000;        // number of time steps
-
 int main(int argc, char *argv[])
 {
 
@@ -168,6 +165,11 @@ int main(int argc, char *argv[])
     // done parsing the input file
     delete parse;
 
+    // We register the number of time steps to track the beam.
+    // This has been set by the parser, but will be cleared when
+    // initalizing the trajectories for actual tracking.
+    int NOTS = masterBeam->getNOTS();
+
     // ===============================================================
     // re-distribute all particles into one bunch per node
     // all containing approximately equal numbers of particles
@@ -234,7 +236,6 @@ int main(int argc, char *argv[])
     // copy the tracking information from the master beam
     trackedBeam->setTrackingMethod(masterBeam->getTrackingMethod());
     trackedBeam->setTimeStep(masterBeam->getTimeStep());
-    trackedBeam->setNOTS(masterBeam->getNOTS());
     // prepare the tracking of the beam
     trackedBeam->setupTracking(lattice);
     
@@ -272,7 +273,7 @@ int main(int argc, char *argv[])
     double print_time = start_time;
 
     // do the tracking of the beam
-    for (int step=0; step<trackedBeam->getNOTS(); step++)
+    for (int step=0; step<NOTS; step++)
     {
     
         // do a step
@@ -382,6 +383,8 @@ int main(int argc, char *argv[])
         for (int i=0; i<(int)listLoggers.size(); i++)
             listLoggers.at(i)->WriteBeamParametersSDDS();
 
+    delete[] pc_node;
+    
     // ===============================================================
     // compute the radiation observations
     // each node does the computation for it's own set of particles
@@ -451,16 +454,13 @@ int main(int argc, char *argv[])
             catch (exception& e) { cout << e.what() << endl;}
         }
         // if (teufel::rank == 0) delete reduceBuffer;
-        delete reduceBuffer;
-        delete nodeBuffer;
+        delete[] reduceBuffer;
+        delete[] nodeBuffer;
     }
         
-
-/*
-
-    // collect all the field computed on the individual nodes
-    // into the master node
-*/
+    // ===============================================================
+    // done with the radiation observations - clean up
+    // ===============================================================
 
     // delete all observers
     for (int i=0; i<(int)listObservers.size(); i++)
@@ -470,6 +470,12 @@ int main(int argc, char *argv[])
     // delete all watches
     watches.clear();
 
+    // delete all loggers
+    // one has to delete all loggers by hand as the list only contains pointer references
+    for (int i=0; i<(int)listLoggers.size(); i++)
+        delete listLoggers.at(i);
+    listLoggers.clear();
+
     // deleting the lattice automatically deletes all lattice elments
     delete lattice;
     
@@ -477,8 +483,8 @@ int main(int argc, char *argv[])
     delete masterBeam;
     delete trackedBeam;
 
-    delete sendbuffer;
-    delete recbuffer;
+    delete[] sendbuffer;
+    delete[] recbuffer;
     MPI_Barrier(MPI_COMM_WORLD);
     
     if (teufel::rank==0)

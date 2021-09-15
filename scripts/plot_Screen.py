@@ -14,7 +14,7 @@ from matplotlib.patches import Circle
 mu0 = 4*np.pi*1e-7
 
 parser = argparse.ArgumentParser()
-parser.add_argument('file', help='the file name of the watch point HDF5 file')
+parser.add_argument('file', help='the file name of the HDF5 file of the screens recorded fields')
 parser.add_argument('-fmax', help="plot range for the spectrum in Hz", dest="fmax", type=float)
 parser.add_argument('-roi', help="ROI for the spectrum in Hz", dest="roi", type=float, nargs=2)
 parser.add_argument('-circ', help="ROI for the spatial dist.", dest="circ", type=float)

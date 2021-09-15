@@ -19,19 +19,20 @@
         </undulator>
     </lattice>
     <beam>
-        <bunch gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" n="100" >
+        <bunch gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" n="999" >
             <!-- compute bunch length for a form factor of 0.5 -->
             <calc print="for F=0.5 bunchlength [s] = " var="tau" eq="0.1325/f"/>
             <position x="0.0" y="0.0" z="0.0" zrms="tau*_c" />
             <momentum x="0.0" y="0.0" z="1.0" delta="1e-3" />
+            <log file="elbe-u300.sdds" step="10" />
         </bunch>
     </beam>
     <calc print="tracking length [m] = " var="total_L" eq="4.0" />
     <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
     <calc print="dt = " var="dt" eq="total_t/4000" />
     <tracking method="Vay" delta_t="dt" n="4000" >
-        <watch step="0" file="elbe-u300_inital.h5" />
-        <watch step="4000" file="elbe-u300_final.h5" />
+        <watch step="0" file="elbe-u300_inital.hdf5" />
+        <watch step="4000" file="elbe-u300_final.hdf5" />
     </tracking>
     <observer>
         <calc print="screen position z0 = " var="z0" eq="10.0"/>
