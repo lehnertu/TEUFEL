@@ -40,7 +40,7 @@
     </lattice>
 
     <beam>
-        <bunch gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" n="1000" >
+        <bunch gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" n="2000" >
             <position x="0.0" y="0.0" z="-1.0" xrms="0.001" yrms="0.001" zrms="2.0e-12*_c" />
             <momentum x="0.0" y="0.0" z="1.0" xrms="0.0001" yrms="0.0001" delta="1.2e-3" />
             <log file="elbe-cdr.sdds" step="100" />

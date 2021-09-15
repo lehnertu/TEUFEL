@@ -77,14 +77,16 @@ bgx = data[3]
 bgy = data[4]
 bgz = data[5]
 
-xp = bgx/bgz
-yp = bgy/bgz
-p = np.sqrt(np.square(bgx)+np.square(bgy)+np.square(bgz))
-
+xmean = np.mean(x)
+ymean = np.mean(y)
 zmean = np.mean(z)
+bgxmean = np.mean(bgx)
+bgymean = np.mean(bgy)
+bgzmean = np.mean(bgz)
 dt = -(z-zmean) / 3.0e8
 
 Np = len(x)
+p = np.sqrt(np.square(bgx)+np.square(bgy)+np.square(bgz))
 betagamma = np.mean(p)
 E = 0.511*p
 E0 = np.mean(E)
@@ -95,6 +97,22 @@ if tau!=0.0:
     chirp = 1.0e15 * ( np.dot(dE,dt)/float(Np) ) / (tau*tau)
 else:
     chirp = 0.0
+
+x_rms = np.sqrt((np.dot(x-xmean,x-xmean)/Np))
+y_rms = np.sqrt((np.dot(y-ymean,y-ymean)/Np))
+z_rms = np.sqrt((np.dot(z-zmean,z-zmean)/Np))
+bgx_rms = np.sqrt((np.dot(bgx-bgxmean,bgx-bgxmean)/Np))
+bgy_rms = np.sqrt((np.dot(bgy-bgymean,bgy-bgymean)/Np))
+bgz_rms = np.sqrt((np.dot(bgz-bgzmean,bgz-bgzmean)/Np))
+print("beam of %d particles:" % Np)
+print("mean    x=%.3f mm,  y=%.3f mm,  z=%.3f m" % (1e3*xmean, 1e3*ymean, zmean) )
+print("mean    bg_x=%.3f,  bg_y=%.3f,  bg_z=%.3f" % (bgxmean, bgymean, bgzmean) )
+print("r.m.s.  x=%.3f mm,  y=%.3f mm,  z=%.3f mm" % (1e3*x_rms, 1e3*y_rms, 1e3*z_rms) )
+print("r.m.s.  bg_x=%.3f,  bg_y=%.3f,  bg_z=%.3f" % (bgx_rms, bgy_rms, bgz_rms) )
+print()
+
+xp = bgx/bgz
+yp = bgy/bgz
 ex_rms = 1.0e6 * betagamma * np.sqrt((np.dot(x,x)*np.dot(xp,xp)-pow(np.dot(x,xp),2))/pow(float(Np),2))
 ey_rms = 1.0e6 * betagamma * np.sqrt((np.dot(y,y)*np.dot(yp,yp)-pow(np.dot(y,yp),2))/pow(float(Np),2))
 ez_rms = 1.0e15 * np.sqrt((np.dot(dE,dE)*np.dot(dt,dt)-pow(np.dot(dE,dt),2))/pow(float(Np),2))

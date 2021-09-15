@@ -429,6 +429,7 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                 }
                 // add the bunch to the beam
                 beam->Add(bunch);
+                delete dist;
                 count++;
             }
             else
@@ -607,7 +608,7 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                 MeshedScreen *meshObs = new MeshedScreen(fn.as_string());
                 meshObs->init();
                 meshObs->zero();
-                meshObs->writeReport(&cout);
+                if (teufel::rank==0) meshObs->writeReport(&cout);
                 listObservers->push_back(meshObs);
             }
             else if (type == "point")

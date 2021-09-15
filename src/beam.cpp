@@ -29,6 +29,8 @@
 Beam::Beam()
 {
     NOB = 0;
+    NOTS = 0;
+    dt = 0.0;
     tracker = TRACKING_NONE;
 }
 
@@ -50,7 +52,21 @@ void Beam::clear()
     for(int i=0; i<NOB; i++)
         delete B[i];
     NOB = 0;
+    NOTS = 0;
     B.clear();
+}
+
+void Beam::clearTrajectories()
+{
+    NOTS = 0;
+    for(int i=0; i<NOB; i++)
+        B[i]->clearTrajectories();
+}
+
+void Beam::preAllocate(int nTraj)
+{
+    for(int i=0; i<NOB; i++)
+        B[i]->preAllocate(nTraj);
 }
 
 Bunch* Beam::getBunch(int i)
@@ -105,6 +121,7 @@ void Beam::setupTracking(GeneralField *field)
 
 void Beam::doStep(GeneralField *field)
 {
+    NOTS++;
     switch (tracker)
     {
         case TRACKING_NONE:
@@ -123,6 +140,7 @@ void Beam::doStep(GeneralField *field)
 
 void Beam::InitVay(GeneralField *field)
 {
+    NOTS = 0;
     for(int i=0; i<NOB; i++)
     {
         B[i]->InitVay(dt, field);
@@ -134,6 +152,31 @@ void Beam::StepVay(GeneralField *field)
     for(int i=0; i<NOB; i++)
     {
         B[i]->StepVay(field);
+    }
+}
+
+int Beam::getStepBufferSize()
+{
+    return getNOP()*10;
+}
+
+void Beam::bufferStep(double *buffer)
+{
+    double *buf = buffer;
+    for(int i=0; i<NOB; i++)
+    {
+        // the pointer is advanced as the bunch is filled into the buffer
+        buf = B[i]->bufferStep(buf);
+    }
+}
+
+void Beam::setStepFromBuffer(double *buffer)
+{
+    double *buf = buffer;
+    for(int i=0; i<NOB; i++)
+    {
+        // the pointer is advanced as the buffer is consumed
+        buf = B[i]->setStepFromBuffer(buf);
     }
 }
 
@@ -230,6 +273,7 @@ int Beam::WriteWatchPointHDF5(std::string filename)
     }
     // no errors have occured if we made it 'til here
     std::cout << "writing HDF5 done." << std::endl;
+    delete[] buffer;
     return nop;
 }
 
