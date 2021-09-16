@@ -432,6 +432,29 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                 delete dist;
                 count++;
             }
+            else if (type == "SDDS")
+            {
+                pugi::xml_attribute sddsname = entry.attribute("file");
+                if (!sddsname)
+                    throw(IOexception("InputParser::parseBeam - <SDDS> attribute file not found."));                
+                // now we can create the bunch from the SDDS input file
+                Bunch *bunch = new Bunch(sddsname.as_string());
+                // create a logger for this bunch if defined in the input file
+                pugi::xml_node lognode = entry.child("log");
+                if (lognode)
+                {
+                    pugi::xml_attribute fn = lognode.attribute("file");
+                    if (!fn) throw(IOexception("InputParser::parseBeam - <bunch> filename for log not found."));
+                    int step = 1;
+                    pugi::xml_attribute st = lognode.attribute("step");
+                    if (fn) step = st.as_int();
+                    TrackingLogger<Bunch>* logger = new TrackingLogger<Bunch>(bunch, fn.as_string(), step);
+                    logs->push_back(logger);
+                }
+                // add the bunch to the beam
+                beam->Add(bunch);
+                count++;
+            }
             else
                 throw(IOexception("InputParser::parseBeam - unknown type of beam entry."));
         };

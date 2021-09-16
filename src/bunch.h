@@ -182,6 +182,13 @@ public:
      */
     Bunch(Distribution *dist, double reftime, Vector refpos, Vector refmom, double charge, double mass);
     
+    /*! create a bunch of particles read from an SDDS file (ELEGANT watch point)
+     * 
+     * The file name is given as parameter. If the file cannot be read successfully,
+     * an empty bunch is created.
+     */
+    Bunch(const char *filename);
+
     /*!
      * copy constructor:
      * Create a copy of an existing bunch, thereby, creating copies of all particles

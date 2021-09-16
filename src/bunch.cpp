@@ -185,6 +185,132 @@ Bunch::Bunch(Distribution *dist, double reftime, Vector refpos, Vector refmom, d
     }
 }
 
+Bunch::Bunch(const char *filename)
+{
+    // set a safe default in case we return with read errors
+    NOP = 0;
+    std::cout << "reading particles from SDDS file " << filename << std::endl;
+    // make a copy of the filename to make it changable
+    char fn[100];
+    strncpy (fn, filename, sizeof(fn)-1);
+    SDDS_DATASET SDDS_dataset;
+    // SDDS_InitializeInput - returns 1 on success, 0 on failure 
+    if (SDDS_InitializeInput(&SDDS_dataset, fn ) != 1)
+    {
+        std::cout << "cannot read SDDS file " << filename;
+        std::cout << " : creating empty bunch." << std::endl;
+        return;
+    };
+    
+    int page = SDDS_ReadPage(&SDDS_dataset);
+    while (page >= 1)
+    {
+        page = SDDS_ReadPage(&SDDS_dataset);
+    };
+    
+    char parName[] = "Particles";
+    int32_t *nopData = SDDS_GetParameterAsLong(&SDDS_dataset, parName, NULL);
+    if (nopData==NULL)
+    {
+        std::cout << "cannot read number of particles" << std::endl;
+        SDDS_PrintErrors(stderr, SDDS_VERBOSE_PrintErrors);
+        return;
+    };
+
+    // the file value is the total charge [C] unsigned value
+    char chName[] = "Charge";
+    double *chData = SDDS_GetParameterAsDouble(&SDDS_dataset, chName, NULL);
+    if (chData==NULL)
+    {
+        std::cout << "cannot read charge" << std::endl;
+        SDDS_PrintErrors(stderr, SDDS_VERBOSE_PrintErrors);
+        return;
+    };
+    double charge = *chData/ElementaryCharge/(*nopData);
+
+    char xName[] = "x";
+    double *xData = SDDS_GetColumnInDoubles(&SDDS_dataset, xName);
+    if (xData==NULL)
+    {
+        std::cout << "cannot read x column" << std::endl;
+        SDDS_PrintErrors(stderr, SDDS_VERBOSE_PrintErrors);
+        return;
+    };
+
+    char xpName[] = "xp";
+    double *xpData = SDDS_GetColumnInDoubles(&SDDS_dataset, xpName);
+    if (xpData==NULL)
+    {
+        std::cout << "cannot read xp column" << std::endl;
+        SDDS_PrintErrors(stderr, SDDS_VERBOSE_PrintErrors);
+        return;
+    };
+
+    char yName[] = "y";
+    double *yData = SDDS_GetColumnInDoubles(&SDDS_dataset, yName);
+    if (yData==NULL)
+    {
+        std::cout << "cannot read y column" << std::endl;
+        SDDS_PrintErrors(stderr, SDDS_VERBOSE_PrintErrors);
+        return;
+    };
+
+    char ypName[] = "yp";
+    double *ypData = SDDS_GetColumnInDoubles(&SDDS_dataset, ypName);
+    if (ypData==NULL)
+    {
+        std::cout << "cannot read yp column" << std::endl;
+        SDDS_PrintErrors(stderr, SDDS_VERBOSE_PrintErrors);
+        return;
+    };
+
+    char pName[] = "p";
+    double *pData = SDDS_GetColumnInDoubles(&SDDS_dataset, pName);
+    if (pData==NULL)
+    {
+        std::cout << "cannot read p column" << std::endl;
+        SDDS_PrintErrors(stderr, SDDS_VERBOSE_PrintErrors);
+        return;
+    };
+
+    char tName[] = "t";
+    double *tData = SDDS_GetColumnInDoubles(&SDDS_dataset, tName);
+    if (tData==NULL)
+    {
+        std::cout << "cannot read t column" << std::endl;
+        SDDS_PrintErrors(stderr, SDDS_VERBOSE_PrintErrors);
+        return;
+    };
+
+    NOP = *nopData;
+    // t is the arrival time at a given z-plane
+    // compute the mean arrival time of the bunch
+    double sum = 0;
+    for(int i=0; i<NOP; i++) sum += tData[i];
+    double t0 = sum/NOP;
+    // create the particles
+    for(int i=0; i<NOP; i++)
+    {
+        // create negatively charged particles with electron charge-to-mass ratio
+        ChargedParticle *p = new ChargedParticle(-charge,charge);
+        // pData is the total momentum
+        double betagamma = pData[i];
+        double beta = sqrt( betagamma*betagamma / (betagamma*betagamma+1.0) );
+        // xp and yp are the angles [rad] with respect to the axis (z)
+        Vector direction = Vector(xpData[i], ypData[i], 1.0);
+        direction.normalize();
+        // relativistic velocity
+        Vector v = direction * beta;
+        // we translate the difference in arrival time into a position at t0
+        Vector X0 = Vector(xData[i], yData[i], 0.0) + v*(t0-tData[i])*SpeedOfLight;
+        Vector P0 = direction * betagamma;
+        Vector A0 = Vector(0.0, 0.0, 0.0);
+        p->initTrajectory(t0, X0, P0, A0);
+        P.push_back(p);
+    }
+    
+}
+
 Bunch::~Bunch()
 {
     for(int i=0; i<NOP; i++)
@@ -316,14 +442,14 @@ double Bunch::avgTime()
 
 Vector Bunch::avgPosition()
 {
-    Vector pos;
+    Vector pos = Vector(0.0, 0.0, 0.0);
     for(int i=0; i<NOP; i++) pos += P[i]->getPosition();
     return pos*(1.0/NOP);
 }
 
 Vector Bunch::rmsPosition()
 {
-    Vector sum;
+    Vector sum = Vector(0.0, 0.0, 0.0);
     Vector mean = avgPosition();
     for(int i=0; i<NOP; i++)
     {
@@ -336,7 +462,7 @@ Vector Bunch::rmsPosition()
 
 Vector Bunch::avgMomentum()
 {
-    Vector mom;
+    Vector mom = Vector(0.0, 0.0, 0.0);
     for(int i=0; i<NOP; i++)
         mom += P[i]->getMomentum();
     return mom*(1.0/NOP);

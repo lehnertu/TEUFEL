@@ -4,11 +4,16 @@
     <lattice>
     </lattice>
     <beam>
-        <SDDS file="tests/test.sdds" />
+        <SDDS file="tests/test.sdds">
+            <log file="sdds_beam_log.sdds" step="10" />
+        </SDDS>
     </beam>
     <calc print="tracking length [m] = " var="total_L" eq="1.0" />
     <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
     <calc print="dt = " var="dt" eq="total_t/1000" />
-    <tracking method="Vay" delta_t="dt" n="1000" />
+    <tracking method="Vay" delta_t="dt" n="1000">
+        <watch step="0" file="sdds_beam_initial.hdf5" />
+        <watch step="1000" file="sdds_beam_final.hdf5" />
+    </tracking>
     <observer />
 </teufel>

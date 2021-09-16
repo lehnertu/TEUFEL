@@ -459,6 +459,7 @@ int main(int argc, char *argv[])
         //     p->StepVay(lattice);
         // }
             
+        MPI_Barrier(MPI_COMM_WORLD);
         // distribute the step result to all nodes
         // each node buffers its own tracked bunch
         trackedBeam->bufferStep(trackingBuffer);
@@ -467,7 +468,6 @@ int main(int argc, char *argv[])
                       masterBuffer, TRACKING_BUFSIZE, MPI_DOUBLE, MPI_COMM_WORLD);
         // each node updates the master beam from the master buffer
         masterBeam->setStepFromBuffer(masterBuffer);
-        
         MPI_Barrier(MPI_COMM_WORLD);
         // now we have all data available on all nodes
 
@@ -494,8 +494,12 @@ int main(int argc, char *argv[])
         
         // make a print once every 10s
         current_time = MPI_Wtime();
-        if (current_time-print_time > 10)
+        if (current_time-print_time > 30)
         {
+            if (teufel::rank == 0)
+            {
+                std::cout << "tracking step " << step << std::endl;
+            };
             ss.str(std::string());
             ss << "/proc/" << PID << "/status";
             myfile.open(ss.str());
@@ -515,11 +519,6 @@ int main(int argc, char *argv[])
                 myfile.close();
             }
             print_time = current_time;
-            if (teufel::rank == 0)
-            {
-                print_time = current_time;
-                std::cout << "tracking step " << step << std::endl;
-            };
         };
         
     }
