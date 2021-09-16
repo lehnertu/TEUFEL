@@ -33,7 +33,7 @@ find_package(PUGIXML REQUIRED)
 find_package(MUPARSER REQUIRED)
 
 # our local SDDS library
-set(SDDS_DIR ${PROJECT_SOURCE_DIR}/lib/SDDSToolKit-devel-3.4)
+set(SDDS_DIR ${PROJECT_SOURCE_DIR}/lib/SDDS)
 find_library(SDDS_LIB NAMES SDDS1 HINTS ${SDDS_DIR})
 find_library(SDDS_MDBLIB NAMES mdblib HINTS ${SDDS_DIR})
 find_library(SDDS_MDBCOMMON NAMES mdbcommon HINTS ${SDDS_DIR})

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding=UTF-8
 
 import sys, sdds, time
@@ -32,27 +32,30 @@ for file in args.files:
 
     fileOK = os.path.isfile(file)
     if not fileOK:
-	print "file not found"
-	sys.exit()
+        print("file not found")
+        sys.exit()
 
-    print "reading ",file
+    print("reading ",file)
     data = sdds.SDDS(0)
     data.load(file)
     if args.listpar:
-	data.listParameters()
+        data.listParameters()
     if args.listcol:
-	data.listColumns()
+        data.listColumns()
 
     if ("t" in data.columnName):
-	t = np.array(data.getColumnData("t"))*1e9
+        t = np.array(data.getColumnData("t"))*1e9
     if ("t0" in data.parameterName and
-	"dt" in data.parameterName and
-	"NumberTimeSteps" in data.parameterName):
-	t0 = data.getParameterValue("t0")
-	dt = data.getParameterValue("dt")
-	nots = data.getParameterValue("NumberTimeSteps")
-	print r'%d steps starting at t0=%12.3g s step dt=%12.3g s' % (nots,t0,dt)
-	t = (np.linspace(t0, t0+nots*dt, num=nots)+0.5*dt)*1e9
+        "dt" in data.parameterName and
+        "NumberTimeSteps" in data.parameterName):
+        t0 = data.getParameterValue("t0")
+        dt = data.getParameterValue("dt")
+        nots = data.getParameterValue("NumberTimeSteps")
+        print(r'%d steps starting at t0=%12.3g s step dt=%12.3g s' % (nots,t0,dt))
+        t = (np.linspace(t0, t0+nots*dt, num=nots)+0.5*dt)*1e9
+    else:
+        print("unable to read the timing")
+        sys.exit()
 
     Ex = np.array(data.getColumnData("Ex"))
     Ey = np.array(data.getColumnData("Ey"))
@@ -66,7 +69,7 @@ for file in args.files:
     # Poynting vector in V/m * (N/(A m)) / (N/A²) = W/m²
     SVec = np.cross(EVec, BVec) / mu0
     if 'dt' in globals():
-	print 'energy flow density = ', SVec.sum(axis=0)*dt, " Ws/m²"
+        print('energy flow density = ', SVec.sum(axis=0)*dt, " Ws/m²")
 
     l1 = ax1.plot(t, Ex, "r-", label=r'$E_x$')
     l2 = ax1.plot(t, Ey, "b-", label=r'$E_y$')
@@ -77,7 +80,7 @@ for file in args.files:
     labels = [l.get_label() for l in lines]
     ax1.legend(lines,labels,loc='upper right')
     for label in ax1.get_xticklabels():
-	label.set_visible(False)
+        label.set_visible(False)
     ax1.grid(True)
 
     l4 = ax4.plot(t, Bx, "r-", label=r'$B_x$')
