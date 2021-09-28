@@ -85,8 +85,6 @@ include_directories( ${PROJECT_BINARY_DIR}
 # we put all objects into a library that can be linked to the various executables
 aux_source_directory(${PROJECT_SOURCE_DIR}/src lib_sources )
 # the main program is not part of the library
-list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/teufel.cpp)
-list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/teufel_mpi.cpp)
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/teufel_hybrid.cpp)
 # stand-alone codes are not part of the library
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/propagate.cpp)
@@ -106,25 +104,12 @@ configure_file (
 # compiler flags
 add_definitions(-std=c++11 -Wall -m64 -pthread)
 
-add_executable(teufel ${PROJECT_SOURCE_DIR}/src/teufel_mpi.cpp)
+add_executable(teufel ${PROJECT_SOURCE_DIR}/src/teufel_hybrid.cpp)
 set_target_properties(teufel PROPERTIES
     COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
 set_target_properties(teufel PROPERTIES
     LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
-target_link_libraries(teufel ${PROJECT_NAME}lib
-                             ${HDF5_LIBRARIES}
-                             ${SDDS_LIBRARIES}
-                             ${MPI_CXX_LIBRARIES}
-                             ${PUGIXML_LIBRARIES}
-                             ${MUPARSER_LIBRARY}
-                             ${ZLIB_LIBRARY_RELEASE} )
-
-add_executable(teufel_hybrid ${PROJECT_SOURCE_DIR}/src/teufel_hybrid.cpp)
-set_target_properties(teufel_hybrid PROPERTIES
-    COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
-set_target_properties(teufel_hybrid PROPERTIES
-    LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
-target_link_libraries(teufel_hybrid
+target_link_libraries(teufel
                              ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
