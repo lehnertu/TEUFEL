@@ -117,3 +117,114 @@ ElMagField HardEdgeDipole::LocalField(double t, Vector X)
     return ElMagField(E, B);
 }
 
+
+
+
+SoftEdgeDipole::SoftEdgeDipole() :
+    ExternalField()
+{
+    B_val = Vector(0.0, 0.0, 0.0);
+    p_1 = Vector(0.0, 0.0, 0.0);
+    n_1 = Vector(1.0, 0.0, 0.0);
+    t_1 = 0.01;
+    p_2 = Vector(0.0, 0.0, 0.0);
+    n_2 = Vector(-1.0, 0.0, 0.0);
+    t_2 = 0.01;
+}
+
+SoftEdgeDipole::SoftEdgeDipole(Vector B, Vector p1, Vector n1, double t1, Vector p2, Vector n2, double t2) :
+    ExternalField()
+{
+    B_val = B;
+    p_1 = p1;
+    n_1 = n1;
+    t_1 = t1;
+    p_2 = p2;
+    n_2 = n2;
+    t_2 = t2;
+}
+
+SoftEdgeDipole::SoftEdgeDipole(const pugi::xml_node node, InputParser *parser) :
+    ExternalField()
+{
+    parser->parseCalcChildren(node);
+    pugi::xml_node field = node.child("B");
+    if (!field)
+        throw(IOexception("InputParser::SoftEdgeDipole - <B> not found."));
+    else
+    {
+        double x, y, z;
+        x = parser->parseValue(field.attribute("x"));
+        y = parser->parseValue(field.attribute("y"));
+        z = parser->parseValue(field.attribute("z"));
+        B_val = Vector(x,y,z);
+    }
+    pugi::xml_node pos1 = node.child("p1");
+    if (!pos1)
+        throw(IOexception("InputParser::SoftEdgeDipole - <p1> not found."));
+    else
+    {
+        double x, y, z;
+        x = parser->parseValue(pos1.attribute("x"));
+        y = parser->parseValue(pos1.attribute("y"));
+        z = parser->parseValue(pos1.attribute("z"));
+        p_1 = Vector(x,y,z);
+    }
+    pugi::xml_node norm1 = node.child("n1");
+    if (!norm1)
+        throw(IOexception("InputParser::SoftEdgeDipole - <n1> not found."));
+    else
+    {
+        double x, y, z;
+        x = parser->parseValue(norm1.attribute("x"));
+        y = parser->parseValue(norm1.attribute("y"));
+        z = parser->parseValue(norm1.attribute("z"));
+        n_1 = Vector(x,y,z);
+    }
+    pugi::xml_node pos2 = node.child("p2");
+    if (!pos2)
+        throw(IOexception("InputParser::SoftEdgeDipole - <p2> not found."));
+    else
+    {
+        double x, y, z;
+        x = parser->parseValue(pos2.attribute("x"));
+        y = parser->parseValue(pos2.attribute("y"));
+        z = parser->parseValue(pos2.attribute("z"));
+        p_2 = Vector(x,y,z);
+    }
+    pugi::xml_node norm2 = node.child("n2");
+    if (!norm2)
+        throw(IOexception("InputParser::SoftEdgeDipole - <n2> not found."));
+    else
+    {
+        double x, y, z;
+        x = parser->parseValue(norm2.attribute("x"));
+        y = parser->parseValue(norm2.attribute("y"));
+        z = parser->parseValue(norm2.attribute("z"));
+        n_2 = Vector(x,y,z);
+    }
+    pugi::xml_node trans = node.child("transition");
+    if (!trans)
+        throw(IOexception("InputParser::SoftEdgeDipole - <transition> not found."));
+    else
+    {
+        t_1 = parser->parseValue(trans.attribute("l1"));
+        t_2 = parser->parseValue(trans.attribute("l2"));
+    }
+}
+
+ElMagField SoftEdgeDipole::LocalField(double t, Vector X)
+{
+    Vector E = Vector(0.0, 0.0, 0.0);
+    Vector B = Vector(0.0, 0.0, 0.0);
+    // check distances from the limiting planes (outside positive)
+    double d1 = dot(X-p_1,n_1);
+    double d2 = dot(X-p_2,n_2);
+    // scale the field at the edges
+    double at1 = atan(2.0*d1/t_1);
+    double at2 = atan(2.0*d2/t_2);
+    double scal = 1.0 - (at1/Pi+0.5) - (at2/Pi+0.5);
+    B = B_val * scal;
+    return ElMagField(E, B);
+}
+

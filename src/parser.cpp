@@ -196,6 +196,14 @@ int InputParser::parseLattice(Lattice *lattice)
                 HardEdgeDipole* dipole = new HardEdgeDipole(element, this);
                 lattice->addElement(dipole);
             }
+            else if (type == "soft edge")
+            {
+                if (teufel::rank==0) std::cout << name << "::SoftEdgeDipole" << std::endl;
+                // the dipole object parses its own input
+                // we provide a reference to the parser
+                SoftEdgeDipole* dipole = new SoftEdgeDipole(element, this);
+                lattice->addElement(dipole);
+            }
             else
                 throw(IOexception("InputParser::parseLattice(Lattice - unknown dipole type."));
             count++;

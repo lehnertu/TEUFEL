@@ -197,6 +197,11 @@ int main(int argc, char *argv[])
     int NoE = parse->parseLattice(lattice);
     if (teufel::rank==0) std::cout << std::endl;
     if (teufel::rank==0) std::cout << "lattice of " << NoE << " elements created." << std::endl;
+    MPI_Barrier(MPI_COMM_WORLD);
+    usleep(100000);
+    if (teufel::rank==0) cout << std::endl << std::flush;
+    usleep(100000);
+    MPI_Barrier(MPI_COMM_WORLD);
     
     // We create an empty beam object.
     // Then we call the parser to fill in the necessary information from the input file.
@@ -214,21 +219,33 @@ int main(int argc, char *argv[])
     if (teufel::rank==0) std::cout << "total number of particles : " << masterBeam->getNOP() << std::endl;
     if (teufel::rank==0) std::cout << "total charge : "
         << masterBeam->getTotalCharge()*ElementaryCharge*1.0e9 << "nC" << std::endl;
-    if (teufel::rank==0) std::cout << std::endl;
+    MPI_Barrier(MPI_COMM_WORLD);
+    usleep(100000);
+    if (teufel::rank==0) cout << std::endl << std::flush;
+    usleep(100000);
+    MPI_Barrier(MPI_COMM_WORLD);
 
     // get all tracking information from the input file
     std::vector<watch_t> watches;
     parse->parseTracking(masterBeam, &watches);
     if (teufel::rank==0) std::cout << "defined " << (int)watches.size() << " watch points." << std::endl;
-    if (teufel::rank==0) std::cout << std::endl;
+    MPI_Barrier(MPI_COMM_WORLD);
+    usleep(100000);
+    if (teufel::rank==0) std::cout << std::endl << std::flush;
+    usleep(100000);
+    MPI_Barrier(MPI_COMM_WORLD);
     
     // parse all observer definitions
     std::vector<Observer*> listObservers;
     parse->parseObservers(&listObservers);
     if (teufel::rank==0) std::cout << std::endl;
     if (teufel::rank==0) std::cout << "defined " << (int)listObservers.size() << " observers." << std::endl;
-    if (teufel::rank==0) std::cout << std::endl;
-    
+    MPI_Barrier(MPI_COMM_WORLD);
+    usleep(100000);
+    if (teufel::rank==0) std::cout << std::endl << std::flush;
+    usleep(100000);
+    MPI_Barrier(MPI_COMM_WORLD);
+
     // We register the number of time steps to track the beam.
     // This has been set by the parser, but will be cleared when
     // initalizing the trajectories for actual tracking.
@@ -239,7 +256,7 @@ int main(int argc, char *argv[])
         << " MB  for " << masterBeam->getNOP() << " particles" << std::endl;
     MPI_Barrier(MPI_COMM_WORLD);
     usleep(100000);
-    if (teufel::rank==0) cout << std::endl << std::flush;
+    if (teufel::rank==0) std::cout << std::endl << std::flush;
     usleep(100000);
     MPI_Barrier(MPI_COMM_WORLD);
 

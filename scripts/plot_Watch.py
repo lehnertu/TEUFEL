@@ -111,10 +111,14 @@ print("r.m.s.  x=%.3f mm,  y=%.3f mm,  z=%.3f mm" % (1e3*x_rms, 1e3*y_rms, 1e3*z
 print("r.m.s.  bg_x=%.3f,  bg_y=%.3f,  bg_z=%.3f" % (bgx_rms, bgy_rms, bgz_rms) )
 print()
 
+dx = x-xmean
+dy = y-ymean
 xp = bgx/bgz
 yp = bgy/bgz
-ex_rms = 1.0e6 * betagamma * np.sqrt((np.dot(x,x)*np.dot(xp,xp)-pow(np.dot(x,xp),2))/pow(float(Np),2))
-ey_rms = 1.0e6 * betagamma * np.sqrt((np.dot(y,y)*np.dot(yp,yp)-pow(np.dot(y,yp),2))/pow(float(Np),2))
+dxp = (bgx-bgxmean)/bgz
+dyp = (bgy-bgymean)/bgz
+ex_rms = 1.0e6 * betagamma * np.sqrt((np.dot(dx,dx)*np.dot(dxp,dxp)-pow(np.dot(dx,dxp),2))/pow(float(Np),2))
+ey_rms = 1.0e6 * betagamma * np.sqrt((np.dot(dy,dy)*np.dot(dyp,dyp)-pow(np.dot(dy,dyp),2))/pow(float(Np),2))
 ez_rms = 1.0e15 * np.sqrt((np.dot(dE,dE)*np.dot(dt,dt)-pow(np.dot(dE,dt),2))/pow(float(Np),2))
 
 string = r'$E_{beam}$ = %7.3f MeV' % E0 + '\n' + \

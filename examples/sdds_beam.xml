@@ -3,33 +3,37 @@
     author="Ulf Lehnert 15.9.2021">
     <lattice>
         <calc print="chicane field [T] = " var="B" eq="0.46" />
-        <dipole name="MD1" type="hard edge">
+        <dipole name="MD1" type="soft edge">
             <B x="0.0" y="-B" z="0.0" />
-            <p1 x="0.0" y="0.0" z="0.130" />
+            <p1 x="0.0" y="0.0" z="0.630" />
             <n1 x="0.0" y="0.0" z="-1.0" />
-            <p2 x="0.0" y="0.0" z="0.280" />
+            <p2 x="0.0" y="0.0" z="0.780" />
             <n2 x="0.0" y="0.0" z="1.0" />
+            <transition l1="0.005" l2="0.005"/>
         </dipole>
-        <dipole name="MD2" type="hard edge">
+        <dipole name="MD2" type="soft edge">
             <B x="0.0" y="B" z="0.0" />
-            <p1 x="0.0" y="0.0" z="1.030" />
+            <p1 x="0.0" y="0.0" z="1.530" />
             <n1 x="0.0" y="0.0" z="-1.0" />
-            <p2 x="0.0" y="0.0" z="1.180" />
+            <p2 x="0.0" y="0.0" z="1.680" />
             <n2 x="0.0" y="0.0" z="1.0" />
+            <transition l1="0.005" l2="0.005"/>
         </dipole>
-        <dipole name="MD3" type="hard edge">
+        <dipole name="MD3" type="soft edge">
             <B x="0.0" y="B" z="0.0" />
-            <p1 x="0.0" y="0.0" z="1.570" />
+            <p1 x="0.0" y="0.0" z="2.070" />
             <n1 x="0.0" y="0.0" z="-1.0" />
-            <p2 x="0.0" y="0.0" z="1.720" />
+            <p2 x="0.0" y="0.0" z="2.220" />
             <n2 x="0.0" y="0.0" z="1.0" />
+            <transition l1="0.005" l2="0.005"/>
         </dipole>
-        <dipole name="MD4" type="hard edge">
+        <dipole name="MD4" type="soft edge">
             <B x="0.0" y="-B" z="0.0" />
-            <p1 x="0.0" y="0.0" z="2.470" />
+            <p1 x="0.0" y="0.0" z="2.970" />
             <n1 x="0.0" y="0.0" z="-1.0" />
-            <p2 x="0.0" y="0.0" z="2.620" />
+            <p2 x="0.0" y="0.0" z="3.120" />
             <n2 x="0.0" y="0.0" z="1.0" />
+            <transition l1="0.005" l2="0.005"/>
         </dipole>
     </lattice>
     <beam>
@@ -37,12 +41,12 @@
             <log file="sdds_beam_log.sdds" step="10" />
         </SDDS>
     </beam>
-    <calc print="tracking length [m] = " var="total_L" eq="3.0" />
+    <calc print="tracking length [m] = " var="total_L" eq="4.0" />
     <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
-    <calc print="dt = " var="dt" eq="total_t/20000" />
-    <tracking method="Vay" delta_t="dt" n="20000">
+    <calc print="dt = " var="dt" eq="total_t/4000" />
+    <tracking method="Vay" delta_t="dt" n="4000">
         <watch step="0" file="sdds_beam_initial.hdf5" />
-        <watch step="20000" file="sdds_beam_final.hdf5" />
+        <watch step="4000" file="sdds_beam_final.hdf5" />
     </tracking>
     <observer />
 </teufel>

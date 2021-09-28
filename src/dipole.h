@@ -82,3 +82,65 @@ private:
 };
 
 
+/*!
+ * \class SoftEdgeDipole
+ * \brief A magnetic dipole
+ * @author Ulf Lehnert
+ * @date 28.9.2021
+ * 
+ * This lattice element describes a region of space with a constant dipole magnetic field.
+ * The region is limited by two infinite planes each defined by
+ * one point and the outside normal direction.
+ * Field magnitude and direction can be defined with arbitrary values.
+ * The reported field is constant within the region and drops to zero outside.
+ * The edges are modeled with an ArcTan shape, the given transition length
+ * corresponds to the transition from 75% to 25% of the peak field.
+ */
+class SoftEdgeDipole : public ExternalField
+{
+
+public:
+
+    /*! The default contructor just calls the default constructor of the base class
+     *  and initalizes all variables with sane values. This will not yet produce any field output.
+     */
+    SoftEdgeDipole();
+
+    /*! This constructor places the field at a given position in lab space.
+     *  @param B field vector
+     *  @param p1 position of the first limiting plane
+     *  @param n1 outside normal of the first limiting plane
+     *  @param t1 transition length at the first field boudary
+     *  @param p2 position of the second limiting plane
+     *  @param n2 outside normal of the second limiting plane
+     *  @param t2 transition length at the second field boudary
+     */
+    SoftEdgeDipole(Vector B, Vector p1, Vector n1, double t1, Vector p2, Vector n2, double t2);
+
+    /*! This constructor takes the information from an XML node
+     *  describing all field properties. It will throw exceptions
+     *  if necessary information is missing or cannot be interpreted.
+     * 
+     *  A reference to the input parser must be provided as it is
+     *  necessary to run the input through the calculator.
+     */
+    SoftEdgeDipole(const pugi::xml_node node, InputParser *parser);
+
+    //! Get the field vector [T]
+    Vector GetB() { return B_val; };
+
+private:
+
+    ElMagField LocalField(double t, Vector X);
+
+    Vector  B_val;                              //! field value [T]
+    Vector  p_1;                                //! position of the first limiting plane
+    Vector  n_1;                                //! outside normal of the first limiting plane
+    double  t_1;                                //! transition length at the first field boudary
+    Vector  p_2;                                //! position of the second limiting plane
+    Vector  n_2;                                //! outside normal of the second limiting plane
+    double  t_2;                                //! transition length at the second field boudary
+
+};
+
+
