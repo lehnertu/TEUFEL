@@ -79,6 +79,12 @@ public:
         unsigned int ny,
         double t);
 
+    //! Set the source of the fiels to be recorded
+    virtual void setSource(RadSource s);
+
+    //! Report the source of the fiels to be recorded
+    virtual RadSource getSource();
+
     /*! Integrate the fields emitted by all particles of the source
      *  during all of their history, induced a th time of observation.
      *  Should be called after tracking all particles at least to the time of observation.

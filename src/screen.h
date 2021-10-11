@@ -92,6 +92,12 @@ public:
         double dt,
         unsigned int nots);
     
+    //! Set the source of the fiels to be recorded
+    virtual void setSource(RadSource s);
+
+    //! Report the source of the fiels to be recorded
+    virtual RadSource getSource();
+
     /*! Integrate the fields emitted by the source
      *  during all of its history, falling onto the time frame
      *  of observation.

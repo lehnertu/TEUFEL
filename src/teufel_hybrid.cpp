@@ -608,7 +608,10 @@ int main(int argc, char *argv[])
         usleep(100000);
         std::cout << "node " << teufel::rank << " integrating ... " << std::endl;
         // OpenMP parallelization is handled inside the observer object
-        obs->integrate(trackedBeam);
+        if (obs->getSource()==BeamObservation)
+            obs->integrate(trackedBeam);
+        if (obs->getSource()==LatticeObservation)
+            obs->integrate(lattice);
         double stop_time = MPI_Wtime();
         MPI_Barrier(MPI_COMM_WORLD);
         usleep(100000);

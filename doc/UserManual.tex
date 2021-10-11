@@ -51,9 +51,9 @@ TEUFEL is designed to make use of clusters of multi-core nodes. The particles ar
 
 After the tracking every node computes the observed fields from its own set of particles. This is the most time-consuming step of the computation. It is addidionally parallelized using the shared-memory model Open-MP. This way all CPU's available on one node can cooperate to compute the fields. Only a single copy of the fields (which can be very large) needs to be held in memory. After every node has computed the fields from its own particles the total fields are gethered onto the master node (using MPI) and written to file.
 
-As an example, when running a problem on an 8-core workstation where the fields (and necessary communication buffers) fit into the memory twice, one would start TEUFEL with 2 nodes each using 5 CPU's
+As an example, when running a problem on an 8-core workstation where the fields (and necessary communication buffers) fit into the memory twice, one would start TEUFEL with 2 nodes each using 4 CPU's
 \begin{lstlisting}
-mpirun -n 2 --cpus-per-rank 5 --oversubscribe input.xml
+mpirun -n 2 --cpus-per-rank 4 --oversubscribe ./build/teufel input.xml
 \end{lstlisting}
 
 On a cluster one would have to submit a batch job with the according information.
@@ -149,6 +149,15 @@ A few variables are pre-defined. All of those have names starting with an unders
 \section{Scripts for creating input files}
 
 \section{Scripts for output visualization}
+
+\section{Examples}
+
+\subsection{elbe_u300.xml}
+
+Notice that the screen has been shifted by half a pixel size
+such that the (Nx/2, Ny/2) pixel is exactly on the axis.
+That is the arrangement expected when importing the screen fields into FOBT
+for further propagation of single-frequency optical beams.
 
 \end{document}
 

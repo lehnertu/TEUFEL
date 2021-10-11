@@ -40,11 +40,23 @@ PointObserver::PointObserver(
     FileName = filename,
     Pos = position;
     trace = new FieldTrace(t0,dt,nots);
+    // set a default source
+    source = BeamObservation;
 }
 
 PointObserver::~PointObserver()
 {
     delete trace;
+}
+
+void PointObserver::setSource(RadSource s)
+{
+    source = s;
+}
+
+RadSource PointObserver::getSource()
+{ 
+    return source;
 }
 
 void PointObserver::integrate(Beam *src)

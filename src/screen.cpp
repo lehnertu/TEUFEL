@@ -59,6 +59,7 @@ ScreenObserver::ScreenObserver(
         std::cout << "allocating " << (double)(6*Nx*Ny*NOTS) * sizeof(double) / 1e6 << " MB of memory per node";
         std::cout << std::endl << std::endl;
     }    
+
     // set the field sizes and fill the field with zeros
     ElMagField field;
     TimeDomainField.resize(Nx);
@@ -70,6 +71,19 @@ ScreenObserver::ScreenObserver(
     	    for (unsigned int i=0; i<NOTS; i++) TimeDomainField[ix][iy].push_back(field);
     	};
     }
+
+    // set a default source
+    source = BeamObservation;
+}
+
+void ScreenObserver::setSource(RadSource s)
+{
+    source = s;
+}
+
+RadSource ScreenObserver::getSource()
+{ 
+    return source;
 }
 
 Vector ScreenObserver::CellPosition(int ix, int iy)

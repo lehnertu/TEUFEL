@@ -16,7 +16,7 @@
             <position x="0.0" y="0.0" z="2.0"/>
         </undulator>
         <wave name="seed" type="gaussian">
-        	<calc print="seed wavelength [m] = " var="lambda_S" eq="lambda_R*1.011"/>
+        	<calc print="seed wavelength [m] = " var="lambda_S" eq="lambda_R*1.025"/>
         	<position x="0.0" y="0.0" z="2.0"/>
         	<!-- compute the seed field -->
         	<calc print="seed power [W] = " var="P0" eq="1e6"/>
@@ -28,7 +28,7 @@
         </wave>
     </lattice>
     <beam>
-        <bunch gamma="gamma" charge="_e*5000" cmr="-1.0" n="5000" >
+        <bunch gamma="gamma" charge="1.0e-9" cmr="-1.0" n="5000" >
             <position x="0.0" y="0.0" z="0.0" zrms="lambda_R" />
             <momentum x="0.0" y="0.0" z="1.0" delta="0.001" />
         </bunch>
@@ -42,5 +42,15 @@
         <watch step="4000" file="fel-u37_final.h5" />
     </tracking>
     <observer>
+        <calc print="screen position z0 = " var="z0" eq="5.0"/>
+        <calc print="screen start time t0 = " var="t0" eq="z0/_c"/>
+        <point file="fel_lat_5m.sdds" source="lattice">
+            <position x="0.0" y="0.0" z="z0" />
+            <time t0="t0" dt="0.5e-14" n="1000" />
+        </point>
+        <point file="fel_obs_5m.sdds" source="beam">
+            <position x="0.0" y="0.0" z="z0" />
+            <time t0="t0" dt="0.5e-14" n="1000" />
+        </point>
     </observer>
 </teufel>

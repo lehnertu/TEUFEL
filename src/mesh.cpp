@@ -210,11 +210,24 @@ MeshedScreen::MeshedScreen(std::string filename)
         
     status = H5Fclose (file);
     if (status<0) throw(IOexception("MeshedScreen - error closing the file."));
+    
+    // set a default source
+    source = BeamObservation;
 }
 
 MeshedScreen::~MeshedScreen()
 {
     for (int i=0; i<Np; i++) delete A[i];
+}
+
+void MeshedScreen::setSource(RadSource s)
+{
+    source = s;
+}
+
+RadSource MeshedScreen::getSource()
+{ 
+    return source;
 }
 
 void MeshedScreen::init()

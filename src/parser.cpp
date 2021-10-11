@@ -648,7 +648,7 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                 double t0, dt;
                 pugi::xml_attribute fn = obs.attribute("file");
                 if (!fn)
-                    throw(IOexception("InputParser::parseObservers - <point> attribute file not found."));                
+                    throw(IOexception("InputParser::parseObservers - <point> attribute file not found."));
                 parseCalcChildren(obs);
                 pugi::xml_node posnode = obs.child("position");
                 if (!posnode)
@@ -669,6 +669,13 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                     fn.as_string(),
                     pos,
                     t0, dt, nt.as_int() );
+                pugi::xml_attribute src = obs.attribute("source");
+                if (src)
+                {
+                    if (std::string(src.value()) == "beam") pointObs->setSource(BeamObservation);
+                    else if (std::string(src.value()) == "lattice") pointObs->setSource(LatticeObservation);
+                    else throw(IOexception("InputParser::parseObservers - <point> illegal source attribute."));
+                };
                 listObservers->push_back(pointObs);
             }
             else

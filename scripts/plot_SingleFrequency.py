@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding=UTF-8
 
 import sys, time
@@ -17,37 +17,37 @@ parser = argparse.ArgumentParser()
 parser.add_argument('file', help='the file name of the watch point HDF5 file')
 parser.add_argument('freq', help="frequency in Hz", type=float)
 
-print
+print()
 args = parser.parse_args()
 radfile = args.file
 radOK = os.path.isfile(radfile)
 if not radOK:
-  print "file not found"
+  print("file not found")
   sys.exit()
 f = args.freq
 
 # Open the file for reading
-print "reading ",radfile
+print("reading ",radfile)
 hdf = h5py.File(radfile, "r")
-print hdf
-print
+print(hdf)
+print()
 
 # Get the groups
 pos = hdf['ObservationPosition']
 Nx = pos.attrs.get('Nx')
 Ny = pos.attrs.get('Ny')
-print "Nx=%d Ny=%d" % (Nx,Ny)
-print pos
+print("Nx=%d Ny=%d" % (Nx,Ny))
+print(pos)
 field = hdf['ElMagField']
-print field
+print(field)
 t0 = field.attrs.get('t0')
 dt = field.attrs.get('dt')
 nots = field.attrs.get('NOTS')
-print "t0=%g dt=%g NOTS=%d" % (t0, dt, nots)
+print("t0=%g dt=%g NOTS=%d" % (t0, dt, nots))
 pos = np.array(pos)
 a = np.array(field)
 hdf.close()
-print
+print()
 
 AmplitudeX = np.empty([Nx, Ny])
 PhaseX = np.empty([Nx, Ny])
@@ -110,17 +110,17 @@ for ix in range(Nx):
 
 dX = pos[1,0,0]-pos[0,0,0]
 dY = pos[0,1,1]-pos[0,0,1]
-print "dx=%g dy=%g m" % (dX,dY)
+print("dx=%g dy=%g m" % (dX,dY))
 # Etot = Amplitude.sum()*dX*dY
-# print "integrated energy = ", 1e6*Etot, " µJ"
+# print("integrated energy = ", 1e6*Etot, " µJ"(
 
 maxX = np.max(AmplitudeX)
 maxY = np.max(AmplitudeY)
 maxV = np.max([maxX,maxY])
-print "max = %g" % maxV
+print("max = %g" % maxV)
 expo = np.rint(np.log10(maxV))
 scale = np.power(10,-expo)
-print "scale = %g" % scale
+print("scale = %g" % scale)
 
 fig1 = plt.figure(1,figsize=(11,9))
 

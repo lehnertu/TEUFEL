@@ -53,6 +53,18 @@ SnapshotObserver::SnapshotObserver(
     for (unsigned int ix = 0; ix < Nx; ix++)
     	for (unsigned int iy = 0; iy < Ny; iy++)
     	    FieldArray[ix].push_back(field);
+    // set a default source
+    source = BeamObservation;
+}
+
+void SnapshotObserver::setSource(RadSource s)
+{
+    source = s;
+}
+
+RadSource SnapshotObserver::getSource()
+{ 
+    return source;
 }
 
 void SnapshotObserver::integrate(Beam *src)

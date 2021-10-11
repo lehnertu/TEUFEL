@@ -58,8 +58,8 @@ a = np.array(field)
 hdf.close()
 print()
 
-xcenter = (Nx-1)//2
-ycenter = (Ny-1)//2
+xcenter = Nx//2
+ycenter = Ny//2
 print("center = (",xcenter,",",ycenter,")")
 centerposition = pos[xcenter,ycenter]
 print("position = ",centerposition)

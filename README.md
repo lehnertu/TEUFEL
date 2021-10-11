@@ -42,14 +42,14 @@ After the tracking every node computes the observed fields from its own set of p
 This is the most time-consuming step of the computation. It is addidionally parallelized
 using the shared-memory model Open-MP. This way all CPU's available on one node
 can cooperate to compute the fields. Only a single copy of the fields (which can be very large)
-needs to be held in memory. After very node has computed the fields from its own particles
+needs to be held in memory. After every node has computed the fields from its own particles
 the total fields are gethered onto the master node (using MPI) and written to file.
 
 As an example, when running a problem on an 8-core workstation where the
 fields (and necessary communication buffers) fit into the memory twice,
-one would start TEUFEL with 2 nodes each using 5 CPU's
+one would start TEUFEL with 2 nodes each using 4 CPU's
 
-```mpirun -n 2 --cpus-per-rank 5 --oversubscribe input.xml```
+```mpirun -n 2 --cpus-per-rank 4 --oversubscribe ./build/teufel input.xml```
 
 On a cluster one would have to submit a batch job with te according information.
 
