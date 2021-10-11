@@ -577,6 +577,13 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                     nh.as_int(),
                     nv.as_int(),
                     t0 );
+                pugi::xml_attribute src = obs.attribute("source");
+                if (src)
+                {
+                    if (std::string(src.value()) == "beam") snapObs->setSource(BeamObservation);
+                    else if (std::string(src.value()) == "lattice") snapObs->setSource(LatticeObservation);
+                    else throw(IOexception("InputParser::parseObservers - <snapshot> illegal source attribute."));
+                };
                 listObservers->push_back(snapObs);
             }
             else if (type == "screen")
@@ -628,6 +635,13 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                     nh.as_int(),
                     nv.as_int(),
                     t0, dt, nt.as_int() );
+                pugi::xml_attribute src = obs.attribute("source");
+                if (src)
+                {
+                    if (std::string(src.value()) == "beam") screenObs->setSource(BeamObservation);
+                    else if (std::string(src.value()) == "lattice") screenObs->setSource(LatticeObservation);
+                    else throw(IOexception("InputParser::parseObservers - <screen> illegal source attribute."));
+                };
                 listObservers->push_back(screenObs);
             }
             else if (type == "mesh")
@@ -639,6 +653,13 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                 MeshedScreen *meshObs = new MeshedScreen(fn.as_string());
                 meshObs->init();
                 meshObs->zero();
+                pugi::xml_attribute src = obs.attribute("source");
+                if (src)
+                {
+                    if (std::string(src.value()) == "beam") meshObs->setSource(BeamObservation);
+                    else if (std::string(src.value()) == "lattice") meshObs->setSource(LatticeObservation);
+                    else throw(IOexception("InputParser::parseObservers - <mesh> illegal source attribute."));
+                };
                 if (teufel::rank==0) meshObs->writeReport(&cout);
                 listObservers->push_back(meshObs);
             }
