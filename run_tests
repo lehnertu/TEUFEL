@@ -68,7 +68,7 @@ echo ''
 echo '==============================================================================='
 echo ''
 
-mpiexec -n 1 ./build/teufel examples/undulator_matching.xml
+./build/teufel examples/undulator_matching.xml
 ./scripts/test_matching.py; rc=$?
 num=$(($num + $rc))
 
@@ -76,15 +76,27 @@ echo ''
 echo '==============================================================================='
 echo ''
 
-mpiexec -n 4 ./build/teufel examples/elbe-u300.xml; rc=$?
+mpiexec -n 2 ./build/teufel examples/elbe-u300.xml; rc=$?
+if [ $rc = "0" ]
+then
+    echo -e "$green OK.$nc"
+else
+    echo -e "$red Error.$nc"
 num=$(($num + $rc))
+fi
 
 echo ''
 echo '==============================================================================='
 echo ''
 
 ./build/reflection tests/DiffractionScreenWithFields.h5 tests/BackwardDiffractionScreen.h5 tests/BackwardDiffractionFields.h5; rc=$?
+if [ $rc = "0" ]
+then
+    echo -e "$green OK.$nc"
+else
+    echo -e "$red Error.$nc"
 num=$(($num + $rc))
+fi
 
 echo ''
 echo '==============================================================================='

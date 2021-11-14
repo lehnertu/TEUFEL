@@ -40,10 +40,12 @@ ScreenObserver::ScreenObserver(
     unsigned int ny,
     double t0,
     double dt,
+    double dtx,
+    double dty,
     unsigned int nots)
 {
     FileName = filename,
-    O = position;
+    Origin = position;
     dX = dx;
     dY = dy;
     normal = cross(dX,dY);
@@ -52,6 +54,8 @@ ScreenObserver::ScreenObserver(
     Ny = ny;
     t0_obs = t0;
     dt_obs = dt;
+    dtx_obs = dtx;
+    dty_obs = dty;
     NOTS = nots;
     if (teufel::rank==0)
     {
@@ -61,19 +65,26 @@ ScreenObserver::ScreenObserver(
     }    
 
     // set the field sizes and fill the field with zeros
-    ElMagField field;
-    TimeDomainField.resize(Nx);
+    Traces.resize(Nx);
     for (unsigned int ix = 0; ix < Nx; ix++) {
-    	TimeDomainField[ix].resize(Ny);
+    	Traces[ix].resize(Ny);
     	for (unsigned int iy = 0; iy < Ny; iy++)
     	{
-    	    TimeDomainField[ix][iy].clear();
-    	    for (unsigned int i=0; i<NOTS; i++) TimeDomainField[ix][iy].push_back(field);
+    	    FieldTrace* tr = new FieldTrace(CellTimeZero(ix,iy),dt_obs,NOTS);
+    	    if (tr==0) throw(IOexception("MeshedScreen - error allocating memory."));
+    	    Traces[ix][iy] = tr;
     	};
     }
 
     // set a default source
     source = BeamObservation;
+}
+
+ScreenObserver::~ScreenObserver()
+{
+    for (unsigned int ix = 0; ix < Nx; ix++)
+    	for (unsigned int iy = 0; iy < Ny; iy++)
+            delete Traces[ix][iy];
 }
 
 void ScreenObserver::setSource(RadSource s)
@@ -86,9 +97,16 @@ RadSource ScreenObserver::getSource()
     return source;
 }
 
-Vector ScreenObserver::CellPosition(int ix, int iy)
+Vector ScreenObserver::CellPosition(unsigned int ix, unsigned int iy)
 {
-    return O + dX*((double)ix-0.5*((double)Nx-1.0)) + dY*((double)iy-0.5*((double)Ny-1.0));
+    // center index is Nx/2 Ny/2 (integer division!)
+    return Origin + dX*(double)(ix-Nx/2) + dY*(double)(iy-Ny/2);
+}
+
+double ScreenObserver::CellTimeZero(unsigned int ix, unsigned int iy)
+{
+    // center index is Nx/2 Ny/2 (integer division!)
+    return t0_obs + dtx_obs*(double)(ix-Nx/2) + dty_obs*(double)(iy-Ny/2);
 }
 
 void ScreenObserver::integrate(Beam *src)
@@ -105,8 +123,8 @@ void ScreenObserver::integrate(Beam *src)
             {
                 #pragma omp atomic
                 counter++;
-                src->integrateFieldTrace(
-                    CellPosition(ix, iy), t0_obs, dt_obs, NOTS, &TimeDomainField[ix][iy]);
+                // all timing information is already stored in the trace
+                src->integrateFieldTrace(CellPosition(ix, iy), Traces[ix][iy]);
             };
             if (omp_get_thread_num() == 0)
             {
@@ -137,8 +155,8 @@ void ScreenObserver::integrate(Bunch *src)
             {
                 #pragma omp atomic
                 counter++;
-                src->integrateFieldTrace(
-                    CellPosition(ix, iy), t0_obs, dt_obs, NOTS, &TimeDomainField[ix][iy]);
+                // all timing information is already stored in the trace
+                src->integrateFieldTrace(CellPosition(ix, iy), Traces[ix][iy]);
             };
             if (omp_get_thread_num() == 0)
             {
@@ -169,9 +187,10 @@ void ScreenObserver::integrate(Lattice *src)
             {
                 #pragma omp atomic
                 counter++;
-                for (unsigned int it = 0; it < NOTS; it ++ )
+                for (unsigned int it = 0; it < NOTS; it++)
                 {
-                    TimeDomainField[ix][iy][it] += src->Field(t0_obs+it*dt_obs, CellPosition(ix, iy));
+                    Traces[ix][iy]->add(it,
+                        src->Field(CellTimeZero(ix,iy)+(double)it*dt_obs, CellPosition(ix,iy)) );
                 }
                 if (omp_get_thread_num() == 0)
                 {
@@ -197,7 +216,7 @@ ElMagField ScreenObserver::getField(
     // default zero
     ElMagField field;
     if ((ix<Nx) && (iy<Ny) && (it<NOTS))
-	    field = TimeDomainField[ix][iy][it];
+	    field = Traces[ix][iy]->get_field((std::size_t)it);
 	else
 	    throw(IOexception("ScreenObserver::getField() - requested index out of range."));
     return field;
@@ -210,7 +229,7 @@ void ScreenObserver::setField(
 	ElMagField field)
 {
     if ((ix<Nx) && (iy<Ny) && (it<NOTS))
-	   TimeDomainField[ix][iy][it] = field;
+	   Traces[ix][iy]->set_field((std::size_t)it, field);
 	else
 	    throw(IOexception("ScreenObserver::setField() - requested index out of range."));
 }

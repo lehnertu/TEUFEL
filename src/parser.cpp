@@ -634,7 +634,7 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                     pos, dx, dy,
                     nh.as_int(),
                     nv.as_int(),
-                    t0, dt, nt.as_int() );
+                    t0, dt, 0.0, 0.0, nt.as_int() );
                 pugi::xml_attribute src = obs.attribute("source");
                 if (src)
                 {

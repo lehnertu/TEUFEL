@@ -599,20 +599,6 @@ ElMagField Bunch::RetardedField(double obs_time, Vector obs_pos)
 
 void Bunch::integrateFieldTrace(
         Vector ObservationPoint,
-        double t0,
-        double dt,
-        int nots,
-        std::vector<ElMagField> *ObservationField)
-{
-    // cout << "Bunch::integrateFieldTrace() NOP=" << NOP << endl;
-    // integrate for all particles
-    for (int i=0; i<NOP; i++)
-        P[i]->integrateFieldTrace(ObservationPoint, t0, dt, nots, ObservationField);
-    // cout << endl;
-}
-
-void Bunch::integrateFieldTrace(
-        Vector ObservationPoint,
         FieldTrace *trace)
 {
     for (int i=0; i<NOP; i++)
