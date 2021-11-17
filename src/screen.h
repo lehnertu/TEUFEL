@@ -177,6 +177,7 @@ public:
      *  The file name was defined when creating the oberver object.
      * 
      *  Data is divided into 2 data sets
+     *  At present 3 data sets are provided to maintain full compatibility with old code.
      * 
      *  "ObservationPosition" :
      *  - 2D array of cell center position (Vector) [m]
@@ -188,6 +189,32 @@ public:
      *      - 3 componenets of the electric field [V/m]
      *      - 3 componenets of the magnetic field [T]
      *  - Atributes : t0_obs, dt_obs, NOTS
+     *
+     *  new:
+     *  all information is given in 2 data sets
+     *
+     *  1) "Screen" :
+     *  - data: 4 vectors (3 doubles each) :
+     *    - origin [m] : center position of the screen
+     *    - normal [m] : backward normal of the screen
+     *    - dx [m] : cell spacing
+     *    - dy [m] : cell spacing
+     *  - Attributes : 
+     *    - Nx : number of cells
+     *    - Ny : Number of cells
+     *    - NOTS : number of time steps
+     *    - t0 : start time [s] of the trace at the center cell
+     *    - dt : time step [s] of the field traces
+     *    - dtx : start time change [s/pixel] in x direction
+     *    - dty : start time change [s/pixel] in y direction
+     *   
+     *  2) "ElMagField" :
+     *  - data: 2D array [Nx,Ny] of field traces
+     *    - [NOTS] array of ElMagField
+     *      - 3 componenets of the electric field [V/m]
+     *      - 3 componenets of the magnetic field [T]
+     *  - Attributes :
+     *    - none
      * 
      * @throws IOexception
      */

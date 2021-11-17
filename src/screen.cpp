@@ -78,6 +78,28 @@ ScreenObserver::ScreenObserver(
 
     // set a default source
     source = BeamObservation;
+
+    // debugging output
+    /*
+    if (teufel::rank==0)
+    {
+        std::cout << "origin=(" << Origin.x << ", " << Origin.y << ", " << Origin.z << ")"  << std::endl;
+        unsigned int ix=Nx/2;
+        unsigned int iy=Ny/2;
+        Vector p = CellPosition(ix, iy);
+        std::cout << "ix=" <<  ix << "  iy=" << iy << "  t0=" << CellTimeZero(ix, iy);
+        std::cout << "  x=(" << p.x << ", " << p.y << ", " << p.z << ")"  << std::endl;
+        std::cout << std::endl << std::endl;
+        ix=Nx/2+1; iy=Ny/2; p = CellPosition(ix, iy);
+        std::cout << "ix=" <<  ix << "  iy=" << iy << "  t0=" << CellTimeZero(ix, iy);
+        std::cout << "  x=(" << p.x << ", " << p.y << ", " << p.z << ")"  << std::endl;
+        std::cout << std::endl << std::endl;
+        ix=Nx/2; iy=Ny/2+1; p = CellPosition(ix, iy);
+        std::cout << "ix=" <<  ix << "  iy=" << iy << "  t0=" << CellTimeZero(ix, iy);
+        std::cout << "  x=(" << p.x << ", " << p.y << ", " << p.z << ")"  << std::endl;
+        std::cout << std::endl << std::endl;
+    }
+    */
 }
 
 ScreenObserver::~ScreenObserver()
@@ -100,13 +122,13 @@ RadSource ScreenObserver::getSource()
 Vector ScreenObserver::CellPosition(unsigned int ix, unsigned int iy)
 {
     // center index is Nx/2 Ny/2 (integer division!)
-    return Origin + dX*(double)(ix-Nx/2) + dY*(double)(iy-Ny/2);
+    return Origin + dX*(double)((int)ix-(int)Nx/2) + dY*(double)((int)iy-(int)Ny/2);
 }
 
 double ScreenObserver::CellTimeZero(unsigned int ix, unsigned int iy)
 {
     // center index is Nx/2 Ny/2 (integer division!)
-    return t0_obs + dtx_obs*(double)(ix-Nx/2) + dty_obs*(double)(iy-Ny/2);
+    return t0_obs + dtx_obs*(double)((int)ix-(int)Nx/2) + dty_obs*(double)((int)iy-(int)Ny/2);
 }
 
 void ScreenObserver::integrate(Beam *src)
@@ -283,12 +305,15 @@ void ScreenObserver::fromBuffer(double *buffer, std::size_t size)
 
 void ScreenObserver::WriteTimeDomainFieldHDF5()
 {
+    hid_t atts, attr;
     herr_t status;
     cout << "writing HDF5 file " << FileName << endl;
     // Create a new file using the default properties.
     hid_t file = H5Fcreate (FileName.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
     if (file<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Fcreate()"));
-    
+
+// OLD
+
     // Create dataspace for the observation positions.
     // Setting maximum size to NULL sets the maximum size to be the current size.
     hsize_t pdims[3];
@@ -296,10 +321,10 @@ void ScreenObserver::WriteTimeDomainFieldHDF5()
     pdims[1] = Ny;
     pdims[2] = 3;
     hid_t pspace = H5Screate_simple (3, pdims, NULL);
-    if (pspace<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Screate(pspace)"));
+    if (pspace<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Screate(pspace) - old"));
     // buffer the data
-    double *buffer = new double[Nx*Ny*3];
-    double *bp = buffer;
+    double *pbuffer = new double[Nx*Ny*3];
+    double *bp = pbuffer;
     for (unsigned int ix = 0; ix < Nx; ix++)
 	for (unsigned int iy = 0; iy < Ny; iy++)
 	{
@@ -310,47 +335,165 @@ void ScreenObserver::WriteTimeDomainFieldHDF5()
 	};
     // Create the dataset creation property list
     hid_t pdcpl = H5Pcreate (H5P_DATASET_CREATE);
-    if (pdcpl<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Pcreate(pdcpl)"));
+    if (pdcpl<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Pcreate(pdcpl) - old"));
     // Create the dataset.
     hid_t pdset = H5Dcreate(file,
         "ObservationPosition",		// dataset name
         H5T_NATIVE_DOUBLE,		// data type
         pspace, H5P_DEFAULT,
         pdcpl, H5P_DEFAULT);
-    if (pdset<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Dcreate(pdset)"));
+    if (pdset<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Dcreate(pdset) - old"));
     // Write the data to the dataset
     status = H5Dwrite (pdset,
         H5T_NATIVE_DOUBLE, 		// mem type id
         H5S_ALL, 			// mem space id
         pspace,
         H5P_DEFAULT,			// data transfer properties
-        buffer);
+        pbuffer);
     if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Dwrite(pdset)"));
-    // attach scalar attributes
-    hid_t atts1  = H5Screate(H5S_SCALAR);
-    if (atts1<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Screate(atts1)"));
-    hid_t attr1 = H5Acreate2(pdset, "Nx", H5T_NATIVE_INT, atts1, H5P_DEFAULT, H5P_DEFAULT);
-    if (attr1<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Acreate2(attr1)"));
-    status = H5Awrite(attr1, H5T_NATIVE_INT, &Nx);
-    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Awrite(attr1)"));
-    status = H5Sclose (atts1);
-    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Sclose(atts1)"));
-    hid_t atts2  = H5Screate(H5S_SCALAR);
-    if (atts2<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Screate(atts2)"));
-    hid_t attr2 = H5Acreate2(pdset, "Ny", H5T_NATIVE_INT, atts2, H5P_DEFAULT, H5P_DEFAULT);
-    if (attr2<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Acreate2(attr2)"));
-    status = H5Awrite(attr2, H5T_NATIVE_INT, &Ny);
-    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Awrite(attr2)"));
-    status = H5Sclose (atts2);
-    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Sclose(atts2)"));
+    // attach scalar attribute Nx
+    atts  = H5Screate(H5S_SCALAR);
+    if (atts<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Screate(Nx) - old"));
+    attr = H5Acreate2(pdset, "Nx", H5T_NATIVE_INT, atts, H5P_DEFAULT, H5P_DEFAULT);
+    if (attr<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Acreate2(Nx) - old"));
+    status = H5Awrite(attr, H5T_NATIVE_INT, &Nx);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Awrite(Nx) - old"));
+    status = H5Sclose (atts);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Sclose(Nx) - old"));
+    // attach scalar attribute Nx
+    atts  = H5Screate(H5S_SCALAR);
+    if (atts<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Screate(Ny) - old"));
+    attr = H5Acreate2(pdset, "Ny", H5T_NATIVE_INT, atts, H5P_DEFAULT, H5P_DEFAULT);
+    if (attr<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Acreate2(Ny) - old"));
+    status = H5Awrite(attr, H5T_NATIVE_INT, &Ny);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Awrite(Ny) - old"));
+    status = H5Sclose (atts);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Sclose(Ny) - old"));
     // Close and release resources.
     status = H5Pclose (pdcpl);
-    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Pclose(pdcpl)"));
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Pclose(pdcpl) - old"));
     status = H5Dclose (pdset);
-    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Dclose(pdset)"));
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Dclose(pdset) - old"));
     status = H5Sclose (pspace);
-    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Dclose(pspace)"));
-    delete[] buffer;
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Dclose(pspace) - old"));
+    delete[] pbuffer;
+
+// NEW
+
+    // Create dataspace for the screen metadata.
+    // data field 3 vectors
+    hsize_t s_dims[2];
+    s_dims[0] = 4;
+    s_dims[1] = 3;
+    // Setting maximum size to NULL sets the maximum size to be the current size.
+    hid_t s_space = H5Screate_simple (2, s_dims, NULL);
+    if (s_space<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Screate(s_space)"));
+    // buffer the data
+    double *s_buffer = new double[4*3];
+    double *s_bp = s_buffer;
+    *s_bp++ = Origin.x;
+    *s_bp++ = Origin.y;
+    *s_bp++ = Origin.z;
+    *s_bp++ = normal.x;
+    *s_bp++ = normal.y;
+    *s_bp++ = normal.z;
+    *s_bp++ = dX.x;
+    *s_bp++ = dX.y;
+    *s_bp++ = dX.z;
+    *s_bp++ = dY.x;
+    *s_bp++ = dY.y;
+    *s_bp++ = dY.z;
+    // Create the dataset creation property list
+    hid_t s_dcpl = H5Pcreate (H5P_DATASET_CREATE);
+    if (s_dcpl<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Pcreate(s_dcpl)"));
+    // Create the dataset.
+    hid_t s_dset = H5Dcreate(file,
+        "Screen",		        // dataset name
+        H5T_NATIVE_DOUBLE,		// data type
+        s_space, H5P_DEFAULT,
+        s_dcpl, H5P_DEFAULT);
+    if (s_dset<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Dcreate(s_dset)"));
+    // Write the data to the dataset
+    status = H5Dwrite (s_dset,
+        H5T_NATIVE_DOUBLE, 		// mem type id
+        H5S_ALL, 			    // mem space id
+        s_space,
+        H5P_DEFAULT,			// data transfer properties
+        s_buffer);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Dwrite(s_dset)"));
+    // attach scalar attribute Nx
+    atts  = H5Screate(H5S_SCALAR);
+    if (atts<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Screate(Nx)"));
+    attr = H5Acreate2(s_dset, "Nx", H5T_NATIVE_INT, atts, H5P_DEFAULT, H5P_DEFAULT);
+    if (attr<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Acreate2(Nx)"));
+    status = H5Awrite(attr, H5T_NATIVE_INT, &Nx);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Awrite(Nx)"));
+    status = H5Sclose (atts);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Sclose(Nx)"));
+    // attach scalar attribute Nx
+    atts  = H5Screate(H5S_SCALAR);
+    if (atts<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Screate(Ny)"));
+    attr = H5Acreate2(s_dset, "Ny", H5T_NATIVE_INT, atts, H5P_DEFAULT, H5P_DEFAULT);
+    if (attr<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Acreate2(Ny)"));
+    status = H5Awrite(attr, H5T_NATIVE_INT, &Ny);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Awrite(Ny)"));
+    status = H5Sclose (atts);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Sclose(Ny)"));
+    // attach scalar attribute NOTS
+    atts  = H5Screate(H5S_SCALAR);
+    if (atts<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Screate(NOTS)"));
+    attr = H5Acreate2(s_dset, "NOTS", H5T_NATIVE_INT, atts, H5P_DEFAULT, H5P_DEFAULT);
+    if (attr<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Acreate2(NOTS)"));
+    status = H5Awrite(attr, H5T_NATIVE_INT, &NOTS);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Awrite(NOTS)"));
+    status = H5Sclose (atts);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Sclose(NOTS)"));
+    // attach scalar attribute t0
+    atts  = H5Screate(H5S_SCALAR);
+    if (atts<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Screate(t0)"));
+    attr = H5Acreate2(s_dset, "t0", H5T_NATIVE_DOUBLE, atts, H5P_DEFAULT, H5P_DEFAULT);
+    if (attr<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Acreate2(t0)"));
+    status = H5Awrite(attr, H5T_NATIVE_DOUBLE, &t0_obs);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Awrite(t0)"));
+    status = H5Sclose (atts);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Sclose(t0)"));
+    // attach scalar attribute dt
+    atts  = H5Screate(H5S_SCALAR);
+    if (atts<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Screate(dt)"));
+    attr = H5Acreate2(s_dset, "dt", H5T_NATIVE_DOUBLE, atts, H5P_DEFAULT, H5P_DEFAULT);
+    if (attr<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Acreate2(dt)"));
+    status = H5Awrite(attr, H5T_NATIVE_DOUBLE, &dt_obs);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Awrite(dt)"));
+    status = H5Sclose (atts);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Sclose(dt)"));
+    // attach scalar attribute dtx
+    atts  = H5Screate(H5S_SCALAR);
+    if (atts<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Screate(dtx)"));
+    attr = H5Acreate2(s_dset, "dtx", H5T_NATIVE_DOUBLE, atts, H5P_DEFAULT, H5P_DEFAULT);
+    if (attr<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Acreate2(dtx)"));
+    status = H5Awrite(attr, H5T_NATIVE_DOUBLE, &dtx_obs);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Awrite(dtx)"));
+    status = H5Sclose (atts);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Sclose(dtx)"));
+    // attach scalar attribute dty
+    atts  = H5Screate(H5S_SCALAR);
+    if (atts<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Screate(dty)"));
+    attr = H5Acreate2(s_dset, "dty", H5T_NATIVE_DOUBLE, atts, H5P_DEFAULT, H5P_DEFAULT);
+    if (attr<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Acreate2(dty)"));
+    status = H5Awrite(attr, H5T_NATIVE_DOUBLE, &dty_obs);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Awrite(dty)"));
+    status = H5Sclose (atts);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Sclose(dty)"));
+    // Close and release resources.
+    status = H5Pclose (s_dcpl);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Pclose(s_dcpl)"));
+    status = H5Dclose (s_dset);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Dclose(s_dset)"));
+    status = H5Sclose (s_space);
+    if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Dclose(s_space)"));
+    delete s_buffer;
+
+// end NEW
 
     // Create dataspace for the field data.
     // Setting maximum size to NULL sets the maximum size to be the current size.
@@ -362,7 +505,7 @@ void ScreenObserver::WriteTimeDomainFieldHDF5()
     hid_t space = H5Screate_simple (4, dims, NULL);
     if (space<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Screate(space)"));
     // buffer the data
-    buffer = getBuffer();
+    double *buffer = getBuffer();
     // Create the dataset creation property list
     hid_t dcpl = H5Pcreate (H5P_DATASET_CREATE);
     if (dcpl<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Pcreate(dcpl)"));
@@ -382,9 +525,9 @@ void ScreenObserver::WriteTimeDomainFieldHDF5()
         buffer);
     if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Dwrite(dset)"));
     // attach scalar attributes
-    hid_t atts  = H5Screate(H5S_SCALAR);
+    atts  = H5Screate(H5S_SCALAR);
     if (atts<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Screate(t0)"));
-    hid_t attr = H5Acreate2(dset, "t0", H5T_NATIVE_DOUBLE, atts, H5P_DEFAULT, H5P_DEFAULT);
+    attr = H5Acreate2(dset, "t0", H5T_NATIVE_DOUBLE, atts, H5P_DEFAULT, H5P_DEFAULT);
     if (attr<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Acreate2(t0)"));
     status = H5Awrite(attr, H5T_NATIVE_DOUBLE, &t0_obs);
     if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Awrite(t0)"));
@@ -413,7 +556,7 @@ void ScreenObserver::WriteTimeDomainFieldHDF5()
     if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Dclose(dset)"));
     status = H5Sclose (space);
     if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Sclose(space)"));
-    delete[] buffer;
+    delete buffer;
 
     status = H5Fclose (file);
     if (status<0) throw(IOexception("ScreenObserver::WriteTimeDomainFieldHDF5 - error in H5Fclose()"));
