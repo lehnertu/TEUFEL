@@ -47,5 +47,11 @@
             <vpitch x="0.0" y="0.01" z="0.0" n="64" />
             <time t0="t0" dt="1e-13" n="1000" />
         </screen>
+        <screen file="elbe-u300_angled_screen_5m.h5">
+            <position x="0.0" y="0.0" z="z0" />
+            <hpitch x="0.01" y="0.0" z="-0.01" n="64" dt="-0.01/_c"/>
+            <vpitch x="0.0" y="0.01" z="0.0" n="64" dt="0.0"/>
+            <time t0="t0" dt="1e-13" n="1000" />
+        </screen>
     </observer>
 </teufel>
