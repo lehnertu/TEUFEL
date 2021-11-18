@@ -6,6 +6,7 @@ import os.path
 import argparse
 import numpy as np
 import h5py
+from screen import *
 import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter
 from matplotlib.patches import Circle
@@ -28,52 +29,19 @@ if not radOK:
 
 # Open the file for reading
 print("reading ",radfile)
-hdf = h5py.File(radfile, "r")
-print(hdf)
+screen = TeufelScreen.read(radfile)
 print()
 
-# Get the groups
-pos = hdf['ObservationPosition']
-Nx = pos.attrs.get('Nx')
-Ny = pos.attrs.get('Ny')
-print("Nx=%d Ny=%d" % (Nx,Ny))
-print(pos)
-field = hdf['ElMagField']
-print(field)
-t0 = field.attrs.get('t0')
-dt = field.attrs.get('dt')
-nots = field.attrs.get('NOTS')
-print("t0=%g dt=%g NOTS=%d" % (t0, dt, nots))
-pos = np.array(pos)
-a = np.array(field)
-hdf.close()
-print()
-
-xcenter = Nx//2
-ycenter = Ny//2
-print("center = (",xcenter,",",ycenter,")")
-centerposition = pos[xcenter][ycenter]
-print("center position = ",centerposition)
-
-onaxis = a[xcenter][ycenter]
-data = onaxis.transpose()
-
-Ex = data[0]
-Ey = data[1]
-Ez = data[2]
-Bx = data[3]
-By = data[4]
-Bz = data[5]
-
-EVec = np.array([Ex, Ey, Ez]).transpose()
-BVec = np.array([Bx, By, Bz]).transpose()
-# Poynting vector in V/m * (N/(A m)) / (N/A²) = W/m²
+# analyze power density on axis
+(EVec,BVec) = screen.getFieldTrace(screen.xcenter,screen.ycenter)
 SVec = np.cross(EVec, BVec) / mu0
-# t = 1e9*np.arange(t0,t0+(nots-1)*dt,dt)
-t = 1e9*np.linspace(t0,t0+(nots-1)*dt,nots)
-print('on axis energy flow density = ', 1e6*SVec.sum(axis=0)*dt, " µJ/m²")
+print('energy flow density on axis = ', 1e6*SVec.sum(axis=0)*screen.dt, " µJ/m²")
+print()
 
 # first figure with the time-trace of the fields on axis
+
+t0 = screen.getStartTime(screen.xcenter,screen.ycenter)
+t = 1e9*np.linspace(t0,t0+(screen.nots-1)*screen.dt,screen.nots)
 
 left, width = 0.15, 0.80
 rect1 = [left, 0.55, width, 0.40]  #left, bottom, width, height
@@ -83,9 +51,9 @@ fig = plt.figure(1,figsize=(12,9))
 ax1 = fig.add_axes(rect1)
 ax2 = fig.add_axes(rect2, sharex=ax1)
 
-l1 = ax1.plot(t, Ex, "r-", label=r'$E_x$')
-l2 = ax1.plot(t, Ey, "b-", label=r'$E_y$')
-l3 = ax1.plot(t, Ez, "g-", label=r'$E_z$')
+l1 = ax1.plot(t, EVec[:,0], "r-", label=r'$E_x$')
+l2 = ax1.plot(t, EVec[:,1], "b-", label=r'$E_y$')
+l3 = ax1.plot(t, EVec[:,2], "g-", label=r'$E_z$')
 
 ax1.set_ylabel(r'$E$ [V/m]')
 lines = l1 + l2 + l3
@@ -95,9 +63,9 @@ for label in ax1.get_xticklabels():
     label.set_visible(False)
 ax1.grid(True)
 
-l4 = ax2.plot(t, Bx, "r-", label=r'$B_x$')
-l5 = ax2.plot(t, By, "b-", label=r'$B_y$')
-l6 = ax2.plot(t, Bz, "g-", label=r'$B_z$')
+l4 = ax2.plot(t, BVec[:,0], "r-", label=r'$B_x$')
+l5 = ax2.plot(t, BVec[:,1], "b-", label=r'$B_y$')
+l6 = ax2.plot(t, BVec[:,2], "g-", label=r'$B_z$')
 
 ax2.set_ylabel(r'$B$ [T]')
 ax2.set_xlabel(r't [ns]')
@@ -106,42 +74,30 @@ labels = [l.get_label() for l in lines]
 ax2.legend(lines,labels,loc='upper right')
 ax2.grid(True)
 
+# second figure with the time-trace of the fields off axis
+
 if args.xy != None:
 
     xi = args.xy[0]
     yi = args.xy[1]
     print("index = (",xi,",",yi,")")
-    position = pos[xi][yi]
-    print("off-axis position = ",position)
+    position = screen.screenPos(xi,yi)
+    print("off-axis position [m] = ",position)
 
-    offaxis = a[xi][yi]
-    data = offaxis.transpose()
-    
-    Ex = data[0]
-    Ey = data[1]
-    Ez = data[2]
-    Bx = data[3]
-    By = data[4]
-    Bz = data[5]
-
-    EVec = np.array([Ex, Ey, Ez]).transpose()
-    BVec = np.array([Bx, By, Bz]).transpose()
-    # Poynting vector in V/m * (N/(A m)) / (N/A²) = W/m²
+    (EVec,BVec) = screen.getFieldTrace(xi,yi)
     SVec = np.cross(EVec, BVec) / mu0
-    # t = 1e9*np.arange(t0,t0+(nots-1)*dt,dt)
-    t = 1e9*np.linspace(t0,t0+(nots-1)*dt,nots)
-    print('off axis energy flow density = ', 1e6*SVec.sum(axis=0)*dt, " µJ/m²")
-
-    # second figure with the time-trace of the fields off axis
+    print('off axis energy flow density = ', 1e6*SVec.sum(axis=0)*screen.dt, " µJ/m²")
+    
+    t0 = screen.getStartTime(xi,yi)
+    t = 1e9*np.linspace(t0,t0+(screen.nots-1)*screen.dt,screen.nots)
 
     fig2 = plt.figure(2,figsize=(12,9))
-    
     ax3 = fig2.add_axes(rect1)
     ax4 = fig2.add_axes(rect2, sharex=ax3)
     
-    l21 = ax3.plot(t, Ex, "r-", label=r'$E_x$')
-    l22 = ax3.plot(t, Ey, "b-", label=r'$E_y$')
-    l23 = ax3.plot(t, Ez, "g-", label=r'$E_z$')
+    l21 = ax3.plot(t, EVec[:,0], "r-", label=r'$E_x$')
+    l22 = ax3.plot(t, EVec[:,1], "b-", label=r'$E_y$')
+    l23 = ax3.plot(t, EVec[:,2], "g-", label=r'$E_z$')
     
     ax3.set_ylabel(r'$E$ [V/m]')
     lines = l21 + l22 + l23
@@ -151,9 +107,9 @@ if args.xy != None:
         label.set_visible(False)
     ax3.grid(True)
 
-    l24 = ax4.plot(t, Bx, "r-", label=r'$B_x$')
-    l25 = ax4.plot(t, By, "b-", label=r'$B_y$')
-    l26 = ax4.plot(t, Bz, "g-", label=r'$B_z$')
+    l24 = ax4.plot(t, BVec[:,0], "r-", label=r'$B_x$')
+    l25 = ax4.plot(t, BVec[:,1], "b-", label=r'$B_y$')
+    l26 = ax4.plot(t, BVec[:,2], "g-", label=r'$B_z$')
     
     ax4.set_ylabel(r'$B$ [T]')
     ax4.set_xlabel(r't [ns]')

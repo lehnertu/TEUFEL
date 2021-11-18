@@ -70,6 +70,12 @@ class TeufelScreen():
         y = self.dy * (iy-self.ycenter)
         return (x,y)
 
+    def getStartTime(self,ix,iy):
+        """
+        get the start time [s] of the trace for an indexed pixel on the screen
+        """
+        return self.t0 + self.dtx*(ix-self.xcenter) + self.dty*(iy-self.ycenter)
+
     def getFieldTrace(self,ix,iy):
         """
         get the fields recorded in one pixel
