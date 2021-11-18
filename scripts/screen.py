@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # coding=UTF-8
 
-import sys, time
-import os.path
 import numpy as np
 import h5py
 
@@ -31,33 +29,63 @@ class TeufelScreen():
         field = hdf['ElMagField']
         screen.A = np.array(field)
         # get the geomtry information
-        sn = hdf['Screen']
-        screen.Nx = sn.attrs.get('Nx')
-        screen.Ny = sn.attrs.get('Ny')
-        screen.nots = sn.attrs.get('NOTS')
-        print("Nx=%d Ny=%d Nots=%d" % (screen.Nx,screen.Ny,screen.nots))
-        sd = np.array(sn)
-        screen.origin = sd[0]
-        print("origin= (%g, %g, %g) m" % (screen.origin[0],screen.origin[1],screen.origin[2]))
-        screen.normal = sd[1]
-        print("normal= (%g, %g, %g) m" % (screen.normal[0],screen.normal[1],screen.normal[2]))
-        screen.dX = sd[2]
-        screen.dx = np.linalg.norm(screen.dX)
-        screen.ex = screen.dX / screen.dx
-        print("dX= (%g, %g, %g) m" % (screen.dX[0],screen.dX[1],screen.dX[2]))
-        screen.dY = sd[3]
-        screen.dy = np.linalg.norm(screen.dY)
-        screen.ey = screen.dY / screen.dy
-        print("dY= (%g, %g, %g) m" % (screen.dY[0],screen.dY[1],screen.dY[2]))
-        screen.t0 = sn.attrs.get('t0')
-        screen.dt = sn.attrs.get('dt')
-        screen.dtx = sn.attrs.get('dtx')
-        screen.dty = sn.attrs.get('dty')
-        print("t0=%g dt=%g dtx=%g dty=%g" % (screen.t0, screen.dt, screen.dtx, screen.dty))
-        hdf.close()
+        if hdf.get('Screen', getclass=True) == h5py._hl.dataset.Dataset:
+            # new version of the file format
+            sn = hdf['Screen']
+            screen.Nx = sn.attrs.get('Nx')
+            screen.Ny = sn.attrs.get('Ny')
+            screen.xcenter = screen.Nx//2
+            screen.ycenter = screen.Ny//2
+            screen.nots = sn.attrs.get('NOTS')
+            print("Nx=%d Ny=%d Nots=%d" % (screen.Nx,screen.Ny,screen.nots))
+            sd = np.array(sn)
+            screen.origin = sd[0]
+            print("origin= (%g, %g, %g) m" % (screen.origin[0],screen.origin[1],screen.origin[2]))
+            screen.normal = sd[1]
+            print("normal= (%g, %g, %g) m" % (screen.normal[0],screen.normal[1],screen.normal[2]))
+            screen.dX = sd[2]
+            screen.dx = np.linalg.norm(screen.dX)
+            screen.ex = screen.dX / screen.dx
+            print("dX= (%g, %g, %g) m" % (screen.dX[0],screen.dX[1],screen.dX[2]))
+            screen.dY = sd[3]
+            screen.dy = np.linalg.norm(screen.dY)
+            screen.ey = screen.dY / screen.dy
+            print("dY= (%g, %g, %g) m" % (screen.dY[0],screen.dY[1],screen.dY[2]))
+            screen.t0 = sn.attrs.get('t0')
+            screen.dt = sn.attrs.get('dt')
+            screen.dtx = sn.attrs.get('dtx')
+            screen.dty = sn.attrs.get('dty')
+            print("t0=%g dt=%g dtx=%g dty=%g" % (screen.t0, screen.dt, screen.dtx, screen.dty))
+        else:
+            print("WARNING : old file format")
+            pos = hdf['ObservationPosition']
+            posdata = np.array(pos)
+            screen.Nx = pos.attrs.get('Nx')
+            screen.Ny = pos.attrs.get('Ny')
+            screen.xcenter = screen.Nx//2
+            screen.ycenter = screen.Ny//2
+            screen.nots = field.attrs.get('NOTS')
+            print("Nx=%d Ny=%d Nots=%d" % (screen.Nx,screen.Ny,screen.nots))
+            screen.origin = posdata[screen.xcenter,screen.ycenter]
+            print("origin= (%g, %g, %g) m" % (screen.origin[0],screen.origin[1],screen.origin[2]))
+            screen.dX = posdata[screen.xcenter+1,screen.ycenter] - screen.origin
+            screen.dx = np.linalg.norm(screen.dX)
+            screen.ex = screen.dX / screen.dx
+            print("dX= (%g, %g, %g) m" % (screen.dX[0],screen.dX[1],screen.dX[2]))
+            screen.dY = posdata[screen.xcenter,screen.ycenter+1] - screen.origin
+            screen.dy = np.linalg.norm(screen.dY)
+            screen.ey = screen.dY / screen.dy
+            print("dY= (%g, %g, %g) m" % (screen.dY[0],screen.dY[1],screen.dY[2]))
+            screen.normal = np.cross(screen.dX,screen.dY)*-1.0
+            screen.normal = screen.normal / np.linalg.norm(screen.normal)
+            print("normal= (%g, %g, %g) m" % (screen.normal[0],screen.normal[1],screen.normal[2]))
+            screen.t0 = field.attrs.get('t0')
+            screen.dt = field.attrs.get('dt')
+            screen.dtx = 0.0
+            screen.dty = 0.0
+            print("t0=%g dt=%g dtx=%g dty=%g" % (screen.t0, screen.dt, screen.dtx, screen.dty))
         # done with the file
-        screen.xcenter = screen.Nx//2
-        screen.ycenter = screen.Ny//2
+        hdf.close()
         # object is ready
         return screen
         
