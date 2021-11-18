@@ -7,11 +7,9 @@ import argparse
 import numpy as np
 import h5py
 import matplotlib.pyplot as plt
+from screen import *
 from matplotlib.ticker import NullFormatter
 from matplotlib.patches import Circle
-
-# magnetic field constant in N/A²
-mu0 = 4*np.pi*1e-7
 
 parser = argparse.ArgumentParser()
 parser.add_argument('file', help='the file name of the HDF5 file of the screens recorded fields')
@@ -37,62 +35,20 @@ if not radOK:
 
 # Open the file for reading
 print("reading ",radfile)
-hdf = h5py.File(radfile, "r")
-print(hdf)
+screen = TeufelScreen.read(radfile)
 print()
 
-# Get the groups
-pos = hdf['ObservationPosition']
-Nx = pos.attrs.get('Nx')
-Ny = pos.attrs.get('Ny')
-print("Nx=%d Ny=%d" % (Nx,Ny))
-print(pos)
-field = hdf['ElMagField']
-print(field)
-t0 = field.attrs.get('t0')
-dt = field.attrs.get('dt')
-nots = field.attrs.get('NOTS')
-print("t0=%g dt=%g NOTS=%d" % (t0, dt, nots))
-pos = np.array(pos)
-a = np.array(field)
-hdf.close()
-print()
-
-xcenter = Nx//2
-ycenter = Ny//2
-print("center = (",xcenter,",",ycenter,")")
-centerposition = pos[xcenter,ycenter]
-print("position = ",centerposition)
-
-onaxis = a[xcenter][ycenter]
-data = onaxis.transpose()
-
-Ex = data[0]
-Ey = data[1]
-Ez = data[2]
-Bx = data[3]
-By = data[4]
-Bz = data[5]
-
-EVec = np.array([Ex, Ey, Ez]).transpose()
-BVec = np.array([Bx, By, Bz]).transpose()
-# Poynting vector in V/m * (N/(A m)) / (N/A²) = W/m²
+# analyze power density on axis
+(EVec,BVec) = screen.getFieldTrace(screen.xcenter,screen.ycenter)
 SVec = np.cross(EVec, BVec) / mu0
-# t = 1e9*np.arange(t0,t0+(nots-1)*dt,dt)
-t = 1e9*np.linspace(t0,t0+(nots-1)*dt,nots)
-print('energy flow density = ', 1e6*SVec.sum(axis=0)*dt, " µJ/m²")
+print('energy flow density on axis = ', 1e6*SVec.sum(axis=0)*screen.dt, " µJ/m²")
+print()
 
-# second figure with spectrum on axis
+# Figure 1 : spectral distribution
+# Fig. 1a) spectrum on axis
 
-nf = nots
-fmax = 1.0/dt
-f = np.linspace(0.0,fmax,nf)[:nots//2]
-df=1.0/dt/nf
-spectE = np.fft.fft(Ex)[:nots//2]
-# print(spectE[:30])
-spectB = np.fft.fft(By)[:nots//2]
-# print(spectB[:30])
-amplit = np.real(spectE*np.conj(spectB)/mu0)*2*dt/(df*nf)
+df = 1.0/screen.dt/screen.nots
+(f, amplit) = screen.spectralDensityH(screen.xcenter,screen.ycenter)
 
 fig1 = plt.figure(1,figsize=(12,9))
 ax1 = fig1.add_axes([0.1, 0.1, 0.8, 0.8])
@@ -104,12 +60,6 @@ ax1.tick_params(axis='y', colors='r')
 if roiOK:
   ax1.axvspan(1e-12*f1, 1e-12*f2, facecolor='#2ca02c', alpha=0.5)
 
-print()
-print("trace length = %d" % nots)
-print("trace step size = %g s" % dt)
-print("FFT max. frequency = %g Hz" % fmax)
-print("FFT bin width = %g Hz" % df)
-print()
 intspec = amplit.sum()*df
 print("total spectral power density on axis = %g µJ/m²" % (1e6*intspec))
 
@@ -119,41 +69,24 @@ if roiOK:
   intspec = amplit[nf1:nf2].sum()*df
   print("integrated spectral power density in ROI = %g µJ/m²" % (1e6*intspec))
 
-# add spectrum integrated over the whole area
+# Fig. 1b) spectrum integrated over the whole area
 # and integrated over the cirular range (if defined)
+
 totamp = np.zeros_like(amplit)
 if args.circ != None:
     r2 = args.circ * args.circ
     circamp = np.zeros_like(amplit)
-for ix in range(Nx):
-  for iy in range(Ny):
-    trace = a[ix,iy]
-    data = trace.transpose()
-    Ex = data[0]
-    Ey = data[1]
-    Ez = data[2]
-    Bx = data[3]
-    By = data[4]
-    Bz = data[5]
-    spectEx = np.fft.fft(Ex)[:nots//2]
-    spectEy = np.fft.fft(Ey)[:nots//2]
-    spectEz = np.fft.fft(Ez)[:nots//2]
-    spectBx = np.fft.fft(Bx)[:nots//2]
-    spectBy = np.fft.fft(By)[:nots//2]
-    spectBz = np.fft.fft(Bz)[:nots//2]
-    totamp += np.real(spectEx*np.conj(spectBy)/mu0)*2*dt/(df*nf)
+for ix in range(screen.Nx):
+  for iy in range(screen.Ny):
+    (f, amplit) = screen.spectralDensityH(ix,iy)  
+    totamp += amplit
     if args.circ != None:
-      x = pos[ix,iy,0]
-      y = pos[ix,iy,1]
+      (x,y) = screen.screenPos(ix,iy)
       if x*x + y*y <= r2:
-        circamp += np.real(spectEx*np.conj(spectBy)/mu0)*2*dt/(df*nf)
-
-dX = pos[1,0,0]-pos[0,0,0]
-dY = pos[0,1,1]-pos[0,0,1]
-print("dx=%g dy=%g m" % (dX,dY))
-totamp *= dX*dY
+        circamp += amplit
+totamp *= screen.dx*screen.dy
 if args.circ != None:
-    circamp *= dX*dY
+    circamp *= screen.dx*screen.dy
 
 ax2 = ax1.twinx()
 l2 = ax2.plot(1e-12*f, 1e6*1e12*totamp, "b-")
@@ -165,49 +98,33 @@ ax2.set_ylabel(r'area integrated spectral power density   $dE/df$ [$\mu$J/THz]')
 ax2.yaxis.label.set_color('b')
 ax2.tick_params(axis='y', colors='b')
 
-# third figure with power density on screen
+# Figure 2 : total power density distribution on screen
 
-t = 1e9*np.linspace(t0,t0+(nots-1)*dt,nots)
-X = np.empty([Nx, Ny])
-Y = np.empty([Nx, Ny])
-Pz = np.empty([Nx, Ny])
-for ix in range(Nx):
-  for iy in range(Ny):
-    X[ix,iy] = pos[ix,iy,0]
-    Y[ix,iy] = pos[ix,iy,1]
-    trace = a[ix,iy]
-    data = trace.transpose()
-    Ex = data[0]
-    Ey = data[1]
-    Ez = data[2]
-    Bx = data[3]
-    By = data[4]
-    Bz = data[5]
-    EVec = np.array([Ex, Ey, Ez]).transpose()
-    BVec = np.array([Bx, By, Bz]).transpose()
-    SVec = np.cross(EVec, BVec) / mu0
-    Pz[ix,iy] = (SVec.sum(axis=0))[2]*dt
-
-dX = pos[1,0,0]-pos[0,0,0]
-dY = pos[0,1,1]-pos[0,0,1]
-print("dx=%g dy=%g m" % (dX,dY))
-Etot = Pz.sum()*dX*dY
+X = np.empty([screen.Nx, screen.Ny])
+Y = np.empty([screen.Nx, screen.Ny])
+Pz = np.empty([screen.Nx, screen.Ny])
+for ix in range(screen.Nx):
+  for iy in range(screen.Ny):
+    (x,y) = screen.screenPos(ix,iy)
+    X[ix,iy] = x
+    Y[ix,iy] = y
+    Pz[ix,iy] = screen.totalPowerDensity(ix,iy)
+Etot = Pz.sum()*screen.dx*screen.dy
 print("integrated energy = ", 1e6*Etot, " µJ")
 
 if args.circ != None:
     Ecirc = 0
     r2 = args.circ * args.circ
-    for ix in range(Nx):
-      for iy in range(Ny):
-        x = pos[ix,iy,0]
-        y = pos[ix,iy,1]
+    for ix in range(screen.Nx):
+      for iy in range(screen.Ny):
+        (x,y) = screen.screenPos(ix,iy)
         if x*x + y*y <= r2:
           Ecirc += Pz[ix,iy]
-    Ecirc *= dX*dY
+    Ecirc *= screen.dx*screen.dy
     print("integrated energy in circle = ", 1e6*Ecirc, " µJ")
 
-fig3 = plt.figure(3,figsize=(12,9))
-ax3 = fig3.add_subplot(111)
+fig2 = plt.figure(2,figsize=(12,9))
+ax3 = fig2.add_subplot(111)
 plt.contourf(X, Y, 1e6*Pz, 15, cmap='CMRmap')
 plt.title('total energy density [$\mu$J/m$^2$]')
 plt.xlabel('x /m')
@@ -222,54 +139,31 @@ if args.circ != None:
     c.set_lw(3)
     c.set_color('white')
 
-
-# fourth figure with power density in ROI on screen
+# Figure 3 : power density distribution in ROI on screen
 
 if roiOK:
-    t = 1e9*np.arange(t0,t0+(nots-1)*dt,dt)
-    X = np.empty([Nx, Ny])
-    Y = np.empty([Nx, Ny])
-    Pz = np.empty([Nx, Ny])
-    for ix in range(Nx):
-      for iy in range(Ny):
-        X[ix,iy] = pos[ix,iy,0]
-        Y[ix,iy] = pos[ix,iy,1]
-        trace = a[ix,iy]
-        data = trace.transpose()
-        Ex = data[0]
-        Ey = data[1]
-        Ez = data[2]
-        Bx = data[3]
-        By = data[4]
-        Bz = data[5]
-        spectEx = np.fft.fft(Ex)[:nots//2]
-        spectEy = np.fft.fft(Ey)[:nots//2]
-        spectEz = np.fft.fft(Ez)[:nots//2]
-        spectBx = np.fft.fft(Bx)[:nots//2]
-        spectBy = np.fft.fft(By)[:nots//2]
-        spectBz = np.fft.fft(Bz)[:nots//2]
-        amplit = np.real(spectEx*np.conj(spectBy)-spectEy*np.conj(spectBx))/mu0*2*dt/(df*nf)
+    for ix in range(screen.Nx):
+      for iy in range(screen.Ny):
+        # we already have X and Y
+        (f, amplit) = screen.spectralDensityH(ix,iy)
         Pz[ix,iy] = amplit[nf1:nf2].sum()*df
-
-    dX = pos[1,0,0]-pos[0,0,0]
-    dY = pos[0,1,1]-pos[0,0,1]
-    Eroi = Pz.sum()*dX*dY
+        
+    Eroi = Pz.sum()*screen.dx*screen.dy
     print("integrated energy in ROI = ", 1e6*Eroi, " µJ")
 
     if args.circ != None:
         Ecirc = 0
         r2 = args.circ * args.circ
-        for ix in range(Nx):
-          for iy in range(Ny):
-            x = pos[ix,iy,0]
-            y = pos[ix,iy,1]
+        for ix in range(screen.Nx):
+          for iy in range(screen.Ny):
+            (x,y) = screen.screenPos(ix,iy)
             if x*x + y*y <= r2:
               Ecirc += Pz[ix,iy]
-        Ecirc *= dX*dY
+        Ecirc *= screen.dx*screen.dy
         print("integrated energy in ROI in circle = ", 1e6*Ecirc, " µJ")
 
-    fig4 = plt.figure(4,figsize=(12,9))
-    ax4 = fig4.add_subplot(111)
+    fig3 = plt.figure(3,figsize=(12,9))
+    ax4 = fig3.add_subplot(111)
     plt.contourf(X, Y, 1e6*Pz, 15, cmap='CMRmap')
     plt.title('energy density within ROI [$\mu$J/m$^2$]')
     plt.xlabel('x /m')
@@ -285,3 +179,4 @@ if roiOK:
         c.set_color('white')
 
 plt.show()
+

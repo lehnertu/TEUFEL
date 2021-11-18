@@ -57,8 +57,8 @@ public:
      * extending along the dx and dy vectors.
      * These vectors define the size of one single grid cell.
      * The screen normal is perpendicular to both oriented such
-     * that (x,y,n) form a right-handed coordinate system.
-     * I.e. if a screen is seen such that dx points right and dy points up
+     * that (x,y,-n) form a right-handed coordinate system.
+     * I.e. if a screen is seen such that dx points left and dy points up
      * than the normal points at the observer.
      * Only fields that are created from sources placed at
      * positive normal direction are registered by the screen

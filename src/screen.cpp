@@ -48,7 +48,7 @@ ScreenObserver::ScreenObserver(
     Origin = position;
     dX = dx;
     dY = dy;
-    normal = cross(dX,dY);
+    normal = cross(dX,dY)*-1.0;
     normal.normalize();
     Nx = nx;
     Ny = ny;
@@ -78,28 +78,6 @@ ScreenObserver::ScreenObserver(
 
     // set a default source
     source = BeamObservation;
-
-    // debugging output
-    /*
-    if (teufel::rank==0)
-    {
-        std::cout << "origin=(" << Origin.x << ", " << Origin.y << ", " << Origin.z << ")"  << std::endl;
-        unsigned int ix=Nx/2;
-        unsigned int iy=Ny/2;
-        Vector p = CellPosition(ix, iy);
-        std::cout << "ix=" <<  ix << "  iy=" << iy << "  t0=" << CellTimeZero(ix, iy);
-        std::cout << "  x=(" << p.x << ", " << p.y << ", " << p.z << ")"  << std::endl;
-        std::cout << std::endl << std::endl;
-        ix=Nx/2+1; iy=Ny/2; p = CellPosition(ix, iy);
-        std::cout << "ix=" <<  ix << "  iy=" << iy << "  t0=" << CellTimeZero(ix, iy);
-        std::cout << "  x=(" << p.x << ", " << p.y << ", " << p.z << ")"  << std::endl;
-        std::cout << std::endl << std::endl;
-        ix=Nx/2; iy=Ny/2+1; p = CellPosition(ix, iy);
-        std::cout << "ix=" <<  ix << "  iy=" << iy << "  t0=" << CellTimeZero(ix, iy);
-        std::cout << "  x=(" << p.x << ", " << p.y << ", " << p.z << ")"  << std::endl;
-        std::cout << std::endl << std::endl;
-    }
-    */
 }
 
 ScreenObserver::~ScreenObserver()

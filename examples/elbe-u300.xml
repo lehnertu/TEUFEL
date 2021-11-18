@@ -19,7 +19,7 @@
         </undulator>
     </lattice>
     <beam>
-        <bunch gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" n="9" >
+        <bunch gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" n="199" >
             <!-- compute bunch length for a form factor of 0.5 -->
             <calc print="for F=0.5 bunchlength [s] = " var="tau" eq="0.1325/f"/>
             <position x="0.0" y="0.0" z="0.0" zrms="tau*_c" />
