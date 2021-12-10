@@ -40,7 +40,7 @@
  * @date 18.10.2017
  * 
  * This class handles the computation and storage of emitted electromagnetic
- * radiation from different sources (bunches and beams).
+ * radiation from different sources (lattice, bunches and beams).
  * For every point on a 2-dimensional screen time-traces of
  * the observed electromagnetic field are generated.
  */
@@ -56,17 +56,30 @@ public:
      * From there a grid of size (nx,ny) is created
      * extending along the dx and dy vectors.
      * These vectors define the size of one single grid cell.
-     * They need not neccessarily be orthogonal to each other.
      * The screen normal is perpendicular to both oriented such
-     * that (x,y,n) form a right-handed coordinate system.
-     * If nxy are odd then the (nxy-1)/2 indexed grid cell
+     * that (x,y,-n) form a right-handed coordinate system.
+     * I.e. if a screen is seen such that dx points left and dy points up
+     * than the normal points at the observer.
+     * Only fields that are created from sources placed at
+     * positive normal direction are registered by the screen
+     * limiting the incidence to the front half plane.
+     *
+     * If the dx and dy ectors are not perpendicular to each other
+     * dx will be modified to fulfill that condition.
+     * If nxy are odd then the (nxy-1)/2 indexed grid cell (i.e. center=2 of 5)
      * (index running 0...nxy-1) will have its center exactly
      * at the screen center position.
+     * If the index range is even than the first half of the array (i.e. 0...2 of 6) 
+     * will be at negative displacements and the first cell
+     * of the second half (i.e. center=3 of 6) will be placed exactly at the origin.
      * 
      * The field is recorded in time domain
      * starting at t0 with nots equidistant time steps of dt length.
      * The first time step starts at \f$t0\f$ and ends at \f$t0+dt\f$.
      * The total timespan covererd ends at \f$t0+n*dt\f$.
+     * The start time t0 is defined for the center of the grid.
+     * The actual start time is cell dependent. It can vary by dtx/dty
+     * (time shift per cell index) linearly depending on the position of the cell.
      * The field is computed for the center point of the grid cells only
      * and assumed constant over the whole area of the cell for
      * power flow calculation.
@@ -79,6 +92,8 @@ public:
      * \param[in] ny The number of grid cells in y direction.
      * \param[in] t0 Start time of the trace.
      * \param[in] dt Time step of the observation trace.
+     * \param[in] dtx Start time increment per index in x
+     * \param[in] dty Start time increment per index in y
      * \param[in] nots Number of time steps.
      */
     ScreenObserver(
@@ -90,12 +105,17 @@ public:
         unsigned int ny,
         double t0,
         double dt,
+        double dtx,
+        double dty,
         unsigned int nots);
     
-    //! Set the source of the fiels to be recorded
+    //! We need a destructor to release the memory for the field traces
+    ~ScreenObserver();
+    
+    //! Set the source of the fields to be recorded
     virtual void setSource(RadSource s);
 
-    //! Report the source of the fiels to be recorded
+    //! Report the source of the fields to be recorded
     virtual RadSource getSource();
 
     /*! Integrate the fields emitted by the source
@@ -157,6 +177,7 @@ public:
      *  The file name was defined when creating the oberver object.
      * 
      *  Data is divided into 2 data sets
+     *  At present 3 data sets are provided to maintain full compatibility with old code.
      * 
      *  "ObservationPosition" :
      *  - 2D array of cell center position (Vector) [m]
@@ -168,6 +189,32 @@ public:
      *      - 3 componenets of the electric field [V/m]
      *      - 3 componenets of the magnetic field [T]
      *  - Atributes : t0_obs, dt_obs, NOTS
+     *
+     *  new:
+     *  all information is given in 2 data sets
+     *
+     *  1) "Screen" :
+     *  - data: 4 vectors (3 doubles each) :
+     *    - origin [m] : center position of the screen
+     *    - normal [m] : backward normal of the screen
+     *    - dx [m] : cell spacing
+     *    - dy [m] : cell spacing
+     *  - Attributes : 
+     *    - Nx : number of cells
+     *    - Ny : Number of cells
+     *    - NOTS : number of time steps
+     *    - t0 : start time [s] of the trace at the center cell
+     *    - dt : time step [s] of the field traces
+     *    - dtx : start time change [s/pixel] in x direction
+     *    - dty : start time change [s/pixel] in y direction
+     *   
+     *  2) "ElMagField" :
+     *  - data: 2D array [Nx,Ny] of field traces
+     *    - [NOTS] array of ElMagField
+     *      - 3 componenets of the electric field [V/m]
+     *      - 3 componenets of the magnetic field [T]
+     *  - Attributes :
+     *    - none
      * 
      * @throws IOexception
      */
@@ -181,9 +228,14 @@ public:
 private:
     
     /*! Compute the center position of the grid cell
-     *  from its indeces
+     *  from its indexes
      */
-    Vector CellPosition(int ix, int iy);
+    Vector CellPosition(unsigned int ix, unsigned int iy);
+    
+    /*! Compute the trace start time of the grid cell
+     *  from its indexes
+     */
+    double CellTimeZero(unsigned int ix, unsigned int iy);
     
 private:
     
@@ -191,7 +243,7 @@ private:
     std::string FileName;
 
     //! the origin of the grid
-    Vector O;
+    Vector Origin;
     
     //! the x-direction vector of the grid
     Vector dX;
@@ -216,13 +268,19 @@ private:
     
     //! the time step of the field trace
     double dt_obs;
+
+    //! the start time change per index x
+    double dtx_obs;
+
+    //! the start time change per index y
+    double dty_obs;
     
     /*! the interpolated electromagnetic field is stored in
-     *  a 3-dimensional vector.
+     *  a 2-dimensional array of FieldTrace.
      *  The first (outermost) index is ix.
      *  The second index is iy.
-     *  The third (innermost) index is the time index.
+     *  We store pointers to the traces for every grid cell.
      */ 
-    std::vector<std::vector<std::vector<ElMagField>>> TimeDomainField;
+    std::vector<std::vector<FieldTrace*>> Traces;
 
 };

@@ -509,13 +509,14 @@ int main(int argc, char *argv[])
                 }
             }
         
-        // make a print once every 10s
+        // make a print once every 30s
         current_time = MPI_Wtime();
         if (current_time-print_time > 30)
         {
             if (teufel::rank == 0)
             {
-                std::cout << "tracking step " << step << std::endl;
+                std::cout << "time elapsed : " << current_time-start_time << " s   ";
+                std::cout << "tracking step : " << step << std::endl;
             };
             ss.str(std::string());
             ss << "/proc/" << PID << "/status";

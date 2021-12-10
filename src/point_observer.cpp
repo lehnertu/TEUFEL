@@ -42,6 +42,14 @@ PointObserver::PointObserver(
     trace = new FieldTrace(t0,dt,nots);
     // set a default source
     source = BeamObservation;
+    
+    if (teufel::rank==0)
+    {
+        std::cout << "point observer : " << filename << std::endl;
+        std::cout << "Pos = (" << Pos.x << ", " << Pos.y << ", " << Pos.z << ") m" << std::endl;
+        std::cout << "t0=" << t0 << "  dt=" << dt << "  nots=" << nots << std::endl;
+        std::cout << std::endl << std::endl;
+    }    
 }
 
 PointObserver::~PointObserver()

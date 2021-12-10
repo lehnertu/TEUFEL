@@ -589,7 +589,7 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
             else if (type == "screen")
             {
                 double x, y, z;
-                double t0, dt;
+                double t0, dt, dtx, dty;
                 pugi::xml_attribute fn = obs.attribute("file");
                 if (!fn)
                     throw(IOexception("InputParser::parseObservers - <screen> attribute file not found."));                
@@ -607,6 +607,11 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                 x = parseValue(hnode.attribute("x"));
                 y = parseValue(hnode.attribute("y"));
                 z = parseValue(hnode.attribute("z"));
+                pugi::xml_attribute att_dtx = hnode.attribute("dt");
+                if (!att_dtx)
+                    dtx = 0.0;
+                else
+                    dtx = parseValue(att_dtx);
                 Vector dx = Vector(x, y, z);
                 pugi::xml_attribute nh = hnode.attribute("n");
                 if (!nh)
@@ -617,6 +622,11 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                 x = parseValue(vnode.attribute("x"));
                 y = parseValue(vnode.attribute("y"));
                 z = parseValue(vnode.attribute("z"));
+                pugi::xml_attribute att_dty = vnode.attribute("dt");
+                if (!att_dty)
+                    dty = 0.0;
+                else
+                    dty = parseValue(att_dty);
                 Vector dy = Vector(x, y, z);
                 pugi::xml_attribute nv = vnode.attribute("n");
                 if (!nv)
@@ -634,7 +644,7 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                     pos, dx, dy,
                     nh.as_int(),
                     nv.as_int(),
-                    t0, dt, nt.as_int() );
+                    t0, dt, dtx, dty, nt.as_int() );
                 pugi::xml_attribute src = obs.attribute("source");
                 if (src)
                 {

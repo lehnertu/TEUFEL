@@ -288,20 +288,6 @@ ElMagField Beam::RetardedField(double obs_time, Vector obs_pos)
 }
 
 void Beam::integrateFieldTrace(
-    Vector ObservationPoint,
-    double t0,
-    double dt,
-    int nots,
-    std::vector<ElMagField> *ObservationField)
-{
-    // just do the summation over all te bunches
-    for(int i=0; i<NOB; i++)
-    {
-        B[i]->integrateFieldTrace(ObservationPoint,t0,dt,nots,ObservationField);
-    }
-}
-
-void Beam::integrateFieldTrace(
         Vector ObservationPoint,
         FieldTrace *trace)
 {
