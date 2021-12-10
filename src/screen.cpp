@@ -60,6 +60,12 @@ ScreenObserver::ScreenObserver(
     if (teufel::rank==0)
     {
         std::cout << "screen observer : " << filename << std::endl;
+        std::cout << "Nx=" << Nx << "  Ny=" << Ny << "  Nots=" << NOTS << std::endl;
+        std::cout << "Origin = (" << Origin.x << ", " << Origin.y << ", " << Origin.z << ") m" << std::endl;
+        std::cout << "Normal = (" << normal.x << ", " << normal.y << ", " << normal.z << ") m" << std::endl;
+        std::cout << "dX = (" << dX.x << ", " << dX.y << ", " << dX.z << ") m" << std::endl;
+        std::cout << "dY = (" << dY.x << ", " << dY.y << ", " << dY.z << ") m" << std::endl;
+        std::cout << "t0=" << t0_obs << "  dt=" << dt_obs << "  dtx=" << dtx_obs << "  dty=" << dty_obs << std::endl;
         std::cout << "allocating " << (double)(6*Nx*Ny*NOTS) * sizeof(double) / 1e6 << " MB of memory per node";
         std::cout << std::endl << std::endl;
     }    
@@ -113,6 +119,7 @@ void ScreenObserver::integrate(Beam *src)
 {
     int counter = 0;
     double now = current_time();
+    double start_time = now;
     double print_time = now;
     #pragma omp parallel shared(counter)
     {
@@ -133,7 +140,8 @@ void ScreenObserver::integrate(Beam *src)
                 {
                     print_time = now;
                     std::cout << "node " << teufel::rank << " : computed ";
-                    std::cout << counter << " of " << Nx*Ny << " cells";
+                    std::cout << counter << " of " << Nx*Ny << " cells ";
+                    std::cout << " in " << now-start_time << " s ";
                     std::cout << " using " << omp_get_num_threads() << " threads." << std::endl;
                 };
             };
@@ -145,6 +153,7 @@ void ScreenObserver::integrate(Bunch *src)
 {
     int counter = 0;
     double now = current_time();
+    double start_time = now;
     double print_time = now;
     #pragma omp parallel shared(counter)
     {
@@ -165,7 +174,8 @@ void ScreenObserver::integrate(Bunch *src)
                 {
                     print_time = now;
                     std::cout << "node " << teufel::rank << " : computed ";
-                    std::cout << counter << " of " << Nx*Ny << " cells";
+                    std::cout << counter << " of " << Nx*Ny << " cells ";
+                    std::cout << " in " << now-start_time << " s ";
                     std::cout << " using " << omp_get_num_threads() << " threads." << std::endl;
                 };
             };
@@ -177,6 +187,7 @@ void ScreenObserver::integrate(Lattice *src)
 {
     int counter = 0;
     double now = current_time();
+    double start_time = now;
     double print_time = now;
     #pragma omp parallel shared(counter)
     {
@@ -199,7 +210,8 @@ void ScreenObserver::integrate(Lattice *src)
                     {
                         print_time = now;
                         std::cout << "node " << teufel::rank << " : computed ";
-                        std::cout << counter << " of " << Nx*Ny << " cells";
+                        std::cout << counter << " of " << Nx*Ny << " cells ";
+                        std::cout << " in " << now-start_time << " s ";
                         std::cout << " using " << omp_get_num_threads() << " threads." << std::endl;
                     };
                 };
