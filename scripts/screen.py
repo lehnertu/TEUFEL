@@ -89,6 +89,12 @@ class TeufelScreen():
         # object is ready
         return screen
         
+    def shape(self):
+        """
+        Report the shape of the screen.
+        """
+        return (self.Nx, self.Ny)
+
     def screenPos(self,ix,iy):
         """
         get the position [m] of an indexed pixel on the screen

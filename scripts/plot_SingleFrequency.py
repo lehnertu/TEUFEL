@@ -6,6 +6,7 @@ import os.path
 import argparse
 import numpy as np
 import h5py
+from screen import *
 import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter
 from matplotlib.patches import Circle
@@ -28,26 +29,12 @@ f = args.freq
 
 # Open the file for reading
 print("reading ",radfile)
-hdf = h5py.File(radfile, "r")
-print(hdf)
+screen = TeufelScreen.read(radfile)
 print()
 
-# Get the groups
-pos = hdf['ObservationPosition']
-Nx = pos.attrs.get('Nx')
-Ny = pos.attrs.get('Ny')
-print("Nx=%d Ny=%d" % (Nx,Ny))
-print(pos)
-field = hdf['ElMagField']
-print(field)
-t0 = field.attrs.get('t0')
-dt = field.attrs.get('dt')
-nots = field.attrs.get('NOTS')
-print("t0=%g dt=%g NOTS=%d" % (t0, dt, nots))
-pos = np.array(pos)
-a = np.array(field)
-hdf.close()
-print()
+(Nx,Ny) = screen.shape()
+nots = screen.nots
+dt = screen.dt
 
 AmplitudeX = np.empty([Nx, Ny])
 PhaseX = np.empty([Nx, Ny])
@@ -56,39 +43,38 @@ PhaseY = np.empty([Nx, Ny])
 X = np.empty([Nx, Ny])
 Y = np.empty([Nx, Ny])
 
-t = np.linspace(t0,t0+(nots-1)*dt,nots)
-cft = np.cos(2*np.pi*f*t)
-sft = np.sin(2*np.pi*f*t)
 
 for ix in range(Nx):
     for iy in range(Ny):
         # field data
-        X[ix,iy] = pos[ix,iy,0]
-        Y[ix,iy] = pos[ix,iy,1]
-        trace = a[ix,iy]
-        data = trace.transpose()
+        (X[ix,iy], Y[ix,iy]) = screen.screenPos(ix,iy)
+        (EVec, BVec) = screen.getFieldTrace(ix,iy)
+        t0 = screen.getStartTime(ix,iy)
+        t = np.linspace(t0,t0+(nots-1)*dt,nots)
+        cft = np.cos(2*np.pi*f*t)
+        sft = np.sin(2*np.pi*f*t)
         # fourier components of the field
-        Ex = data[0]
+        Ex = EVec[:,0]
         cosEx = np.dot(Ex,cft)
         sinEx = np.dot(Ex,sft)
         cEx = cosEx + 1j*sinEx
-        Ey = data[1]
+        Ey = EVec[:,1]
         cosEy = np.dot(Ey,cft)
         sinEy = np.dot(Ey,sft)
         cEy = cosEy + 1j*sinEy
-        Ez = data[2]
+        Ez = EVec[:,2]
         cosEz = np.dot(Ez,cft)
         sinEz = np.dot(Ez,sft)
         cEz = cosEz + 1j*sinEz
-        Bx = data[3]
+        Bx = BVec[:,0]
         cosBx = np.dot(Bx,cft)
         sinBx = np.dot(Bx,sft)
         ccBx = cosBx - 1j*sinBx
-        By = data[4]
+        By = BVec[:,1]
         cosBy = np.dot(By,cft)
         sinBy = np.dot(By,sft)
         ccBy = cosBy - 1j*sinBy
-        Bz = data[5]
+        Bz = BVec[:,2]
         cosBz = np.dot(Bz,cft)
         sinBz = np.dot(Bz,sft)
         ccBz = cosBz - 1j*sinBz
@@ -108,8 +94,8 @@ for ix in range(Nx):
 
 # figure with power density on screen
 
-dX = pos[1,0,0]-pos[0,0,0]
-dY = pos[0,1,1]-pos[0,0,1]
+dX = screen.dx
+dY = screen.dy
 print("dx=%g dy=%g m" % (dX,dY))
 # Etot = Amplitude.sum()*dX*dY
 # print("integrated energy = ", 1e6*Etot, " µJ"(
