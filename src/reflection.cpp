@@ -494,7 +494,7 @@ int main(int argc, char* argv[])
                     t1.retard(R/SpeedOfLight, &component);
                     propagated_trace += component * (-dot(RVec,Normal)/R3) * dA;
                 }
-                catch(IOexception exc)
+                catch(IOexception const & exc)
                 {
                     #pragma omp atomic
                     warnings_counter++;
@@ -515,7 +515,7 @@ int main(int argc, char* argv[])
                     t2.retard(R/SpeedOfLight, &component);
                     propagated_trace += component * (-dot(RVec,Normal)/(R2*SpeedOfLight)) * dA;
                 }
-                catch(IOexception exc)
+                catch(IOexception const & exc)
                 {
                     #pragma omp atomic
                     warnings_counter++;
@@ -529,7 +529,7 @@ int main(int argc, char* argv[])
                     // TODO: why is this term positive - should be negative
                     propagated_trace += component * (1.0/R) * dA;
                 }
-                catch(IOexception exc)
+                catch(IOexception const & exc)
                 {
                     #pragma omp atomic
                     warnings_counter++;

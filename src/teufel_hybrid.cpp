@@ -667,7 +667,7 @@ int main(int argc, char *argv[])
                     obs->generateOutput();
                     std::cout << "Observer output file written." << std::endl;
             }
-            catch (exception& e) { cout << e.what() << endl;}
+            catch (exception const & e) { cout << e.what() << endl;}
         }
         // if (teufel::rank == 0) delete reduceBuffer;
         delete[] reduceBuffer;
