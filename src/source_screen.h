@@ -91,6 +91,22 @@ public:
     //! We need a destructor to release the memory for the field traces
     ~SourceScreen();
     
+    /*! The method gives the size of the buffer necessary to store
+     *  the field information of either the traces or one of the derivatives
+     *  as a number of doubles (not bytes!).
+     */
+    std::size_t getBufferSize() { return Nx*Ny*NOTS*6; };
+
+    /*! Get the energy flow density vector of one trace
+     *  integrated over time
+     */
+    Vector Poynting(unsigned int ix, unsigned int iy) { return Traces[ix][iy]->Poynting(); };
+
+    /*! Compute the total electromagnetic energy flowing through the screen
+     *  Energy flow vectors opposite the normal vector are counted positive.
+     */
+    double totalEnergy();
+
 private:
 
 	/*! Compute the electromagnetic fields in local coordinates:
@@ -137,16 +153,16 @@ private:
     unsigned int NOTS;
     
     //! the start time of the field trace
-    double t0_obs;
+    double t0_src;
     
     //! the time step of the field trace
-    double dt_obs;
+    double dt_src;
 
     //! the start time change per index x
-    double dtx_obs;
+    double dtx_src;
 
     //! the start time change per index y
-    double dty_obs;
+    double dty_src;
     
     /*! the electromagnetic field is stored in
      *  a 2-dimensional array of FieldTrace.
