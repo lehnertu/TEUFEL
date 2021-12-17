@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<teufel description="Generate input field for waveguide example"
+    author="Ulf Lehnert 17.12.2021">
+    <calc print="frequency [Hz] = " var="freq" eq="1.0e12"/>
+    <calc print="wavelength [m] = " var="lambda" eq="_c/freq"/>
+    <calc print="waveguide height g [m] = " var="gap" eq="0.01"/>
+    <lattice>
+        <wave name="seed" type="gaussian">
+        	<position x="0.0" y="0.0" z="0.0"/>
+        	<!-- compute the seed field -->
+        	<calc print="seed power [W] = " var="P0" eq="1e6"/>
+			<calc print="Rayleigh range [m] = " var="zR" eq="1.0"/>
+			<calc print="waist radius w0 [m] = " var="w0" eq="sqrt(lambda*zR/_pi)"/>
+			<calc print="peak intensity I0 [W/m²] = " var="I0" eq="2.0*P0/(_pi*w0*w0)"/>
+			<calc print="peak field E0 [V/m] = " var="E0" eq="sqrt(2*I0/_eps0/_c)"/>
+        	<field lambda="lambda" ReA="E0" ImA="0.0" rayleigh="zR"/>
+        </wave>
+    </lattice>
+    <beam>
+    </beam>
+    <tracking method="Vay" delta_t="dt" n="1000" >
+    </tracking>
+    <observer>
+        <calc print="screen position z0 = " var="z0" eq="0.0"/>
+        <calc print="screen center time t0 = " var="tscreen" eq="0.0"/>
+        <screen name="EntranceWG" source="lattice" file="EntranceWG.h5">
+            <position x="0.0" y="0.0" z="z0" />
+            <hpitch x="0.001" y="0.0" z="0.0" n="50" />
+            <vpitch x="0.0" y="gap/16" z="0.0" n="16" />
+            <time t0="tscreen" dt="0.5e-13" n="200" />
+        </screen>
+    </observer>
+</teufel>

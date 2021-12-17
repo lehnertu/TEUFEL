@@ -216,6 +216,7 @@ private:
  * are handled by this class.
  * 
  * At present only a simple shift of the origin is implemented.
+ * TODO: at least we also need a time shift
  */
 class ExternalField : public GeneralField
 {

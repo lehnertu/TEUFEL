@@ -31,6 +31,7 @@
 #include "point_observer.h"
 #include "screen.h"
 #include "snapshot.h"
+#include "source_screen.h"
 #include "undulator.h"
 #include "vector.h"
 #include "wave.h"
@@ -181,6 +182,29 @@ int InputParser::parseLattice(Lattice *lattice)
             }
             else
                 throw(IOexception("InputParser::parseLattice(Lattice - unknown wave type."));
+            count++;
+        }
+        else if (type == "screen")
+        {
+            parseCalcChildren(element);
+            type = element.attribute("type").value();
+            name = element.attribute("name").value();
+            if (teufel::rank==0) std::cout << name << "::SourceScreen" << std::endl;
+            pugi::xml_attribute fn = element.attribute("file");
+            if (!fn)
+                throw(IOexception("InputParser::parseLattice - <screen> attribute file not found."));                
+            double x, y, z, t0;
+            pugi::xml_node posnode = element.child("position");
+            if (!posnode)
+                throw(IOexception("InputParser::parseLattice - <screen> <position> not found."));
+            x = parseValue(posnode.attribute("x"));
+            y = parseValue(posnode.attribute("y"));
+            z = parseValue(posnode.attribute("z"));
+            t0 = parseValue(posnode.attribute("t"));
+            Vector pos = Vector(x, y, z);
+            SourceScreen *screen = new SourceScreen(
+                fn.as_string(), pos, t0);
+            lattice->addElement(screen);
             count++;
         }
         else if (type == "dipole")

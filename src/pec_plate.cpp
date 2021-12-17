@@ -19,33 +19,29 @@
  * 
  * =========================================================================*/
 
-#include "scatterer.h"
+#include "pec_plate.h"
 
 #include <iostream>
 #include <math.h>
 
-Scatterer::Scatterer()
+template <class objectT>
+PlatePEC<objectT>::PlatePEC(objectT *obj, const char *filename)
 {
 }
 
-Scatterer::~Scatterer()
+template <class objectT>
+PlatePEC<objectT>::~PlatePEC()
 {
 }
 
-void Scatterer::integrate(Beam *src)
-{
-}
-
-void Scatterer::integrate(Bunch *src)
-{
-}
-
-void Scatterer::integrate(Lattice *src)
-{
-}
-
-ElMagField Scatterer::Field(double t, Vector X)
+template <class objectT>
+ElMagField PlatePEC<objectT>::Field(double t, Vector X)
 {
     return ElMagField(Vector(0.0,0.0,0.0),Vector(0.0,0.0,0.0));
+}
+
+template <class objectT>
+void PlatePEC<objectT>::update()
+{
 }
 

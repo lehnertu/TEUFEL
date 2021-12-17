@@ -41,8 +41,8 @@
  * 
  * This class handles the computation and storage of emitted electromagnetic
  * radiation from different sources (lattice, bunches and beams).
- * For every point on a 2-dimensional screen time-traces of
- * the observed electromagnetic field are generated.
+ * For every point on a 2-dimensional planar rectangular grid
+ * time-traces of the observed electromagnetic field are generated.
  */
 class ScreenObserver : public Observer
 {
