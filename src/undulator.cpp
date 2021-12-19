@@ -25,19 +25,19 @@
 #include <math.h>
 
 PlanarUndulator::PlanarUndulator() :
-    ExternalField()
+    LocalizedField()
 {
     Setup(0.0, 1.0, 1);
 }
 
 PlanarUndulator::PlanarUndulator(Vector pos) :
-    ExternalField(pos)
+    LocalizedField(0.0,pos)
 {
     Setup(0.0, 1.0, 1);
 }
 
 PlanarUndulator::PlanarUndulator(const pugi::xml_node node, InputParser *parser) :
-    ExternalField()
+    LocalizedField()
 {
     parser->parseCalcChildren(node);
     pugi::xml_node position = node.child("position");
@@ -126,19 +126,19 @@ ElMagField PlanarUndulator::LocalField(double t, Vector X)
 }
 
 TransverseGradientUndulator::TransverseGradientUndulator() :
-    ExternalField()
+    LocalizedField()
 {
     Setup(0.0, 1.0, 0.0, 1.0, 1);
 }
 
 TransverseGradientUndulator::TransverseGradientUndulator(Vector pos) :
-    ExternalField(pos)
+    LocalizedField(0.0,pos)
 {
     Setup(0.0, 1.0, 0.0, 1.0, 1);
 }
 
 TransverseGradientUndulator::TransverseGradientUndulator(const pugi::xml_node node, InputParser *parser) :
-    ExternalField()
+    LocalizedField()
 {
     parser->parseCalcChildren(node);
     pugi::xml_node position = node.child("position");

@@ -31,7 +31,7 @@ SourceScreen::SourceScreen(
         std::string filename,
         Vector position,
         double start_time) :
-    ExternalField()
+    LocalizedField()
 {
     FileName = filename;
     if (teufel::rank==0) std::cout << "screen field source : " << filename << std::endl;

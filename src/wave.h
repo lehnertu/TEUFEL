@@ -39,7 +39,7 @@
  * the mode waist. The propagation direction is along the z-axis and
  * the polarization of the electic field is along the x-axis.
  * Possitions and directions can be changed by transformations
- * given in the constructors applied through the ExternalField base class.
+ * given in the constructors applied through the LocalizedField base class.
  * The transverse mode size is defined by the Rayleigh length.
  * 
  * The radiation power is constant all along the beam with the
@@ -52,7 +52,7 @@
  * with \f$ I_0 = |E_0|^2 / (2 \eta) \f$ the peak intensity on axis.
  * \f$ \eta = 1 / (\epsilon_0 c) \f$ is the vacuum impedance.
  */
-class GaussianWave : public ExternalField
+class GaussianWave : public LocalizedField
 {
 
 public:
@@ -67,7 +67,7 @@ public:
      *  and initalizes all variables with sane values. This will not yet
      *  produce any field output as the amplitude is zero.
      */
-    GaussianWave(Vector pos);
+    GaussianWave(double time, Vector pos);
 
     /*! This constructor takes the information from an XML node
      *  describing all wave properties. It will throw exceptions
@@ -128,7 +128,7 @@ private:
  * the mode waist. The propagation direction is along the z-axis and
  * the polarization of the electic field is along the x-axis.
  * Possitions and directions can be changed by transformations
- * given in the constructors applied through the ExternalField base class.
+ * given in the constructors applied through the LocalizedField base class.
  * The transverse mode size is defined by the Rayleigh length.
  * 
  * The intensity of the wave has a gaussian time dependence.
@@ -145,7 +145,7 @@ private:
  * with \f$ I_0 = |E_0|^2 / (2 \eta) \f$ the peak intensity on axis.
  * \f$ \eta = 1 / (\epsilon_0 c) \f$ is the vacuum impedance.
  */
-class GaussianWavePacket : public ExternalField
+class GaussianWavePacket : public LocalizedField
 {
 
 public:
@@ -160,7 +160,7 @@ public:
      *  and initalizes all variables with sane values. This will not yet
      *  produce any field output as the amplitude is zero.
      */
-    GaussianWavePacket(Vector pos);
+    GaussianWavePacket(double time, Vector pos);
 
     /*! This constructor takes the information from an XML node
      *  describing all wave properties. It will throw exceptions

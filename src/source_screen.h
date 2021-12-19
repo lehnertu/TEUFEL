@@ -65,7 +65,7 @@
  * propagates the fields further without change in the same direction
  * it was propagating when recorded, that is, in negative normal direction.
  */
-class SourceScreen : public ExternalField
+class SourceScreen : public LocalizedField
 {
     
 public:
@@ -111,7 +111,7 @@ private:
 
 	/*! Compute the electromagnetic fields in local coordinates:
      * This is the field in the coordinate system that was used in the file.
-     * For field computation ExternalField::Field() is used which performs the
+     * For field computation LocalizedField::Field() is used which performs the
      * shift of origin in space and time.
      */
     virtual ElMagField LocalField(double t, Vector X);

@@ -200,7 +200,7 @@ private:
 };
 
 /*!
- * \class ExternalField
+ * \class LocalizedField
  * \brief An external field (lattice element) through which to track particles.
  * @author Ulf Lehnert
  * @author Vipul Joshi
@@ -218,7 +218,7 @@ private:
  * At present only a simple shift of the origin is implemented.
  * TODO: at least we also need a time shift
  */
-class ExternalField : public GeneralField
+class LocalizedField : public GeneralField
 {
 
 public:
@@ -226,16 +226,16 @@ public:
     /*! The default constructor just defines an identity transformation
 	of the element coordinates into lab coordinates
     */
-    ExternalField();
+    LocalizedField();
 
     /*! This constructor defines a different origin
      *	of the element local coordinate system, thus, placing the element
-     *  at a certain position in lab space
+     *  at a certain position in lab space and time
      */
-    ExternalField(Vector pos);
+    LocalizedField(double time, Vector pos);
     
     /*! All derived classe must provide a destructor */
-    virtual ~ExternalField() {};
+    virtual ~LocalizedField() {};
     
     /*! The electromagnetic field at a given time and point in space.
      * 
@@ -264,6 +264,9 @@ protected :
 
     /*! This is the position of the element in laboratory frame */
     Vector origin;
+    
+    /*! This is the local time zero given in lab time */
+    double t0;
 
 };
 
@@ -279,7 +282,7 @@ protected :
  * is an GeneralField.
  * 
  * Typically the lattice only containes external fields derived from
- * ExternalField. However, particle bunches may also add the mutual
+ * LocalizedField. However, particle bunches may also add the mutual
  * interaction fields of their particles to the lattice.
  * 
  */

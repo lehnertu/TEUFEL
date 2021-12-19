@@ -25,19 +25,19 @@
 #include <math.h>
 
 GaussianWave::GaussianWave() :
-    ExternalField()
+    LocalizedField()
 {
     Setup(1.0, complex<double>(0.0, 0.0), 1.0);
 }
 
-GaussianWave::GaussianWave(Vector pos) :
-    ExternalField(pos)
+GaussianWave::GaussianWave(double time, Vector pos) :
+    LocalizedField(time,pos)
 {
     Setup(1.0, complex<double>(0.0, 0.0), 1.0);
 }
 
 GaussianWave::GaussianWave(const pugi::xml_node node, InputParser *parser) :
-    ExternalField()
+    LocalizedField()
 {
     // parser->parseCalcChildren(node);
     pugi::xml_node position = node.child("position");
@@ -104,19 +104,19 @@ ElMagField GaussianWave::LocalField(double t, Vector X)
 
 
 GaussianWavePacket::GaussianWavePacket() :
-    ExternalField()
+    LocalizedField()
 {
     Setup(1.0, complex<double>(0.0, 0.0), 1.0, 1.0, 0.0);
 }
 
-GaussianWavePacket::GaussianWavePacket(Vector pos) :
-    ExternalField(pos)
+GaussianWavePacket::GaussianWavePacket(double time, Vector pos) :
+    LocalizedField(time,pos)
 {
     Setup(1.0, complex<double>(0.0, 0.0), 1.0, 1.0, 0.0);
 }
 
 GaussianWavePacket::GaussianWavePacket(const pugi::xml_node node, InputParser *parser) :
-    ExternalField()
+    LocalizedField()
 {
     // parser->parseCalcChildren(node);
     pugi::xml_node position = node.child("position");

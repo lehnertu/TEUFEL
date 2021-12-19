@@ -162,24 +162,26 @@ ElMagField HomogeneousField::Field(double t, Vector X)
     return EB;
 }
 
-// ********** ExternalField **********
+// ********** LocalizedField **********
 
-ExternalField::ExternalField()
+LocalizedField::LocalizedField()
 {
+    t0 = 0.0;
     origin = Vector(0.0,0.0,0.0);
 }
 
-ExternalField::ExternalField(Vector pos)
+LocalizedField::LocalizedField(double time, Vector pos)
 {
+    t0 = time;
     origin = pos;
 }
 
-ElMagField ExternalField::Field(double t, Vector X)
+ElMagField LocalizedField::Field(double t, Vector X)
 {
-    return LocalField(t,X-origin);
+    return LocalField(t-t0,X-origin);
 }
 
-ElMagField ExternalField::LocalField(double t, Vector X)
+ElMagField LocalizedField::LocalField(double t, Vector X)
 {
     return ElMagField(Vector(0.0,0.0,0.0),Vector(0.0,0.0,0.0));
 }

@@ -25,7 +25,7 @@
 #include <math.h>
 
 HardEdgeDipole::HardEdgeDipole() :
-    ExternalField()
+    LocalizedField()
 {
     B_val = Vector(0.0, 0.0, 0.0);
     p_1 = Vector(0.0, 0.0, 0.0);
@@ -35,7 +35,7 @@ HardEdgeDipole::HardEdgeDipole() :
 }
 
 HardEdgeDipole::HardEdgeDipole(Vector B, Vector p1, Vector n1, Vector p2, Vector n2) :
-    ExternalField()
+    LocalizedField()
 {
     B_val = B;
     p_1 = p1;
@@ -45,7 +45,7 @@ HardEdgeDipole::HardEdgeDipole(Vector B, Vector p1, Vector n1, Vector p2, Vector
 }
 
 HardEdgeDipole::HardEdgeDipole(const pugi::xml_node node, InputParser *parser) :
-    ExternalField()
+    LocalizedField()
 {
     parser->parseCalcChildren(node);
     pugi::xml_node field = node.child("B");
@@ -121,7 +121,7 @@ ElMagField HardEdgeDipole::LocalField(double t, Vector X)
 
 
 SoftEdgeDipole::SoftEdgeDipole() :
-    ExternalField()
+    LocalizedField()
 {
     B_val = Vector(0.0, 0.0, 0.0);
     p_1 = Vector(0.0, 0.0, 0.0);
@@ -133,7 +133,7 @@ SoftEdgeDipole::SoftEdgeDipole() :
 }
 
 SoftEdgeDipole::SoftEdgeDipole(Vector B, Vector p1, Vector n1, double t1, Vector p2, Vector n2, double t2) :
-    ExternalField()
+    LocalizedField()
 {
     B_val = B;
     p_1 = p1;
@@ -145,7 +145,7 @@ SoftEdgeDipole::SoftEdgeDipole(Vector B, Vector p1, Vector n1, double t1, Vector
 }
 
 SoftEdgeDipole::SoftEdgeDipole(const pugi::xml_node node, InputParser *parser) :
-    ExternalField()
+    LocalizedField()
 {
     parser->parseCalcChildren(node);
     pugi::xml_node field = node.child("B");
