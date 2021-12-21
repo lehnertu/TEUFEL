@@ -26,7 +26,7 @@
         <screen name="EntranceWG" source="lattice" file="EntranceWG.h5">
             <position x="0.0" y="0.0" z="z0" />
             <hpitch x="0.001" y="0.0" z="0.0" n="50" />
-            <vpitch x="0.0" y="gap/16" z="0.0" n="16" />
+            <vpitch x="0.0" y="gap/21" z="0.0" n="21" />
             <time t0="tscreen" dt="0.5e-13" n="200" />
         </screen>
     </observer>

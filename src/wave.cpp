@@ -124,11 +124,13 @@ GaussianWavePacket::GaussianWavePacket(const pugi::xml_node node, InputParser *p
         throw(IOexception("InputParser::GaussianWave - wave <position> not found."));
     else
     {
-        double x, y, z;
+        double x, y, z, t;
         x = parser->parseValue(position.attribute("x"));
         y = parser->parseValue(position.attribute("y"));
         z = parser->parseValue(position.attribute("z"));
+        t = parser->parseValue(position.attribute("t"));
         origin = Vector(x,y,z);
+        t0 = t;
     }
     pugi::xml_node field = node.child("field");
     if (!field)

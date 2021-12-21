@@ -77,7 +77,8 @@ public:
      * 
      * The geometry is fully read from the file attributes.
      * The origin of the screen can be shifted in space and time, however.
-     * (no rotations provided, yet)
+     * It is placed at the coordinaes given to the constructor.
+     * The position and time information recorded in the file is discarded.
      *
      * \param[in] filename The name of the input file.
      * \param[in] position The new position of the screen.
@@ -86,7 +87,7 @@ public:
     SourceScreen(
         std::string filename,
         Vector position,
-        double start_time);
+        double time);
     
     //! We need a destructor to release the memory for the field traces
     ~SourceScreen();
@@ -117,28 +118,59 @@ private:
     virtual ElMagField LocalField(double t, Vector X);
 
     /*! Compute the center position of the grid cell
-     *  from its indexes
+     *  from its indexes in local coordinates
      */
     Vector CellPosition(unsigned int ix, unsigned int iy);
     
     /*! Compute the trace start time of the grid cell
-     *  from its indexes
+     *  from its indexes in local time
      */
     double CellTimeZero(unsigned int ix, unsigned int iy);
+
+    /*! Write one of the fields into a scree-like HDF5 file.
+     *  THIS IS FOR DEBUGGING PURPOSE ONLY
+     *  TODO: remove this
+     *  A pointer to the field is given.
+     */
+    void WriteField(
+        std::string filename,
+        std::vector<std::vector<FieldTrace*>> Field
+    );
+
+    /*! Return all field values in a newly allocated buffer.
+     *  Memory for the buffer is allocated by this method and must be freeed
+     *  by the caller. Returns a pointer to the allocated memory.
+     *  An exception is thrown if the alloaction of the buffer fails.
+     *
+     *  THIS IS FOR DEBUGGING PURPOSE ONLY
+     *  TODO: remove this
+     */
+    double* getBuffer(
+        std::vector<std::vector<FieldTrace*>> Field
+    );
     
 private:
     
     //! file name for the final output
     std::string FileName;
 
-    //! the origin of the grid
-    Vector Origin;
-    
     //! the x-direction vector of the grid
     Vector dX;
     
+    //! the absolute value of the x grid spacing
+    double dx;
+
+    //! the unit vector of the x direction
+    Vector ex;
+        
     //! the y-direction vector of the grid
     Vector dY;
+
+    //! the absolute value of the y grid spacing
+    double dy;
+    
+    //! the unit vector of the y direction
+    Vector ey;
 
     //! the normal direction vector of the screen
     Vector normal;
@@ -151,9 +183,6 @@ private:
     
     //! number of time steps in the interpolated trace
     unsigned int NOTS;
-    
-    //! the start time of the field trace
-    double t0_src;
     
     //! the time step of the field trace
     double dt_src;

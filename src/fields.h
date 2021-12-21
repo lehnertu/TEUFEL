@@ -55,6 +55,9 @@ public:
     /*! Magnetic field report */
     Vector B();
 
+    /*! Check if it is different from zero */
+    bool isNull() { return (vecE.isNull() and vecB.isNull()); };
+
     /* Poynting vector - energy flow density */
     Vector Poynting();
     
@@ -88,6 +91,9 @@ private:
     Vector vecB;
 
 };
+
+//! a zero field constant for convenience
+const ElMagField ElMagFieldZero(VectorZero,VectorZero);
 
 /*!
  * \class ElMagObs

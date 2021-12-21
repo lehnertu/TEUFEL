@@ -29,7 +29,7 @@ FieldTrace::FieldTrace(double t0_p, double dt_p, std::size_t N_p)
     t0 = t0_p;
     dt = dt_p;
     N = N_p;
-    trace = std::vector<ElMagField>(N,ElMagField(Vector(0.0,0.0,0.0),Vector(0.0,0.0,0.0)));
+    trace = std::vector<ElMagField>(N,ElMagFieldZero);
 }
 
 FieldTrace::FieldTrace(FieldTrace *original)
@@ -43,7 +43,7 @@ FieldTrace::FieldTrace(FieldTrace *original)
 void FieldTrace::zero()
 {
     for (std::size_t i=0; i<N; i++)
-        trace[i] = ElMagField(Vector(0.0,0.0,0.0),Vector(0.0,0.0,0.0));
+        trace[i] = ElMagFieldZero;
 }
 
 FieldTrace::~FieldTrace()
@@ -163,9 +163,9 @@ ElMagField FieldTrace::get_field(double time)
     double ref = (time-t0)/dt;
     int index = (int)floor(ref);
     double frac = ref-(double)index;
-    ElMagField f1(Vector(0.0,0.0,0.0),Vector(0.0,0.0,0.0));
+    ElMagField f1=ElMagFieldZero;
     if ((index>=0) && (index<(int)N)) f1=trace[(std::size_t)index];
-    ElMagField f2(Vector(0.0,0.0,0.0),Vector(0.0,0.0,0.0));
+    ElMagField f2=ElMagFieldZero;
     if ((index+1>=0) && (index+1<(int)N)) f2=trace[(std::size_t)(index+1)];
     return(f1*(1.0-frac)+f2*frac);
 }
@@ -185,13 +185,16 @@ Vector FieldTrace::Poynting()
     return(sum*dt);
 }
 
-FieldTrace FieldTrace::derivative()
+FieldTrace* FieldTrace::derivative()
 {
-    FieldTrace temp = *this;
-    temp.trace[0] = (trace[1]-trace[0])/dt;
+    // create a new field trace as a copy
+    FieldTrace* temp = new FieldTrace(*this);
+    if (temp==0) throw(IOexception("FieldTrace::derivative() - error allocating memory."));
+    // compute the new data
+    temp->set_field(0, (trace[1]-trace[0])/dt );
     for (std::size_t i=1; i<N-1; i++)
-        temp.trace[i] = (trace[i+1]-trace[i-1])/(2.0*dt);
-    temp.trace[N-1] = (trace[N-1]-trace[N-2])/dt;
+        temp->set_field(i, (trace[i+1]-trace[i-1])/(2.0*dt) );
+    temp->set_field(N-1, (trace[N-1]-trace[N-2])/dt );
     return(temp);
 }
 

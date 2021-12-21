@@ -105,7 +105,7 @@ public:
     void set_t0(double t) { t0=t; };
 
     /*! Get the sampling definitions
-     *  These are not expected to be changed, so, no setter routines are provoded */
+     *  These are not expected to be changed, so, no setter routines are provided */
     double get_dt() { return dt; };
     std::size_t get_N() { return N; };
     
@@ -137,8 +137,8 @@ public:
     /*! Poynting vector - time-integrated energy flow density */
     Vector Poynting();
     
-    /*! compute time derivative of fields */
-    FieldTrace derivative();
+    /*! compute a new trace containing time derivative of fields */
+    FieldTrace* derivative();
     
     /*! Compute a retarded trace:
      *  @param delta_t - the amount of retardation in seconds

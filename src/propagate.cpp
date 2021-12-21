@@ -110,7 +110,7 @@ int main(int argc, char* argv[])
     for (int ip=0; ip<source->get_Np(); ip++)
     {
         FieldTrace source_trace = source->get_trace(ip);
-        FieldTrace *deriv = new FieldTrace(source_trace.derivative());
+        FieldTrace *deriv = source_trace.derivative();
         source_dA_dt[ip] = deriv;
     }
     
