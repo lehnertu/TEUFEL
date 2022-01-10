@@ -142,10 +142,22 @@ SourceScreen::SourceScreen(
     }    
 
     // read the field dataset
-    // TODO: sanity check the field sizes
     ElMagField* field_buf = new ElMagField[getBufferSize()];
     if (field_buf==0) throw(IOexception("SourceScreen - error allocating memory."));
     dataset = H5Dopen2(file, "ElMagField", H5P_DEFAULT);
+    
+    // sanity check the field sizes
+    hid_t dspace = H5Dget_space(dataset);
+    int ndims = H5Sget_simple_extent_ndims(dspace);
+    if (ndims != 4) throw(IOexception("SourceScreen - error reading dataset ElMagField - dimension != 4"));
+    hsize_t dims[4];
+    H5Sget_simple_extent_dims(dspace, dims, NULL);
+    if (dims[0] != Nx) throw(IOexception("SourceScreen - error reading dataset ElMagField - size[0] != Nx"));
+    if (dims[1] != Ny) throw(IOexception("SourceScreen - error reading dataset ElMagField - size[1] != Ny"));
+    if (dims[2] != NOTS) throw(IOexception("SourceScreen - error reading dataset ElMagField - size[2] != NOTS"));
+    if (dims[3] != 6) throw(IOexception("SourceScreen - error reading dataset ElMagField - size[3] != 6"));
+    
+    // buffer the data
     if (dataset<0) throw(IOexception("SourceScreen - error opening dataset ElMagField"));
     status = H5Dread (dataset,
         H5T_NATIVE_DOUBLE, 		// mem type id
@@ -377,7 +389,30 @@ double SourceScreen::CellTimeZero(unsigned int ix, unsigned int iy)
 
 ElMagField SourceScreen::LocalField(double t, Vector X)
 {
-    return ElMagField(Vector(0.0,0.0,0.0),Vector(0.0,0.0,0.0));
+    // integrate over the screen to collect all contributions
+    // to the field at the requested point
+    ElMagField total = ElMagFieldZero;
+    for (unsigned int ix = 0; ix < Nx; ix++)
+    	for (unsigned int iy = 0; iy < Ny; iy++)
+        {
+            Vector source_pos = CellPosition(ix,iy);
+            FieldTrace* source_trace = Traces[ix][iy];
+            Vector RVec = X - source_pos;
+            double R = RVec.norm();
+            double R2 = R*R;
+            double R3 = R2*R;
+            // consider retardation
+            double source_t = t - R/SpeedOfLight;
+            if ((source_t>=source_trace->get_t0()) and (source_t<=source_trace->get_last_time()))
+            {
+                ElMagField c1 = source_trace->get_field(source_t) * (-dot(RVec,normal)/R3);
+                ElMagField c2 = dt_Traces[ix][iy]->get_field(source_t) * (-dot(RVec,normal)/(R2*SpeedOfLight));
+                // TODO: why is this term positive - should be negative
+                ElMagField c3 = dn_Traces[ix][iy]->get_field(source_t) * (1.0/R);
+                total += c2+c3;
+            };
+        }
+    return total*dx*dy;
 }
 
 double SourceScreen::totalEnergy()

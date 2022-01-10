@@ -77,7 +77,9 @@ public:
      * 
      * The geometry is fully read from the file attributes.
      * The origin of the screen can be shifted in space and time, however.
-     * It is placed at the coordinaes given to the constructor.
+     * It is placed at the coordinaes given to the constructor (the parent
+     * class LocalizedField handles that). In local coordinates the origin
+     * of the screen is placed at the origin of the coordinate system and t=0.
      * The position and time information recorded in the file is discarded.
      *
      * \param[in] filename The name of the input file.

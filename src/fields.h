@@ -221,8 +221,9 @@ private:
  * The transformation necessary to compute the field in laboratory coordinates,
  * are handled by this class.
  * 
- * At present only a simple shift of the origin is implemented.
- * TODO: at least we also need a time shift
+ * At present only a simple shift of the origin and time is implemented.
+ * No transformation of the fields is needed, we just query the fields
+ * at the coordinates transformed into the local system.
  */
 class LocalizedField : public GeneralField
 {
@@ -258,7 +259,6 @@ private:
 
     /*! The electromagnetic field at a given time and point in space.
      * in element-local coordinates.
-     * The coordinates and the time refer to the laboratory (rest) frame.
      * The field is returned as a tuple of electric field [V/m] and
      * magnetic field [T] vectors.
      * 

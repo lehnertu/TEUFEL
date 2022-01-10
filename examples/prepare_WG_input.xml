@@ -25,8 +25,8 @@
         <calc print="screen center time t0 = " var="tscreen" eq="0.0"/>
         <screen name="EntranceWG" source="lattice" file="EntranceWG.h5">
             <position x="0.0" y="0.0" z="z0" />
-            <hpitch x="0.001" y="0.0" z="0.0" n="50" />
-            <vpitch x="0.0" y="gap/21" z="0.0" n="21" />
+            <hpitch x="0.001" y="0.0" z="0.0" n="40" />
+            <vpitch x="0.0" y="0.001" z="0.0" n="40" />
             <time t0="tscreen" dt="0.5e-13" n="200" />
         </screen>
     </observer>

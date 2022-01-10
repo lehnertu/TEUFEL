@@ -109,11 +109,14 @@ public:
     double get_dt() { return dt; };
     std::size_t get_N() { return N; };
     
-    /*! Get the center time of the trace */
-    double get_tCenter() { return t0+0.5*dt*(double)N; }
-    
     /*! Get the time of one point of the trace */
     double get_time(std::size_t index);
+    
+    /*! Get the time of the last point of the trace */
+    double get_last_time();
+    
+    /*! Get the center time of the trace */
+    double get_center_time();
     
     /*! Get the field at one point of the trace */
     ElMagField get_field(std::size_t index);

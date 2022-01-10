@@ -144,6 +144,18 @@ double FieldTrace::get_time(std::size_t index)
     return t0+index*dt;
 }
 
+double FieldTrace::get_last_time()
+{
+    double t=t0;
+    if (N>0) t=get_time(N-1);
+    return t;
+};
+
+double FieldTrace::get_center_time()
+{
+    return t0+0.5*dt*(double)N;
+}
+
 ElMagField FieldTrace::get_field(std::size_t index)
 {
     if (index<0 || index>=N)

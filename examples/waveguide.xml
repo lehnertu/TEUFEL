@@ -14,11 +14,15 @@
     <observer>
         <calc print="screen position z0 = " var="z0" eq="1.0"/>
         <calc print="screen center time t0 = " var="tscreen" eq="z0/_c"/>
-        <screen file="ExitWG.h5">
+        <point file="SourceScreen_Obs.sdds" source="lattice">
             <position x="0.0" y="0.0" z="z0" />
-            <hpitch x="0.001" y="0.0" z="0.0" n="50" />
-            <vpitch x="0.0" y="gap/21" z="0.0" n="21" />
-            <time t0="tscreen" dt="0.5e-13" n="200" />
+            <time t0="tscreen" dt="0.4e-13" n="500" />
+        </point>
+        <screen file="ExitWG.h5" source="lattice">
+            <position x="0.0" y="0.0" z="z0" />
+            <hpitch x="0.001" y="0.0" z="0.0" n="40" />
+            <vpitch x="0.0" y="0.001" z="0.0" n="40" />
+            <time t0="tscreen" dt="0.4e-13" n="500" />
         </screen>
     </observer>
 </teufel>
