@@ -43,6 +43,13 @@
  * All data is read from an *.h5 file generated in a previous TEUFEL run
  * or by external scripts (e.g. GaussianPulse.ipynb).
  *
+ * It is aasumed that the radiation impinges on the screen essentially
+ * from the normal direction with the source residing sufficiently far away.
+ * Then all fields on the screen should be transversal, all normal
+ * components are canceled. Given that, the normal and time derivatives
+ * are related as \f$ \frac{\partial}{\partial n}V = -\frac{1}{c} \frac{\partial}{\partial t}V \f$
+ * and the Kirchhoff theorem simplifies to 2 contributions, only.
+ *
  * The screen is placed at a given position in space.
  * From there a grid of size (nx,ny) is created
  * extending along the dx and dy vectors.
@@ -207,11 +214,5 @@ private:
      *  a 2-dimensional array of FieldTrace.
      */ 
     std::vector<std::vector<FieldTrace*>> dt_Traces;
-
-    /*! the spatial derivative of the electromagnetic field
-     *  in normal direction is stored in
-     *  a 2-dimensional array of FieldTrace.
-     */ 
-    std::vector<std::vector<FieldTrace*>> dn_Traces;
 
 };

@@ -183,6 +183,9 @@ SourceScreen::SourceScreen(
     	    tr -> set_buffer(b, NOTS);
     	    // the field data are expressed in screen-local coordinates
     	    tr -> transform(ex,ey,normal);
+    	    // coax the fields to be purely transversal
+    	    // (cancel the z component in the screen-local frame)
+    	    tr -> cancel_long_fields(Vector(0.0,0.0,1.0));
     	    Traces[ix][iy] = tr;
     	    b+=NOTS;
     	};
@@ -195,170 +198,30 @@ SourceScreen::SourceScreen(
     status = H5Fclose (file);
     if (status<0) throw(IOexception("SourceScreen - error closing the file."));
 
-    if (teufel::rank==0)
-        std::cout << "computing derivatives ..." << std::endl;
-    // record the start time
-    double start_time = current_time();
-
-    // allocate temporary traces for in-plane spatial derivatives
-    FieldTrace* dx_trace = new FieldTrace(0.0,dt_src,NOTS);
-    FieldTrace* dy_trace = new FieldTrace(0.0,dt_src,NOTS);
-    // compute the derivatives of the field
+    // compute the time derivatives
     dt_Traces.resize(Nx);
-    dn_Traces.resize(Nx);
-    double cSquared = SpeedOfLight*SpeedOfLight;
-    // TODO: parallel loop - after testing sequential code is tested
-    // make a separate loop for the resize()
-    // collapse(2) -  parallelism over two loops
-    // what about dx_trace and dy_trace - private ?
-    // -> only parallelize outer loop and allocate private traces inside
     for (unsigned int ix = 0; ix < Nx; ix++)
     {
     	dt_Traces[ix].resize(Ny);
-    	dn_Traces[ix].resize(Ny);
     	for (unsigned int iy = 0; iy < Ny; iy++)
     	{
-    	    FieldTrace* point_trace = Traces[ix][iy];
             // compute the time derivative (includes allocation of a trace)
     	    FieldTrace* dt_trace = Traces[ix][iy]->derivative();
     	    dt_Traces[ix][iy] = dt_trace;
-    	    // allocate a time trace for the normal derivative
-    	    FieldTrace* tr = new FieldTrace(CellTimeZero(ix,iy),dt_src,NOTS);
-    	    if (tr==0) throw(IOexception("SourceScreen - error allocating memory."));
-    	    // compute the spatial derivative with respect to x
-    	    if (ix==0)
-    	    {
-    	        for (std::size_t it=0; it<NOTS; it++)
-    	        {
-    	            double t = point_trace->get_time(it);
-    	            ElMagField F0 = point_trace->get_field(it);
-    	            ElMagField F2 = Traces[ix+1][iy]->get_field(t);
-    	            if (F0.isNull() or F2.isNull())
-    	                dx_trace->set_field(it, ElMagFieldZero);
-    	            else
-    	                dx_trace->set_field(it, (F2-F0)/dx );
-	            };
-    	    }
-    	    else if (ix==Nx-1)
-    	    {
-    	        for (std::size_t it=0; it<NOTS; it++)
-    	        {
-    	            double t = point_trace->get_time(it);
-    	            ElMagField F0 = point_trace->get_field(it);
-    	            ElMagField F1 = Traces[ix-1][iy]->get_field(t);
-    	            if (F0.isNull() or F1.isNull())
-    	                dx_trace->set_field(it, ElMagFieldZero);
-    	            else
-    	                dx_trace->set_field(it, (F0-F1)/dx );
-	            };
-    	    }
-    	    else
-    	    {
-    	        for (std::size_t it=0; it<NOTS; it++)
-    	        {
-    	            double t = point_trace->get_time(it);
-    	            ElMagField F0 = point_trace->get_field(it);
-    	            ElMagField F1 = Traces[ix-1][iy]->get_field(t);
-    	            ElMagField F2 = Traces[ix+1][iy]->get_field(t);
-    	            if (F1.isNull())
-    	            {
-    	                if (F2.isNull())
-    	                    dx_trace->set_field(it, ElMagFieldZero);
-    	                else
-    	                    dx_trace->set_field(it, (F2-F0)/dx );
-    	            }
-    	            else
-    	            {
-    	                if (F2.isNull())
-    	                    dx_trace->set_field(it, (F0-F1)/dx );
-    	                else
-    	                    dx_trace->set_field(it, (F2-F1)/(2.0*dx) );
-    	            }
-	            };
-    	    };
-    	    // compute the spatial derivative with respect to y
-    	    if (iy==0)
-    	    {
-    	        for (std::size_t it=0; it<NOTS; it++)
-    	        {
-    	            double t = point_trace->get_time(it);
-    	            ElMagField F0 = point_trace->get_field(it);
-    	            ElMagField F2 = Traces[ix][iy+1]->get_field(t);
-    	            if (F0.isNull() or F2.isNull())
-    	                dy_trace->set_field(it, ElMagFieldZero);
-    	            else
-    	                dy_trace->set_field(it, (F2-F0)/dy );
-	            };
-    	    }
-    	    else if (iy==Ny-1)
-    	    {
-    	        for (std::size_t it=0; it<NOTS; it++)
-    	        {
-    	            double t = point_trace->get_time(it);
-    	            ElMagField F0 = point_trace->get_field(it);
-    	            ElMagField F1 = Traces[ix][iy-1]->get_field(t);
-    	            if (F0.isNull() or F1.isNull())
-    	                dy_trace->set_field(it, ElMagFieldZero);
-    	            else
-    	                dy_trace->set_field(it, (F0-F1)/dy );
-	            };
-    	    }
-    	    else
-    	    {
-    	        for (std::size_t it=0; it<NOTS; it++)
-    	        {
-    	            double t = point_trace->get_time(it);
-    	            ElMagField F0 = point_trace->get_field(it);
-    	            ElMagField F1 = Traces[ix][iy-1]->get_field(t);
-    	            ElMagField F2 = Traces[ix][iy+1]->get_field(t);
-    	            if (F1.isNull())
-    	            {
-    	                if (F2.isNull())
-    	                    dy_trace->set_field(it, ElMagFieldZero);
-    	                else
-    	                    dy_trace->set_field(it, (F2-F0)/dy );
-    	            }
-    	            else
-    	            {
-    	                if (F2.isNull())
-    	                    dy_trace->set_field(it, (F0-F1)/dy );
-    	                else
-    	                    dy_trace->set_field(it, (F2-F1)/(2.0*dy) );
-    	            }
-	            };
-    	    };
-            // use Maxwells equations to compute the normal derivatives of the fields
-	        for (std::size_t it=0; it<NOTS; it++)
-	        {
-	            double dz_Ex = dx_trace->get_field(it).E().z - dt_trace->get_field(it).B().y;
-	            double dz_Ey = dy_trace->get_field(it).E().z + dt_trace->get_field(it).B().x;
-	            double dz_Ez = -dx_trace->get_field(it).E().x - dy_trace->get_field(it).E().y;
-	            double dz_Bx = dx_trace->get_field(it).B().z + dt_trace->get_field(it).E().y/cSquared;
-	            double dz_By = dy_trace->get_field(it).B().z - dt_trace->get_field(it).E().x/cSquared;
-	            double dz_Bz = -dx_trace->get_field(it).B().x - dy_trace->get_field(it).B().y;
-	            tr->set_field(it,ElMagField(Vector(dz_Ex,dz_Ey,dz_Ez),Vector(dz_Bx,dz_By,dz_Bz)));
-	        }
-    	    // set the normal derivative
-    	    dn_Traces[ix][iy] = tr;
-    	};
-    };
-	delete dx_trace;
-	delete dy_trace;
-    
-    double stop_time = current_time();
+	    }
+    }
+        
     if (teufel::rank==0)
     {
-        std::cout << "done after " << stop_time-start_time << " s" << std::endl;
-        std::cout << std::endl;
         std::cout << "total energy on source screen " << totalEnergy() << " J" << std::endl;
         std::cout << std::endl;
     }  
     
     // when we are done we write the field to files
     // for debugging purpose only
+    // TODO: remove this
     WriteField("SourceScreenTraces_DEBUG.h5", Traces);
     WriteField("SourceScreenTimeDerivative_DEBUG.h5", dt_Traces);
-    WriteField("SourceScreenNormalDerivative_DEBUG.h5", dn_Traces);
   
 }
 
@@ -369,7 +232,6 @@ SourceScreen::~SourceScreen()
     	    {
                 delete Traces[ix][iy];
                 delete dt_Traces[ix][iy];
-                delete dn_Traces[ix][iy];
             };
 }
 
@@ -399,20 +261,18 @@ ElMagField SourceScreen::LocalField(double t, Vector X)
             FieldTrace* source_trace = Traces[ix][iy];
             Vector RVec = X - source_pos;
             double R = RVec.norm();
-            double R2 = R*R;
-            double R3 = R2*R;
             // consider retardation
             double source_t = t - R/SpeedOfLight;
             if ((source_t>=source_trace->get_t0()) and (source_t<=source_trace->get_last_time()))
             {
+                double R2 = R*R;
+                double R3 = R2*R;
                 ElMagField c1 = source_trace->get_field(source_t) * (-dot(RVec,normal)/R3);
-                ElMagField c2 = dt_Traces[ix][iy]->get_field(source_t) * (-dot(RVec,normal)/(R2*SpeedOfLight));
-                // TODO: why is this term positive - should be negative
-                ElMagField c3 = dn_Traces[ix][iy]->get_field(source_t) * (1.0/R);
-                total += c2+c3;
+                ElMagField c2 = dt_Traces[ix][iy]->get_field(source_t) * (1.0-dot(RVec,normal)/R) / (R*SpeedOfLight);
+                total += c2 ;
             };
         }
-    return total*dx*dy;
+    return total*dx*dy/(4.0*Pi);
 }
 
 double SourceScreen::totalEnergy()
