@@ -269,7 +269,7 @@ ElMagField SourceScreen::LocalField(double t, Vector X)
                 double R3 = R2*R;
                 ElMagField c1 = source_trace->get_field(source_t) * (-dot(RVec,normal)/R3);
                 ElMagField c2 = dt_Traces[ix][iy]->get_field(source_t) * (1.0-dot(RVec,normal)/R) / (R*SpeedOfLight);
-                total += c2 ;
+                total += c1+c2 ;
             };
         }
     return total*dx*dy/(4.0*Pi);
