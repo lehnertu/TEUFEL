@@ -210,6 +210,19 @@ FieldTrace* FieldTrace::derivative()
     return(temp);
 }
 
+void FieldTrace::cancel_long_fields(Vector normal)
+{
+    normal.normalize();
+    for (std::size_t i=0; i<N; i++)
+    {
+        Vector E = trace[i].E();
+        Vector B = trace[i].B();
+        E -= normal*dot(E,normal);
+        B -= normal*dot(B,normal);
+        trace[i] = ElMagField(E, B);
+    }
+}
+
 void FieldTrace::retard(double delta_t, FieldTrace *target)
 {
     for (std::size_t i=0; i<target->get_N(); i++)

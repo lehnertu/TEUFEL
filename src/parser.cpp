@@ -180,6 +180,14 @@ int InputParser::parseLattice(Lattice *lattice)
                 GaussianWave *wave = new GaussianWave(element, this);
                 lattice->addElement(wave);
             }
+            else if (type == "packet")
+            {
+                if (teufel::rank==0) std::cout << name << "::GaussianWavePacket" << std::endl;
+                // the wave packet object parses its own input
+                // we provide a reference to the parser
+                GaussianWavePacket *wave = new GaussianWavePacket(element, this);
+                lattice->addElement(wave);
+            }
             else
                 throw(IOexception("InputParser::parseLattice(Lattice - unknown wave type."));
             count++;

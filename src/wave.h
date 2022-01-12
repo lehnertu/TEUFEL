@@ -129,6 +129,8 @@ private:
  * the polarization of the electic field is along the x-axis.
  * Possitions and directions can be changed by transformations
  * given in the constructors applied through the LocalizedField base class.
+ * The zero time given to the constructor is the time at which the
+ * peak of the packet passes through the given origin.
  * The transverse mode size is defined by the Rayleigh length.
  * 
  * The intensity of the wave has a gaussian time dependence.
@@ -186,10 +188,8 @@ public:
         complex<double> amplitude,
         //! the Rayleigh length [m]
         double range,
-        //! pulse length [s]
-        double duration,
-        //! time at waist [s]
-        double arrival
+        //! pulse length sigma [s]
+        double duration
         );
 
 	/*! Report the wavelength lambda [m]
@@ -213,10 +213,8 @@ private:
     double zR;
     //! mode size at waist [m]
     double w0;
-    //! pulse length [s]
+    //! pulse length sigma[s]
     double tau;
-    //! time at waist [s]
-    double t0;
 
 };
 

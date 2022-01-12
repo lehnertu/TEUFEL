@@ -143,6 +143,11 @@ public:
     /*! compute a new trace containing time derivative of fields */
     FieldTrace* derivative();
     
+    /*! Cancel all fields in one given direction
+     *  This is intended to limit propagating fields to be purely transversal.
+     */
+    void cancel_long_fields(Vector normal);
+    
     /*! Compute a retarded trace:
      *  @param delta_t - the amount of retardation in seconds
      *  @param target - the new trace (fields will be overwritten)
