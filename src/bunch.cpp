@@ -302,10 +302,11 @@ Bunch::Bunch(const char *filename)
         // relativistic velocity
         Vector v = direction * beta;
         // we translate the difference in arrival time into a position at t0
+        // we then set t=0 as the start time of the particle, removing the average
         Vector X0 = Vector(xData[i], yData[i], 0.0) + v*(t0-tData[i])*SpeedOfLight;
         Vector P0 = direction * betagamma;
         Vector A0 = Vector(0.0, 0.0, 0.0);
-        p->initTrajectory(t0, X0, P0, A0);
+        p->initTrajectory(0.0, X0, P0, A0);
         P.push_back(p);
     }
     
