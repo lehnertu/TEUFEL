@@ -325,7 +325,8 @@ Bunch::Bunch(const char *filename, Vector dir)
         Vector X0 = e_x*xData[i] + e_y*yData[i] + v*(t0-tData[i])*SpeedOfLight;
         Vector P0 = direction * betagamma;
         Vector A0 = Vector(0.0, 0.0, 0.0);
-        p->initTrajectory(t0, X0, P0, A0);
+        // we then set t=0 as the start time of the particle, removing the average
+        p->initTrajectory(0.0, X0, P0, A0);
         P.push_back(p);
     }
     
