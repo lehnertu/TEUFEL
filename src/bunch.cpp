@@ -22,9 +22,10 @@
 #include "bunch.h"
 #include "particle.h"
 #include "global.h"
-#include <math.h>
+#include <cmath>
 #include <random>
 #include <iostream>
+#include <iomanip>
 #include <cstring>
 #include "SDDS.h"
 #include "hdf5.h"
@@ -185,7 +186,7 @@ Bunch::Bunch(Distribution *dist, double reftime, Vector refpos, Vector refmom, d
     }
 }
 
-Bunch::Bunch(const char *filename)
+Bunch::Bunch(const char *filename, Vector dir)
 {
     // set a safe default in case we return with read errors
     NOP = 0;
@@ -288,6 +289,25 @@ Bunch::Bunch(const char *filename)
     double sum = 0;
     for(int i=0; i<NOP; i++) sum += tData[i];
     double t0 = sum/NOP;
+    // compute the coordinate system to which the input coordinates are transformed
+    // x-y-s is left-handed
+    // TODO
+    Vector e_s = dir;
+    e_s.normalize();
+    Vector e_x;
+    if (fabs(dot(e_s, Vector(1.0,0.0,0.0)))>0.8)
+        // if the propagation direction is close to x, start with z
+        e_x = Vector(0.0,0.0,1.0);
+    else
+        // otherwise start with x
+        e_x = Vector(1.0,0.0,0.0);
+    e_x -= e_s * dot(e_x,e_s);
+    e_x.normalize();
+    Vector e_y = cross(e_x,e_s);
+    std::cout << setprecision(4);
+    std::cout << "s = " << e_s.x << " " << e_s.y << " " << e_s.z << std::endl;
+    std::cout << "x = " << e_x.x << " " << e_x.y << " " << e_x.z << std::endl;
+    std::cout << "y = " << e_y.x << " " << e_y.y << " " << e_y.z << std::endl;
     // create the particles
     for(int i=0; i<NOP; i++)
     {
@@ -297,12 +317,12 @@ Bunch::Bunch(const char *filename)
         double betagamma = pData[i];
         double beta = sqrt( betagamma*betagamma / (betagamma*betagamma+1.0) );
         // xp and yp are the angles [rad] with respect to the axis (z)
-        Vector direction = Vector(xpData[i], ypData[i], 1.0);
+        Vector direction = e_x*xpData[i] + e_y*ypData[i] + e_s;
         direction.normalize();
         // relativistic velocity
         Vector v = direction * beta;
         // we translate the difference in arrival time into a position at t0
-        Vector X0 = Vector(xData[i], yData[i], 0.0) + v*(t0-tData[i])*SpeedOfLight;
+        Vector X0 = e_x*xData[i] + e_y*yData[i] + v*(t0-tData[i])*SpeedOfLight;
         Vector P0 = direction * betagamma;
         Vector A0 = Vector(0.0, 0.0, 0.0);
         p->initTrajectory(t0, X0, P0, A0);

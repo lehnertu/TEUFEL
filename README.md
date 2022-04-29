@@ -166,13 +166,19 @@ Documentation
 -------------
 
 We aim at fully documenting the code for easy reuse and maintenance.
-The documentation can be built using doxygen.
+The documentation can be built using doxygen
+and then be accessed with a browser starting from `doc/html/index.html`.
 
 ```
 make doc
 ```
 
-The documentation can then be accessed with a browser starting from `doc/html/index.html`.
+A full manual is not yet available. The document which is in the writing
+can be compiled using LaTeX and is then found in the `build/doc/` folder.
+
+```
+make man
+```
 
 Testcases
 ---------
@@ -202,7 +208,7 @@ right away from the build directory, a script is provided in the main folder:
 To check for memory leaks the tool [Valgrind](http://valgrind.org) is recommended.
 
 ```
-valgrind --tool=memcheck tests/teufel.xxx
+valgrind --tool=memcheck build/teufel.xxx
 ```
 
 For some testcases and examples python scripts for visualizing the data are

@@ -466,7 +466,7 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                     if (fn) step = st.as_int();
                     TrackingLogger<Bunch>* logger = new TrackingLogger<Bunch>(bunch, fn.as_string(), step);
                     logs->push_back(logger);
-                }
+                };
                 // add the bunch to the beam
                 beam->Add(bunch);
                 delete dist;
@@ -476,9 +476,21 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
             {
                 pugi::xml_attribute sddsname = entry.attribute("file");
                 if (!sddsname)
-                    throw(IOexception("InputParser::parseBeam - <SDDS> attribute file not found."));                
+                    throw(IOexception("InputParser::parseBeam - <SDDS> attribute file not found."));   
+                // parse propagation  direction of the input beam
+                Vector dir = Vector(0.0, 0.0, 1.0);
+                pugi::xml_node dirnode = entry.child("dir");
+                if (dirnode)
+                {
+                    parseCalcChildren(dirnode);
+                    double x = parseValue(dirnode.attribute("x"));
+                    double y = parseValue(dirnode.attribute("y"));
+                    double z = parseValue(dirnode.attribute("z"));
+                    dir = Vector(x, y, z);
+                    dir.normalize();
+                };
                 // now we can create the bunch from the SDDS input file
-                Bunch *bunch = new Bunch(sddsname.as_string());
+                Bunch *bunch = new Bunch(sddsname.as_string(), dir);
                 // create a logger for this bunch if defined in the input file
                 pugi::xml_node lognode = entry.child("log");
                 if (lognode)
@@ -490,7 +502,7 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                     if (fn) step = st.as_int();
                     TrackingLogger<Bunch>* logger = new TrackingLogger<Bunch>(bunch, fn.as_string(), step);
                     logs->push_back(logger);
-                }
+                };
                 // add the bunch to the beam
                 beam->Add(bunch);
                 count++;

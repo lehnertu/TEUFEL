@@ -186,8 +186,9 @@ public:
      * 
      * The file name is given as parameter. If the file cannot be read successfully,
      * an empty bunch is created.
+     * The bunch is propagating in the direction of the given vector.
      */
-    Bunch(const char *filename);
+    Bunch(const char *filename, Vector dir);
 
     /*!
      * copy constructor:

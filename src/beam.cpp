@@ -23,7 +23,9 @@
 #include "bunch.h"
 #include "particle.h"
 #include "global.h"
+#include "SDDS.h"
 #include "hdf5.h"
+#include <cmath>
 #include <iostream>
 
 Beam::Beam()
@@ -296,3 +298,163 @@ void Beam::integrateFieldTrace(
         B[i]->integrateFieldTrace(ObservationPoint, trace);
 }
 
+int Beam::WriteWatchPointSDDS(const char *filename)
+{
+    // buffer coordinates of all particles
+    int nop = getNOP();
+    double *buffer = new double[nop*6];
+    double *bp = buffer;
+    // remaining buffer capacity
+    int remaining = nop;
+    for(int i=0; i<NOB; i++)
+    {
+        bp = B[i]->bufferCoordinates(bp, remaining);
+        remaining = nop - (bp-buffer)/6;
+    }
+    if (remaining != 0)
+        std::cout << "warning in Beam::WriteWatchPointSDDS() - buffer size mismatch" << std::endl;
+
+    // determine the centroid of the bunch
+    Vector centroid = Vector(0.0, 0.0, 0.0);
+    for (int i=0; i<nop; i++)
+        centroid += Vector(buffer[6*i], buffer[6*i+1], buffer[6*i+2]);
+    centroid /= nop;
+    // determine the propagation direction of the beam
+    Vector momentum = Vector(0.0, 0.0, 0.0);
+    for (int i=0; i<nop; i++)
+        momentum += Vector(buffer[6*i+3], buffer[6*i+4], buffer[6*i+5]);
+    momentum /= nop;
+    double pCen = momentum.norm();
+    Vector sdir = momentum;
+    sdir.normalize();
+    // determine the x and y unit vectors
+    Vector xdir;
+    if (fabs(dot(sdir, Vector(1.0,0.0,0.0)))>0.8)
+        // if the propagation direction is close to x, start with z
+        xdir = Vector(0.0,0.0,1.0);
+    else
+        // otherwise start with x
+        xdir = Vector(1.0,0.0,0.0);
+    xdir -= sdir * dot(xdir,sdir);
+    xdir.normalize();
+    Vector ydir = cross(xdir,sdir);
+    
+    // determine the parameter values
+    double charge = getTotalCharge();
+    double t_avg = 0.0;
+    for(int i=0; i<NOB; i++)
+        t_avg += B[i]->avgTime() * B[i]->getNOP();
+    t_avg /= nop;
+    // compute the coordinate values for the file
+    double *t = new double[nop];
+    double *x = new double[nop];
+    double *y = new double[nop];
+    double *p = new double[nop];
+    for (int i=0; i<nop; i++)
+    {
+        Vector dX = Vector(buffer[6*i], buffer[6*i+1], buffer[6*i+2]) - centroid;
+        x[i] = dot(dX,xdir);
+        y[i] = dot(dX,ydir);
+        Vector P = Vector(buffer[6*i+3], buffer[6*i+4], buffer[6*i+5]);
+        p[i] = P.norm();
+        double gamma = sqrt(P.abs2nd()+1.0);
+        Vector beta = P / gamma;
+        double beta_s = dot(beta,sdir);
+        t[i] = t_avg - dot(dX,sdir) / (beta_s*SpeedOfLight);
+        // TODO
+        // xp, yp
+    };    
+    
+    cout << "writing SDDS file " << filename << endl;
+    SDDS_DATASET data;
+    if (1 != SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,filename))
+    {
+        std::cout << "Beam::WriteWatchPointSDDS - error initializing output" << std::endl;
+        return 1;
+    }
+    if (
+        SDDS_DefineSimpleParameter(&data,"Particles","", SDDS_LONG) !=1 ||
+        SDDS_DefineSimpleParameter(&data,"Charge","C", SDDS_DOUBLE) !=1 ||
+        SDDS_DefineSimpleParameter(&data,"pCentral","m$be$nc", SDDS_DOUBLE) !=1
+       )
+    {
+        std::cout << "Beam::WriteWatchPointSDDS - error defining parameters" << std::endl;
+        return 2;
+    }
+    if  (
+        SDDS_DefineColumn(&data,"t\0","t\0","s\0","Time\0",NULL, SDDS_DOUBLE,0)   ==-1 || 
+        SDDS_DefineColumn(&data,"x\0","x\0","m\0","PositionX\0",NULL, SDDS_DOUBLE,0) == -1 ||
+        SDDS_DefineColumn(&data,"y\0","y\0","m\0","PositionY\0",NULL, SDDS_DOUBLE,0) == -1 ||
+        SDDS_DefineColumn(&data,"p\0","p\0",NULL,"BetaGamma\0",NULL,SDDS_DOUBLE,0) == -1 ||
+        SDDS_DefineColumn(&data,"xp\0","xp\0",NULL,"Xprime\0",NULL, SDDS_DOUBLE,0)== -1 || 
+        SDDS_DefineColumn(&data,"yp\0","yp\0",NULL,"Bprime\0",NULL,SDDS_DOUBLE,0) == -1 
+        )
+    {
+        std::cout << "Beam::WriteWatchPointSDDS - error defining data columns" << std::endl;
+        return 3;
+    }
+    if (SDDS_WriteLayout(&data) != 1)
+    {
+        std::cout << "Beam::WriteWatchPointSDDS - error writing layout" << std::endl;
+        return 4;
+    }
+    // start a page with number of lines equal to the number of trajectory points
+    // cout << "SDDS start page" << endl;
+    if (SDDS_StartPage(&data,(int32_t)nop) !=1 )
+    {
+        std::cout << "Beam::WriteWatchPointSDDS - error starting page" << std::endl;
+        return 5;
+    }
+    // write the single valued variables
+    // cout << "SDDS write parameters" << endl;
+    if (
+        SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, "Particles", nop, NULL ) !=1 ||
+        SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, "Charge", charge, NULL ) !=1 ||
+        SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, "pCentral", pCen, NULL ) !=1
+       )
+    {
+        std::cout << "Beam::WriteWatchPointSDDS - error setting parameters" << std::endl;
+        return 6;
+    }
+    // write the table of particle data
+    cout << "SDDS writing " << nop << " particles" << endl;
+    for( int i=0; i<nop; i++)
+    {
+        // TODO
+        // xp, yp
+        if( SDDS_SetRowValues(&data,
+            SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,i,
+            "t",t[i],
+            "x",x[i],
+            "y",y[i],
+            "p",p[i],
+            "xp",0.0,
+            "yp",0.0,
+            NULL) != 1
+            )
+        {
+            std::cout << "Beam::WriteWatchPointSDDS - error writing data columns" << std::endl;
+            return 7;
+        }
+    }
+    if( SDDS_WritePage(&data) != 1)
+    {
+        std::cout << "Beam::WriteWatchPointSDDS - error writing page" << std::endl;
+        return 8;
+    }
+    // finalize the file
+    if (SDDS_Terminate(&data) !=1 )
+    {
+        std::cout << "Beam::WriteWatchPointSDDS - error terminating data file" << std::endl;
+        return 9;
+    }	
+    // no errors have occured if we made it 'til here
+    cout << "writing SDDS done." << endl;
+    
+    delete[] buffer;
+    delete x;
+    delete y;
+    delete p;
+
+    return 0;
+}
