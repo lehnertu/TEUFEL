@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
 
-import sys, time
+import sys, sdds, time
 import os.path
 import argparse
 import numpy as np
-import h5py
 import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter
 
@@ -68,7 +67,15 @@ def DistProp(X, prt=None):
     return (avg, rms)
     
 parser = argparse.ArgumentParser()
-parser.add_argument('file', help='the file name of the watch point HDF5 file')
+parser.add_argument('file', help='the file name of the watch point')
+parser.add_argument('--list_columns', dest='listcol',
+  action='store_const', const=True, default=False,
+  help='list all columns available in the output files')
+parser.add_argument('--list_params', dest='listpar',
+  action='store_const', const=True, default=False, help='list all parameters available in the file')
+parser.add_argument('--cp', dest='currpro',
+  action='store_const', const=True, default=False,
+  help='plot a current profile')
 parser.add_argument('-pix', help="the number of pixels for the plots", dest="pix", type=int)
 parser.add_argument('-img', help="output not to screen but image file", dest="img")
 
@@ -82,81 +89,81 @@ if not bunOK:
 
 # Open the file for reading
 print("reading ",bunfile)
-hdf = h5py.File(bunfile, "r")
-print(hdf)
-print()
+data = sdds.SDDS(0)
+data.load(bunfile)
+if args.listpar:
+    print()
+    print("Parameters")
+    print("==========")
+    data.listParameters()
+if args.listcol:
+    print()
+    print("Columns")
+    print("=======")
+    data.listColumns()
 
-# Get the group
-electrons = hdf['electrons']
-a = np.array(electrons)
-hdf.close()
+charge = 1.0e12 * data.getParameterValue("Charge")
 
-data = a.transpose()
-# print(data)
+x = np.array(data.getColumnData("x"))
+DistProp(x, prt="x [m] : ")
+xp = np.array(data.getColumnData("xp"))
+DistProp(xp, prt="xp [] : ")
+y = np.array(data.getColumnData("y"))
+DistProp(y, prt="y [m] : ")
+yp = np.array(data.getColumnData("yp"))
+DistProp(yp, prt="yp [] : ")
+p = np.array(data.getColumnData("p"))
+t = np.array(data.getColumnData("t"))
 
-x = data[0]
+(t0, tau) = DistProp(t, prt="arrival time t [s] : ")
+(betagamma, prms) = DistProp(p, prt="particle momentum p [m_e*c] : ")
+dt = t-t0
+
 Np = len(x)
-print("beam of %d particles:" % Np)
-(xmean, x_rms) = DistProp(x, prt="x [m] : ")
-y = data[1]
-(ymean, y_rms) = DistProp(y, prt="y [m] : ")
-z = data[2]
-(zmean, z_rms) = DistProp(z, prt="z [m] : ")
-bgx = data[3]
-(bgxmean, bgx_rms) = DistProp(bgx, prt="px [m_e c] : ")
-bgy = data[4]
-(bgymean, bgy_rms) = DistProp(bgy, prt="py [m_e c] : ")
-bgz = data[5]
-(bgzmean, bgz_rms) = DistProp(bgz, prt="pz [m_e c] : ")
-
-dt = -(z-zmean) / 3.0e8
-(t0, tau) = DistProp(dt, prt="arrival time t [s] : ")
-
-p = np.sqrt(np.square(bgx)+np.square(bgy)+np.square(bgz))
-(betagamma, p_rms) = DistProp(p, prt="particle momentum p [m_e*c] : ")
 E = 0.511*np.sqrt(np.square(p)+1.0)
 (E0, erms) = DistProp(E, prt="particle total energy E_tot [MeV] : ")
 dE = E-E0
-tau = 1.0e12 * tau
-if tau!=0.0:
-    chirp = 1.0e15 * ( np.dot(dE,dt)/float(Np) ) / (tau*tau)
-else:
-    chirp = 0.0
-print()
 
-dx = x-xmean
-dy = y-ymean
-xp = bgx/bgz
-yp = bgy/bgz
-DistProp(xp, prt="xp [] : ")
-DistProp(yp, prt="yp [] : ")
+print("E-t correlation :")
+MatXT = np.matrix([np.ones_like(1.0e12*dt),1.0e12*dt,np.square(1.0e12*dt)])
+MatX = MatXT.transpose(1,0)
+MatXTXI = np.dot(MatXT,MatX).getI()
+MatXTY = np.dot(MatXT,E)[0]
+corr = MatXTXI*MatXTY.transpose(1,0)
+# print(corr)
+print("%g keV/ps" % (1e3*corr[1,0]))
+print("%g keV/ps²" % (1e3*corr[2,0]))
 
-dxp = (bgx-bgxmean)/bgz
-dyp = (bgy-bgymean)/bgz
-ex_rms = 1.0e6 * betagamma * np.sqrt((np.dot(dx,dx)*np.dot(dxp,dxp)-pow(np.dot(dx,dxp),2))/pow(float(Np),2))
-ey_rms = 1.0e6 * betagamma * np.sqrt((np.dot(dy,dy)*np.dot(dyp,dyp)-pow(np.dot(dy,dyp),2))/pow(float(Np),2))
+ex_rms = 1.0e6 * betagamma * np.sqrt((np.dot(x,x)*np.dot(xp,xp)-pow(np.dot(x,xp),2))/pow(float(Np),2))
+ey_rms = 1.0e6 * betagamma * np.sqrt((np.dot(y,y)*np.dot(yp,yp)-pow(np.dot(y,yp),2))/pow(float(Np),2))
 ez_rms = 1.0e15 * np.sqrt((np.dot(dE,dE)*np.dot(dt,dt)-pow(np.dot(dE,dt),2))/pow(float(Np),2))
 
-string = r'$E_{beam}$ = %7.3f MeV' % E0 + '\n' + \
-  '%d particles' % Np + '\n' + \
-  r'$\sigma_E$ = %4.1f keV' % erms + '\n' + \
-  r'$\sigma_t$ = %1.3f ps' % tau + '\n' + \
-  r'$c$ = %2.2f keV/ps' % chirp + '\n' + \
+string = r'p*c = %5.3f MeV' % E0 + r'  $\beta \gamma$ = %5.3f' % betagamma + '\n' + \
+  '%d particles' % Np + '   Q=%.1f pC' % charge + '\n' + \
+  r'$\sigma_E$ = %6.3f keV' % (1e3*erms) + '\n' + \
+  r'$\sigma_t$ = %1.3f ps' % (1e12*tau) + '\n' + \
   r'$\epsilon^n_{x, RMS}$ = %2.3f $\mu m$' % ex_rms  + '\n' + \
   r'$\epsilon^n_{y, RMS}$ = %2.3f $\mu m$' % ey_rms  + '\n' + \
   r'$\epsilon_{z, RMS}$ = %3.1f keV ps' % ez_rms
 fig = plt.figure(figsize=(16,10),dpi=80)
-# fig.text(0.78,0.9, string, color='b', size=20.0 , **text_params, linespacing=2)
 fig.text(0.68,0.93, string, color='b', size=18.0 , ha='left', va='top', linespacing=2, family='serif')
 PlotPS(1000.0*x,1000.0*xp,"$x$ [mm]", "$p_x$ [mrad]", rect_dens = [0.03, 0.55, 0.3, 0.4])
 PlotPS(1000.0*y,1000.0*yp,"$y$ [mm]", "$p_y$ [mrad]", rect_dens = [0.35, 0.55, 0.3, 0.4])
-PlotPS(1000.0*x,1000.0*y,"$x$ [mm]", "$y$ [mm]", rect_dens = [0.03, 0.08, 0.3, 0.4])
+PlotPS(1000.0*x,1000.0*y,"$x$ [mm]", "$y$ [mm]", rect_dens = [0.03, 0.08, 0.3, 0.4], square=True)
 PlotPS(1e12*dt,E,"$dt$ [ps]", "$E [MeV]$", rect_dens = [0.35, 0.08, 0.3, 0.4], center=False)
-PlotPS(1e12*dt,1000*dE-chirp*1e12*dt,"$dt$ [ps]", "$dE [keV]$", rect_dens = [0.68, 0.08, 0.3, 0.4], center=False)
-# plt.annotate('E = ', xy=(0.8, 0.8),  xycoords='figure fraction',
-#              xytext=(20, 20), textcoords='offset points',
-#              ha="left", va="bottom",
-#              )
+
+if args.currpro:
+    hist, bins = np.histogram(1e12*dt, bins=100)
+    delta = bins[1]-bins[0]
+    center = (bins[:-1] + bins[1:]) / 2
+    current = hist * np.fabs(charge)/delta/Np
+    axc = plt.axes([0.68, 0.08, 0.3, 0.4])
+    axc.bar(center, current, align='center', width=delta, zorder=10)
+    axc.grid(True, zorder=5)
+    axc.set_xlabel("$dt$ [ps]")
+    axc.set_ylabel("$I$ [A]")
+else:
+    PlotPS(1e12*dt,1000*(E-c0-c1*1e12*dt-c2*np.square(1e12*dt)),"$dt$ [ps]", "$dE [keV]$", rect_dens = [0.68, 0.08, 0.3, 0.4], center=False)
 
 if (args.img != None):
     plt.savefig(args.img)

@@ -443,8 +443,11 @@ int main(int argc, char *argv[])
             if (w.step == 0)
             {
                 std::cout << "writing watch point " << w.filename << std::endl;
-                int nw = masterBeam->WriteWatchPointHDF5(w.filename);
-                std::cout << nw << " particles written." << std::endl;
+                // int nw = masterBeam->WriteWatchPointHDF5(w.filename);
+                // std::cout << nw << " particles written." << std::endl;
+                // TODO : allow both file types
+                int err = masterBeam->WriteWatchPointSDDS(w.filename);
+                if (err==0) std::cout << "done." << std::endl;
                 std::cout << std::endl;
             }
         }
@@ -503,8 +506,11 @@ int main(int argc, char *argv[])
                 if (w.step == step+1)
                 {
                     std::cout << "writing watch point " << w.filename << std::endl;
-                    int nw = masterBeam->WriteWatchPointHDF5(w.filename);
-                    std::cout << nw << " particles written." << std::endl;
+                    // int nw = masterBeam->WriteWatchPointHDF5(w.filename);
+                    // std::cout << nw << " particles written." << std::endl;
+                    // TODO : allow both file types
+                    int err = masterBeam->WriteWatchPointSDDS(w.filename);
+                    if (err==0) std::cout << "done." << std::endl;
                     std::cout << std::endl;
                 }
             }

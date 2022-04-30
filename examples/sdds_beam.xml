@@ -45,8 +45,8 @@
     <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
     <calc print="dt = " var="dt" eq="total_t/4000" />
     <tracking method="Vay" delta_t="dt" n="4000">
-        <watch step="0" file="sdds_beam_initial.hdf5" />
-        <watch step="4000" file="sdds_beam_final.hdf5" />
+        <watch step="0" file="sdds_beam_initial.sdds" />
+        <watch step="4000" file="sdds_beam_final.sdds" />
     </tracking>
     <observer />
 </teufel>

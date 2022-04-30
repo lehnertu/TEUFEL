@@ -298,7 +298,7 @@ void Beam::integrateFieldTrace(
         B[i]->integrateFieldTrace(ObservationPoint, trace);
 }
 
-int Beam::WriteWatchPointSDDS(const char *filename)
+int Beam::WriteWatchPointSDDS(std::string filename)
 {
     // buffer coordinates of all particles
     int nop = getNOP();
@@ -350,6 +350,8 @@ int Beam::WriteWatchPointSDDS(const char *filename)
     double *x = new double[nop];
     double *y = new double[nop];
     double *p = new double[nop];
+    double *xp = new double[nop];
+    double *yp = new double[nop];
     for (int i=0; i<nop; i++)
     {
         Vector dX = Vector(buffer[6*i], buffer[6*i+1], buffer[6*i+2]) - centroid;
@@ -361,13 +363,15 @@ int Beam::WriteWatchPointSDDS(const char *filename)
         Vector beta = P / gamma;
         double beta_s = dot(beta,sdir);
         t[i] = t_avg - dot(dX,sdir) / (beta_s*SpeedOfLight);
-        // TODO
-        // xp, yp
+        double beta_x = dot(beta,xdir);
+        xp[i] = beta_x / beta_s;
+        double beta_y = dot(beta,ydir);
+        yp[i] = beta_y / beta_s;
     };    
     
     cout << "writing SDDS file " << filename << endl;
     SDDS_DATASET data;
-    if (1 != SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,filename))
+    if (1 != SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,filename.c_str()))
     {
         std::cout << "Beam::WriteWatchPointSDDS - error initializing output" << std::endl;
         return 1;
@@ -428,8 +432,8 @@ int Beam::WriteWatchPointSDDS(const char *filename)
             "x",x[i],
             "y",y[i],
             "p",p[i],
-            "xp",0.0,
-            "yp",0.0,
+            "xp",xp[i],
+            "yp",yp[i],
             NULL) != 1
             )
         {
@@ -451,10 +455,13 @@ int Beam::WriteWatchPointSDDS(const char *filename)
     // no errors have occured if we made it 'til here
     cout << "writing SDDS done." << endl;
     
-    delete[] buffer;
+    delete buffer;
+    delete t;
     delete x;
     delete y;
     delete p;
+    delete xp;
+    delete yp;
 
     return 0;
 }
