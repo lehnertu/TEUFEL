@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<teufel description="Superradiant emission from the ELBE U300 undulator"
+    author="Ulf Lehnert 14.9.2017">
+    <calc print="beam energy [eV] = " var="E_beam" eq="26.0e6" />
+    <calc print="gamma = " var="gamma" eq="E_beam/_mec2"/>
+    <calc print="charge [nC] = " var="charge" eq="-0.1" />
+    <!-- set desired output frequency -->
+    <calc print="freq [Hz] = " var="f" eq="1.0e12"/>
+    <calc print="lambda [m] = " var="lambda" eq="_c/f"/>
+    <calc var="lambda_U" eq="0.300" />
+    <lattice>
+        <undulator name="U300" type="planar">
+            <!-- compute undulator setting from desired output frequency -->
+            <calc print="K_rms(U300) = " var="K_rms" eq="sqrt(lambda/lambda_U*2*gamma*gamma-1)" />
+            <!-- setup the undulator -->
+            <field B="K_rms*sqrt(2)/_c*2*_pi*_mec2/lambda_U"
+                   period="lambda_U" N="8" />
+            <position x="0.0" y="0.0" z="2.0"/>
+        </undulator>
+    </lattice>
+    <beam>
+        <SDDS file="examples/before_U300.sdds">
+            <log file="elbe-u300_200pC_log.sdds" step="10" />
+        </SDDS>
+    </beam>
+    <calc print="tracking length [m] = " var="total_L" eq="4.0" />
+    <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
+    <calc print="dt = " var="dt" eq="total_t/4000" />
+    <tracking method="Vay" delta_t="dt" n="4000" >
+        <watch step="0" file="elbe-u300_200pC_inital.sdds" />
+        <watch step="4000" file="elbe-u300_200pC_final.sdds" />
+    </tracking>
+    <observer>
+        <calc print="screen position z0 = " var="z0" eq="7.0"/>
+        <calc print="screen start time t0 = " var="t0" eq="z0/_c"/>
+        <point file="elbe-u300_200pC_obs_5m.sdds">
+            <position x="0.0" y="0.0" z="z0" />
+            <time t0="t0-5e-12" dt="1e-13" n="300" />
+        </point>
+        <screen file="elbe-u300_200pC_screen_5m.h5">
+            <position x="0.0" y="0.0" z="z0" />
+            <hpitch x="0.01" y="0.0" z="0.0" n="64" />
+            <vpitch x="0.0" y="0.01" z="0.0" n="64" />
+            <time t0="t0-5e-12" dt="1e-13" n="1000" />
+        </screen>
+    </observer>
+</teufel>

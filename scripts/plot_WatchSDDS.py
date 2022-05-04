@@ -131,6 +131,7 @@ MatXTXI = np.dot(MatXT,MatX).getI()
 MatXTY = np.dot(MatXT,E)[0]
 corr = MatXTXI*MatXTY.transpose(1,0)
 # print(corr)
+(c0,c1,c2) = (corr[0,0],corr[1,0],corr[2,0])
 print("%g keV/ps" % (1e3*corr[1,0]))
 print("%g keV/ps²" % (1e3*corr[2,0]))
 
