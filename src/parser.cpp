@@ -491,6 +491,43 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                 };
                 // now we can create the bunch from the SDDS input file
                 Bunch *bunch = new Bunch(sddsname.as_string(), dir);
+                // parse and add correlations
+                pugi::xml_node corrnode = entry.child("correlations");
+                if (corrnode)
+                {
+                    parseCalcChildren(corrnode);
+                    // all children are handled in sequence
+                    for (pugi::xml_node_iterator cit = corrnode.begin(); cit != corrnode.end(); ++cit)
+                    {
+                        pugi::xml_node cn = *cit;
+                        std::string ctype = cn.name();
+                        if (ctype == "linear")
+                        {
+                            int ind = 0;
+                            int dep = 0;
+                            double fac = 0.0;
+                            pugi::xml_attribute indatt = cn.attribute("indep");
+                            if (indatt)
+                                ind = int(parseValue(indatt));
+                            else
+                                throw(IOexception("InputParser::parseBeam <SDDS> - correlation indep not found."));
+                            pugi::xml_attribute depatt = cn.attribute("dep");
+                            if (depatt)
+                                dep = int(parseValue(depatt));
+                            else
+                                throw(IOexception("InputParser::parseBeam <SDDS> - correlation dep not found."));
+                            pugi::xml_attribute facatt = cn.attribute("factor");
+                            if (facatt)
+                                fac = parseValue(facatt);
+                            else
+                                throw(IOexception("InputParser::parseBeam <SDDS> - correlation factor not found."));
+                            // std::cout << "correlation " << fac << " " << ind << " -> " << dep << " added" << endl;
+                            bunch->addCorrelation(ind, dep, fac);
+                        } else {
+                            throw(IOexception("InputParser::parseBeam <SDDS> - unknown type of correlation."));
+                        }
+                    };
+                };
                 // create a logger for this bunch if defined in the input file
                 pugi::xml_node lognode = entry.child("log");
                 if (lognode)

@@ -344,6 +344,71 @@ void Bunch::Add(ChargedParticle *part)
     P.push_back(part);
 }
 
+void Bunch::addCorrelation(int independent, int dependent, double factor)
+{
+    if (independent>=0 && independent<6 &&
+        dependent>=0 && dependent<6 &&
+        dependent!=independent)
+    {
+        double mean=0.0;
+        for (int i=0; i<NOP; i++)
+        {
+            ChargedParticle *p = P[i];
+            Vector X0 = p->TrajPoint(0);
+            Vector P0 = p->TrajMomentum(0);
+            switch (independent)
+            {
+                case 0: mean += X0.x; break;
+                case 1: mean += X0.y; break;
+                case 2: mean += X0.z; break;
+                case 3: mean += P0.x; break;
+                case 4: mean += P0.y; break;
+                case 5: mean += P0.z; break;
+            };
+        };
+        mean /= NOP;
+        for (int i=0; i<NOP; i++)
+        {
+            ChargedParticle *p = P[i];
+            double t0 = p->TrajTime(0);
+            Vector X0 = p->TrajPoint(0);
+            Vector P0 = p->TrajMomentum(0);
+            Vector A0 = p->TrajAccel(0);
+            double ind = 0.0;
+            double dep = 0.0;
+            switch (independent)
+            {
+                case 0: ind = X0.x; break;
+                case 1: ind = X0.y; break;
+                case 2: ind = X0.z; break;
+                case 3: ind = P0.x; break;
+                case 4: ind = P0.y; break;
+                case 5: ind = P0.z; break;
+            };
+            switch (dependent)
+            {
+                case 0: dep = X0.x; break;
+                case 1: dep = X0.y; break;
+                case 2: dep = X0.z; break;
+                case 3: dep = P0.x; break;
+                case 4: dep = P0.y; break;
+                case 5: dep = P0.z; break;
+            };
+            dep += factor * (ind-mean);
+            switch (dependent)
+            {
+                case 0: X0.x = dep; break;
+                case 1: X0.y = dep; break;
+                case 2: X0.z = dep; break;
+                case 3: P0.x = dep; break;
+                case 4: P0.y = dep; break;
+                case 5: P0.z = dep; break;
+            };
+            p->initTrajectory(t0, X0, P0, A0);
+        }
+    }
+}
+
 void Bunch::clearTrajectories()
 {
     for(int i=0; i<NOP; i++)

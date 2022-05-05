@@ -20,6 +20,9 @@
     </lattice>
     <beam>
         <SDDS file="examples/before_U300.sdds">
+            <correlations>
+                <linear indep="5" dep="2" factor="2.2e-12*_c" />
+            </correlations>
             <log file="elbe-u300_200pC_log.sdds" step="10" />
         </SDDS>
     </beam>
@@ -37,11 +40,5 @@
             <position x="0.0" y="0.0" z="z0" />
             <time t0="t0-5e-12" dt="1e-13" n="300" />
         </point>
-        <screen file="elbe-u300_200pC_screen_5m.h5">
-            <position x="0.0" y="0.0" z="z0" />
-            <hpitch x="0.01" y="0.0" z="0.0" n="64" />
-            <vpitch x="0.0" y="0.01" z="0.0" n="64" />
-            <time t0="t0-5e-12" dt="1e-13" n="1000" />
-        </screen>
     </observer>
 </teufel>
