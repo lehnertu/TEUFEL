@@ -44,6 +44,7 @@ InputParser::InputParser(const pugi::xml_node node)
     // we pre-define a number of constants in the calculator
     calc->DefineConst("_c", (double)SpeedOfLight);
     calc->DefineConst("_e", (double)ElementaryCharge);
+    calc->DefineConst("_h", (double)PlanckH);
     calc->DefineConst("_mec2", (double)mecsquared);
     calc->DefineConst("_eps0", (double)EpsNull);
     calc->DefineConst("_pi", (double)Pi);
@@ -333,7 +334,7 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                     if (!fn) throw(IOexception("InputParser::parseBeam - <particle> filename for log not found."));
                     int step = 1;
                     pugi::xml_attribute st = lognode.attribute("step");
-                    if (fn) step = st.as_int();
+                    if (st) step = st.as_int();
                     TrackingLogger<Bunch>* logger = new TrackingLogger<Bunch>(single, fn.as_string(), step);
                     logs->push_back(logger);
                 }

@@ -218,7 +218,7 @@ int main(int argc, char *argv[])
     if (teufel::rank==0) std::cout << "beam of " << NoB << " bunches created." << std::endl;
     if (teufel::rank==0) std::cout << "total number of particles : " << masterBeam->getNOP() << std::endl;
     if (teufel::rank==0) std::cout << "total charge : "
-        << masterBeam->getTotalCharge()*ElementaryCharge*1.0e9 << "nC" << std::endl;
+        << masterBeam->getTotalCharge()*1.0e9 << "nC" << std::endl;
     MPI_Barrier(MPI_COMM_WORLD);
     usleep(100000);
     if (teufel::rank==0) cout << std::endl << std::flush;
