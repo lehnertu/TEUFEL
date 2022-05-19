@@ -120,6 +120,27 @@ fields or both.
 %    hard edge
 %background
 
+\subsubsection{Wave-packet}
+This describes a gaussian pulse of a gaussian beam of electromagnetic radiation.
+The radiation wavelength, complex electric field amplitude and Rayleigh length of
+the optical waist must be given in the \verb|<field>| node. The \verb|<position>| node
+gives the position of the optical waist. The peak of the wave packet passes through this waist
+at the time given in the \verb|<position>| node. The wavepacket propagates
+in positive $z$ direction by default. The example given here also shows
+one way to calculate the field parameters.
+\begin{lstlisting}
+<wave name="seed" type="packet">
+	<!-- compute the seed field -->
+	<calc print="seed power [W] = " var="P0" eq="1e9"/>
+	<calc print="Rayleigh range [m] = " var="zR" eq="1.0"/>
+	<calc print="waist radius w0 [m] = " var="w0" eq="sqrt(lambda_S*zR/_pi)"/>
+	<calc print="peak intensity I0 [W/m²] = " var="I0" eq="2.0*P0/(_pi*w0*w0)"/>
+	<calc print="peak field E0 [V/m] = " var="E0" eq="sqrt(2*I0/_eps0/_c)"/>
+	<position x="0.0" y="0.0" z="0.0" t="1.0/_c"/>
+	<field lambda="10.0e-6" ReA="E0" ImA="0.0" rayleigh="zR" tau="50.0e-6/_c"/>
+</wave>
+\end{lstlisting}
+
 \subsection{Beam description}
 
 \subsubsection{Coordinate systems}
@@ -173,6 +194,11 @@ to account for the difference to the average arrival time of the particles in th
 \subsubsection{bunch}
 
 \subsection{Tracking definitions}
+
+The number of steps must be an integer value (cannot be calculated)!
+\begin{lstlisting}
+<tracking method="Vay" delta_t="dt" n="1000000" />
+\end{lstlisting}
 
 %method
 %watch
