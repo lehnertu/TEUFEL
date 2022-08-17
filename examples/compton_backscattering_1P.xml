@@ -41,12 +41,21 @@
             <calc print="lattice observation time step [s] = " var="dt_lat" eq="0.01*lambda/_c"/>
             <time t0="t0_lat-1000*dt_lat" dt="dt_lat" n="2000" />
         </point>
-        <point file="compton_2m.sdds" source="beam">
+        <point file="compton_1P.sdds" source="beam">
             <calc print="screen position z0 = " var="z0" eq="2.0"/>
             <calc print="screen center time t0 = " var="t0" eq="L_ip/(beta*_c) + z0/_c"/>
             <position x="0.0" y="0.0" z="-z0" />
             <calc print="observation time step [s] = " var="dt_obs" eq="0.02*lambda_X/_c"/>
             <time t0="t0-2000*dt_obs" dt="dt_obs" n="4000" />
         </point>
+        <screen file="compton_screen_1P.h5">
+            <calc print="screen position z0 = " var="z0" eq="2.0"/>
+            <calc print="screen center time t0 = " var="t0" eq="L_ip/(beta*_c) + z0/_c"/>
+            <calc print="observation time step [s] = " var="dt_obs" eq="0.05*lambda_X/_c"/>
+            <position x="0.0" y="0.0" z="-z0" />
+            <hpitch x="0.000001" y="0.0" z="0.0" n="50" dt="0.0"/>
+            <vpitch x="0.0" y="0.000001" z="0.0" n="50" dt="0.0"/>
+            <time t0="t0-2000*dt_obs" dt="dt_obs" n="5000" />
+        </screen>
     </observer>
 </teufel>
