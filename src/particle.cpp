@@ -558,6 +558,12 @@ ElMagField ChargedParticle::RetardedField(int index,
  * will be extrapolated to negative times. In the intermediate case a bisection
  * of the trajectory interval is done until the trajectory interval has been reduced
  * to a single time step.
+ *
+ * (X1, t1) and (X2, t2) are the trajectory points that frame
+ * the point (SourceX, SourceT) where the retardation condition is met.
+ * The found interval is subdivided with a fraction
+ * which ist iteratively refined to 1e-3 accuracy (max. 10 steps)
+ *
  */
 ElMagField ChargedParticle::RetardedField(double obs_time, Vector obs_pos)
 {
@@ -584,11 +590,10 @@ ElMagField ChargedParticle::RetardedField(double obs_time, Vector obs_pos)
         Vector SourceX;
         Vector SourceBeta;
         Vector SourceBetaPrime;
-        // reletivistic factors to be computed in every case
+        // relativistic factors to be computed in every case
         double betagamma2, gamma2, gamma;
         if (t1<=0.0)
         {
-            // printf("ChargedParticle::RetardedField - extrapolating from zero\n");
             // one has to extrapolate to negative trajectory times
             // if the is only one trajectory point available (i1==i2) we will be here as well
             Vector Rc = (obs_pos - X[0]) / SpeedOfLight;
@@ -631,61 +636,108 @@ ElMagField ChargedParticle::RetardedField(double obs_time, Vector obs_pos)
                     t2 = tMid;
                 }
             }
-            double frac = t1/(t1-t2);
-            // printf("i1=%d  i2=%d  frac=%12.9f\n",i1,i2,frac);
             // Simple linear interpolation is not enough.
-            // Do a refinement until the interpolaed position changes
-            // by less than a 1.0e-5 fraction of the trajectory step.
-            //! @todo Linear interpolation fails, as does recursive refinement.<br>
-            //! One should do ananalytic solution as it is done for the back-extrapolation.
-            //! The present code works at suffucuently large distances from the trajectory.
+            // Do a refinement until the interpolated position changes
+            // by less than a 1.0e-3 fraction of the trajectory step.
             double t1 = Time[i1];
             double t2 = Time[i2];
             Vector X1 = X[i1];
             Vector X2 = X[i2];
+            double dt1 = t1 + (obs_pos-X1).norm()/SpeedOfLight - obs_time;
+            double dt2 = t2 + (obs_pos-X2).norm()/SpeedOfLight - obs_time;
+            // sanity check
+            if (dt1>=0.0) printf("WARNING : programming error in ChargedParticle::RetardedField : dt1>0\n");
+            if (dt2<0.0) printf("WARNING : programming error in ChargedParticle::RetardedField : dt2<0\n");
+            if (dt2<dt1) printf("WARNING : programming error in ChargedParticle::RetardedField : dt2<dt1\n");
+            double frac = dt1/(dt1-dt2);
+            // sanity check
+            if (frac>1.0) printf("WARNING : programming error in ChargedParticle::RetardedField : frac>1\n");
+            if (frac<0.0) printf("WARNING : programming error in ChargedParticle::RetardedField : frac<0\n");
             SourceT = t1*(1.0-frac) + t2*frac;
             SourceX = X1*(1.0-frac) + X2*frac;
-            double R = (obs_pos-SourceX).norm();
+            Vector RVec = obs_pos-SourceX;
+            double R = RVec.norm();
+            Vector nVec = RVec/R;
             // how much off is the time
             double dt = SourceT + R / SpeedOfLight - obs_time;
             // how does dt change with frac
-            // the first refinement step uses the trajectory time step for computing the derivative
-            double r1 = (obs_pos-X1).norm();
-            double r2 = (obs_pos-X2).norm();
-            double dtdfrac = (t2-t1) + (r2-r1)/SpeedOfLight;
-            double dfrac = dt/dtdfrac;
-            // printf("frac= %12.9f R=%9.6g  SourceT=%9.6g  dt=%9.6g => dfrac=%12.9f\n",frac,R,SourceT,dt,-dfrac);
-            int number_ref=1;
-            while (fabs(dfrac)>1e-5 && number_ref<10)
+            double dSourceT_dfrac = t2-t1;
+            Vector dX_dfrac = X2-X1;
+            double dR_dfrac = -dot(dX_dfrac,nVec);
+            double dt_dfrac = dSourceT_dfrac + dR_dfrac / SpeedOfLight;
+            // for debugging we store the refinement steps
+            double dt_storage[10];
+            double R_storage[10];
+            double frac_storage[10];
+            double dR_dfrac_storage[10];
+            double dt_dfrac_storage[10];
+            dt_storage[0] = dt;
+            R_storage[0] = R / SpeedOfLight;
+            frac_storage[0] = frac;
+            dR_dfrac_storage[0] = dR_dfrac / SpeedOfLight;
+            dt_dfrac_storage[0] = dt_dfrac;
+            // the first refinement step
+            double dfrac = dt/dt_dfrac;
+            frac -= dfrac;
+            if (frac<0.0) frac=0.0;
+            if (frac>1.0) frac=1.0;
+            int number_ref=0;
+            // iterate if necessary
+            while (fabs(dfrac)>1e-3 && number_ref<9)
             {
-                // for subsequent refinement steps we use the change from the last step
-                // to compute the drivative
-                // before
-                double Lastdt = dt;
-                // after
-                frac -=dfrac;
+                number_ref++;
                 SourceT = t1*(1.0-frac) + t2*frac;
                 SourceX = X1*(1.0-frac) + X2*frac;
-                R = (obs_pos-SourceX).norm();
+                RVec = obs_pos-SourceX;
+                R = RVec.norm();
+                nVec = RVec/R;
+                // how much off is the time
                 dt = SourceT + R / SpeedOfLight - obs_time;
                 // how does dt change with frac
-                dtdfrac = -(dt-Lastdt)/dfrac;
-                dfrac = dt/dtdfrac; 
-                // printf("frac=%12.9f  R=%9.6g  SourceT=%9.6g  dt=%9.6g => dfrac=%12.9f\n",frac,R,SourceT,dt,-dfrac);
-                number_ref++;
+                dR_dfrac = -dot(dX_dfrac,nVec);
+                dt_dfrac = dSourceT_dfrac + dR_dfrac / SpeedOfLight;
+                // for debugging we store the refinement steps
+                dt_storage[number_ref] = dt;
+                R_storage[number_ref] = R / SpeedOfLight;
+                frac_storage[number_ref] = frac;
+                dR_dfrac_storage[number_ref] = dR_dfrac / SpeedOfLight;
+                dt_dfrac_storage[number_ref] = dt_dfrac;
+                // the refinement step
+                dfrac = dt/dt_dfrac;
+                frac -= dfrac;
+                if (frac<0.0) frac=0.0;
+                if (frac>1.0) frac=1.0;
             }
-            // repeat with corrected frac
-            frac -=dfrac;
+            // continue with corrected frac
             SourceT = t1*(1.0-frac) + t2*frac;
             SourceX = X1*(1.0-frac) + X2*frac;
-            if (number_ref>=10)
+            // print output if the refinement did not converge
+            if (fabs(dfrac)>1e-3)
             {
                 printf("WARNING : no convergence in ChargedParticle::RetardedField\n");
                 printf("Obs    : t=%9.6g  X=(%9.6g, %9.6g, %9.6g)\n",obs_time,obs_pos.x,obs_pos.y,obs_pos.z);
                 printf("Source : t=%9.6g  X=(%9.6g, %9.6g, %9.6g)\n",SourceT,SourceX.x,SourceX.y,SourceX.z);
                 R = (obs_pos-SourceX).norm();
+                printf("R=(%9.6g, %9.6g, %9.6g)\n",RVec.x,RVec.y,RVec.z);
+                printf("dX_dfrac=(%9.6g, %9.6g, %9.6g)\n",dX_dfrac.x,dX_dfrac.y,dX_dfrac.z);
                 dt = SourceT + R / SpeedOfLight - obs_time;
-                printf("frac=%12.9f  R=%9.6g  dt=%9.6g => dfrac=%12.9f\n",frac,R,dt,-dfrac);
+                printf("frac=%12.9f  dt=%9.6g  dt1=%9.6g dt2=%9.6g refinements:%d\n", frac,dt,dt1,dt2,number_ref);
+                printf("dR_dfrac/c=%9.6g  dSourceT_dfrac = %9.6g => dfrac=%12.9f\n", dR_dfrac/SpeedOfLight,dSourceT_dfrac,dfrac);
+                printf("dt    = [");
+                for (int iref=0; iref<10; iref++) printf("%9.6g, ", dt_storage[iref]);
+                printf("]\n");
+                printf("R/c   = [");
+                for (int iref=0; iref<10; iref++) printf("%9.6g, ", R_storage[iref]);
+                printf("]\n");
+                printf("dt/df = [");
+                for (int iref=0; iref<10; iref++) printf("%9.6g, ", dt_dfrac_storage[iref]);
+                printf("]\n");
+                printf("dR/df = [");
+                for (int iref=0; iref<10; iref++) printf("%9.6g, ", dR_dfrac_storage[iref]);
+                printf("]\n");
+                printf("frac = [");
+                for (int iref=0; iref<10; iref++) printf("%9.6g, ", frac_storage[iref]);
+                printf("]\n\n");
             }
             SourceBeta = P[i1]*(1.0-frac) + P[i2]*frac;
             betagamma2 = SourceBeta.abs2nd();
