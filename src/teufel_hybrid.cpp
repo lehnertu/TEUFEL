@@ -443,9 +443,24 @@ int main(int argc, char *argv[])
             if (w.step == 0)
             {
                 std::cout << "writing watch point " << w.filename << std::endl;
-                int nw = masterBeam->WriteWatchPointHDF5(w.filename);
-                std::cout << nw << " particles written." << std::endl;
-                std::cout << std::endl;
+                if (w.type == hdf5)
+                {
+                    int nw = masterBeam->WriteWatchPointHDF5(w.filename);
+                    std::cout << nw << " particles written." << std::endl;
+                    std::cout << std::endl;
+                };
+                if (w.type == sdds)
+                {
+                    int res = masterBeam->WriteWatchPointSDDS(w.filename);
+                    if (res==0)
+                    {
+                        std::cout << masterBeam->getNOP() << " particles written." << std::endl;
+                        std::cout << std::endl;
+                    } else {
+                        std::cout << "error " << res << " while writing." << std::endl;
+                        std::cout << std::endl;
+                    };
+                };
             }
         }
 
@@ -503,9 +518,24 @@ int main(int argc, char *argv[])
                 if (w.step == step+1)
                 {
                     std::cout << "writing watch point " << w.filename << std::endl;
-                    int nw = masterBeam->WriteWatchPointHDF5(w.filename);
-                    std::cout << nw << " particles written." << std::endl;
-                    std::cout << std::endl;
+                    if (w.type == hdf5)
+                    {
+                        int nw = masterBeam->WriteWatchPointHDF5(w.filename);
+                        std::cout << nw << " particles written." << std::endl;
+                        std::cout << std::endl;
+                    };
+                    if (w.type == sdds)
+                    {
+                        int res = masterBeam->WriteWatchPointSDDS(w.filename);
+                        if (res==0)
+                        {
+                            std::cout << masterBeam->getNOP() << " particles written." << std::endl;
+                            std::cout << std::endl;
+                        } else {
+                            std::cout << "error " << res << " while writing." << std::endl;
+                            std::cout << std::endl;
+                        };
+                    };
                 }
             }
         

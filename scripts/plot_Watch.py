@@ -5,6 +5,7 @@ import os.path
 import argparse
 import numpy as np
 import h5py
+import sdds
 import matplotlib.pyplot as plt
 from matplotlib.ticker import NullFormatter
 
@@ -28,23 +29,22 @@ def PlotPS(x, y, xlabel='x', ylabel='y', rect_dens = [0.15, 0.1, 0.8, 0.8], cent
   else:
     H, xticks, yticks = np.histogram2d(x,y,bins=pixels,
       range=[[xmin,xmax],[ymin,ymax]])
-  # wegen Matrickonvention muss H transponiert werden
+  # wegen Matrixkonvention muss H transponiert werden
   # da von links oben beginnend gezeichnet wird, muss man vertikal flippen
   M = np.flipud(H.T)
-  # erster Index ist jetzt Energie, wird von unten nach oben dargestellt
-  # zweiter Index ist Zeit, wird von links nach rechts dargestellt
+  # erster Index wird von unten nach oben dargestellt
+  # zweiter Index wird von links nach rechts dargestellt
   axDens = plt.axes(rect_dens)
   im = axDens.imshow(M, interpolation='nearest',
       aspect=(xticks[0]-xticks[-1])/(yticks[0]-yticks[-1]),
       extent=[xticks[0], xticks[-1], yticks[0], yticks[-1]])
   plt.xlabel(xlabel)
   plt.ylabel(ylabel)
-  # plt.colorbar()
   return plt
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('file', help='the file name of the watch point HDF5 file')
+parser.add_argument('file', help='the file name of the watch point file (HDF5 or SDDS)')
 parser.add_argument('-pix', help="the number of pixels for the plots", dest="pix", type=int)
 parser.add_argument('-img', help="output not to screen but image file", dest="img")
 
@@ -56,26 +56,55 @@ if not bunOK:
   print("file not found")
   sys.exit()
 
-# Open the file for reading
-print("reading ",bunfile)
-hdf = h5py.File(bunfile, "r")
-print(hdf)
-print()
+# determine the file format
+f = open(bunfile, "rb")
+bytes = f.read(4)
+is_sdds = (bytes == b'SDDS')
+is_hdf5 = (bytes == b'\x89HDF')
+if not (is_sdds or is_hdf5):
+  print("file is neither SDDS nor HDF5 file")
+  sys.exit()
 
-# Get the group
-electrons = hdf['electrons']
-a = np.array(electrons)
-hdf.close()
+# read HDF5 data
+if is_hdf5:
+    # Open the file for reading
+    print("reading ",bunfile)
+    hdf = h5py.File(bunfile, "r")
+    print(hdf)
+    print()
 
-data = a.transpose()
-# print(data)
+    # Get the group
+    electrons = hdf['electrons']
+    a = np.array(electrons)
+    hdf.close()
 
-x = data[0]
-y = data[1]
-z = data[2]
-bgx = data[3]
-bgy = data[4]
-bgz = data[5]
+    data = a.transpose()
+    print(f'have read {data.shape} array.')
+
+    x = data[0]
+    y = data[1]
+    z = data[2]
+    bgx = data[3]
+    bgy = data[4]
+    bgz = data[5]
+
+# read SDDS data
+if is_sdds:
+    # Open the file for reading
+    print("reading ",bunfile)
+    data = sdds.SDDS(0)
+    data.load(bunfile)
+
+    x = np.array(data.getColumnData("x"))
+    xp = np.array(data.getColumnData("xp"))
+    y = np.array(data.getColumnData("y"))
+    yp = np.array(data.getColumnData("yp"))
+    p = np.array(data.getColumnData("p"))
+    z = np.array(data.getColumnData("z"))
+    bgz = p*np.sqrt(1.0-np.square(xp)-np.square(yp))
+    bgx = bgz*xp
+    bgy = bgz*yp
+    print(f'have read {x.shape} particles.')
 
 xmean = np.mean(x)
 ymean = np.mean(y)

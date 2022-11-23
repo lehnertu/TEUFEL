@@ -97,5 +97,10 @@ public:
 /*! a data struct to hold the definition of a watch point
  *  where particle coordinates will be written during tracking
  */
-typedef struct { int step; std::string filename; } watch_t;
+enum WatchType { hdf5, sdds };
+typedef struct {
+    int step;
+    std::string filename;
+    WatchType type;
+    } watch_t;
 

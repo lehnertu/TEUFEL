@@ -509,7 +509,18 @@ void InputParser::parseTracking(Beam *beam, std::vector<watch_t> *watches)
                 pugi::xml_attribute fn = child.attribute("file");
                 if (!fn)
                     throw(IOexception("InputParser::parseTracking - <watch> attribute file not found."));
-                watch_t w = { step.as_int(), fn.as_string() };
+                watch_t w = { step.as_int(), fn.as_string(), hdf5 };
+                watches->push_back(w);
+            }
+            else if (type == "watch-sdds")
+            {
+                pugi::xml_attribute step = child.attribute("step");
+                if (!step)
+                    throw(IOexception("InputParser::parseTracking - <watch-sdds> attribute step not found."));
+                pugi::xml_attribute fn = child.attribute("file");
+                if (!fn)
+                    throw(IOexception("InputParser::parseTracking - <watch-sdds> attribute file not found."));
+                watch_t w = { step.as_int(), fn.as_string(), sdds };
                 watches->push_back(w);
             }
             else

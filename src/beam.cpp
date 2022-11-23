@@ -24,6 +24,8 @@
 #include "particle.h"
 #include "global.h"
 #include "hdf5.h"
+#include "SDDS.h"
+#include <math.h>
 #include <iostream>
 
 Beam::Beam()
@@ -275,6 +277,112 @@ int Beam::WriteWatchPointHDF5(std::string filename)
     std::cout << "writing HDF5 done." << std::endl;
     delete[] buffer;
     return nop;
+}
+
+int Beam::WriteWatchPointSDDS(std::string filename)
+{
+    cout << "writing SDDS file " << filename << endl;
+    SDDS_DATASET data;
+    if (1 != SDDS_InitializeOutput(&data,SDDS_BINARY,1,NULL,NULL,filename.c_str()))
+    {
+        std::cout << "Bunch::WriteWatchPointSDDS - error initializing output" << std::endl;
+        return 1;
+    }
+    if  (SDDS_DefineSimpleParameter(&data,"NumberOfParticles","", SDDS_LONG)!=1)
+    {
+        std::cout << "Bunch::WriteWatchPointSDDS - error defining parameters" << std::endl;
+        return 2;
+    }
+    if  (
+        SDDS_DefineColumn(&data,"t\0","t\0","s\0","Time\0",NULL, SDDS_DOUBLE,0)   ==-1 || 
+        SDDS_DefineColumn(&data,"x\0","x\0","m\0","PositionX\0",NULL, SDDS_DOUBLE,0) == -1 ||
+        SDDS_DefineColumn(&data,"y\0","y\0","m\0","PositionY\0",NULL, SDDS_DOUBLE,0) == -1 ||
+        SDDS_DefineColumn(&data,"z\0","z\0","m\0","PositionZ\0",NULL, SDDS_DOUBLE,0) == -1 || 
+        SDDS_DefineColumn(&data,"px\0","px\0",NULL,"BetaGammaX\0",NULL, SDDS_DOUBLE,0)== -1 || 
+        SDDS_DefineColumn(&data,"py\0","py\0",NULL,"BetaGammaY\0",NULL,SDDS_DOUBLE,0) == -1 ||
+        SDDS_DefineColumn(&data,"pz\0","pz\0",NULL,"BetaGammaZ\0",NULL,SDDS_DOUBLE,0) == -1 ||
+        SDDS_DefineColumn(&data,"p\0","p\0",NULL,"BetaGamma\0",NULL,SDDS_DOUBLE,0) == -1 ||
+        SDDS_DefineColumn(&data,"xp\0","xp\0",NULL,"Xprime\0",NULL, SDDS_DOUBLE,0)== -1 || 
+        SDDS_DefineColumn(&data,"yp\0","yp\0",NULL,"Bprime\0",NULL,SDDS_DOUBLE,0) == -1 ||
+        SDDS_DefineColumn(&data,"gamma\0","gamma\0",NULL,"RelativisticFactor\0",NULL,SDDS_DOUBLE,0)==-1
+        )
+    {
+        std::cout << "Bunch::WriteWatchPointSDDS - error defining data columns" << std::endl;
+        return 3;
+    }
+    if (SDDS_WriteLayout(&data) != 1)
+    {
+        std::cout << "Bunch::WriteWatchPointSDDS - error writing layout" << std::endl;
+        return 4;
+    }
+    // start a page with number of lines equal to the number of particles
+    int NOP = getNOP();
+    // cout << "SDDS start page" << endl;
+    if (SDDS_StartPage(&data,(int32_t)NOP) !=1 )
+    {
+        std::cout << "Bunch::WriteWatchPointSDDS - error starting page" << std::endl;
+        return 5;
+    }
+    // write the single valued variables
+    // cout << "SDDS write parameters" << endl;
+    if( SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,
+        "NumberOfParticles",NOP,
+        NULL ) !=1
+        )
+    {
+        std::cout << "Bunch::WriteWatchPointSDDS - error setting parameters" << std::endl;
+        return 6;
+    }
+    // write the table of particle data
+    // cout << "SDDS writing " << NOP << " particles" << endl;
+    int index=0;
+    for(int b=0; b<NOB; b++)
+    {
+        Bunch *bunch = B[b];
+        int nop = bunch->getNOP();
+        for( int i=0; i<nop; i++)
+        {
+            ChargedParticle *P = bunch->getParticle(i);
+            double t = P->getTime();
+            Vector X = P->getPosition();
+            Vector BG = P->getMomentum();
+            if( SDDS_SetRowValues(&data,
+                SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, index,
+                "t",t,
+                "x",X.x,
+                "y",X.y,
+                "z",X.z,
+                "px",BG.x,
+                "py",BG.y,
+                "pz",BG.z,
+                "p",BG.norm(),
+                "xp",BG.x/BG.z,
+                "yp",BG.y/BG.z,
+                "gamma",sqrt(1.0+BG.abs2nd()),
+                NULL) != 1
+                )
+            {
+                std::cout << "Bunch::WriteWatchPointSDDS - error writing data columns" << std::endl;
+                return 7;
+            }
+            index++;
+        }
+    }
+
+    if( SDDS_WritePage(&data) != 1)
+    {
+        std::cout << "Bunch::WriteWatchPointSDDS - error writing page" << std::endl;
+        return 8;
+    }
+    // finalize the file
+    if (SDDS_Terminate(&data) !=1 )
+    {
+        std::cout << "Bunch::WriteWatchPointSDDS - error terminating data file" << std::endl;
+        return 9;
+    }	
+    // no errors have occured if we made it 'til here
+    // cout << "writing SDDS done." << endl;
+    return 0;
 }
 
 ElMagField Beam::RetardedField(double obs_time, Vector obs_pos)
