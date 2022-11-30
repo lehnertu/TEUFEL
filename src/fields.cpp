@@ -167,21 +167,18 @@ ElMagField HomogeneousField::Field(double t, Vector X)
 ExternalField::ExternalField()
 {
     origin = Vector(0.0,0.0,0.0);
+    t0 = 0.0;
 }
 
-ExternalField::ExternalField(Vector pos)
+ExternalField::ExternalField(Vector pos, double t)
 {
     origin = pos;
+    t0 = t;
 }
 
 ElMagField ExternalField::Field(double t, Vector X)
 {
-    return LocalField(t,X-origin);
-}
-
-ElMagField ExternalField::LocalField(double t, Vector X)
-{
-    return ElMagField(Vector(0.0,0.0,0.0),Vector(0.0,0.0,0.0));
+    return LocalField((t-t0),X-origin);
 }
 
 // ********** Lattice **********

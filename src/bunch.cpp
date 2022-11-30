@@ -202,12 +202,20 @@ Bunch::Bunch(const char *filename)
         return;
     };
     
+    /* @TODO: unclear what this example is doing
+       something like this may be needed for multi-page files
     int page = SDDS_ReadPage(&SDDS_dataset);
     while (page >= 1)
     {
         page = SDDS_ReadPage(&SDDS_dataset);
     };
-    
+    */
+    int page = SDDS_ReadPage(&SDDS_dataset);
+    if (page != 1)
+    {
+        std::cout << "SDDS ReadPage(1) returns " << page << std::endl;
+        SDDS_PrintErrors(stderr, SDDS_VERBOSE_PrintErrors);
+    }
     char parName[] = "Particles";
     int32_t *nopData = SDDS_GetParameterAsLong(&SDDS_dataset, parName, NULL);
     if (nopData==NULL)
@@ -216,6 +224,9 @@ Bunch::Bunch(const char *filename)
         SDDS_PrintErrors(stderr, SDDS_VERBOSE_PrintErrors);
         return;
     };
+    // we only assign a local variable here, so NOP stays zero
+    // just in case there may be further errors
+    int file_NOP = *nopData;
 
     // the file value is the total charge [C] unsigned value
     char chName[] = "Charge";
@@ -226,7 +237,10 @@ Bunch::Bunch(const char *filename)
         SDDS_PrintErrors(stderr, SDDS_VERBOSE_PrintErrors);
         return;
     };
-    double charge = *chData/ElementaryCharge/(*nopData);
+    double charge = *chData;
+    std::cout << "SDDS file parameters: NOP=" << file_NOP;
+    std::cout << "  Charge=" << charge << " C" << std::endl;
+    std::cout << "SDDS mode " << SDDS_dataset.mode << std::endl;
 
     char xName[] = "x";
     double *xData = SDDS_GetColumnInDoubles(&SDDS_dataset, xName);
@@ -282,17 +296,18 @@ Bunch::Bunch(const char *filename)
         return;
     };
 
-    NOP = *nopData;
+    NOP = file_NOP;
     // t is the arrival time at a given z-plane
     // compute the mean arrival time of the bunch
     double sum = 0;
     for(int i=0; i<NOP; i++) sum += tData[i];
     double t0 = sum/NOP;
+    // create negatively charged particles with electron charge-to-mass ratio
+    double numElectrons = charge/ElementaryCharge/NOP;
     // create the particles
     for(int i=0; i<NOP; i++)
     {
-        // create negatively charged particles with electron charge-to-mass ratio
-        ChargedParticle *p = new ChargedParticle(-charge,charge);
+        ChargedParticle *p = new ChargedParticle(-numElectrons,numElectrons);
         // pData is the total momentum
         double betagamma = pData[i];
         double beta = sqrt( betagamma*betagamma / (betagamma*betagamma+1.0) );
@@ -467,6 +482,34 @@ Vector Bunch::avgMomentum()
     for(int i=0; i<NOP; i++)
         mom += P[i]->getMomentum();
     return mom*(1.0/NOP);
+}
+
+double Bunch::delta()
+{
+    double avg = 0.0;
+    for(int i=0; i<NOP; i++)
+        avg += (P[i]->getMomentum()).norm();
+    avg /= NOP;
+    double sum = 0.0;
+    for(int i=0; i<NOP; i++)
+    {
+        double diff = (P[i]->getMomentum()).norm() - avg;
+        sum += diff*diff;
+    }
+    return sqrt(sum/NOP)/avg;
+}
+
+std::complex<double> Bunch::BunchingFactor(double freq)
+{
+    const std::complex<double> I(0.0,1.0);
+    std::complex<double> sum(0.0, 0.0);
+    for(int i=0; i<NOP; i++)
+    {
+        double z = P[i]->getPosition().z;
+        std::complex<double> arg = 2.0*Pi*I*freq*z/SpeedOfLight;
+        sum += std::exp(arg);
+    };
+    return (1.0/(double)NOP)*sum;
 }
 
 double* Bunch::bufferCoordinates(double *buffer, int size)

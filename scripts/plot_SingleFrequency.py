@@ -97,8 +97,6 @@ for ix in range(Nx):
 dX = screen.dx
 dY = screen.dy
 print("dx=%g dy=%g m" % (dX,dY))
-# Etot = Amplitude.sum()*dX*dY
-# print("integrated energy = ", 1e6*Etot, " µJ"(
 
 maxX = np.max(AmplitudeX)
 maxY = np.max(AmplitudeY)
@@ -111,7 +109,13 @@ print("scale = %g" % scale)
 fig1 = plt.figure(1,figsize=(11,9))
 
 ax1 = fig1.add_subplot(221)
-plt.pcolormesh(X, Y, scale*AmplitudeX, cmap='CMRmap', vmin=0, vmax=scale*maxV)
+# for colormesh we have to specify the coordinates of the corner points - we have the centers
+xmin, xmax = np.min(X), np.max(X)
+xx = np.linspace(xmin-0.5*screen.dx, xmax+0.5*screen.dx, Nx+1)
+ymin, ymax = np.min(Y), np.max(Y)
+yy = np.linspace(ymin-0.5*screen.dy, ymax+0.5*screen.dy, Ny+1)
+X, Y = np.meshgrid(xx, yy)
+plt.pcolormesh(X, Y, scale*AmplitudeX.transpose(), cmap='CMRmap', vmin=0, vmax=scale*maxV, shading='flat')
 plt.title('integrated $E_x$ amplitude [V/m s]')
 plt.xlabel('x /m')
 plt.ylabel('y /m')
@@ -119,14 +123,14 @@ cb=plt.colorbar()
 cb.set_label(r'$10^{%d}$ Vs/m' % expo)
 
 ax2 = fig1.add_subplot(222)
-plt.pcolormesh(X, Y, PhaseX, cmap='seismic')
+plt.pcolormesh(X, Y, PhaseX.transpose(), cmap='seismic', shading='flat')
 plt.title('$E_x$ phase [rad]')
 plt.xlabel('x /m')
 plt.ylabel('y /m')
 cb=plt.colorbar()
 
 ax3 = fig1.add_subplot(223)
-plt.pcolormesh(X, Y, scale*AmplitudeY, cmap='CMRmap', vmin=0, vmax=scale*maxV)
+plt.pcolormesh(X, Y, scale*AmplitudeY.transpose(), cmap='CMRmap', vmin=0, vmax=scale*maxV, shading='flat')
 plt.title('integrated $E_y$ amplitude [V/m s]')
 plt.xlabel('x /m')
 plt.ylabel('y /m')
@@ -134,7 +138,7 @@ cb=plt.colorbar()
 cb.set_label(r'$10^{%d}$ Vs/m' % expo)
 
 ax4 = fig1.add_subplot(224)
-plt.pcolormesh(X, Y, PhaseY, cmap='seismic')
+plt.pcolormesh(X, Y, PhaseY.transpose(), cmap='seismic', shading='flat')
 plt.title('$E_y$ phase [rad]')
 plt.xlabel('x /m')
 plt.ylabel('y /m')

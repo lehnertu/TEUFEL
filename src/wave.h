@@ -160,7 +160,7 @@ public:
      *  and initalizes all variables with sane values. This will not yet
      *  produce any field output as the amplitude is zero.
      */
-    GaussianWavePacket(Vector pos);
+    GaussianWavePacket(Vector pos, double t0=0.0);
 
     /*! This constructor takes the information from an XML node
      *  describing all wave properties. It will throw exceptions
@@ -186,10 +186,8 @@ public:
         complex<double> amplitude,
         //! the Rayleigh length [m]
         double range,
-        //! pulse length [s]
-        double duration,
-        //! time at waist [s]
-        double arrival
+        //! pulse length tau [s]
+        double duration
         );
 
 	/*! Report the wavelength lambda [m]
@@ -215,8 +213,6 @@ private:
     double w0;
     //! pulse length [s]
     double tau;
-    //! time at waist [s]
-    double t0;
 
 };
 

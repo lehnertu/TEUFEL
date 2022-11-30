@@ -229,9 +229,9 @@ public:
 
     /*! This constructor defines a different origin
      *	of the element local coordinate system, thus, placing the element
-     *  at a certain position in lab space
+     *  at a certain position in lab space and time
      */
-    ExternalField(Vector pos);
+    ExternalField(Vector pos, double t=0.0);
     
     /*! All derived classe must provide a destructor */
     virtual ~ExternalField() {};
@@ -263,6 +263,7 @@ protected :
 
     /*! This is the position of the element in laboratory frame */
     Vector origin;
+    double t0;
 
 };
 

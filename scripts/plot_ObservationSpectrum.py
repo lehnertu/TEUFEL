@@ -1,4 +1,5 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
+# coding=UTF-8
 
 import sys, sdds, time
 import os.path
@@ -7,7 +8,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 parser = argparse.ArgumentParser()
-parser.add_argument('file', help='the name of the SDDS file with the observation field data')
+parser.add_argument('file', help='file name of <point> observation (SDDS)')
+parser.add_argument('--list_params', dest='listpar',
+  action='store_const', const=True, default=False, help='list all parameters available in the file')
 parser.add_argument('--list_columns', dest='listcol',
   action='store_const', const=True, default=False, help='list all columns available in the file')
 
@@ -15,10 +18,10 @@ args = parser.parse_args()
 
 fileOK = os.path.isfile(args.file)
 if not fileOK:
-  print "file not found"
+  print("file not found")
   sys.exit()
 
-print "reading ",args.file
+print("reading ",args.file)
 data = sdds.SDDS(0)
 data.load(args.file)
 if args.listcol:

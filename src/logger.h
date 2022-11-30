@@ -32,7 +32,8 @@
  * 
  * This class handles the computation and storage of beam parameters
  * accessible during the tracking.
- * @todo specialization for beam still missing, only for bunch implemented
+ * @TODO specialization for beam still missing, only for bunch implemented
+ * @TODO could (optionally) log lattice fields at bunch center
  */
 template <class objectT>
 class TrackingLogger
@@ -52,6 +53,13 @@ public:
      */
     TrackingLogger(objectT *obj, const char *filename, int step);
 
+    /*! Request the logger to record the bunching factor at a given frequency.
+     *  The recorded value is a complex number including the phase information.
+     *
+     * \param[in] freq The frequency [Hz] at which to compute the bunching factor
+     */
+    void record_bunching(double freq);
+    
     /*! Check whether the given tracking step should be logged */
     bool log_requested(int step) { return 0 == (step % stepsize); };
     
@@ -101,6 +109,12 @@ private:
     //! the logging frequency in tracking steps
     unsigned int stepsize;
     
+    //! whether to include a bunching factor
+    bool include_bunching;
+    
+    //! the frequency for the bunching factor
+    double bunching_freq;
+    
     //! the observation time
     std::vector<double> Time;
 
@@ -118,5 +132,11 @@ private:
 
     //! the observation position-momentum correlation
     std::vector<Vector> PosBG;
+    
+    //! magnitude of observed bunching factors
+    std::vector<double> BF;
+    
+    //! relative energy spread
+    std::vector<double> Delta;
     
 };

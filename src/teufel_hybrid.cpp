@@ -210,7 +210,8 @@ int main(int argc, char *argv[])
     // or other bunch-related procedures. This way it is possible to log information
     // for inidividual bunches making up the total beam.
     // After every tracking step, the current particle information distributed over
-    // the compute nodes will be re-gathered into this object on all nodes.
+    // the compute nodes will be re-gathered into this object.
+    // Every node is doing that, so the total beam history is available for interactions.
     Beam *masterBeam = new Beam();
     std::vector<TrackingLogger<Bunch>*> listLoggers;
     int NoB = parse->parseBeam(masterBeam, &listLoggers);

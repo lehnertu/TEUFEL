@@ -88,6 +88,27 @@ class TeufelScreen():
         hdf.close()
         # object is ready
         return screen
+
+    def write(self, filename):
+        """
+        Export a TeufelScreen object to an HDF5 file.
+        """
+        hf = h5py.File(filename, 'w')
+        # data for the 'Screen' dataset
+        sd = np.array([self.origin, self.normal, self.dX, self.dY])
+        dataset = hf.create_dataset('Screen', data=sd)
+        # add attributes for the geometry and sampling
+        dataset.attrs['Nx'] = self.Nx
+        dataset.attrs['Ny'] = self.Ny
+        dataset.attrs['NOTS'] = self.nots
+        dataset.attrs['t0'] = self.t0
+        dataset.attrs['dt'] = self.dt
+        dataset.attrs['dtx'] = self.dtx
+        dataset.attrs['dty'] = self.dty
+        # data for the 'ElMagField' dataset
+        hf.create_dataset('ElMagField', data=self.A)
+        # write to disk
+        hf.close()
         
     def shape(self):
         """
@@ -126,7 +147,23 @@ class TeufelScreen():
         EVec = np.array([Ex, Ey, Ez]).transpose()
         BVec = np.array([Bx, By, Bz]).transpose()
         return (EVec, BVec)
-        
+    
+    def setFieldTrace(self,ix,iy,EVec,BVec):
+        """
+        eet the fields for one pixel from 
+        E [V/m] and B [T] arrays of vectors.
+        """
+        ET = EVec.transpose()
+        Ex = ET[0]
+        Ey = ET[1]
+        Ez = ET[2]
+        BT = BVec.transpose()
+        Bx = BT[0]
+        By = BT[1]
+        Bz = BT[2]
+        trace = np.array([Ex, Ey, Ez, Bx, By, Bz]).transpose()
+        self.A[ix,iy] = trace
+    
     def totalPowerDensity(self,ix,iy):
         """
         get the total incident radiation energy [J/m²] per unit area of the screen
@@ -158,6 +195,20 @@ class TeufelScreen():
         (EH, EV, BH, BV) = self.getInPlaneFields(ix,iy)
         spectE = np.fft.fft(EH)[:nf//2]
         spectB = np.fft.fft(BV)[:nf//2]
-        amplit = np.real(spectE*np.conj(spectB)/mu0)*2*self.dt/(df*nf)
+        amplit = np.abs(spectE*np.conj(spectB)/mu0)*2*self.dt/(df*nf)
+        return (f, amplit)
+
+    def spectralDensityV(self,ix,iy):
+        """
+        get the spectral power density [J/(m² THz)] of the vertical polarization
+        """  
+        nf = self.nots
+        fmax = 1.0/self.dt
+        f = np.linspace(0.0,fmax,nf)[:nf//2]
+        df=1.0/self.dt/nf
+        (EH, EV, BH, BV) = self.getInPlaneFields(ix,iy)
+        spectE = np.fft.fft(EV)[:nf//2]
+        spectB = np.fft.fft(BH)[:nf//2]
+        amplit = np.abs(spectE*np.conj(spectB)/mu0)*2*self.dt/(df*nf)
         return (f, amplit)
 

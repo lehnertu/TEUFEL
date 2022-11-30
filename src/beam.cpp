@@ -288,7 +288,10 @@ int Beam::WriteWatchPointSDDS(std::string filename)
         std::cout << "Bunch::WriteWatchPointSDDS - error initializing output" << std::endl;
         return 1;
     }
-    if  (SDDS_DefineSimpleParameter(&data,"NumberOfParticles","", SDDS_LONG)!=1)
+    if  (
+        SDDS_DefineSimpleParameter(&data,"NumberOfParticles","", SDDS_LONG)!=1 ||
+        SDDS_DefineSimpleParameter(&data,"Charge","C", SDDS_DOUBLE)!=1
+        )
     {
         std::cout << "Bunch::WriteWatchPointSDDS - error defining parameters" << std::endl;
         return 2;
@@ -326,8 +329,14 @@ int Beam::WriteWatchPointSDDS(std::string filename)
     // write the single valued variables
     // cout << "SDDS write parameters" << endl;
     if( SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,
-        "NumberOfParticles",NOP,
-        NULL ) !=1
+        "NumberOfParticles", NOP, NULL ) !=1
+        )
+    {
+        std::cout << "Bunch::WriteWatchPointSDDS - error setting parameters" << std::endl;
+        return 6;
+    }
+    if( SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE,
+        "Charge", ElementaryCharge*getTotalCharge(), NULL ) !=1
         )
     {
         std::cout << "Bunch::WriteWatchPointSDDS - error setting parameters" << std::endl;

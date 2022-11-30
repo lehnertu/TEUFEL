@@ -179,6 +179,14 @@ int InputParser::parseLattice(Lattice *lattice)
                 GaussianWave *wave = new GaussianWave(element, this);
                 lattice->addElement(wave);
             }
+            else if (type == "packet")
+            {
+                if (teufel::rank==0) std::cout << name << "::GaussianWavePacket" << std::endl;
+                // the wave object parses its own input
+                // we provide a reference to the parser
+                GaussianWavePacket *wave = new GaussianWavePacket(element, this);
+                lattice->addElement(wave);
+            }
             else
                 throw(IOexception("InputParser::parseLattice(Lattice - unknown wave type."));
             count++;
@@ -433,6 +441,12 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                     pugi::xml_attribute st = lognode.attribute("step");
                     if (fn) step = st.as_int();
                     TrackingLogger<Bunch>* logger = new TrackingLogger<Bunch>(bunch, fn.as_string(), step);
+                    pugi::xml_attribute bf = lognode.attribute("bunching-freq");
+                    if (bf)
+                    {
+                        double freq = parseValue(bf);
+                        logger->record_bunching(freq);
+                    };
                     logs->push_back(logger);
                 }
                 // add the bunch to the beam
@@ -457,6 +471,12 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                     pugi::xml_attribute st = lognode.attribute("step");
                     if (fn) step = st.as_int();
                     TrackingLogger<Bunch>* logger = new TrackingLogger<Bunch>(bunch, fn.as_string(), step);
+                    pugi::xml_attribute bf = lognode.attribute("bunching-freq");
+                    if (bf)
+                    {
+                        double freq = parseValue(bf);
+                        logger->record_bunching(freq);
+                    };
                     logs->push_back(logger);
                 }
                 // add the bunch to the beam

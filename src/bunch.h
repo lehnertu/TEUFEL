@@ -26,6 +26,7 @@
 #include "particle.h"
 #include "vector.h"
 #include <vector>
+#include <complex>
 
 using namespace std;
 
@@ -221,7 +222,9 @@ public:
     //! Report the number of particles in the bunch.
     int getNOP();	
 
-    //! Report the total charge of the particles contained in the bunch.
+    /*! Report the total charge of the particles contained in the bunch
+     *  in units of elementary charge (i.e. simulated number of electrons)
+     */
     double getTotalCharge();
 
     /*!
@@ -307,6 +310,15 @@ public:
      */
     Vector avgMomentum();
 
+    /*! @brief Relative energy spread
+     */
+    double delta();
+
+    /*! @brief Bunching factor at given frequency
+     *  The bunching factor is a complex value retaining phase information
+     */
+    std::complex<double> BunchingFactor(double freq);
+    
     /*! @brief write coordinates of all particles to a buffer
      *  @param buffer address of the buffer
      *  @param size maximum number of particles the buffer can hold

@@ -93,7 +93,9 @@ public:
     //! Report the total number of particles contained in the beam.
     int getNOP();
     
-    //! Report the total charge of the particles contained in the beam.
+    /*! Report the total charge of the particles contained in the beam
+     *  in units of elementary charge (i.e. simulated number of electrons)
+     */
     double getTotalCharge();
     
     //! Report the used tracking method

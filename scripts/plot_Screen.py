@@ -38,6 +38,14 @@ print("reading ",radfile)
 screen = TeufelScreen.read(radfile)
 print()
 
+print(f'peak Ex = {np.abs(screen.A[:,:,:,0]).max()} V/m')
+print(f'peak Ey = {np.abs(screen.A[:,:,:,1]).max()} V/m')
+print(f'peak Ez = {np.abs(screen.A[:,:,:,2]).max()} V/m')
+print(f'peak Bx = {np.abs(screen.A[:,:,:,3]).max()} T')
+print(f'peak By = {np.abs(screen.A[:,:,:,4]).max()} T')
+print(f'peak Bz = {np.abs(screen.A[:,:,:,5]).max()} T')
+print()
+
 # analyze power density on axis
 (EVec,BVec) = screen.getFieldTrace(screen.xcenter,screen.ycenter)
 SVec = np.cross(EVec, BVec) / mu0
@@ -49,6 +57,8 @@ print()
 
 df = 1.0/screen.dt/screen.nots
 (f, amplit) = screen.spectralDensityH(screen.xcenter,screen.ycenter)
+intspec = amplit.sum()*df
+print("total spectral power density on axis = %g µJ/m²" % (1e6*intspec))
 
 fig1 = plt.figure(1,figsize=(12,9))
 ax1 = fig1.add_axes([0.1, 0.1, 0.8, 0.8])
@@ -59,9 +69,6 @@ ax1.yaxis.label.set_color('r')
 ax1.tick_params(axis='y', colors='r')
 if roiOK:
   ax1.axvspan(1e-12*f1, 1e-12*f2, facecolor='#2ca02c', alpha=0.5)
-
-intspec = amplit.sum()*df
-print("total spectral power density on axis = %g µJ/m²" % (1e6*intspec))
 
 if roiOK:
   nf1 = np.ceil(f1/df).astype('int')

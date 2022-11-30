@@ -106,13 +106,13 @@ ElMagField GaussianWave::LocalField(double t, Vector X)
 GaussianWavePacket::GaussianWavePacket() :
     ExternalField()
 {
-    Setup(1.0, complex<double>(0.0, 0.0), 1.0, 1.0, 0.0);
+    Setup(1.0, complex<double>(0.0, 0.0), 1.0, 1.0);
 }
 
-GaussianWavePacket::GaussianWavePacket(Vector pos) :
-    ExternalField(pos)
+GaussianWavePacket::GaussianWavePacket(Vector pos, double t0) :
+    ExternalField(pos, t0)
 {
-    Setup(1.0, complex<double>(0.0, 0.0), 1.0, 1.0, 0.0);
+    Setup(1.0, complex<double>(0.0, 0.0), 1.0, 1.0);
 }
 
 GaussianWavePacket::GaussianWavePacket(const pugi::xml_node node, InputParser *parser) :
@@ -124,11 +124,13 @@ GaussianWavePacket::GaussianWavePacket(const pugi::xml_node node, InputParser *p
         throw(IOexception("InputParser::GaussianWave - wave <position> not found."));
     else
     {
-        double x, y, z;
+        double x, y, z, t;
         x = parser->parseValue(position.attribute("x"));
         y = parser->parseValue(position.attribute("y"));
         z = parser->parseValue(position.attribute("z"));
+        t = parser->parseValue(position.attribute("t0"));
         origin = Vector(x,y,z);
+        t0 = t;
     }
     pugi::xml_node field = node.child("field");
     if (!field)
@@ -139,7 +141,8 @@ GaussianWavePacket::GaussianWavePacket(const pugi::xml_node node, InputParser *p
         double Ai = parser->parseValue(field.attribute("ImA"));
         double l = parser->parseValue(field.attribute("lambda"));
         double r = parser->parseValue(field.attribute("rayleigh"));
-        Setup(l, complex<double>(Ar,Ai), r, 1.0, 0.0);
+        double tau = parser->parseValue(field.attribute("tau"));
+        Setup(l, complex<double>(Ar,Ai), r, tau);
     }
 }
 
@@ -147,11 +150,10 @@ void GaussianWavePacket::Setup(
         double lda,
         complex<double> amplitude,
         double range,
-        double duration,
-        double arrival
-
+        double duration
     )
 {
+    // origin is already set
     lambda = lda;
     k = 2.0*Pi/lambda;
     omega = k*SpeedOfLight;
@@ -159,7 +161,6 @@ void GaussianWavePacket::Setup(
     zR = range;
     w0 = sqrt(lambda*zR/Pi);
     tau = duration;
-    t0 = arrival;
     double I0 = norm(A)/2.0*EpsNull*SpeedOfLight;
     double Ptot = Pi/2.0 * I0*w0*w0;
     if (teufel::rank==0) {
@@ -180,7 +181,7 @@ ElMagField GaussianWavePacket::LocalField(double t, Vector X)
 	// field density fraction
 	// the phase factor is missing because it is contained in the complex amplitude
 	complex<double> dens = w0/w *
-	    exp(complex<double>(-pow(r/w,2.0)-pow((t-t0-z/SpeedOfLight)/tau,2.0), omega*(t-t0) -k*z -Pi*r*r/lambda/R));
+	    exp(complex<double>(-pow(r/w,2.0)-pow((t-z/SpeedOfLight)/tau,2.0), omega*t -k*z -Pi*r*r/lambda/R));
 	// std::cout << "z=" << z << " m    r=" << r << " m   ";
 	// std::cout << "fac=(" << dens.real() << ", " << dens.imag() << ")" << std::endl;
 	Vector E = Vector( (A*dens).real(), 0.0, 0.0 );
