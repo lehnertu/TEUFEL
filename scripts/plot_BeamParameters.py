@@ -47,17 +47,29 @@ if args.listpar:
 if args.listcol:
     data.listColumns()
 
-if ("t" in data.columnName):
-    t = np.array(data.getColumnData("t"))*1e9
-
 x = np.array(data.getColumnData("x_av"))
+print(f'{len(x)} data points')
 y = np.array(data.getColumnData("y_av"))
 z = np.array(data.getColumnData("z_av"))
+if ("t" in data.columnName):
+    t = np.array(data.getColumnData("t"))*1e9
+    print(f'time span in file {t[0]} ... {t[-1]} s')
 bgx = np.array(data.getColumnData("bgx_av"))
 bgy = np.array(data.getColumnData("bgy_av"))
 bgz = np.array(data.getColumnData("bgz_av"))
-delta = np.array(data.getColumnData("delta"))
-bf = np.array(data.getColumnData("BF"))
+if ("gamma" in data.columnName):
+    gamma = np.array(data.getColumnData("gamma"))
+    print(f'beam energy gamma start {gamma[0]} end {gamma[-1]} change {gamma[-1]-gamma[0]}')
+else:
+    gamma = np.zeros_like(x);
+if ("delta" in data.columnName):
+    delta = np.array(data.getColumnData("delta"))
+else:
+    delta = np.zeros_like(x);
+if ("BF" in data.columnName):
+    bf = np.array(data.getColumnData("BF"))
+else:
+    bf = np.zeros_like(x);
 x_rms = np.array(data.getColumnData("x_rms"))
 y_rms = np.array(data.getColumnData("y_rms"))
 z_rms = np.array(data.getColumnData("z_rms"))
@@ -85,6 +97,7 @@ ax1.grid(True)
 if (args.bunching):
     l4 = ax4.plot(t, delta, "r-", label=r'$\delta$')
     l5 = ax5.plot(t, bf, "b-", label=r'$BF$')
+    l6 = ax4.plot(t, gamma-gamma[0], "g-", label=r'$\gamma - \gamma[0]$')
     ax4.set_ylabel(r'$\delta$')
     ax4.ticklabel_format(useOffset=False)
     for label in ax4.get_xticklabels():
@@ -94,7 +107,7 @@ if (args.bunching):
     ax5.ticklabel_format(useOffset=False)
     for label in ax5.get_xticklabels():
         label.set_visible(False)
-    lines = l4 + l5
+    lines = l4 + l5 +l6
 else:
     l4 = ax4.plot(t, bgx, "r-", label=r'$\beta_x\gamma$')
     l5 = ax4.plot(t, bgy, "b-", label=r'$\beta_y\gamma$')

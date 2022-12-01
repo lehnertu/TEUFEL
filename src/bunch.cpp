@@ -484,6 +484,19 @@ Vector Bunch::avgMomentum()
     return mom*(1.0/NOP);
 }
 
+double Bunch::avgGamma()
+{
+    double avg = 0.0;
+    for(int i=0; i<NOP; i++)
+    {
+        double bg = (P[i]->getMomentum()).norm();
+        double g = sqrt(bg*bg+1.0);
+        avg += g;
+    }
+    avg /= NOP;
+    return avg;
+}
+
 double Bunch::delta()
 {
     double avg = 0.0;

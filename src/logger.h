@@ -75,8 +75,10 @@ public:
      * - mean beam momentum (beta*gamma)
      * - average particle position
      * - average particle momentum
+     * - gamma - beam energy
      * - RMS beam size
      * - RMS beam momentum
+     * - bunching factor at certain frequency
      * - correlation x-bgx y-bgy z-bgz
      * 
      * @return values for error checks:
@@ -121,6 +123,9 @@ private:
     //! the observation position
     std::vector<Vector> Pos;
 
+    //! the observation beam energy
+    std::vector<double> Gamma;
+    
     //! the observation momentum
     std::vector<Vector> BG;
     

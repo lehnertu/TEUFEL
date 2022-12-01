@@ -55,6 +55,8 @@ void TrackingLogger<objectT>::update()
     Pos.push_back(Beam->avgPosition());
     BG.push_back(Beam->avgMomentum());
     PosRMS.push_back(Beam->rmsPosition());
+    Gamma.push_back(Beam->avgGamma());
+    // TODO : compute momentum spread ad correlation
     BGRMS.push_back(Vector(0.0,0.0,0.0));
     PosBG.push_back(Vector(0.0,0.0,0.0));
     if (include_bunching)
@@ -67,7 +69,6 @@ void TrackingLogger<objectT>::update()
     Delta.push_back(Beam->delta());
 }
 
-// @TODO: log delta
 template <class objectT>
 int TrackingLogger<objectT>::WriteBeamParametersSDDS()
 {
@@ -83,9 +84,19 @@ int TrackingLogger<objectT>::WriteBeamParametersSDDS()
 	    cout << "WriteSDDS - error defining parameters\n";
 	    return 2;
     }
+    if  ( SDDS_DefineSimpleParameter(&data,"NumberParticles","", SDDS_LONG) != 1 )
+    {
+	    cout << "WriteSDDS - error defining parameters\n";
+	    return 2;
+    }
+    if  ( SDDS_DefineSimpleParameter(&data,"TotalCharge","C", SDDS_DOUBLE) != 1 )
+    {
+	    cout << "WriteSDDS - error defining parameters\n";
+	    return 2;
+    }
     if (include_bunching)
     {
-        if  ( SDDS_DefineSimpleParameter(&data,"BunchingFrequency","", SDDS_DOUBLE) != 1 )
+        if  ( SDDS_DefineSimpleParameter(&data,"BunchingFrequency","Hz", SDDS_DOUBLE) != 1 )
         {
 	        cout << "WriteSDDS - error defining parameters\n";
 	        return 2;
@@ -99,6 +110,7 @@ int TrackingLogger<objectT>::WriteBeamParametersSDDS()
 	    SDDS_DefineColumn(&data,"bgx_av\0","bgx_av\0","\0","average momentum\0",NULL, SDDS_DOUBLE,0) == -1 ||
 	    SDDS_DefineColumn(&data,"bgy_av\0","bgy_av\0","\0","average momentum\0",NULL, SDDS_DOUBLE,0) == -1 ||
 	    SDDS_DefineColumn(&data,"bgz_av\0","bgz_av\0","\0","average momentum\0",NULL, SDDS_DOUBLE,0) == -1 ||
+	    SDDS_DefineColumn(&data,"gamma\0","gamma\0","\0","average beam energy\0",NULL, SDDS_DOUBLE,0) == -1 ||
 	    SDDS_DefineColumn(&data,"delta\0","delta\0","\0","relative momentum spread\0",NULL, SDDS_DOUBLE,0) == -1 ||
 	    SDDS_DefineColumn(&data,"x_rms\0","x_rms\0","m\0","r.m.s. position\0",NULL, SDDS_DOUBLE,0) == -1 ||
 	    SDDS_DefineColumn(&data,"y_rms\0","y_rms\0","m\0","r.m.s. position\0",NULL, SDDS_DOUBLE,0) == -1 ||
@@ -128,6 +140,16 @@ int TrackingLogger<objectT>::WriteBeamParametersSDDS()
 	    cout << "WriteSDDS - error setting parameters\n";
 	    return 6;
     }
+    if  ( SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, "NumberParticles",Beam->getNOP(), NULL ) != 1 )
+    {
+	    cout << "WriteSDDS - error setting parameters\n";
+	    return 6;
+    }
+    if  ( SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, "TotalCharge",Beam->getTotalCharge()*ElementaryCharge, NULL ) != 1 )
+    {
+	    cout << "WriteSDDS - error setting parameters\n";
+	    return 6;
+    }
     if (include_bunching)
     {
         if  ( SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, "BunchingFrequency",bunching_freq, NULL ) != 1 )
@@ -150,6 +172,7 @@ int TrackingLogger<objectT>::WriteBeamParametersSDDS()
 	        "bgx_av",BG[i].x,
 	        "bgy_av",BG[i].y,
 	        "bgz_av",BG[i].z,
+	        "gamma",Gamma[i],
 	        "delta",Delta[i],
 	        "x_rms",PosRMS[i].x,
 	        "y_rms",PosRMS[i].y,

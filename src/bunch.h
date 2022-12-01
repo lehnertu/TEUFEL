@@ -310,6 +310,10 @@ public:
      */
     Vector avgMomentum();
 
+    /*! @brief average particle energy
+     */
+    double avgGamma();
+
     /*! @brief Relative energy spread
      */
     double delta();
