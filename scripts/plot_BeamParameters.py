@@ -56,6 +56,10 @@ z = np.array(data.getColumnData("z_av"))
 bgx = np.array(data.getColumnData("bgx_av"))
 bgy = np.array(data.getColumnData("bgy_av"))
 bgz = np.array(data.getColumnData("bgz_av"))
+gamma = np.sqrt(np.square(bgx)+np.square(bgy)+np.square(bgz))
+print(f'gamma[start] = {gamma[0]}')
+print(f'gamma[end] = {gamma[-1]}')
+dgamma = gamma-gamma[0]
 delta = np.array(data.getColumnData("delta"))
 bf = np.array(data.getColumnData("BF"))
 x_rms = np.array(data.getColumnData("x_rms"))
@@ -85,6 +89,7 @@ ax1.grid(True)
 if (args.bunching):
     l4 = ax4.plot(t, delta, "r-", label=r'$\delta$')
     l5 = ax5.plot(t, bf, "b-", label=r'$BF$')
+    l6 = ax4.plot(t,dgamma, "g-", label=r'$\Delta\gamma')
     ax4.set_ylabel(r'$\delta$')
     ax4.ticklabel_format(useOffset=False)
     for label in ax4.get_xticklabels():
@@ -94,7 +99,7 @@ if (args.bunching):
     ax5.ticklabel_format(useOffset=False)
     for label in ax5.get_xticklabels():
         label.set_visible(False)
-    lines = l4 + l5
+    lines = l4 + l5 + l6
 else:
     l4 = ax4.plot(t, bgx, "r-", label=r'$\beta_x\gamma$')
     l5 = ax4.plot(t, bgy, "b-", label=r'$\beta_y\gamma$')
