@@ -54,9 +54,9 @@ HardEdgeDipole::HardEdgeDipole(const pugi::xml_node node, InputParser *parser) :
     else
     {
         double x, y, z;
-        x = parser->parseValue(field.attribute("x"));
-        y = parser->parseValue(field.attribute("y"));
-        z = parser->parseValue(field.attribute("z"));
+        x = parser->parseDouble(field.attribute("x"));
+        y = parser->parseDouble(field.attribute("y"));
+        z = parser->parseDouble(field.attribute("z"));
         B_val = Vector(x,y,z);
     }
     pugi::xml_node pos1 = node.child("p1");
@@ -65,9 +65,9 @@ HardEdgeDipole::HardEdgeDipole(const pugi::xml_node node, InputParser *parser) :
     else
     {
         double x, y, z;
-        x = parser->parseValue(pos1.attribute("x"));
-        y = parser->parseValue(pos1.attribute("y"));
-        z = parser->parseValue(pos1.attribute("z"));
+        x = parser->parseDouble(pos1.attribute("x"));
+        y = parser->parseDouble(pos1.attribute("y"));
+        z = parser->parseDouble(pos1.attribute("z"));
         p_1 = Vector(x,y,z);
     }
     pugi::xml_node norm1 = node.child("n1");
@@ -76,9 +76,9 @@ HardEdgeDipole::HardEdgeDipole(const pugi::xml_node node, InputParser *parser) :
     else
     {
         double x, y, z;
-        x = parser->parseValue(norm1.attribute("x"));
-        y = parser->parseValue(norm1.attribute("y"));
-        z = parser->parseValue(norm1.attribute("z"));
+        x = parser->parseDouble(norm1.attribute("x"));
+        y = parser->parseDouble(norm1.attribute("y"));
+        z = parser->parseDouble(norm1.attribute("z"));
         n_1 = Vector(x,y,z);
     }
     pugi::xml_node pos2 = node.child("p2");
@@ -87,9 +87,9 @@ HardEdgeDipole::HardEdgeDipole(const pugi::xml_node node, InputParser *parser) :
     else
     {
         double x, y, z;
-        x = parser->parseValue(pos2.attribute("x"));
-        y = parser->parseValue(pos2.attribute("y"));
-        z = parser->parseValue(pos2.attribute("z"));
+        x = parser->parseDouble(pos2.attribute("x"));
+        y = parser->parseDouble(pos2.attribute("y"));
+        z = parser->parseDouble(pos2.attribute("z"));
         p_2 = Vector(x,y,z);
     }
     pugi::xml_node norm2 = node.child("n2");
@@ -98,9 +98,9 @@ HardEdgeDipole::HardEdgeDipole(const pugi::xml_node node, InputParser *parser) :
     else
     {
         double x, y, z;
-        x = parser->parseValue(norm2.attribute("x"));
-        y = parser->parseValue(norm2.attribute("y"));
-        z = parser->parseValue(norm2.attribute("z"));
+        x = parser->parseDouble(norm2.attribute("x"));
+        y = parser->parseDouble(norm2.attribute("y"));
+        z = parser->parseDouble(norm2.attribute("z"));
         n_2 = Vector(x,y,z);
     }
 }
@@ -154,9 +154,9 @@ SoftEdgeDipole::SoftEdgeDipole(const pugi::xml_node node, InputParser *parser) :
     else
     {
         double x, y, z;
-        x = parser->parseValue(field.attribute("x"));
-        y = parser->parseValue(field.attribute("y"));
-        z = parser->parseValue(field.attribute("z"));
+        x = parser->parseDouble(field.attribute("x"));
+        y = parser->parseDouble(field.attribute("y"));
+        z = parser->parseDouble(field.attribute("z"));
         B_val = Vector(x,y,z);
     }
     pugi::xml_node pos1 = node.child("p1");
@@ -165,9 +165,9 @@ SoftEdgeDipole::SoftEdgeDipole(const pugi::xml_node node, InputParser *parser) :
     else
     {
         double x, y, z;
-        x = parser->parseValue(pos1.attribute("x"));
-        y = parser->parseValue(pos1.attribute("y"));
-        z = parser->parseValue(pos1.attribute("z"));
+        x = parser->parseDouble(pos1.attribute("x"));
+        y = parser->parseDouble(pos1.attribute("y"));
+        z = parser->parseDouble(pos1.attribute("z"));
         p_1 = Vector(x,y,z);
     }
     pugi::xml_node norm1 = node.child("n1");
@@ -176,9 +176,9 @@ SoftEdgeDipole::SoftEdgeDipole(const pugi::xml_node node, InputParser *parser) :
     else
     {
         double x, y, z;
-        x = parser->parseValue(norm1.attribute("x"));
-        y = parser->parseValue(norm1.attribute("y"));
-        z = parser->parseValue(norm1.attribute("z"));
+        x = parser->parseDouble(norm1.attribute("x"));
+        y = parser->parseDouble(norm1.attribute("y"));
+        z = parser->parseDouble(norm1.attribute("z"));
         n_1 = Vector(x,y,z);
     }
     pugi::xml_node pos2 = node.child("p2");
@@ -187,9 +187,9 @@ SoftEdgeDipole::SoftEdgeDipole(const pugi::xml_node node, InputParser *parser) :
     else
     {
         double x, y, z;
-        x = parser->parseValue(pos2.attribute("x"));
-        y = parser->parseValue(pos2.attribute("y"));
-        z = parser->parseValue(pos2.attribute("z"));
+        x = parser->parseDouble(pos2.attribute("x"));
+        y = parser->parseDouble(pos2.attribute("y"));
+        z = parser->parseDouble(pos2.attribute("z"));
         p_2 = Vector(x,y,z);
     }
     pugi::xml_node norm2 = node.child("n2");
@@ -198,9 +198,9 @@ SoftEdgeDipole::SoftEdgeDipole(const pugi::xml_node node, InputParser *parser) :
     else
     {
         double x, y, z;
-        x = parser->parseValue(norm2.attribute("x"));
-        y = parser->parseValue(norm2.attribute("y"));
-        z = parser->parseValue(norm2.attribute("z"));
+        x = parser->parseDouble(norm2.attribute("x"));
+        y = parser->parseDouble(norm2.attribute("y"));
+        z = parser->parseDouble(norm2.attribute("z"));
         n_2 = Vector(x,y,z);
     }
     pugi::xml_node trans = node.child("transition");
@@ -208,8 +208,8 @@ SoftEdgeDipole::SoftEdgeDipole(const pugi::xml_node node, InputParser *parser) :
         throw(IOexception("InputParser::SoftEdgeDipole - <transition> not found."));
     else
     {
-        t_1 = parser->parseValue(trans.attribute("l1"));
-        t_2 = parser->parseValue(trans.attribute("l2"));
+        t_1 = parser->parseDouble(trans.attribute("l1"));
+        t_2 = parser->parseDouble(trans.attribute("l2"));
     }
 }
 

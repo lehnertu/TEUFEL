@@ -5,6 +5,9 @@ THz Emission from Undulators and Free-Electron Lasers
 This is a C++ project to support tracking of charged particles in
 arbitrary external fields and to compute the electromagnetic radiation
 emitted by these particles using the Liénard-Wiechert formula.
+A mutual interaction with a co-propagating electromagnetic field
+is described with a 1-dimensional description of the field using
+a predefined mode of electromagnetic waves.
 
 The particles are distributed over several compute nodes which communicate
 using OpenMPI. In this computing model a Bunch() is an ensemble of particles
@@ -25,6 +28,7 @@ Functionality
 -------------
 - particle tracking using different pusher algorithms (Euler, Vay)<br>
   see \ref ChargedParticle
+- evolution of co-propagating electromagnetic radiation
 - radiation emission towards a single observation point or observation screen
 - radiation propagation or reflection from one screen to another
 - several external field objects (homogeneous dipole, planar undulator ...)
@@ -49,9 +53,9 @@ As an example, when running a problem on an 8-core workstation where the
 fields (and necessary communication buffers) fit into the memory twice,
 one would start TEUFEL with 2 nodes each using 4 CPU's
 
-```
+<pre>
 mpirun -n 2 --cpus-per-rank 4 --oversubscribe ./build/teufel input.xml
-```
+</pre>
 
 On a cluster one would have to submit a batch job with te according information.
 
@@ -85,21 +89,21 @@ A few libraries are required to build the TEUFEL executable.
   from the distribution repositories.
   It is necessary to set an environment variable for the library to be found by the build system
 
-  ```
+  <pre>
   export HDF5_ROOT=_path_to_library
-  ```
+  </pre>
 
 - For linear algebra calculations we use the [Eigen3](http://eigen.tuxfamily.org) library.
   It should preferably be installed through the systems package management system.
   In case this is not possible (i.e. no root access) it can be used from the git repository.
   
-  ```
+  <pre>
   cd lib/
   ```
   
-  ```
+  <pre>
   git clone https://gitlab.com/libeigen/eigen.git
-  ```
+  </pre>
   
   No build process is required for this library.
   
@@ -113,9 +117,9 @@ A few libraries are required to build the TEUFEL executable.
   (if in teufel/lib or any other less common installation position -
   typical Linux installation positions are found without this hint) for the library to be found.
 
-  ```
+  <pre>
   export PUGIXML_ROOT=_path_to_library
-  ```
+  </pre>
 
 - We use [muParser](https://github.com/beltoforion/muparser) to provide
   an inline scientific calculator that allows calculations to be performed
@@ -142,23 +146,23 @@ cd build
 
 Then we build the makefile from CMakeLists.txt contained in the root directory.
 
-```
+<pre>
 cmake ..
-```
+</pre>
 
 One can check the libraries and tools found and change the make options.
 This can be usefull if it is desired to build the documentation by default
 or to skip the build of the test executables (enabled by default).
 
-```
+<pre>
 ccmake ..
-```
+</pre>
 
 After that 
 
-```
+<pre>
 make
-```
+</pre>
 
 creates the executable in the build directory.
 
@@ -169,16 +173,16 @@ We aim at fully documenting the code for easy reuse and maintenance.
 The documentation can be built using doxygen
 and then be accessed with a browser starting from `doc/html/index.html`.
 
-```
+<pre>
 make doc
-```
+</pre>
 
 A full manual is not yet available. The document which is in the writing
 can be compiled using LaTeX and is then found in the `build/doc/` folder.
 
-```
+<pre>
 make man
-```
+</pre>
 
 Testcases
 ---------
@@ -188,9 +192,9 @@ against known results and as coding examples. All tests are built by default
 in the build directory. For running all the checks in sequence,
 right away from the build directory, a script is provided in the main folder:
 
-```
+<pre>
 ./run_tests
-```
+</pre>
 
 - teufel.integrate_field.cpp : Test case for handling of Bunch::integrateFieldTrace()
 - teufel.bunch.cpp : test case for handling of particle bunches
@@ -207,9 +211,9 @@ right away from the build directory, a script is provided in the main folder:
 
 To check for memory leaks the tool [Valgrind](http://valgrind.org) is recommended.
 
-```
+<pre>
 valgrind --tool=memcheck build/teufel.xxx
-```
+</pre>
 
 For some testcases and examples python scripts for visualizing the data are
 provided in the scrips/ directory. For reading HDF5 files these scripts use the

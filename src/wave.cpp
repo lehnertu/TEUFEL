@@ -46,9 +46,9 @@ GaussianWave::GaussianWave(const pugi::xml_node node, InputParser *parser) :
     else
     {
         double x, y, z;
-        x = parser->parseValue(position.attribute("x"));
-        y = parser->parseValue(position.attribute("y"));
-        z = parser->parseValue(position.attribute("z"));
+        x = parser->parseDouble(position.attribute("x"));
+        y = parser->parseDouble(position.attribute("y"));
+        z = parser->parseDouble(position.attribute("z"));
         origin = Vector(x,y,z);
     }
     pugi::xml_node field = node.child("field");
@@ -56,10 +56,10 @@ GaussianWave::GaussianWave(const pugi::xml_node node, InputParser *parser) :
         throw(IOexception("InputParser::GaussianWave - wave <field> not found."));
     else
     {
-        double Ar = parser->parseValue(field.attribute("ReA"));
-        double Ai = parser->parseValue(field.attribute("ImA"));
-        double l = parser->parseValue(field.attribute("lambda"));
-        double r = parser->parseValue(field.attribute("rayleigh"));
+        double Ar = parser->parseDouble(field.attribute("ReA"));
+        double Ai = parser->parseDouble(field.attribute("ImA"));
+        double l = parser->parseDouble(field.attribute("lambda"));
+        double r = parser->parseDouble(field.attribute("rayleigh"));
         Setup(l, complex<double>(Ar,Ai), r);
     }
 }
@@ -125,10 +125,10 @@ GaussianWavePacket::GaussianWavePacket(const pugi::xml_node node, InputParser *p
     else
     {
         double x, y, z, t;
-        x = parser->parseValue(position.attribute("x"));
-        y = parser->parseValue(position.attribute("y"));
-        z = parser->parseValue(position.attribute("z"));
-        t = parser->parseValue(position.attribute("t"));
+        x = parser->parseDouble(position.attribute("x"));
+        y = parser->parseDouble(position.attribute("y"));
+        z = parser->parseDouble(position.attribute("z"));
+        t = parser->parseDouble(position.attribute("t"));
         origin = Vector(x,y,z);
         t0 = t;
     }
@@ -137,11 +137,11 @@ GaussianWavePacket::GaussianWavePacket(const pugi::xml_node node, InputParser *p
         throw(IOexception("InputParser::GaussianWave - wave <field> not found."));
     else
     {
-        double Ar = parser->parseValue(field.attribute("ReA"));
-        double Ai = parser->parseValue(field.attribute("ImA"));
-        double l = parser->parseValue(field.attribute("lambda"));
-        double r = parser->parseValue(field.attribute("rayleigh"));
-        double tau = parser->parseValue(field.attribute("tau"));
+        double Ar = parser->parseDouble(field.attribute("ReA"));
+        double Ai = parser->parseDouble(field.attribute("ImA"));
+        double l = parser->parseDouble(field.attribute("lambda"));
+        double r = parser->parseDouble(field.attribute("rayleigh"));
+        double tau = parser->parseDouble(field.attribute("tau"));
         Setup(l, complex<double>(Ar,Ai), r, tau);
     }
 }

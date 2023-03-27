@@ -46,9 +46,9 @@ PlanarUndulator::PlanarUndulator(const pugi::xml_node node, InputParser *parser)
     else
     {
         double x, y, z;
-        x = parser->parseValue(position.attribute("x"));
-        y = parser->parseValue(position.attribute("y"));
-        z = parser->parseValue(position.attribute("z"));
+        x = parser->parseDouble(position.attribute("x"));
+        y = parser->parseDouble(position.attribute("y"));
+        z = parser->parseDouble(position.attribute("z"));
         origin = Vector(x,y,z);
     }
     pugi::xml_node field = node.child("field");
@@ -56,8 +56,8 @@ PlanarUndulator::PlanarUndulator(const pugi::xml_node node, InputParser *parser)
         throw(IOexception("InputParser::PlanarUndulator - undulator <field> not found."));
     else
     {
-        double B = parser->parseValue(field.attribute("B"));
-        double period = parser->parseValue(field.attribute("period"));
+        double B = parser->parseDouble(field.attribute("B"));
+        double period = parser->parseDouble(field.attribute("period"));
         int N = field.attribute("N").as_int(0);
         Setup(B, period, N);
     }
@@ -147,9 +147,9 @@ TransverseGradientUndulator::TransverseGradientUndulator(const pugi::xml_node no
     else
     {
         double x, y, z;
-        x = parser->parseValue(position.attribute("x"));
-        y = parser->parseValue(position.attribute("y"));
-        z = parser->parseValue(position.attribute("z"));
+        x = parser->parseDouble(position.attribute("x"));
+        y = parser->parseDouble(position.attribute("y"));
+        z = parser->parseDouble(position.attribute("z"));
         origin = Vector(x,y,z);
     }
     pugi::xml_node field = node.child("field");
@@ -157,12 +157,12 @@ TransverseGradientUndulator::TransverseGradientUndulator(const pugi::xml_node no
         throw(IOexception("InputParser::TransverseGradientUndulator - undulator <field> not found."));
     else
     {
-        double B = parser->parseValue(field.attribute("B"));
-        double kx = parser->parseValue(field.attribute("kx"));
+        double B = parser->parseDouble(field.attribute("B"));
+        double kx = parser->parseDouble(field.attribute("kx"));
         double mod = 0.0;
         pugi::xml_attribute modatt = field.attribute("modulation");
-        if (modatt) mod=parser->parseValue(modatt);
-        double period = parser->parseValue(field.attribute("period"));
+        if (modatt) mod=parser->parseDouble(modatt);
+        double period = parser->parseDouble(field.attribute("period"));
         int N = field.attribute("N").as_int(0);
         Setup(B, kx, mod, period, N);
     }

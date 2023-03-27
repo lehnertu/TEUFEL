@@ -24,6 +24,7 @@
 #include <math.h>
 
 #include "dipole.h"
+#include "fel1d.h"
 #include "fields.h"
 #include "global.h"
 #include "mesh.h"
@@ -109,7 +110,7 @@ void InputParser::parseCalcChildren(const pugi::xml_node node)
     }
 }
 
-double InputParser::parseValue(const pugi::xml_attribute attr)
+double InputParser::parseDouble(const pugi::xml_attribute attr)
 {
     double retval = 0.0;
     try
@@ -121,7 +122,26 @@ double InputParser::parseValue(const pugi::xml_attribute attr)
     {
         if (teufel::rank==0)
         {
-            std::cout << "InputParser::parseValue : can't evaluate " << attr.name() << " from " << attr.value() << std::endl;
+            std::cout << "InputParser::parseDouble : can't evaluate " << attr.name() << " from " << attr.value() << std::endl;
+            std::cout << e.GetMsg() << endl;
+        }
+    }
+    return retval;
+}
+
+double InputParser::parseInt(const pugi::xml_attribute attr)
+{
+    int retval = 0;
+    try
+    {
+        calc->SetExpr(attr.value());
+        retval = rint(calc->Eval());
+    }
+    catch (mu::Parser::exception_type &e)
+    {
+        if (teufel::rank==0)
+        {
+            std::cout << "InputParser::parseInt : can't evaluate " << attr.name() << " from " << attr.value() << std::endl;
             std::cout << e.GetMsg() << endl;
         }
     }
@@ -206,10 +226,10 @@ int InputParser::parseLattice(Lattice *lattice)
             pugi::xml_node posnode = element.child("position");
             if (!posnode)
                 throw(IOexception("InputParser::parseLattice - <screen> <position> not found."));
-            x = parseValue(posnode.attribute("x"));
-            y = parseValue(posnode.attribute("y"));
-            z = parseValue(posnode.attribute("z"));
-            t0 = parseValue(posnode.attribute("t"));
+            x = parseDouble(posnode.attribute("x"));
+            y = parseDouble(posnode.attribute("y"));
+            z = parseDouble(posnode.attribute("z"));
+            t0 = parseDouble(posnode.attribute("t"));
             Vector pos = Vector(x, y, z);
             SourceScreen *screen = new SourceScreen(
                 fn.as_string(), pos, t0);
@@ -249,18 +269,18 @@ int InputParser::parseLattice(Lattice *lattice)
             Vector E;
             if (Enode)
             {
-                x = parseValue(Enode.attribute("x"));
-                y = parseValue(Enode.attribute("y"));
-                z = parseValue(Enode.attribute("z"));
+                x = parseDouble(Enode.attribute("x"));
+                y = parseDouble(Enode.attribute("y"));
+                z = parseDouble(Enode.attribute("z"));
                 E = Vector(x, y, z);
             }
             pugi::xml_node Bnode = element.child("B");
             Vector B;
             if (Bnode)
             {
-                x = parseValue(Bnode.attribute("x"));
-                y = parseValue(Bnode.attribute("y"));
-                z = parseValue(Bnode.attribute("z"));
+                x = parseDouble(Bnode.attribute("x"));
+                y = parseDouble(Bnode.attribute("y"));
+                z = parseDouble(Bnode.attribute("z"));
                 B = Vector(x, y, z);
             }
             HomogeneousField *background = new HomogeneousField(E,B);
@@ -291,31 +311,31 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                 parseCalc(entry);
             else if (type == "particle")
             {
-                double gamma = parseValue(entry.attribute("gamma"));
+                double gamma = parseDouble(entry.attribute("gamma"));
                 double betagamma = sqrt(gamma * gamma - 1.0);
-                double charge = parseValue(entry.attribute("charge"))/ElementaryCharge;
-                double cmr = parseValue(entry.attribute("cmr"));
+                double charge = parseDouble(entry.attribute("charge"))/ElementaryCharge;
+                double cmr = parseDouble(entry.attribute("cmr"));
                 parseCalcChildren(entry);
                 double t0;
                 pugi::xml_node timenode = entry.child("time");
                 if (!timenode)
                     t0 = 0.0;
                 else
-                    t0 = parseValue(timenode.attribute("t0"));
+                    t0 = parseDouble(timenode.attribute("t0"));
                 pugi::xml_node posnode = entry.child("position");
                 if (!posnode)
                     throw(IOexception("InputParser::parseBeam - <particle> <position> not found."));
                 double x, y, z;
-                x = parseValue(posnode.attribute("x"));
-                y = parseValue(posnode.attribute("y"));
-                z = parseValue(posnode.attribute("z"));
+                x = parseDouble(posnode.attribute("x"));
+                y = parseDouble(posnode.attribute("y"));
+                z = parseDouble(posnode.attribute("z"));
                 Vector pos = Vector(x, y, z);
                 pugi::xml_node dirnode = entry.child("momentum");
                 if (!dirnode)
                     throw(IOexception("InputParser::parseBeam - <particle> <momentum> not found."));
-                x = parseValue(dirnode.attribute("x"));
-                y = parseValue(dirnode.attribute("y"));
-                z = parseValue(dirnode.attribute("z"));
+                x = parseDouble(dirnode.attribute("x"));
+                y = parseDouble(dirnode.attribute("y"));
+                z = parseDouble(dirnode.attribute("z"));
                 Vector mom = Vector(x, y, z);
                 mom.normalize();
                 mom *= betagamma;
@@ -344,10 +364,10 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
             }
             else if (type == "bunch")
             {
-                double gamma = parseValue(entry.attribute("gamma"));
+                double gamma = parseDouble(entry.attribute("gamma"));
                 double betagamma = sqrt(gamma * gamma - 1.0);
-                double charge = parseValue(entry.attribute("charge"))/ElementaryCharge;
-                double cmr = parseValue(entry.attribute("cmr"));
+                double charge = parseDouble(entry.attribute("charge"))/ElementaryCharge;
+                double cmr = parseDouble(entry.attribute("cmr"));
                 int NoP = entry.attribute("n").as_int(1);
                 parseCalcChildren(entry);
                 double t0 = 0.0;
@@ -361,7 +381,7 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                 if (timenode)
                 {
                     parseCalcChildren(timenode);
-                    t0 = parseValue(timenode.attribute("t0"));
+                    t0 = parseDouble(timenode.attribute("t0"));
                 }
                 // parse position
                 pugi::xml_node posnode = entry.child("position");
@@ -369,19 +389,19 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                     throw(IOexception("InputParser::parseBeam - <bunch> <position> not found."));
                 parseCalcChildren(posnode);
                 // parse mean position
-                x = parseValue(posnode.attribute("x"));
-                y = parseValue(posnode.attribute("y"));
-                z = parseValue(posnode.attribute("z"));
+                x = parseDouble(posnode.attribute("x"));
+                y = parseDouble(posnode.attribute("y"));
+                z = parseDouble(posnode.attribute("z"));
                 Vector pos = Vector(x, y, z);
                 // parse position distribution
                 pugi::xml_attribute xrmsatt = posnode.attribute("xrms");
-                if (xrmsatt) xrms=parseValue(xrmsatt);
+                if (xrmsatt) xrms=parseDouble(xrmsatt);
                 pugi::xml_attribute yrmsatt = posnode.attribute("yrms");
-                if (yrmsatt) yrms=parseValue(yrmsatt);
+                if (yrmsatt) yrms=parseDouble(yrmsatt);
                 pugi::xml_attribute zrmsatt = posnode.attribute("zrms");
-                if (zrmsatt) zrms=parseValue(zrmsatt);
+                if (zrmsatt) zrms=parseDouble(zrmsatt);
                 pugi::xml_attribute zftatt = posnode.attribute("zft");
-                if (zftatt) zft=parseValue(zftatt);
+                if (zftatt) zft=parseDouble(zftatt);
                 // parse momentum
                 double xprms = 0.0;
                 double yprms = 0.0;
@@ -391,18 +411,18 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                     throw(IOexception("InputParser::parseBeam - <bunch> <momentum> not found."));
                 parseCalcChildren(momnode);
                 // parse mean direction of momentum
-                x = parseValue(momnode.attribute("x"));
-                y = parseValue(momnode.attribute("y"));
-                z = parseValue(momnode.attribute("z"));
+                x = parseDouble(momnode.attribute("x"));
+                y = parseDouble(momnode.attribute("y"));
+                z = parseDouble(momnode.attribute("z"));
                 Vector dir = Vector(x, y, z);
                 dir.normalize();
                 // parse momentum distribution
                 pugi::xml_attribute xpatt = momnode.attribute("xrms");
-                if (xpatt) xprms=parseValue(xpatt);
+                if (xpatt) xprms=parseDouble(xpatt);
                 pugi::xml_attribute ypatt = momnode.attribute("yrms");
-                if (ypatt) yprms=parseValue(ypatt);
+                if (ypatt) yprms=parseDouble(ypatt);
                 pugi::xml_attribute delatt = momnode.attribute("delta");
-                if (delatt) delta=parseValue(delatt);
+                if (delatt) delta=parseDouble(delatt);
                 // create the bunch particle distribution
                 Distribution *dist = new Distribution(6, NoP);
                 dist->generateGaussian(0, xrms);
@@ -434,17 +454,17 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                             double fac = 0.0;
                             pugi::xml_attribute indatt = cn.attribute("indep");
                             if (indatt)
-                                ind = int(parseValue(indatt));
+                                ind = int(parseDouble(indatt));
                             else
                                 throw(IOexception("InputParser::parseBeam - correlation indep not found."));
                             pugi::xml_attribute depatt = cn.attribute("dep");
                             if (depatt)
-                                dep = int(parseValue(depatt));
+                                dep = int(parseDouble(depatt));
                             else
                                 throw(IOexception("InputParser::parseBeam - correlation dep not found."));
                             pugi::xml_attribute facatt = cn.attribute("factor");
                             if (facatt)
-                                fac = parseValue(facatt);
+                                fac = parseDouble(facatt);
                             else
                                 throw(IOexception("InputParser::parseBeam - correlation factor not found."));
                             // std::cout << "correlation " << fac << " " << ind << " -> " << dep << " added" << endl;
@@ -469,7 +489,7 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                     pugi::xml_attribute bf = lognode.attribute("bunching-freq");
                     if (bf)
                     {
-                        double freq = parseValue(bf);
+                        double freq = parseDouble(bf);
                         logger->record_bunching(freq);
                     };
                     logs->push_back(logger);
@@ -490,9 +510,9 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                 if (dirnode)
                 {
                     parseCalcChildren(dirnode);
-                    double x = parseValue(dirnode.attribute("x"));
-                    double y = parseValue(dirnode.attribute("y"));
-                    double z = parseValue(dirnode.attribute("z"));
+                    double x = parseDouble(dirnode.attribute("x"));
+                    double y = parseDouble(dirnode.attribute("y"));
+                    double z = parseDouble(dirnode.attribute("z"));
                     dir = Vector(x, y, z);
                     dir.normalize();
                 };
@@ -515,17 +535,17 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                             double fac = 0.0;
                             pugi::xml_attribute indatt = cn.attribute("indep");
                             if (indatt)
-                                ind = int(parseValue(indatt));
+                                ind = int(parseDouble(indatt));
                             else
                                 throw(IOexception("InputParser::parseBeam <SDDS> - correlation indep not found."));
                             pugi::xml_attribute depatt = cn.attribute("dep");
                             if (depatt)
-                                dep = int(parseValue(depatt));
+                                dep = int(parseDouble(depatt));
                             else
                                 throw(IOexception("InputParser::parseBeam <SDDS> - correlation dep not found."));
                             pugi::xml_attribute facatt = cn.attribute("factor");
                             if (facatt)
-                                fac = parseValue(facatt);
+                                fac = parseDouble(facatt);
                             else
                                 throw(IOexception("InputParser::parseBeam <SDDS> - correlation factor not found."));
                             // std::cout << "correlation " << fac << " " << ind << " -> " << dep << " added" << endl;
@@ -548,7 +568,7 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                     pugi::xml_attribute bf = lognode.attribute("bunching-freq");
                     if (bf)
                     {
-                        double freq = parseValue(bf);
+                        double freq = parseDouble(bf);
                         logger->record_bunching(freq);
                     };
                     logs->push_back(logger);
@@ -564,7 +584,11 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
     return count;
 }
 
-void InputParser::parseTracking(Beam *beam, std::vector<watch_t> *watches)
+void InputParser::parseTracking(
+    Beam *beam,
+    std::vector<watch_t> *watches,
+    std::list<InteractionField*> *interactions
+    )
 {
     pugi::xml_node track = root.child("tracking");
     if (!track)
@@ -583,18 +607,27 @@ void InputParser::parseTracking(Beam *beam, std::vector<watch_t> *watches)
         pugi::xml_attribute timestep = track.attribute("delta_t");
         if (!timestep)
             throw(IOexception("InputParser::parseTracking - <tracking> attribute delta_t not found."));
-        beam->setTimeStep(parseValue(timestep));
+        beam->setTimeStep(parseDouble(timestep));
         pugi::xml_attribute nst = track.attribute("n");
         if (!nst)
             throw(IOexception("InputParser::parseTracking - <tracking> attribute n not found."));
-        beam->setNOTS(nst.as_int());
-        // parse all <watch> children of the <tracking> node
+        beam->setNOTS(parseInt(nst));
+        // parse all children of the <tracking> node
         for (pugi::xml_node_iterator it = track.begin(); it != track.end(); ++it)
         {
             pugi::xml_node child = *it;
             std::string type = child.name();
             if (type == "calc")
                 parseCalc(child);
+            else if (type == "fel1d")
+            {
+                parseCalcChildren(child);
+                // the interaction object parses its own input
+                // we provide a reference to the parser
+                // the timestep attribute has already been evaluated - thats necessary
+                FEL_1D* fel_interaction = new FEL_1D(parseDouble(timestep), child, this);
+                interactions->push_back(fel_interaction);
+            }
             else if (type == "watch")
             {
                 pugi::xml_attribute step = child.attribute("step");
@@ -648,20 +681,20 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                 pugi::xml_node tnode = obs.child("time");
                 if (!tnode)
                     throw(IOexception("InputParser::parseObservers - <snapshot> <time> not found."));
-                double t0 = parseValue(tnode.attribute("t0"));
+                double t0 = parseDouble(tnode.attribute("t0"));
                 pugi::xml_node posnode = obs.child("position");
                 if (!posnode)
                     throw(IOexception("InputParser::parseObservers - <snapshot> <position> not found."));
-                x = parseValue(posnode.attribute("x"));
-                y = parseValue(posnode.attribute("y"));
-                z = parseValue(posnode.attribute("z"));
+                x = parseDouble(posnode.attribute("x"));
+                y = parseDouble(posnode.attribute("y"));
+                z = parseDouble(posnode.attribute("z"));
                 Vector pos = Vector(x, y, z);
                 pugi::xml_node hnode = obs.child("hpitch");
                 if (!hnode)
                     throw(IOexception("InputParser::parseObservers - <snapshot> <hpitch> not found."));
-                x = parseValue(hnode.attribute("x"));
-                y = parseValue(hnode.attribute("y"));
-                z = parseValue(hnode.attribute("z"));
+                x = parseDouble(hnode.attribute("x"));
+                y = parseDouble(hnode.attribute("y"));
+                z = parseDouble(hnode.attribute("z"));
                 Vector h = Vector(x, y, z);
                 pugi::xml_attribute nh = hnode.attribute("n");
                 if (!nh)
@@ -669,9 +702,9 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                 pugi::xml_node vnode = obs.child("vpitch");
                 if (!vnode)
                     throw(IOexception("InputParser::parseObservers - <snapshot> <vpitch> not found."));
-                x = parseValue(vnode.attribute("x"));
-                y = parseValue(vnode.attribute("y"));
-                z = parseValue(vnode.attribute("z"));
+                x = parseDouble(vnode.attribute("x"));
+                y = parseDouble(vnode.attribute("y"));
+                z = parseDouble(vnode.attribute("z"));
                 Vector v = Vector(x, y, z);
                 pugi::xml_attribute nv = vnode.attribute("n");
                 if (!nv)
@@ -702,21 +735,21 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                 pugi::xml_node posnode = obs.child("position");
                 if (!posnode)
                     throw(IOexception("InputParser::parseObservers - <screen> <position> not found."));
-                x = parseValue(posnode.attribute("x"));
-                y = parseValue(posnode.attribute("y"));
-                z = parseValue(posnode.attribute("z"));
+                x = parseDouble(posnode.attribute("x"));
+                y = parseDouble(posnode.attribute("y"));
+                z = parseDouble(posnode.attribute("z"));
                 Vector pos = Vector(x, y, z);
                 pugi::xml_node hnode = obs.child("hpitch");
                 if (!hnode)
                     throw(IOexception("InputParser::parseObservers - <screen> <hpitch> not found."));
-                x = parseValue(hnode.attribute("x"));
-                y = parseValue(hnode.attribute("y"));
-                z = parseValue(hnode.attribute("z"));
+                x = parseDouble(hnode.attribute("x"));
+                y = parseDouble(hnode.attribute("y"));
+                z = parseDouble(hnode.attribute("z"));
                 pugi::xml_attribute att_dtx = hnode.attribute("dt");
                 if (!att_dtx)
                     dtx = 0.0;
                 else
-                    dtx = parseValue(att_dtx);
+                    dtx = parseDouble(att_dtx);
                 Vector dx = Vector(x, y, z);
                 pugi::xml_attribute nh = hnode.attribute("n");
                 if (!nh)
@@ -724,14 +757,14 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                 pugi::xml_node vnode = obs.child("vpitch");
                 if (!vnode)
                     throw(IOexception("InputParser::parseObservers - <screen> <vpitch> not found."));
-                x = parseValue(vnode.attribute("x"));
-                y = parseValue(vnode.attribute("y"));
-                z = parseValue(vnode.attribute("z"));
+                x = parseDouble(vnode.attribute("x"));
+                y = parseDouble(vnode.attribute("y"));
+                z = parseDouble(vnode.attribute("z"));
                 pugi::xml_attribute att_dty = vnode.attribute("dt");
                 if (!att_dty)
                     dty = 0.0;
                 else
-                    dty = parseValue(att_dty);
+                    dty = parseDouble(att_dty);
                 Vector dy = Vector(x, y, z);
                 pugi::xml_attribute nv = vnode.attribute("n");
                 if (!nv)
@@ -739,8 +772,8 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                 pugi::xml_node tnode = obs.child("time");
                 if (!tnode)
                     throw(IOexception("InputParser::parseObservers - <screen> <time> not found."));
-                t0 = parseValue(tnode.attribute("t0"));
-                dt = parseValue(tnode.attribute("dt"));
+                t0 = parseDouble(tnode.attribute("t0"));
+                dt = parseDouble(tnode.attribute("dt"));
                 pugi::xml_attribute nt = tnode.attribute("n");
                 if (!nt)
                     throw(IOexception("InputParser::parseObservers - <screen> <time> attribute n not found."));
@@ -789,15 +822,15 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                 pugi::xml_node posnode = obs.child("position");
                 if (!posnode)
                     throw(IOexception("InputParser::parseObservers - <point> <position> not found."));
-                x = parseValue(posnode.attribute("x"));
-                y = parseValue(posnode.attribute("y"));
-                z = parseValue(posnode.attribute("z"));
+                x = parseDouble(posnode.attribute("x"));
+                y = parseDouble(posnode.attribute("y"));
+                z = parseDouble(posnode.attribute("z"));
                 Vector pos = Vector(x, y, z);
                 pugi::xml_node tnode = obs.child("time");
                 if (!tnode)
                     throw(IOexception("InputParser::parseObservers - <point> <time> not found."));
-                t0 = parseValue(tnode.attribute("t0"));
-                dt = parseValue(tnode.attribute("dt"));
+                t0 = parseDouble(tnode.attribute("t0"));
+                dt = parseDouble(tnode.attribute("dt"));
                 pugi::xml_attribute nt = tnode.attribute("n");
                 if (!nt)
                     throw(IOexception("InputParser::parseObservers - <point> <time> attribute n not found."));

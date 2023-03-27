@@ -89,7 +89,12 @@ public:
      /*! Convert a node attribute into a double value using the calculator.
      *  In case of an error 0.0 is returned.
      */
-    double parseValue(const pugi::xml_attribute att);
+    double parseDouble(const pugi::xml_attribute att);
+    
+     /*! Convert a node attribute into an int value using the calculator.
+     *  In case of an error 0 is returned.
+     */
+    double parseInt(const pugi::xml_attribute att);
     
     /*! Parse the input file and create all described lattice elements.
      *  Each one is added to the given lattice object.
@@ -123,8 +128,15 @@ public:
      *  Watch points where particle coordinates are stored during tracking
      *  are defined under this section. Those are defined as <watch> children
      *  of the <tracking> node. The definitions are appended to the list provided.
+     *  
+     *  Interactions between particles are also defined in the <tracking> section.
+     *  The according objects are appended to the provided list.
      */
-    void parseTracking(Beam *beam, std::vector<watch_t> *watches);
+    void parseTracking(
+        Beam *beam,
+        std::vector<watch_t> *watches,
+        std::list<InteractionField*> *interactions
+        );
     
     /*! Parse the input file and create the defined observers.
      *  All observers found are appended to the given list.

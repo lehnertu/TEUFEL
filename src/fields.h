@@ -277,6 +277,39 @@ protected :
 };
 
 /*!
+ * \class InteractionField
+ * \brief An beam induced field through which one can track particles.
+ * @author Ulf Lehnert
+ * @date 27.3.2023
+ * 
+ * This is the base class for all interactions.
+ * The field is created by the particles, so it must be updated after every tracking step.
+ * Otherwise it behaves just like an external field and can be added
+ * to the tracking lattice.
+ */
+class InteractionField : public GeneralField
+{
+
+public:
+
+    /*! The default constructor */
+    InteractionField() {};
+
+    /*! All derived classe must provide a destructor */
+    virtual ~InteractionField() {};
+    
+    /*! The electromagnetic field at a given time and point in space.
+     * in element-local coordinates.
+     * The field is returned as a tuple of electric field [V/m] and
+     * magnetic field [T] vectors.
+     * 
+     * This must be implemented for all derived interactions.
+     */
+    virtual ElMagField Field(double t, Vector X) = 0;
+
+};
+
+/*!
  * \class Lattice
  * \brief A container class for many objects derived from GeneralField
  * @author Ulf Lehnert

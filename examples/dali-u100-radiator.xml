@@ -1,0 +1,47 @@
+<?xml version="1.0"?>
+<teufel description="Modulated beam emission from the DALI U100 radiator"
+    author="Ulf Lehnert 27.3.2023">
+    <calc print="beam energy [eV] = " var="E_beam" eq="30.0e6" />
+    <calc print="gamma = " var="gamma" eq="E_beam/_mec2"/>
+    <calc print="charge [nC] = " var="charge" eq="-1.0" />
+    <!-- set desired output frequency -->
+    <calc print="lambda [m] = " var="lambda" eq="0.000100"/>
+    <calc print="freq [Hz] = " var="f" eq="_c/lambda"/>
+    <calc var="lambda_U" eq="0.100" />
+    <lattice>
+        <undulator name="U100" type="planar">
+            <!-- compute undulator setting from desired output frequency -->
+            <calc print="K_rms(U100) = " var="K_rms" eq="sqrt(lambda/lambda_U*2*gamma*gamma-1)" />
+            <!-- setup the undulator -->
+            <field B="K_rms*sqrt(2)/_c*2*_pi*_mec2/lambda_U"
+                   period="lambda_U" N="10" />
+            <position x="0.0" y="0.0" z="0.75"/>
+        </undulator>
+    </lattice>
+    <beam>
+        <bunch gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" n="199" >
+            <calc print="bunchlength [s] = " var="tau" eq="1.0e-12"/>
+            <position x="0.0" y="0.0" z="0.0" zrms="tau*_c" />
+            <momentum x="0.0" y="0.0" z="1.0" delta="0.0" />
+            <log file="dali-u100_beam.sdds" step="100" />
+        </bunch>
+    </beam>
+    <calc print="tracking length [m] = " var="total_L" eq="1.5" />
+    <calc print="tracking total time [s] = " var="total_t" eq="(total_L+10*lambda)/_c" />
+    <!-- the field grid must match the time step c*dt = dz -->
+    <calc print="dz = " var="dz" eq="0.1*lambda" />
+    <calc print="dt = " var="dt" eq="dz/_c" />
+    <tracking method="Vay" delta_t="dt" n="total_t/dt" >
+        <fel1d N="200" >
+            <!-- the field has to start ahead of the first particle -->
+            <position x="0.0" y="0.0" z="5.0e-12*_c" />
+            <prop x="0.0" y="0.0" z="1.0" />
+            <pol x="1.0" y="0.0" z="0.0" />
+            <log file="dali-u100_fel.sdds" step="100" />
+        </fel1d>
+        <watch step="0" file="dali-u100-radiator_inital.hdf5" />
+        <watch step="4000" file="dali-u100-radiator_final.hdf5" />
+    </tracking>
+    <observer>
+    </observer>
+</teufel>

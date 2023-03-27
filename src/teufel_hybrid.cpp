@@ -228,8 +228,13 @@ int main(int argc, char *argv[])
 
     // get all tracking information from the input file
     std::vector<watch_t> watches;
-    parse->parseTracking(masterBeam, &watches);
+    std::list<InteractionField*> interactions;
+    parse->parseTracking(masterBeam, &watches, &interactions);
     if (teufel::rank==0) std::cout << "defined " << (int)watches.size() << " watch points." << std::endl;
+    // all interaction fields are added to the lattice to be included in the particel tracking
+    for (InteractionField* f : interactions) lattice->addElement(f);
+    if (teufel::rank==0) std::cout << "defined " << (int)interactions.size() << " interactions." << std::endl;
+    if (teufel::rank==0) std::cout << "lattice containing " << (int)lattice->count() << " components." << std::endl;
     MPI_Barrier(MPI_COMM_WORLD);
     usleep(100000);
     if (teufel::rank==0) std::cout << std::endl << std::flush;

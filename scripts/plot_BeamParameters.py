@@ -53,7 +53,7 @@ y = np.array(data.getColumnData("y_av"))
 z = np.array(data.getColumnData("z_av"))
 if ("t" in data.columnName):
     t = np.array(data.getColumnData("t"))*1e9
-    print(f'time span in file {t[0]} ... {t[-1]} s')
+    print(f'time span in file {t[0]} ... {t[-1]} ns')
 bgx = np.array(data.getColumnData("bgx_av"))
 bgy = np.array(data.getColumnData("bgy_av"))
 bgz = np.array(data.getColumnData("bgz_av"))
