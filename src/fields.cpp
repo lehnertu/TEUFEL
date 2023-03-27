@@ -174,7 +174,7 @@ LocalizedField::LocalizedField(double time, Vector pos)
 {
     t0 = time;
     origin = pos;
-    t0 = t;
+    t0 = time;
 }
 
 ElMagField LocalizedField::Field(double t, Vector X)
