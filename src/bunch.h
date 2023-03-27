@@ -187,8 +187,9 @@ public:
      * 
      * The file name is given as parameter. If the file cannot be read successfully,
      * an empty bunch is created.
+     * The bunch is propagating in the direction of the given vector.
      */
-    Bunch(const char *filename);
+    Bunch(const char *filename, Vector dir);
 
     /*!
      * copy constructor:
@@ -208,6 +209,20 @@ public:
      * The bunch then "owns" the particle and will delete it when destructed.
      */
     void Add(ChargedParticle *part);
+
+    /*! Add a correlation between two axis.
+     *  The value of the independent coordinate multiplied with a factor
+     *  is added to the dependent axis coordinate value.
+     *  The mean values are not changed.
+     *  
+     *  The indices are (0,1,2) for (x,y,z) and (3,4,5) for (px,py,pz).
+     *  The method is safeguarded against illegal corrdinate indexes.
+     *
+     *  The method can only be used during setup of the bunch
+     *  as it modifies only the first point of the stored trajectory
+     *  and calls initTrajectory() for every particle.
+     */
+    void addCorrelation(int independent, int dependent, double factor);
 
     /*! Remove all trajectory information from particles
      * belonging to this bunch

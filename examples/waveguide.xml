@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<teufel description="Radiation propagation through a parallel-plate waveguide"
+    author="Ulf Lehnert 17.12.2021">
+    <calc print="waveguide height g [m] = " var="gap" eq="0.01"/>
+    <lattice>
+        <screen name="Entrance" file="EntranceWG.h5">
+            <position x="0.0" y="0.0" z="0.0" t="0.0"/>
+        </screen>
+    </lattice>
+    <beam>
+    </beam>
+    <tracking method="Vay" delta_t="1e-12" n="100" >
+    </tracking>
+    <observer>
+        <calc print="screen position z0 = " var="z0" eq="1.0"/>
+        <calc print="screen center time t0 = " var="tscreen" eq="z0/_c-0.4e-11"/>
+        <point file="SourceScreen_Obs.sdds" source="lattice">
+            <position x="0.0" y="0.0" z="z0" />
+            <time t0="tscreen" dt="0.4e-13" n="500" />
+        </point>
+        <screen file="ExitWG.h5" source="lattice">
+            <position x="0.0" y="0.0" z="z0" />
+            <hpitch x="0.001" y="0.0" z="0.0" n="40" />
+            <vpitch x="0.0" y="0.001" z="0.0" n="40" />
+            <time t0="tscreen" dt="0.4e-13" n="500" />
+        </screen>
+    </observer>
+</teufel>

@@ -38,7 +38,7 @@
  * Field magnitude and direction can be defined with arbitrary values.
  * The reported field is constant within the region and drops to zero immediately outside.
  */
-class HardEdgeDipole : public ExternalField
+class HardEdgeDipole : public LocalizedField
 {
 
 public:
@@ -96,7 +96,7 @@ private:
  * The edges are modeled with an ArcTan shape, the given transition length
  * corresponds to the transition from 75% to 25% of the peak field.
  */
-class SoftEdgeDipole : public ExternalField
+class SoftEdgeDipole : public LocalizedField
 {
 
 public:

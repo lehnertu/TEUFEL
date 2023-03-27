@@ -105,15 +105,18 @@ public:
     void set_t0(double t) { t0=t; };
 
     /*! Get the sampling definitions
-     *  These are not expected to be changed, so, no setter routines are provoded */
+     *  These are not expected to be changed, so, no setter routines are provided */
     double get_dt() { return dt; };
     std::size_t get_N() { return N; };
     
-    /*! Get the center time of the trace */
-    double get_tCenter() { return t0+0.5*dt*(double)N; }
-    
     /*! Get the time of one point of the trace */
     double get_time(std::size_t index);
+    
+    /*! Get the time of the last point of the trace */
+    double get_last_time();
+    
+    /*! Get the center time of the trace */
+    double get_center_time();
     
     /*! Get the field at one point of the trace */
     ElMagField get_field(std::size_t index);
@@ -137,8 +140,13 @@ public:
     /*! Poynting vector - time-integrated energy flow density */
     Vector Poynting();
     
-    /*! compute time derivative of fields */
-    FieldTrace derivative();
+    /*! compute a new trace containing time derivative of fields */
+    FieldTrace* derivative();
+    
+    /*! Cancel all fields in one given direction
+     *  This is intended to limit propagating fields to be purely transversal.
+     */
+    void cancel_long_fields(Vector normal);
     
     /*! Compute a retarded trace:
      *  @param delta_t - the amount of retardation in seconds

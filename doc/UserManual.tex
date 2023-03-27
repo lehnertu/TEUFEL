@@ -9,6 +9,14 @@
 \geometry{a4paper, top=1cm, body={16cm,24cm}}
 \special{papersize=8.5in,11in}
 
+\usepackage{titlesec}
+\titlespacing*{\section}
+{0pt}{10.0ex plus 1ex minus .5ex}{2.0ex plus .5ex}
+\titlespacing*{\subsection}
+{0pt}{2.5ex plus 1ex minus .5ex}{2.0ex plus .5ex}
+\titlespacing*{\subsubsection}
+{0pt}{2.5ex plus 1ex minus .5ex}{1.0ex plus .5ex}
+
 \usepackage{listings}
 \usepackage{xcolor}
 \definecolor{backcolour}{rgb}{0.95,0.95,0.92}
@@ -47,11 +55,21 @@
 
 \subsection{Parallelization}
 
-TEUFEL is designed to make use of clusters of multi-core nodes. The particles are distributed over the nodes (each tracking its own sub-set of particles) while the particle coordinates are communicated between the nodes after every tracking step using the message passing interface (OpenMPI).
+TEUFEL is designed to make use of clusters of multi-core nodes.
+The particles are distributed over the nodes (each tracking its own sub-set of particles)
+while the particle coordinates are communicated between the nodes
+after every tracking step using the message passing interface (OpenMPI).
 
-After the tracking every node computes the observed fields from its own set of particles. This is the most time-consuming step of the computation. It is addidionally parallelized using the shared-memory model Open-MP. This way all CPU's available on one node can cooperate to compute the fields. Only a single copy of the fields (which can be very large) needs to be held in memory. After every node has computed the fields from its own particles the total fields are gethered onto the master node (using MPI) and written to file.
+After the tracking every node computes the observed fields from its own set of particles.
+This is the most time-consuming step of the computation. It is addidionally parallelized
+using the shared-memory model Open-MP. This way all CPU's available on one node
+can cooperate to compute the fields. Only a single copy of the fields (which can be very large)
+needs to be held in memory. After every node has computed the fields from its own particles
+the total fields are gethered onto the master node (using MPI) and written to file.
 
-As an example, when running a problem on an 8-core workstation where the fields (and necessary communication buffers) fit into the memory twice, one would start TEUFEL with 2 nodes each using 4 CPU's
+As an example, when running a problem on an 8-core workstation where the fields
+(and necessary communication buffers) fit into the memory twice,
+one would start TEUFEL with 2 nodes each using 4 CPU's
 \begin{lstlisting}
 mpirun -n 2 --cpus-per-rank 4 --oversubscribe ./build/teufel input.xml
 \end{lstlisting}
@@ -102,12 +120,85 @@ fields or both.
 %    hard edge
 %background
 
+\subsubsection{Wave-packet}
+This describes a gaussian pulse of a gaussian beam of electromagnetic radiation.
+The radiation wavelength, complex electric field amplitude and Rayleigh length of
+the optical waist must be given in the \verb|<field>| node. The \verb|<position>| node
+gives the position of the optical waist. The peak of the wave packet passes through this waist
+at the time given in the \verb|<position>| node. The wavepacket propagates
+in positive $z$ direction by default. The example given here also shows
+one way to calculate the field parameters.
+\begin{lstlisting}
+<wave name="seed" type="packet">
+	<!-- compute the seed field -->
+	<calc print="seed power [W] = " var="P0" eq="1e9"/>
+	<calc print="Rayleigh range [m] = " var="zR" eq="1.0"/>
+	<calc print="waist radius w0 [m] = " var="w0" eq="sqrt(lambda_S*zR/_pi)"/>
+	<calc print="peak intensity I0 [W/m²] = " var="I0" eq="2.0*P0/(_pi*w0*w0)"/>
+	<calc print="peak field E0 [V/m] = " var="E0" eq="sqrt(2*I0/_eps0/_c)"/>
+	<position x="0.0" y="0.0" z="0.0" t="1.0/_c"/>
+	<field lambda="10.0e-6" ReA="E0" ImA="0.0" rayleigh="zR" tau="50.0e-6/_c"/>
+</wave>
+\end{lstlisting}
+
 \subsection{Beam description}
 
-%particle
-%bunch
+\subsubsection{Coordinate systems}
+
+TEUFEL is per default using a right-handed cartesian laboratory system which could be described
+as ($x$--"north", $y$--"up", $z$--"east") but any other definitions can be used as long as it is
+a right-handed cartesian system. All lattice fields can be placed freely in the chosen coordinate system.
+
+One should be aware that some post-processing routines interpret the $x$ and $y$ components
+of the recorded fields to be "right" and "up" with respect to the propagation direction
+of the beam. If one wants this to hold strictly one has to start the beam in the negative $z$ direction.
+
+\subsubsection{SDDS files}
+
+\begin{lstlisting}
+<beam>
+    <SDDS file="tests/test.sdds">
+        <dir x="..." y="..." z="..." />
+    </SDDS>
+</beam>
+\end{lstlisting}
+
+Beams to be tracked using TEUFEL can be imported from other codes (e.g. ELEGANT)
+by reading SDDS files. SDDS files are imported as a <bunch>, several bunches can be
+be combined into on beam to be tracked. TEUFEL expects two parameters to be present
+in the header of the SDDS file - "Particles" giving the total number and
+"Charge" holding the total charge of all particles containd in the file.
+Particle coordinates are read from 6 columns in the SDDS file:
+\\[1ex]
+\begin{tabular}{lll}
+x & [m] & horizontal displacement (right) from the beam axis \\
+xp & [ ] & horizontal angle with respect to the beam axis (${\rm d}x/{\rm d}z$) \\
+y & [m] & vertical displacement (up) from the beam axis \\
+yp & [ ] & vertical angle with respect to the beam axis (${\rm d}y/{\rm d}z$) \\
+p & [ ] & total particle momentum $\beta\gamma = p/m_e c$ \\
+t & [s] & arrival time of the particle at the observation plane \\
+\end{tabular}\\
+
+The beam will be setup propagating in the direction $s$ given in the import statement.
+The x values read from the file will be mapped to a vector in the $x$-$z$ plane
+perpendicular to $s$. The y values will be mapped such that $x$-$y$-$s$ forms
+a right-handed cartesian system. If $s$ is not given it will be chosen as the positive $z$
+direction in which case x is mapped to $x$ and y is mapped to $-y$.
+
+The resulting bunch will be created with all particles starting at $t=0$.
+All particles are shifted along their individual propagation directions
+to account for the difference to the average arrival time of the particles in the file.
+
+\subsubsection{particle}
+
+\subsubsection{bunch}
 
 \subsection{Tracking definitions}
+
+The number of steps must be an integer value (cannot be calculated)!
+\begin{lstlisting}
+<tracking method="Vay" delta_t="dt" n="1000000" />
+\end{lstlisting}
 
 %method
 %watch
@@ -152,11 +243,11 @@ A few variables are pre-defined. All of those have names starting with an unders
 
 \section{Examples}
 
-\subsection{elbe_u300.xml}
+\subsection{ELBE U300}
 
 Notice that the screen has been shifted by half a pixel size
 such that the (Nx/2, Ny/2) pixel is exactly on the axis.
-That is the arrangement expected when importing the screen fields into FOBT
+That is the arrangement expected when importing the screen fields into pyOPC
 for further propagation of single-frequency optical beams.
 
 \end{document}

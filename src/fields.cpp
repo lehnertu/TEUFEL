@@ -37,8 +37,8 @@ ElMagField::ElMagField(Vector E, Vector B)
 
 void ElMagField::Zero()
 {
-    vecE=Vector(0.0,0.0,0.0);
-    vecB=Vector(0.0,0.0,0.0);
+    vecE=VectorZero;
+    vecB=VectorZero;
 }
 
 Vector ElMagField::E() { return vecE; }
@@ -112,8 +112,8 @@ ElMagField& ElMagField::operator/= (double factor)
 ElMagObs::ElMagObs()
 {
     t = 0.0;
-    vecE = Vector(0.0,0.0,0.0);
-    vecB = Vector(0.0,0.0,0.0);
+    vecE = VectorZero;
+    vecB = VectorZero;
 }
 
 ElMagObs::ElMagObs(double time, Vector E, Vector B)
@@ -149,7 +149,7 @@ ElMagField ElMagObs::EB()
 
 HomogeneousField::HomogeneousField()
 {
-    EB = ElMagField(Vector(0.0,0.0,0.0),Vector(0.0,0.0,0.0));
+    EB = ElMagFieldZero;
 }
 
 HomogeneousField::HomogeneousField(Vector E, Vector B)
@@ -162,23 +162,29 @@ ElMagField HomogeneousField::Field(double t, Vector X)
     return EB;
 }
 
-// ********** ExternalField **********
+// ********** LocalizedField **********
 
-ExternalField::ExternalField()
+LocalizedField::LocalizedField()
 {
-    origin = Vector(0.0,0.0,0.0);
     t0 = 0.0;
+    origin = VectorZero;
 }
 
-ExternalField::ExternalField(Vector pos, double t)
+LocalizedField::LocalizedField(double time, Vector pos)
 {
+    t0 = time;
     origin = pos;
     t0 = t;
 }
 
-ElMagField ExternalField::Field(double t, Vector X)
+ElMagField LocalizedField::Field(double t, Vector X)
 {
-    return LocalField((t-t0),X-origin);
+    return LocalField(t-t0,X-origin);
+}
+
+ElMagField LocalizedField::LocalField(double t, Vector X)
+{
+    return ElMagFieldZero;
 }
 
 // ********** Lattice **********

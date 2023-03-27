@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include "global.h"
 #include "fields.h"
 #include "fieldtrace.h"
 #include "vector.h"
@@ -114,8 +115,8 @@ public:
     /*! Return the number of pre-allocated points in the trajectory */
     int getNpre() { return Npre; };
 
-    /*! Return the charge of the particle */
-    double getCharge() { return Charge; };
+    /*! Return the charge of the particle in C */
+    double getCharge() { return Charge*ElementaryCharge; };
     
     /*! Return the time of the last stored trajectory point
      *  or zero if there is no trajectory.

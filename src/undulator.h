@@ -44,7 +44,7 @@
  * the z-axis values of the entrance and exit. This ensures an approximately
  * symmetric oszillation about the initial trajectory in x direction.
  */
-class PlanarUndulator : public ExternalField
+class PlanarUndulator : public LocalizedField
 {
 
 public:
@@ -126,7 +126,7 @@ private:
  * the z-axis values of the entrance and exit. This ensures an approximately
  * symmetric oszillation about the initial trajectory in x direction.
  */
-class TransverseGradientUndulator : public ExternalField
+class TransverseGradientUndulator : public LocalizedField
 {
 
 public:

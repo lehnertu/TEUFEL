@@ -1,0 +1,61 @@
+<?xml version="1.0"?>
+<teufel description="Compton back-scattering of electromagnetic radiation off relativistic electrons"
+    author="Ulf Lehnert 19.5.2022">
+    <calc print="gamma = " var="gamma" eq="100.0"/>
+    <calc print="beta = " var="beta" eq="sqrt(1.0-1.0/gamma^2)"/>
+    <calc print="beam start from IP [m] = " var="L_ip" eq="1.0e-4"/>
+    <!-- set desired output frequency -->
+    <calc print="seed wavelength [m] = " var="lambda" eq="1.0e-6"/>
+    <calc print="seed frequency [Hz] = " var="freq" eq="_c/lambda"/>
+    <calc print="seed photon energy [eV] = " var="seed_E" eq="_h*_c/_e/lambda"/>
+    <calc print="back-scattered wavelength [m] = " var="lambda_X" eq="lambda/4.0/gamma^2"/>
+    <calc print="back-scattered frequency [Hz] = " var="freq_X" eq="_c/lambda_X"/>
+    <calc print="back-scattered photon energy [eV] = " var="scat_E" eq="_h*_c/_e/lambda_X"/>
+    <lattice>
+        <wave name="seed" type="packet">
+        	<position x="0.0" y="0.0" z="0.0" t="L_ip/(beta*_c)"/>
+        	<!-- compute the seed field -->
+        	<calc print="seed power [W] = " var="P0" eq="1e12"/>
+			<calc print="Rayleigh range [m] = " var="zR" eq="1.0"/>
+			<calc print="waist radius w0 [m] = " var="w0" eq="sqrt(lambda*zR/_pi)"/>
+			<calc print="peak intensity I0 [W/m²] = " var="I0" eq="2.0*P0/(_pi*w0*w0)"/>
+			<calc print="peak field E0 [V/m] = " var="E0" eq="sqrt(2*I0/_eps0/_c)"/>
+        	<field lambda="lambda" ReA="E0" ImA="0.0" rayleigh="zR" tau="5*lambda/_c"/>
+        </wave>
+    </lattice>
+    <beam>
+        <particle gamma="gamma" charge="-1.0e-9" cmr="-1.0" >
+            <position x="0.0" y="0.0" z="L_ip" />
+            <momentum x="0.0" y="0.0" z="-1.0" />
+            <log file="compton_beam.sdds" step="1"/>
+        </particle>
+    </beam>
+    <calc print="tracking length [m] = " var="total_L" eq="2*L_ip" />
+    <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
+    <calc print="dt = " var="dt" eq="total_t/1e4" />
+    <tracking method="Vay" delta_t="dt" n="10000" />
+    <observer>
+        <point file="seed.sdds" source="lattice">
+            <position x="0.0" y="0.0" z="0.0" />
+            <calc print="lattice observation t0 [s] = " var="t0_lat" eq="L_ip/(beta*_c)"/>
+            <calc print="lattice observation time step [s] = " var="dt_lat" eq="0.01*lambda/_c"/>
+            <time t0="t0_lat-1000*dt_lat" dt="dt_lat" n="2000" />
+        </point>
+        <point file="compton_1P.sdds" source="beam">
+            <calc print="screen position z0 = " var="z0" eq="2.0"/>
+            <calc print="screen center time t0 = " var="t0" eq="L_ip/(beta*_c) + z0/_c"/>
+            <position x="0.0" y="0.0" z="-z0" />
+            <calc print="observation time step [s] = " var="dt_obs" eq="0.02*lambda_X/_c"/>
+            <time t0="t0-2000*dt_obs" dt="dt_obs" n="4000" />
+        </point>
+        <screen file="compton_screen_1P.h5">
+            <calc print="screen position z0 = " var="z0" eq="2.0"/>
+            <calc print="screen center time t0 = " var="t0" eq="L_ip/(beta*_c) + z0/_c"/>
+            <calc print="observation time step [s] = " var="dt_obs" eq="0.05*lambda_X/_c"/>
+            <position x="0.0" y="0.0" z="-z0" />
+            <hpitch x="0.000001" y="0.0" z="0.0" n="50" dt="0.0"/>
+            <vpitch x="0.0" y="0.000001" z="0.0" n="50" dt="0.0"/>
+            <time t0="t0-2000*dt_obs" dt="dt_obs" n="5000" />
+        </screen>
+    </observer>
+</teufel>

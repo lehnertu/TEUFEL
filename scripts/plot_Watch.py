@@ -11,17 +11,32 @@ from matplotlib.ticker import NullFormatter
 
 pixels = 100
 
-def PlotPS(x, y, xlabel='x', ylabel='y', rect_dens = [0.15, 0.1, 0.8, 0.8], center=True):
+def PlotPS(x, y, xlabel='x', ylabel='y', rect_dens = [0.15, 0.1, 0.8, 0.8], center=True, square=False):
   global pixels
   # determine the scale range
   if center:
-    xmax=max(abs(x))
-    ymax=max(abs(y))
+    if square:
+        xmax=max(abs(x))
+        ymax=max(abs(y))
+        xmax=max([xmax,ymax])
+        xmin=-xmax
+        ymax=xmax
+        ymin=-xmax
+    else:
+        xmax=max(abs(x))
+        xmin=-xmax
+        ymax=max(abs(y))
+        ymin=-ymax
   else:
     xmin=min(x)
     xmax=max(x)
     ymin=min(y)
     ymax=max(y)
+    if square:
+        xmax=max([xmax,ymax])
+        xmin=min([xmin,ymin])
+        ymax=xmax
+        ymin=xmin
   # Histogram in 2D
   if center:
     H, xticks, yticks = np.histogram2d(x,y,bins=pixels,
@@ -42,7 +57,16 @@ def PlotPS(x, y, xlabel='x', ylabel='y', rect_dens = [0.15, 0.1, 0.8, 0.8], cent
   plt.ylabel(ylabel)
   return plt
 
-
+def DistProp(X, prt=None):
+    X = np.array(X)
+    N = X.size
+    avg = np.mean(X)
+    dX = X - avg
+    rms = np.sqrt(np.dot(dX,dX)/float(N))
+    if prt != None:
+        print(prt,"avg=%g  rms=%g" % (avg,rms))
+    return (avg, rms)
+    
 parser = argparse.ArgumentParser()
 parser.add_argument('file', help='the file name of the watch point file (HDF5 or SDDS)')
 parser.add_argument('-pix', help="the number of pixels for the plots", dest="pix", type=int)
@@ -106,44 +130,28 @@ if is_sdds:
     bgy = bgz*yp
     print(f'have read {x.shape} particles.')
 
-xmean = np.mean(x)
-ymean = np.mean(y)
-zmean = np.mean(z)
-bgxmean = np.mean(bgx)
-bgymean = np.mean(bgy)
-bgzmean = np.mean(bgz)
 dt = -(z-zmean) / 3.0e8
+(t0, tau) = DistProp(dt, prt="arrival time t [s] : ")
 
-Np = len(x)
 p = np.sqrt(np.square(bgx)+np.square(bgy)+np.square(bgz))
-betagamma = np.mean(p)
+(betagamma, p_rms) = DistProp(p, prt="particle momentum p [m_e*c] : ")
 E = 0.511*np.sqrt(np.square(p)+1.0)
-E0 = np.mean(E)
+(E0, erms) = DistProp(E, prt="particle total energy E_tot [MeV] : ")
 dE = E-E0
-erms = 1.0e3 * np.sqrt(np.dot(dE,dE)/float(Np))
-tau = 1.0e12 * np.sqrt(np.dot(dt,dt)/float(Np))
+tau = 1.0e12 * tau
 if tau!=0.0:
     chirp = 1.0e15 * ( np.dot(dE,dt)/float(Np) ) / (tau*tau)
 else:
     chirp = 0.0
-
-x_rms = np.sqrt((np.dot(x-xmean,x-xmean)/Np))
-y_rms = np.sqrt((np.dot(y-ymean,y-ymean)/Np))
-z_rms = np.sqrt((np.dot(z-zmean,z-zmean)/Np))
-bgx_rms = np.sqrt((np.dot(bgx-bgxmean,bgx-bgxmean)/Np))
-bgy_rms = np.sqrt((np.dot(bgy-bgymean,bgy-bgymean)/Np))
-bgz_rms = np.sqrt((np.dot(bgz-bgzmean,bgz-bgzmean)/Np))
-print("beam of %d particles:" % Np)
-print("mean    x=%.3f mm,  y=%.3f mm,  z=%.3f m" % (1e3*xmean, 1e3*ymean, zmean) )
-print("mean    bg_x=%.3f,  bg_y=%.3f,  bg_z=%.3f" % (bgxmean, bgymean, bgzmean) )
-print("r.m.s.  x=%.3f mm,  y=%.3f mm,  z=%.3f mm" % (1e3*x_rms, 1e3*y_rms, 1e3*z_rms) )
-print("r.m.s.  bg_x=%.3f,  bg_y=%.3f,  bg_z=%.3f" % (bgx_rms, bgy_rms, bgz_rms) )
 print()
 
 dx = x-xmean
 dy = y-ymean
 xp = bgx/bgz
 yp = bgy/bgz
+DistProp(xp, prt="xp [] : ")
+DistProp(yp, prt="yp [] : ")
+
 dxp = (bgx-bgxmean)/bgz
 dyp = (bgy-bgymean)/bgz
 ex_rms = 1.0e6 * betagamma * np.sqrt((np.dot(dx,dx)*np.dot(dxp,dxp)-pow(np.dot(dx,dxp),2))/pow(float(Np),2))

@@ -83,6 +83,9 @@ class Vector
 
     /*! In-place division of the vector by a real factor */
     Vector& operator/= (double factor);
+    
+    /*! Check if it is different from the zero vector */
+    bool isNull() { return ((x==0.0) and (y==0.0) and (z==0.0)); };
 
     /*! The absolute value (cartesian norm) of the vector */
     double norm();
@@ -99,6 +102,9 @@ class Vector
     void transform(Vector ex, Vector ey, Vector ez);
 
 };
+
+//! a zero vector constant for convenience
+const Vector VectorZero = Vector(0.0,0.0,0.0);
 
 /*! The dot product of two vectors */
 double dot(Vector a, Vector b);

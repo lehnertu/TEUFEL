@@ -44,6 +44,7 @@
 #include "global.h"
 #include "particle.h"
 #include "bunch.h"
+#include "beam.h"
 
 int main ()
 {
@@ -69,28 +70,32 @@ int main ()
 
     for (int i=0; i<6; i++)
     {
-	ChargedParticle *P = B->getParticle(i);
-	Vector X = P->getPosition();
-	printf("(%d): x=%g",i,X.x);
-	printf(" z=%g\n",X.z);
-	Vector BG = P->getMomentum();
-	printf("(%d): bg.x=%g",i,BG.x);
-	printf(" bg.z=%g\n",BG.z);
+        ChargedParticle *P = B->getParticle(i);
+        Vector X = P->getPosition();
+        printf("(%d): x=%g",i,X.x);
+        printf(" z=%g\n",X.z);
+        Vector BG = P->getMomentum();
+        printf("(%d): bg.x=%g",i,BG.x);
+        printf(" bg.z=%g\n",BG.z);
     }
-    
+
+    // create a beam with this bunch    
+    Beam *beam = new Beam();
+    beam->Add(B);
+
     // create a particle dump
-    if (0 != B->WriteWatchPointSDDS("teufel_bunch_start.sdds"))
+    if (0 != beam->WriteWatchPointSDDS("teufel_bunch_start.sdds"))
     {
-	errors++;
-	printf("SDDS write \033[1;31m failed!\033[0m\n");
+        errors++;
+        printf("SDDS write \033[1;31m failed!\033[0m\n");
     }
     else
     {
-	printf("SDDS file written - \033[1;32m OK\033[0m\n");
+        printf("SDDS file written - \033[1;32m OK\033[0m\n");
     }
 
     // clean up
-    delete B;
+    delete beam;
     delete dist;
 
     return errors;

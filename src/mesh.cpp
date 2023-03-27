@@ -237,7 +237,7 @@ void MeshedScreen::init()
     normal = std::vector<Vector>(Np);
     xi = std::vector<Vector>(Np);
     eta = std::vector<Vector>(Np);
-    Vector avg_normal = Vector(0.0,0.0,0.0);
+    Vector avg_normal = VectorZero;
     for (int ip=0; ip<Np; ip++)
     {
         tri_ref tri = triangles[ip];

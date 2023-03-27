@@ -22,9 +22,10 @@
 #include "bunch.h"
 #include "particle.h"
 #include "global.h"
-#include <math.h>
+#include <cmath>
 #include <random>
 #include <iostream>
+#include <iomanip>
 #include <cstring>
 #include "SDDS.h"
 #include "hdf5.h"
@@ -185,7 +186,7 @@ Bunch::Bunch(Distribution *dist, double reftime, Vector refpos, Vector refmom, d
     }
 }
 
-Bunch::Bunch(const char *filename)
+Bunch::Bunch(const char *filename, Vector dir)
 {
     // set a safe default in case we return with read errors
     NOP = 0;
@@ -304,6 +305,25 @@ Bunch::Bunch(const char *filename)
     double t0 = sum/NOP;
     // create negatively charged particles with electron charge-to-mass ratio
     double numElectrons = charge/ElementaryCharge/NOP;
+    // compute the coordinate system to which the input coordinates are transformed
+    // x-y-s is left-handed
+    // TODO
+    Vector e_s = dir;
+    e_s.normalize();
+    Vector e_x;
+    if (fabs(dot(e_s, Vector(1.0,0.0,0.0)))>0.8)
+        // if the propagation direction is close to x, start with z
+        e_x = Vector(0.0,0.0,1.0);
+    else
+        // otherwise start with x
+        e_x = Vector(1.0,0.0,0.0);
+    e_x -= e_s * dot(e_x,e_s);
+    e_x.normalize();
+    Vector e_y = cross(e_x,e_s);
+    std::cout << setprecision(4);
+    std::cout << "s = " << e_s.x << " " << e_s.y << " " << e_s.z << std::endl;
+    std::cout << "x = " << e_x.x << " " << e_x.y << " " << e_x.z << std::endl;
+    std::cout << "y = " << e_y.x << " " << e_y.y << " " << e_y.z << std::endl;
     // create the particles
     for(int i=0; i<NOP; i++)
     {
@@ -312,15 +332,15 @@ Bunch::Bunch(const char *filename)
         double betagamma = pData[i];
         double beta = sqrt( betagamma*betagamma / (betagamma*betagamma+1.0) );
         // xp and yp are the angles [rad] with respect to the axis (z)
-        Vector direction = Vector(xpData[i], ypData[i], 1.0);
+        Vector direction = e_x*xpData[i] + e_y*ypData[i] + e_s;
         direction.normalize();
         // relativistic velocity
         Vector v = direction * beta;
         // we translate the difference in arrival time into a position at t0
-        // we then set t=0 as the start time of the particle, removing the average
-        Vector X0 = Vector(xData[i], yData[i], 0.0) + v*(t0-tData[i])*SpeedOfLight;
+        Vector X0 = e_x*xData[i] + e_y*yData[i] + v*(t0-tData[i])*SpeedOfLight;
         Vector P0 = direction * betagamma;
         Vector A0 = Vector(0.0, 0.0, 0.0);
+        // we then set t=0 as the start time of the particle, removing the average
         p->initTrajectory(0.0, X0, P0, A0);
         P.push_back(p);
     }
@@ -337,6 +357,71 @@ void Bunch::Add(ChargedParticle *part)
 {
     NOP++;
     P.push_back(part);
+}
+
+void Bunch::addCorrelation(int independent, int dependent, double factor)
+{
+    if (independent>=0 && independent<6 &&
+        dependent>=0 && dependent<6 &&
+        dependent!=independent)
+    {
+        double mean=0.0;
+        for (int i=0; i<NOP; i++)
+        {
+            ChargedParticle *p = P[i];
+            Vector X0 = p->TrajPoint(0);
+            Vector P0 = p->TrajMomentum(0);
+            switch (independent)
+            {
+                case 0: mean += X0.x; break;
+                case 1: mean += X0.y; break;
+                case 2: mean += X0.z; break;
+                case 3: mean += P0.x; break;
+                case 4: mean += P0.y; break;
+                case 5: mean += P0.z; break;
+            };
+        };
+        mean /= NOP;
+        for (int i=0; i<NOP; i++)
+        {
+            ChargedParticle *p = P[i];
+            double t0 = p->TrajTime(0);
+            Vector X0 = p->TrajPoint(0);
+            Vector P0 = p->TrajMomentum(0);
+            Vector A0 = p->TrajAccel(0);
+            double ind = 0.0;
+            double dep = 0.0;
+            switch (independent)
+            {
+                case 0: ind = X0.x; break;
+                case 1: ind = X0.y; break;
+                case 2: ind = X0.z; break;
+                case 3: ind = P0.x; break;
+                case 4: ind = P0.y; break;
+                case 5: ind = P0.z; break;
+            };
+            switch (dependent)
+            {
+                case 0: dep = X0.x; break;
+                case 1: dep = X0.y; break;
+                case 2: dep = X0.z; break;
+                case 3: dep = P0.x; break;
+                case 4: dep = P0.y; break;
+                case 5: dep = P0.z; break;
+            };
+            dep += factor * (ind-mean);
+            switch (dependent)
+            {
+                case 0: X0.x = dep; break;
+                case 1: X0.y = dep; break;
+                case 2: X0.z = dep; break;
+                case 3: P0.x = dep; break;
+                case 4: P0.y = dep; break;
+                case 5: P0.z = dep; break;
+            };
+            p->initTrajectory(t0, X0, P0, A0);
+        }
+    }
 }
 
 void Bunch::clearTrajectories()

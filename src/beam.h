@@ -197,16 +197,26 @@ public:
     int WriteWatchPointHDF5(std::string filename);
     
     /*! Dump all particle information into an SDDS file.
-     *  The written quantities include:
+     *  The particles are transported to the crossing with an average plane perpendicular to the direction of beam propagation.
+     *  The SDDS file uses a left-handed cartesian coordinate system x-y-s (s is the propagation direction).
+     *
+     *  A number of parameters is written to the header:
+     *  - Particles - the total number of particles in the file
+     *  - Charge - the total charge
+     *  - pCentral - average beta*gamma (reference momentum)
+     *  - sdir_x, sdir_y, sdir_z - the propagation direction of the beam in laboratory coordinates
+     *  - xdir_x, xdir_y, xdir_z - the x direction of the file in laboratory coordinates
+     *  - ydir_x, ydir_y, ydir_z - the y direction of the file in laboratory coordinates
+     *
+     *  The written columns include:
      *  - time t
-     *  - position x,y,z
-     *  - momentum px,py,pz,p (beta*gamma)
-     *  - angles xp,yp (px/pz, py/pz)
-     *  - gamma
+     *  - position x,y
+     *  - momentum p (exactly beta*gamma = p/m_e c)
+     *  - angles xp,yp (dx/ds, dy/ds)
      * 
      * returns values for error checks:
      *	 
-     *	0  -  successfully Written the file\n
+     *	0  -  file successfully written\n
      *	1  -  error in SDDS_InitializeOutput \n
      *	2  -  error in SDDS_DefineSimpleParameter \n
      *	3  -  error in SDDS_DefineColumn \n

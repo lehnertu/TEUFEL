@@ -49,7 +49,9 @@ As an example, when running a problem on an 8-core workstation where the
 fields (and necessary communication buffers) fit into the memory twice,
 one would start TEUFEL with 2 nodes each using 4 CPU's
 
-```mpirun -n 2 --cpus-per-rank 4 --oversubscribe ./build/teufel input.xml```
+```
+mpirun -n 2 --cpus-per-rank 4 --oversubscribe ./build/teufel input.xml
+```
 
 On a cluster one would have to submit a batch job with te according information.
 
@@ -83,15 +85,21 @@ A few libraries are required to build the TEUFEL executable.
   from the distribution repositories.
   It is necessary to set an environment variable for the library to be found by the build system
 
-  ```export HDF5_ROOT=_path_to_library```
+  ```
+  export HDF5_ROOT=_path_to_library
+  ```
 
 - For linear algebra calculations we use the [Eigen3](http://eigen.tuxfamily.org) library.
   It should preferably be installed through the systems package management system.
   In case this is not possible (i.e. no root access) it can be used from the git repository.
   
-  ```cd lib/```
+  ```
+  cd lib/
+  ```
   
-  ```git clone https://gitlab.com/libeigen/eigen.git```
+  ```
+  git clone https://gitlab.com/libeigen/eigen.git
+  ```
   
   No build process is required for this library.
   
@@ -105,7 +113,9 @@ A few libraries are required to build the TEUFEL executable.
   (if in teufel/lib or any other less common installation position -
   typical Linux installation positions are found without this hint) for the library to be found.
 
-  ```export PUGIXML_ROOT=_path_to_library```
+  ```
+  export PUGIXML_ROOT=_path_to_library
+  ```
 
 - We use [muParser](https://github.com/beltoforion/muparser) to provide
   an inline scientific calculator that allows calculations to be performed
@@ -132,17 +142,23 @@ cd build
 
 Then we build the makefile from CMakeLists.txt contained in the root directory.
 
-```cmake ..```
+```
+cmake ..
+```
 
 One can check the libraries and tools found and change the make options.
 This can be usefull if it is desired to build the documentation by default
 or to skip the build of the test executables (enabled by default).
 
-```ccmake ..```
+```
+ccmake ..
+```
 
 After that 
 
-```make```
+```
+make
+```
 
 creates the executable in the build directory.
 
@@ -150,11 +166,19 @@ Documentation
 -------------
 
 We aim at fully documenting the code for easy reuse and maintenance.
-The documentation can be built using doxygen.
+The documentation can be built using doxygen
+and then be accessed with a browser starting from `doc/html/index.html`.
 
-```make docs```
+```
+make doc
+```
 
-The documentation can then be accessed with a browser starting from `doc/html/index.html`.
+A full manual is not yet available. The document which is in the writing
+can be compiled using LaTeX and is then found in the `build/doc/` folder.
+
+```
+make man
+```
 
 Testcases
 ---------
@@ -164,7 +188,9 @@ against known results and as coding examples. All tests are built by default
 in the build directory. For running all the checks in sequence,
 right away from the build directory, a script is provided in the main folder:
 
-```./run_tests```
+```
+./run_tests
+```
 
 - teufel.integrate_field.cpp : Test case for handling of Bunch::integrateFieldTrace()
 - teufel.bunch.cpp : test case for handling of particle bunches
@@ -181,7 +207,9 @@ right away from the build directory, a script is provided in the main folder:
 
 To check for memory leaks the tool [Valgrind](http://valgrind.org) is recommended.
 
-```valgrind --tool=memcheck tests/teufel.xxx```
+```
+valgrind --tool=memcheck build/teufel.xxx
+```
 
 For some testcases and examples python scripts for visualizing the data are
 provided in the scrips/ directory. For reading HDF5 files these scripts use the

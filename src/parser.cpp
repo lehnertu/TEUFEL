@@ -31,6 +31,7 @@
 #include "point_observer.h"
 #include "screen.h"
 #include "snapshot.h"
+#include "source_screen.h"
 #include "undulator.h"
 #include "vector.h"
 #include "wave.h"
@@ -43,6 +44,7 @@ InputParser::InputParser(const pugi::xml_node node)
     // we pre-define a number of constants in the calculator
     calc->DefineConst("_c", (double)SpeedOfLight);
     calc->DefineConst("_e", (double)ElementaryCharge);
+    calc->DefineConst("_h", (double)PlanckH);
     calc->DefineConst("_mec2", (double)mecsquared);
     calc->DefineConst("_eps0", (double)EpsNull);
     calc->DefineConst("_pi", (double)Pi);
@@ -182,13 +184,36 @@ int InputParser::parseLattice(Lattice *lattice)
             else if (type == "packet")
             {
                 if (teufel::rank==0) std::cout << name << "::GaussianWavePacket" << std::endl;
-                // the wave object parses its own input
+                // the wave packet object parses its own input
                 // we provide a reference to the parser
                 GaussianWavePacket *wave = new GaussianWavePacket(element, this);
                 lattice->addElement(wave);
             }
             else
                 throw(IOexception("InputParser::parseLattice(Lattice - unknown wave type."));
+            count++;
+        }
+        else if (type == "screen")
+        {
+            parseCalcChildren(element);
+            type = element.attribute("type").value();
+            name = element.attribute("name").value();
+            if (teufel::rank==0) std::cout << name << "::SourceScreen" << std::endl;
+            pugi::xml_attribute fn = element.attribute("file");
+            if (!fn)
+                throw(IOexception("InputParser::parseLattice - <screen> attribute file not found."));                
+            double x, y, z, t0;
+            pugi::xml_node posnode = element.child("position");
+            if (!posnode)
+                throw(IOexception("InputParser::parseLattice - <screen> <position> not found."));
+            x = parseValue(posnode.attribute("x"));
+            y = parseValue(posnode.attribute("y"));
+            z = parseValue(posnode.attribute("z"));
+            t0 = parseValue(posnode.attribute("t"));
+            Vector pos = Vector(x, y, z);
+            SourceScreen *screen = new SourceScreen(
+                fn.as_string(), pos, t0);
+            lattice->addElement(screen);
             count++;
         }
         else if (type == "dipole")
@@ -309,7 +334,7 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                     if (!fn) throw(IOexception("InputParser::parseBeam - <particle> filename for log not found."));
                     int step = 1;
                     pugi::xml_attribute st = lognode.attribute("step");
-                    if (fn) step = st.as_int();
+                    if (st) step = st.as_int();
                     TrackingLogger<Bunch>* logger = new TrackingLogger<Bunch>(single, fn.as_string(), step);
                     logs->push_back(logger);
                 }
@@ -448,7 +473,7 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                         logger->record_bunching(freq);
                     };
                     logs->push_back(logger);
-                }
+                };
                 // add the bunch to the beam
                 beam->Add(bunch);
                 delete dist;
@@ -458,9 +483,58 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
             {
                 pugi::xml_attribute sddsname = entry.attribute("file");
                 if (!sddsname)
-                    throw(IOexception("InputParser::parseBeam - <SDDS> attribute file not found."));                
+                    throw(IOexception("InputParser::parseBeam - <SDDS> attribute file not found."));   
+                // parse propagation  direction of the input beam
+                Vector dir = Vector(0.0, 0.0, 1.0);
+                pugi::xml_node dirnode = entry.child("dir");
+                if (dirnode)
+                {
+                    parseCalcChildren(dirnode);
+                    double x = parseValue(dirnode.attribute("x"));
+                    double y = parseValue(dirnode.attribute("y"));
+                    double z = parseValue(dirnode.attribute("z"));
+                    dir = Vector(x, y, z);
+                    dir.normalize();
+                };
                 // now we can create the bunch from the SDDS input file
-                Bunch *bunch = new Bunch(sddsname.as_string());
+                Bunch *bunch = new Bunch(sddsname.as_string(), dir);
+                // parse and add correlations
+                pugi::xml_node corrnode = entry.child("correlations");
+                if (corrnode)
+                {
+                    parseCalcChildren(corrnode);
+                    // all children are handled in sequence
+                    for (pugi::xml_node_iterator cit = corrnode.begin(); cit != corrnode.end(); ++cit)
+                    {
+                        pugi::xml_node cn = *cit;
+                        std::string ctype = cn.name();
+                        if (ctype == "linear")
+                        {
+                            int ind = 0;
+                            int dep = 0;
+                            double fac = 0.0;
+                            pugi::xml_attribute indatt = cn.attribute("indep");
+                            if (indatt)
+                                ind = int(parseValue(indatt));
+                            else
+                                throw(IOexception("InputParser::parseBeam <SDDS> - correlation indep not found."));
+                            pugi::xml_attribute depatt = cn.attribute("dep");
+                            if (depatt)
+                                dep = int(parseValue(depatt));
+                            else
+                                throw(IOexception("InputParser::parseBeam <SDDS> - correlation dep not found."));
+                            pugi::xml_attribute facatt = cn.attribute("factor");
+                            if (facatt)
+                                fac = parseValue(facatt);
+                            else
+                                throw(IOexception("InputParser::parseBeam <SDDS> - correlation factor not found."));
+                            // std::cout << "correlation " << fac << " " << ind << " -> " << dep << " added" << endl;
+                            bunch->addCorrelation(ind, dep, fac);
+                        } else {
+                            throw(IOexception("InputParser::parseBeam <SDDS> - unknown type of correlation."));
+                        }
+                    };
+                };
                 // create a logger for this bunch if defined in the input file
                 pugi::xml_node lognode = entry.child("log");
                 if (lognode)
@@ -478,7 +552,7 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                         logger->record_bunching(freq);
                     };
                     logs->push_back(logger);
-                }
+                };
                 // add the bunch to the beam
                 beam->Add(bunch);
                 count++;

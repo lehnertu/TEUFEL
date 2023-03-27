@@ -55,6 +55,9 @@ public:
     /*! Magnetic field report */
     Vector B();
 
+    /*! Check if it is different from zero */
+    bool isNull() { return (vecE.isNull() and vecB.isNull()); };
+
     /* Poynting vector - energy flow density */
     Vector Poynting();
     
@@ -88,6 +91,9 @@ private:
     Vector vecB;
 
 };
+
+//! a zero field constant for convenience
+const ElMagField ElMagFieldZero(VectorZero,VectorZero);
 
 /*!
  * \class ElMagObs
@@ -200,7 +206,7 @@ private:
 };
 
 /*!
- * \class ExternalField
+ * \class LocalizedField
  * \brief An external field (lattice element) through which to track particles.
  * @author Ulf Lehnert
  * @author Vipul Joshi
@@ -215,9 +221,11 @@ private:
  * The transformation necessary to compute the field in laboratory coordinates,
  * are handled by this class.
  * 
- * At present only a simple shift of the origin is implemented.
+ * At present only a simple shift of the origin and time is implemented.
+ * No transformation of the fields is needed, we just query the fields
+ * at the coordinates transformed into the local system.
  */
-class ExternalField : public GeneralField
+class LocalizedField : public GeneralField
 {
 
 public:
@@ -225,16 +233,16 @@ public:
     /*! The default constructor just defines an identity transformation
 	of the element coordinates into lab coordinates
     */
-    ExternalField();
+    LocalizedField();
 
     /*! This constructor defines a different origin
      *	of the element local coordinate system, thus, placing the element
      *  at a certain position in lab space and time
      */
-    ExternalField(Vector pos, double t=0.0);
+    LocalizedField(double time, Vector pos);
     
     /*! All derived classe must provide a destructor */
-    virtual ~ExternalField() {};
+    virtual ~LocalizedField() {};
     
     /*! The electromagnetic field at a given time and point in space.
      * 
@@ -251,7 +259,6 @@ private:
 
     /*! The electromagnetic field at a given time and point in space.
      * in element-local coordinates.
-     * The coordinates and the time refer to the laboratory (rest) frame.
      * The field is returned as a tuple of electric field [V/m] and
      * magnetic field [T] vectors.
      * 
@@ -263,6 +270,8 @@ protected :
 
     /*! This is the position of the element in laboratory frame */
     Vector origin;
+    
+    /*! This is the local time zero given in lab time */
     double t0;
 
 };
@@ -279,7 +288,7 @@ protected :
  * is an GeneralField.
  * 
  * Typically the lattice only containes external fields derived from
- * ExternalField. However, particle bunches may also add the mutual
+ * LocalizedField. However, particle bunches may also add the mutual
  * interaction fields of their particles to the lattice.
  * 
  */
