@@ -53,9 +53,13 @@ As an example, when running a problem on an 8-core workstation where the
 fields (and necessary communication buffers) fit into the memory twice,
 one would start TEUFEL with 2 nodes each using 4 CPU's
 
+<<<<<<< HEAD
 <pre>
 mpirun -n 2 --cpus-per-rank 4 --oversubscribe ./build/teufel input.xml
 </pre>
+=======
+<pre>mpirun -n 2 --cpus-per-rank 4 --oversubscribe ./build/teufel input.xml</pre>
+>>>>>>> development branch for 1D FEL interaction
 
 On a cluster one would have to submit a batch job with te according information.
 
@@ -89,9 +93,13 @@ A few libraries are required to build the TEUFEL executable.
   from the distribution repositories.
   It is necessary to set an environment variable for the library to be found by the build system
 
+<<<<<<< HEAD
   <pre>
   export HDF5_ROOT=_path_to_library
   </pre>
+=======
+  <pre>export HDF5_ROOT=_path_to_library</pre>
+>>>>>>> development branch for 1D FEL interaction
 
 - For linear algebra calculations we use the [Eigen3](http://eigen.tuxfamily.org) library.
   It should preferably be installed through the systems package management system.
@@ -99,9 +107,12 @@ A few libraries are required to build the TEUFEL executable.
   
   <pre>
   cd lib/
+<<<<<<< HEAD
   </pre>
   
   <pre>
+=======
+>>>>>>> development branch for 1D FEL interaction
   git clone https://gitlab.com/libeigen/eigen.git
   </pre>
   
@@ -117,9 +128,13 @@ A few libraries are required to build the TEUFEL executable.
   (if in teufel/lib or any other less common installation position -
   typical Linux installation positions are found without this hint) for the library to be found.
 
+<<<<<<< HEAD
   <pre>
   export PUGIXML_ROOT=_path_to_library
   </pre>
+=======
+  <pre>export PUGIXML_ROOT=_path_to_library</pre>
+>>>>>>> development branch for 1D FEL interaction
 
 - We use [muParser](https://github.com/beltoforion/muparser) to provide
   an inline scientific calculator that allows calculations to be performed
@@ -148,14 +163,19 @@ Then we build the makefile from CMakeLists.txt contained in the root directory.
 The default is a Release type build.
 To include debugging information just one additional flag has to be set.
 
+<<<<<<< HEAD
 <pre>
 cmake [-DCMAKE_BUILD_TYPE=Debug] ..
 </pre>
+=======
+<pre>cmake ..</pre>
+>>>>>>> development branch for 1D FEL interaction
 
 One can check the libraries and tools found and change the make options.
 This can be usefull if it is desired to build the documentation by default
 or to skip the build of the test executables (enabled by default).
 
+<<<<<<< HEAD
 <pre>
 ccmake ..
 </pre>
@@ -165,6 +185,13 @@ After that
 <pre>
 make
 </pre>
+=======
+<pre>ccmake ..</pre>
+
+After that 
+
+<pre>make</pre>
+>>>>>>> development branch for 1D FEL interaction
 
 creates the executable in the build directory.
 
@@ -177,9 +204,13 @@ We aim at fully documenting the code for easy reuse and maintenance.
 The documentation can be built using doxygen
 and then be accessed with a browser starting from `doc/html/index.html`.
 
+<<<<<<< HEAD
 <pre>
 make doc
 </pre>
+=======
+<pre>make doc</pre>
+>>>>>>> development branch for 1D FEL interaction
 
 A full manual is not yet available. The document which is in the writing
 can be compiled using LaTeX and is then found in the `build/doc/` folder.
@@ -196,9 +227,13 @@ against known results and as coding examples. All tests are built by default
 in the build directory. For running all the checks in sequence,
 right away from the build directory, a script is provided in the main folder:
 
+<<<<<<< HEAD
 <pre>
 ./run_tests
 </pre>
+=======
+<pre>./run_tests</pre>
+>>>>>>> development branch for 1D FEL interaction
 
 - teufel.integrate_field.cpp : Test case for handling of Bunch::integrateFieldTrace()
 - teufel.bunch.cpp : test case for handling of particle bunches
@@ -213,6 +248,13 @@ right away from the build directory, a script is provided in the main folder:
 - examples/elbe-u300.xml
 - reflection : propagation of CDR reflected from an annular diffraction screen to an observation screen
 
+<<<<<<< HEAD
+=======
+To check for memory leaks the tool [Valgrind](http://valgrind.org) is recommended.
+
+<pre>valgrind --tool=memcheck tests/teufel.xxx</pre>
+
+>>>>>>> development branch for 1D FEL interaction
 For some testcases and examples python scripts for visualizing the data are
 provided in the scrips/ directory. For reading HDF5 files these scripts use the
 [h5py](http://www.h5py.org/) library which can be installed from the "python-h5py" package on most Linux systems.
