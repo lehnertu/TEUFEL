@@ -25,6 +25,7 @@
 #include "vector.h"
 #include "fields.h"
 #include "parser.h"
+#include <vector>
 
 /*!
  * \class FEL_1D
@@ -83,8 +84,45 @@ public:
 
 private:
 
-    double  N_field;                            // number of the field grid cells
-    double  dt;                                 // time step [s]
+    //! a method called by all constructors for initialization and printout
+    void setup();
+
+    //! number of the field grid cells
+    double  N_field;
+    
+    //! time step [s]
+    double  dt;
+    
+    //! the grid vector [m] (opposite to propagation direction)
+    Vector  dz;
+    
+    //! the current position [m] of the first cell
+    Vector  head;
+    
+    //! The propagation direction of the electromagnetic wave:
+    Vector prop;
+    
+    /*! The polarization direction of the electric field.
+     *  This vector is forced to be perpendicular to the propagation direction.
+     */
+    Vector e_x;
+    
+    /*! The polarization direction of the magnetic field.
+     *  This vector is generated perpendicular to the propagation direction and the electric field.
+     */
+    Vector e_y;
+    
+    //! the electric field [V/m] array
+    std::vector<double> field_E;
+
+    //! whether to create a field output file
+    bool createOutput;
+    
+    //! how often to create a field output
+    int step_Output;
+
+    //! the output file name
+    const char* fn_Output;
 
 };
 

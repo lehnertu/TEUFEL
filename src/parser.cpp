@@ -622,8 +622,7 @@ void InputParser::parseTracking(
             else if (type == "fel1d")
             {
                 parseCalcChildren(child);
-                // the interaction object parses its own input
-                // we provide a reference to the parser
+                // the interaction object parses its own input, we provide a reference to the parser
                 // the timestep attribute has already been evaluated - thats necessary
                 FEL_1D* fel_interaction = new FEL_1D(parseDouble(timestep), child, this);
                 interactions->push_back(fel_interaction);
