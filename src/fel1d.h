@@ -24,6 +24,7 @@
 #include "pugixml.hpp"
 #include "vector.h"
 #include "fields.h"
+#include "beam.h"
 #include "parser.h"
 #include <vector>
 
@@ -73,6 +74,20 @@ public:
     /*! All derived classes from GeneralField must provide a destructor */
     virtual ~FEL_1D();
 
+    /*! Advance the electromagnetic field one time step.
+     *  The particles of the given beam drive the interaction.
+     *  This method must be called in a leap-frog sequence interleaved with
+     *  the tracking steps of the beam.
+     */
+    virtual void step(Beam *beam);
+    
+    /*! Write logging data to file if requested (do nothing otherwise).
+     *  This will be called after the tracking is finished.
+     * 
+     * This must be implemented for all derived interactions.
+     */
+    virtual void write_output();
+
     /*!
      * The electromagnetic field at a given time and point in space.
      * 
@@ -84,9 +99,19 @@ public:
 
 private:
 
-    //! a method called by all constructors for initialization and printout
+    /*! Method called by all constructors for initialization and printout
+     *  @todo this needs to be extended by the definition of the envelope of the field
+     */
     void setup();
 
+    /*! Seeding the field with a Gaussian wave packet:
+     *  \param E0 peak amplitude of the electric field [V/m]
+     *  \param lambda central wavelength of the radiation [m]
+     *  \param tau duration of the pulse [s]
+     *  \param t_start the distance from the field head to the pulse center [s]
+     */
+    void seed(double E0, double lambda, double tau, double t_start);
+    
     //! number of the field grid cells
     double  N_field;
     

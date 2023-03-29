@@ -209,6 +209,7 @@ int main(int argc, char *argv[])
     // That is necessary to keep the references to the contained bunches for logging
     // or other bunch-related procedures. This way it is possible to log information
     // for inidividual bunches making up the total beam.
+    // 
     // After every tracking step, the current particle information distributed over
     // the compute nodes will be re-gathered into this object.
     // Every node is doing that, so the total beam history is available for interactions.
@@ -507,7 +508,7 @@ int main(int argc, char *argv[])
         // each node updates the master beam from the master buffer
         masterBeam->setStepFromBuffer(masterBuffer);
         MPI_Barrier(MPI_COMM_WORLD);
-        // now we have all data available on all nodes
+        // now we have all trajectory data available on all nodes
 
         // update the loggers
         if (teufel::rank == 0)
@@ -544,6 +545,10 @@ int main(int argc, char *argv[])
                     };
                 }
             }
+        
+        // compute the interactions on all nodes independently
+        // source is the master beam containing all particles
+        for (InteractionField* f : interactions) f->step(masterBeam);
         
         // make a print once every 30s
         current_time = MPI_Wtime();
@@ -615,10 +620,15 @@ int main(int argc, char *argv[])
         std::cout << "time elapsed during tracking : " << stop_time-start_time << " s" << std::endl;
     };
 
-    // write the logged tracking data
+    // write the logged data
     if (teufel::rank == 0)
+    {
         for (int i=0; i<(int)listLoggers.size(); i++)
             listLoggers.at(i)->WriteBeamParametersSDDS();
+
+        for (InteractionField* f : interactions)
+            f->write_output();
+    }
 
     // ===============================================================
     // Compute the radiation observations :
@@ -658,7 +668,7 @@ int main(int argc, char *argv[])
         };
         
         // collect all the field computed on the individual nodes into the master node
-        // TODO: this should be done in chunks, otherwise we temporarily need
+        //! @todo this should be done in chunks, otherwise we temporarily need
         // 3 times the observer memory (original and 2 buffers).
         unsigned int count = obs->getBufferSize();
         std::cout << "Node " << teufel::rank << " allocating buffers for "<< count << " doubles" << std::endl;

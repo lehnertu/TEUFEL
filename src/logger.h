@@ -32,8 +32,8 @@
  * 
  * This class handles the computation and storage of beam parameters
  * accessible during the tracking.
- * @TODO specialization for beam still missing, only for bunch implemented
- * @TODO could (optionally) log lattice fields at bunch center
+ * @todo specialization for beam still missing, only for bunch implemented
+ * @todo could (optionally) log lattice fields at bunch center
  */
 template <class objectT>
 class TrackingLogger

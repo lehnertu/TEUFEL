@@ -125,7 +125,7 @@ public:
     /* Get the length of the time steps */
     int get_dt() { return dt; }
 
-    // TODO: all index operations should be range-checked
+    //! @todo all index operations should be range-checked
     /*! Get the position of one grid cell */
     Vector get_point(int ip) { return field_points[ip]; }
 
@@ -143,7 +143,7 @@ public:
     /*! Get the fields of one cell */
     FieldTrace get_trace(int ip) { return *A[ip]; }
 
-    // TODO: that is not clean - at least one has to delete the old trace and to do some sanity checks
+    //! @todo that is not clean - at least one has to delete the old trace and to do some sanity checks
     /*! Set the fields of one cell */
     void set_trace(int ip, FieldTrace trace) { *A[ip]=trace; };
     

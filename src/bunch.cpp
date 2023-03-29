@@ -203,14 +203,15 @@ Bunch::Bunch(const char *filename, Vector dir)
         return;
     };
     
-    /* @TODO: unclear what this example is doing
-       something like this may be needed for multi-page files
-    int page = SDDS_ReadPage(&SDDS_dataset);
-    while (page >= 1)
-    {
-        page = SDDS_ReadPage(&SDDS_dataset);
-    };
-    */
+    /*! @todo: unclear what this example is doing
+     *  something like this may be needed for multi-page files
+     *
+     *  int page = SDDS_ReadPage(&SDDS_dataset);
+     *  while (page >= 1)
+     *  {
+     *     page = SDDS_ReadPage(&SDDS_dataset);
+     *  };
+     */
     int page = SDDS_ReadPage(&SDDS_dataset);
     if (page != 1)
     {
@@ -307,7 +308,7 @@ Bunch::Bunch(const char *filename, Vector dir)
     double numElectrons = charge/ElementaryCharge/NOP;
     // compute the coordinate system to which the input coordinates are transformed
     // x-y-s is left-handed
-    // TODO
+    //! @todo
     Vector e_s = dir;
     e_s.normalize();
     Vector e_x;

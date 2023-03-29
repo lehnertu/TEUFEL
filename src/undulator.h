@@ -114,7 +114,7 @@ private:
  * In y direction the the functional dependece of the field is \f$\cosh(k_y y)\f$ so the field diverges far from the axis.
  * To satisfy the Maxwell equations \f$k_y\f$ is chosen as \f$k_y^2 = k_z^2 + k_x^2\f$.
  * 
- * @TODO To compensate for the beam deflection due to the gradient a dipole field
+ * @todo To compensate for the beam deflection due to the gradient a dipole field
  * can be added. Along with the dipole comes a quadrupole which strength is
  * automatically adjusted such that the transverse gradient of the dipole strength
  * matches the transverse gradient of the undulator field. This is the expected field profile

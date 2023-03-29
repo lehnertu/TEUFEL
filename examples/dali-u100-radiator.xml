@@ -37,6 +37,7 @@
             <position x="0.0" y="0.0" z="5.0e-12*_c" />
             <prop x="0.0" y="0.0" z="1.0" />
             <pol x="1.0" y="0.0" z="0.0" />
+            <seed E0="1.0e6" lambda="lambda" tau="1.0e-12" tstart="10.0e-12" />
             <log file="dali-u100_fel.sdds" step="100" />
         </fel1d>
         <watch step="0" file="dali-u100-radiator_inital.hdf5" />

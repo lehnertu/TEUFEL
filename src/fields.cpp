@@ -187,6 +187,8 @@ ElMagField LocalizedField::LocalField(double t, Vector X)
     return ElMagFieldZero;
 }
 
+// ********** InteractionField **********
+
 // ********** Lattice **********
 
 Lattice::Lattice()

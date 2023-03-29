@@ -138,7 +138,7 @@ private:
 
     /*! Write one of the fields into a scree-like HDF5 file.
      *  THIS IS FOR DEBUGGING PURPOSE ONLY
-     *  TODO: remove this
+     *  @todo remove this
      *  A pointer to the field is given.
      */
     void WriteField(
@@ -152,7 +152,7 @@ private:
      *  An exception is thrown if the alloaction of the buffer fails.
      *
      *  THIS IS FOR DEBUGGING PURPOSE ONLY
-     *  TODO: remove this
+     *  @todo remove this
      */
     double* getBuffer(
         std::vector<std::vector<FieldTrace*>> Field

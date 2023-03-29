@@ -407,7 +407,7 @@ int main(int argc, char* argv[])
                 {
                     FieldTrace t3 = *source_dA_dn[isource];
                     t3.retard(R/SpeedOfLight, &component);
-                    // TODO: why is this term positive - should be negative
+                    //! @todo why is this term positive - should be negative
                     propagated_trace += component * (1.0/R) * dA;
                 }
                 catch(IOexception const & exc)

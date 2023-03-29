@@ -56,7 +56,7 @@ void TrackingLogger<objectT>::update()
     BG.push_back(Beam->avgMomentum());
     PosRMS.push_back(Beam->rmsPosition());
     Gamma.push_back(Beam->avgGamma());
-    // TODO : compute momentum spread ad correlation
+    //! @todo compute momentum spread ad correlation
     BGRMS.push_back(Vector(0.0,0.0,0.0));
     PosBG.push_back(Vector(0.0,0.0,0.0));
     if (include_bunching)

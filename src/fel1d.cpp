@@ -99,6 +99,17 @@ FEL_1D::FEL_1D(
         createOutput = false;
     }
     setup();
+    // seed the field if requested
+    // this must be done after setup() so the fields have been created
+    pugi::xml_node seednode = node.child("seed");
+    if (seednode)
+    {
+        double E0 = parser->parseDouble(seednode.attribute("E0"));
+        double lambda = parser->parseDouble(seednode.attribute("lambda"));
+        double tau = parser->parseDouble(seednode.attribute("tau"));
+        double tstart = parser->parseDouble(seednode.attribute("tstart"));
+        seed(E0, lambda, tau, tstart);
+    }
 }
 
 void FEL_1D::setup()
@@ -119,11 +130,32 @@ void FEL_1D::setup()
     }
 }
 
+void FEL_1D::seed(double E0, double lambda, double tau, double t_start)
+{
+    double omega = 2.0*Pi*SpeedOfLight/lambda;
+    for (int i=0; i<N_field; i++)
+    {
+        double t = i*dt-t_start;
+        field_E[i] = E0*cos(omega*t)*exp(-0.5*pow(t/tau,2));
+    }
+}
+
+void FEL_1D::step(Beam *beam)
+{
+    //! @todo needs to be implemented
+}
+
+void FEL_1D::write_output()
+{
+    //! @todo needs to be implemented
+}
+    
 FEL_1D::~FEL_1D()
 {
 }
 
 ElMagField FEL_1D::Field(double t, Vector X)
+//! @todo implementation missing
 {
     return ElMagFieldZero;
 }

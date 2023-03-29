@@ -426,7 +426,7 @@ void MeshedScreen::fromBuffer(double *buffer, std::size_t size)
 
 void MeshedScreen::writeFile(std::string filename)
 {
-    // TODO:
+    //! @todo
     herr_t status;
     hid_t atts, att;
     hid_t dataspace, dcpl, dataset;
@@ -646,7 +646,7 @@ void MeshedScreen::writeFile(std::string filename)
     // attach scalar attributes
     atts  = H5Screate(H5S_SCALAR);
     if (atts<0) throw(IOexception("MeshedScreen - error creating ObservationTime attribute space"));
-    // TODO: problem - for some reason this code writes an int32 where others expect an int64
+    //! @todo problem - for some reason this code writes an int32 where others expect an int64
     att = H5Acreate2(dataset, "Nt", H5T_NATIVE_INT, atts, H5P_DEFAULT, H5P_DEFAULT);
     if (att<0) throw(IOexception("MeshedScreen - error creating ObservationTime attribute Nt"));
     status = H5Awrite(att, H5T_NATIVE_INT, &Nt);

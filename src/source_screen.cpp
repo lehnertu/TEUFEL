@@ -219,7 +219,7 @@ SourceScreen::SourceScreen(
     
     // when we are done we write the field to files
     // for debugging purpose only
-    // TODO: remove this
+    //! @todo remove this
     WriteField("SourceScreenTraces_DEBUG.h5", Traces);
     WriteField("SourceScreenTimeDerivative_DEBUG.h5", dt_Traces);
   

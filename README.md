@@ -99,7 +99,7 @@ A few libraries are required to build the TEUFEL executable.
   
   <pre>
   cd lib/
-  ```
+  </pre>
   
   <pre>
   git clone https://gitlab.com/libeigen/eigen.git
@@ -183,7 +183,7 @@ can be compiled using LaTeX and is then found in the `build/doc/` folder.
 <pre>
 make man
 </pre>
-
+ 
 Testcases
 ---------
 
@@ -224,3 +224,7 @@ Known Issues
 - OpenMPI leaks memory (nothing we can do about it)
 - parseBeam leaks memory
 - masterBeam->WriteWatchPointHDF5 leaks memory
+
+A list of open issues in the code can be found after building the documentation under
+Related Pages -> Todo list
+

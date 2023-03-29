@@ -21,7 +21,8 @@
 
 #pragma once
 
-#include "fields.h"
+#include "beam.fwd.h"
+#include "fields.fwd.h"
 #include "global.h"
 #include "bunch.h"
 #include "vector.h"

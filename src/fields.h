@@ -23,6 +23,8 @@
 
 #include <vector>
 #include "vector.h"
+#include "beam.fwd.h"
+#include "fields.fwd.h"
 
 /*!
  * \class ElMagField
@@ -298,6 +300,15 @@ public:
     /*! All derived classe must provide a destructor */
     virtual ~InteractionField() {};
     
+    /*! Advance the interaction field one time step.
+     *  The particles of the given beam drive the interaction.
+     *  This method must be called in a leap-frog sequence interleaved with
+     *  the tracking steps of the beam.
+     * 
+     * This must be implemented for all derived interactions.
+     */
+    virtual void step(Beam *beam) = 0;
+
     /*! The electromagnetic field at a given time and point in space.
      * in element-local coordinates.
      * The field is returned as a tuple of electric field [V/m] and
@@ -306,6 +317,13 @@ public:
      * This must be implemented for all derived interactions.
      */
     virtual ElMagField Field(double t, Vector X) = 0;
+
+    /*! Write logging data to file if requested (do nothing otherwise).
+     *  This will be called after the tracking is finished.
+     * 
+     * This must be implemented for all derived interactions.
+     */
+    virtual void write_output() = 0;
 
 };
 
