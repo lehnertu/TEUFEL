@@ -31,17 +31,18 @@
     <!-- the field grid must match the time step c*dt = dz -->
     <calc print="dz = " var="dz" eq="0.1*lambda" />
     <calc print="dt = " var="dt" eq="dz/_c" />
-    <tracking method="Vay" delta_t="dt" n="total_t/dt" >
-        <fel1d N="200" >
+    <calc print="tracking steps = " var="n_tracking" eq="total_t/dt" />
+    <tracking method="Vay" delta_t="dt" n="n_tracking" >
+        <fel1d N="300" >
             <!-- the field has to start ahead of the first particle -->
             <position x="0.0" y="0.0" z="5.0e-12*_c" />
             <prop x="0.0" y="0.0" z="1.0" />
             <pol x="1.0" y="0.0" z="0.0" />
-            <seed E0="1.0e6" lambda="lambda" tau="1.0e-12" tstart="10.0e-12" />
-            <log file="dali-u100_fel.sdds" step="100" />
+            <seed E0="1.0e6" lambda="lambda" tau="1.0e-12" tstart="5.0e-12" />
+            <log file="dali-u100_fel1d.hdf5" step="100" />
         </fel1d>
         <watch step="0" file="dali-u100-radiator_inital.hdf5" />
-        <watch step="4000" file="dali-u100-radiator_final.hdf5" />
+        <watch step="n_tracking" file="dali-u100-radiator_final.hdf5" />
     </tracking>
     <observer>
     </observer>

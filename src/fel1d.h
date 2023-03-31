@@ -55,7 +55,7 @@ public:
      */
     FEL_1D(
         double time_step,
-        int number_steps
+        int field_size
         );
 
     /*! This constructor takes the information from an XML node
@@ -113,10 +113,13 @@ private:
     void seed(double E0, double lambda, double tau, double t_start);
     
     //! number of the field grid cells
-    double  N_field;
+    int  N_field;
     
     //! time step [s]
     double  dt;
+    
+    //! the number of steps that the field has been propagated
+    int N_steps;
     
     //! the grid vector [m] (opposite to propagation direction)
     Vector  dz;
@@ -137,9 +140,12 @@ private:
      */
     Vector e_y;
     
-    //! the electric field [V/m] array
+    //! the electric field [V/m] array (current values)
     std::vector<double> field_E;
 
+    //! storage of electric fields over the computed time-steps
+    std::vector<std::vector<double>> field_storage;
+    
     //! whether to create a field output file
     bool createOutput;
     
@@ -147,7 +153,7 @@ private:
     int step_Output;
 
     //! the output file name
-    const char* fn_Output;
+    std::string FileName;
 
 };
 

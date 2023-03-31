@@ -163,6 +163,14 @@ public:
     /*! Default destructor */
     virtual ~GeneralField() {};
     
+    /*! The field should deliver an information whether it is a
+     *  predefined external field (lattice field)
+     *  or an internally generated (interaction) field
+     * 
+     * This method must be overridden by derived classes.
+     */
+    virtual bool is_external() = 0;
+    
     /*!
      * The electromagnetic field at a given time and point in space.
      * 
@@ -197,7 +205,10 @@ public:
      * @param B the magnetic field in T
      */
     HomogeneousField(Vector E, Vector B);
-    
+
+    //! this is an external field    
+    virtual bool is_external() { return true; };
+
     //! Field report routine
     ElMagField Field(double t, Vector X);
     
@@ -243,6 +254,9 @@ public:
      */
     LocalizedField(double time, Vector pos);
     
+    //! all LocalizedFields are external fields
+    virtual bool is_external() { return true; };
+
     /*! All derived classe must provide a destructor */
     virtual ~LocalizedField() {};
     
@@ -296,6 +310,9 @@ public:
 
     /*! The default constructor */
     InteractionField() {};
+
+    //! InteractionFields are not external fields
+    virtual bool is_external() { return false; };
 
     /*! All derived classe must provide a destructor */
     virtual ~InteractionField() {};
@@ -351,6 +368,9 @@ public:
     /*! Create an empty lattice. */
     Lattice();
 
+    //! The lattice may contain both external and interaction fields
+    virtual bool is_external() { return false; };
+
     /*! The destructor also destroys all elements belonging to the lattice */
     ~Lattice();
 
@@ -360,6 +380,12 @@ public:
     /*! Report the number of elements in a lattice */
     int count();
 
+    /*! Get a pointer to one lattice element */
+    GeneralField* at(int index);
+    
+    /*! Delete one lattice element */
+    void remove(int index);
+    
     /*! The electromagnetic field at a given time and point in space
      * of all contained elements combined.
      * The coordinates and the time refer to the laboratory (rest) frame.

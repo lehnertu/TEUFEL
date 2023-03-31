@@ -212,6 +212,20 @@ void Lattice::addElement(GeneralField *element)
 
 int Lattice::count() { return elements.size(); }
 
+GeneralField* Lattice::at(int index)
+{
+    if (index<0) throw(IOexception("Lattice::at() - requested index out of range."));
+    if (index>=(int)elements.size()) throw(IOexception("Lattice::at() - requested index out of range."));
+    return elements[index];        
+}
+
+void Lattice::remove(int index)
+{
+    if (index<0) throw(IOexception("Lattice::remove() - requested index out of range."));
+    if (index>=(int)elements.size()) throw(IOexception("Lattice::remove() - requested index out of range."));
+    elements.erase(elements.begin() + index);
+}
+
 ElMagField Lattice::Field(double t, Vector X)
 {
     // this initalizes with zero

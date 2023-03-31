@@ -231,6 +231,7 @@ int main(int argc, char *argv[])
     std::vector<watch_t> watches;
     std::list<InteractionField*> interactions;
     parse->parseTracking(masterBeam, &watches, &interactions);
+    if (teufel::rank==0) std::cout << std::endl;
     if (teufel::rank==0) std::cout << "defined " << (int)watches.size() << " watch points." << std::endl;
     // all interaction fields are added to the lattice to be included in the particel tracking
     for (InteractionField* f : interactions) lattice->addElement(f);
@@ -642,6 +643,22 @@ int main(int argc, char *argv[])
     usleep(100000);
     MPI_Barrier(MPI_COMM_WORLD);
     
+    // we remove all interaction fields from the lattice
+    // we don't want these to be included with the lattice observations
+    int i_lat = 0;
+    while (i_lat<lattice->count())
+    {
+        GeneralField* elem = lattice->at(i_lat);
+        if (!elem->is_external())
+        {
+            if (teufel::rank == 0)
+                std::cout << "deleting interaction field from lattice at index " << i_lat  << std::endl;
+            lattice->remove(i_lat);
+        } else { 
+            i_lat++;
+        }
+    }
+    
     // compute all observations
     for (int i=0; i<(int)listObservers.size(); i++)
     {
@@ -745,7 +762,7 @@ int main(int argc, char *argv[])
     for (int i=0; i<(int)listLoggers.size(); i++)
         delete listLoggers.at(i);
     listLoggers.clear();
-    
+
     // deleting the lattice automatically deletes all lattice elments
     delete lattice;
     

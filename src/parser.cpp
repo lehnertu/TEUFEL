@@ -129,6 +129,7 @@ double InputParser::parseDouble(const pugi::xml_attribute attr)
     return retval;
 }
 
+//! @todo use parseInt for all integer inputs
 double InputParser::parseInt(const pugi::xml_attribute attr)
 {
     int retval = 0;
@@ -632,10 +633,11 @@ void InputParser::parseTracking(
                 pugi::xml_attribute step = child.attribute("step");
                 if (!step)
                     throw(IOexception("InputParser::parseTracking - <watch> attribute step not found."));
+                int n_step = int(parseInt(step));
                 pugi::xml_attribute fn = child.attribute("file");
                 if (!fn)
                     throw(IOexception("InputParser::parseTracking - <watch> attribute file not found."));
-                watch_t w = { step.as_int(), fn.as_string(), hdf5 };
+                watch_t w = { n_step, fn.as_string(), hdf5 };
                 watches->push_back(w);
             }
             else if (type == "watch-sdds")
@@ -643,10 +645,11 @@ void InputParser::parseTracking(
                 pugi::xml_attribute step = child.attribute("step");
                 if (!step)
                     throw(IOexception("InputParser::parseTracking - <watch-sdds> attribute step not found."));
+                int n_step = int(parseInt(step));
                 pugi::xml_attribute fn = child.attribute("file");
                 if (!fn)
                     throw(IOexception("InputParser::parseTracking - <watch-sdds> attribute file not found."));
-                watch_t w = { step.as_int(), fn.as_string(), sdds };
+                watch_t w = { n_step, fn.as_string(), sdds };
                 watches->push_back(w);
             }
             else
