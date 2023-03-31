@@ -36,6 +36,8 @@ FEL_1D::FEL_1D(
     prop = Vector(0.0, 0.0, 1.0);
     e_x = Vector(1.0, 0.0, 0.0);
     e_x = Vector(0.0, 1.0, 0.0);
+    head = Vector(0.0, 0.0, 0.0);
+    origin = head;
     createOutput = false;
     setup();
 }
@@ -61,6 +63,7 @@ FEL_1D::FEL_1D(
         y = parser->parseDouble(vec.attribute("y"));
         z = parser->parseDouble(vec.attribute("z"));
         head = Vector(x,y,z);
+        origin = head;
     }
     vec = node.child("prop");
     if (!vec)
@@ -121,6 +124,7 @@ void FEL_1D::setup()
     // proper orthonormalization of (e_x, e_y, prop) is assumed
     dz = prop * (-dt*SpeedOfLight);
     field_E = std::vector<double>(N_field, 0.0);
+    previous_E = field_E;
     // the initialized field is the first stored array
     field_storage.clear();
     field_storage.push_back(field_E);
@@ -145,6 +149,11 @@ void FEL_1D::seed(double E0, double lambda, double tau, double t_start)
         double t = i*dt-t_start;
         field_E[i] = E0*cos(omega*t)*exp(-0.5*pow(t/tau,2));
     }
+    // the seed is a stable wave packet
+    previous_E = field_E;
+    // make intentionally wrong, I want to see the field split into 2 counter-propagating fractions
+    previous_E.erase(previous_E.begin()); // pop the first
+    previous_E.push_back(0.0); // extend the end
     // if we are seeding this one replaces the first storage array created by setup()
     field_storage.clear();
     field_storage.push_back(field_E);
@@ -157,9 +166,25 @@ void FEL_1D::seed(double E0, double lambda, double tau, double t_start)
 
 void FEL_1D::step(Beam *beam)
 {
-    //! @todo needs to be implemented
-
+    // the field after this step
+    // it is shifted in time by one index
+    std::vector<double> next_E = std::vector<double>(N_field, 0.0);
+    
+    // index 0 of next_E (the head) always remains zero (no field moving in from the front)
+    // index 1 of next_E is index 0 of field_E
+    next_E[1] = 2.0*field_E[0]; // @todo check if the derivatives really can be neglected
+    // we loop over the indices of the current field
+    for (int i=1; i<N_field-1; i++)
+    {
+        double d2E_dt2 = field_E[i-1] - 2.0*field_E[i] + field_E[i+1];
+        next_E[i+1] = 2.0*field_E[i] - previous_E[i-1] + d2E_dt2;
+    }
+    // @todo here we need to add the beam-induced fields
+    
+    // the time step has been computed, now we move forward
     N_steps++;
+    previous_E = field_E;
+    field_E = next_E;
     
     // every number of steps we record the fields
     if (0 == N_steps % step_Output)
@@ -170,7 +195,6 @@ void FEL_1D::step(Beam *beam)
 
 void FEL_1D::write_output()
 {
-    //! @todo needs to be implemented
     if (createOutput)
     {
     
@@ -217,34 +241,42 @@ void FEL_1D::write_output()
             buffer);
         if (status<0) throw(IOexception("FEL1D::write_output - error in H5Dwrite(pdset)"));
         
+        // This declares a lambda, which can be called just like a function
+        // some external variables are captured by reference
+        auto set_int_attribute = [&pdset](std::string name, int* data) 
+        { 
+            hid_t atts  = H5Screate(H5S_SCALAR);
+            if (atts<0) throw(IOexception(("FEL1D::write_output - error in H5Screate("+name+")").c_str()));
+            hid_t attr = H5Acreate2(pdset, name.c_str(), H5T_NATIVE_INT, atts, H5P_DEFAULT, H5P_DEFAULT);
+            if (attr<0) throw(IOexception(("FEL1D::write_output - error in H5Acreate2("+name+")").c_str()));
+            herr_t status = H5Awrite(attr, H5T_NATIVE_INT, data);
+            if (status<0) throw(IOexception(("FEL1D::write_output - error in H5Awrite("+name+")").c_str()));
+            status = H5Sclose (atts);
+            if (status<0) throw(IOexception(("FEL1D::write_output - error in H5Sclose("+name+")").c_str()));
+        };
+        auto set_double_attribute = [&pdset](std::string name, double* data) 
+        { 
+            hid_t atts  = H5Screate(H5S_SCALAR);
+            if (atts<0) throw(IOexception(("FEL1D::write_output - error in H5Screate("+name+")").c_str()));
+            hid_t attr = H5Acreate2(pdset, name.c_str(), H5T_NATIVE_DOUBLE, atts, H5P_DEFAULT, H5P_DEFAULT);
+            if (attr<0) throw(IOexception(("FEL1D::write_output - error in H5Acreate2("+name+")").c_str()));
+            herr_t status = H5Awrite(attr, H5T_NATIVE_DOUBLE, data);
+            if (status<0) throw(IOexception(("FEL1D::write_output - error in H5Awrite("+name+")").c_str()));
+            status = H5Sclose (atts);
+            if (status<0) throw(IOexception(("FEL1D::write_output - error in H5Sclose("+name+")").c_str()));
+        };
+
         // attach scalar attributes
-        hid_t atts  = H5Screate(H5S_SCALAR);
-        if (atts<0) throw(IOexception("FEL1D::write_output - error in H5Screate(N_field)"));
-        hid_t attr = H5Acreate2(pdset, "N_field", H5T_NATIVE_INT, atts, H5P_DEFAULT, H5P_DEFAULT);
-        if (attr<0) throw(IOexception("FEL1D::write_output - error in H5Acreate2(N_field)"));
-        status = H5Awrite(attr, H5T_NATIVE_INT, &N_field);
-        if (status<0) throw(IOexception("FEL1D::write_output - error in H5Awrite(N_field)"));
-        status = H5Sclose (atts);
-        if (status<0) throw(IOexception("FEL1D::write_output - error in H5Sclose(N_field)"));
+        set_int_attribute("N_field", &N_field);
+        set_int_attribute("N_steps", &N_steps);
+        set_double_attribute("dt", &dt);
+        set_double_attribute("origin.x", &origin.x);
+        set_double_attribute("origin.y", &origin.y);
+        set_double_attribute("origin.z", &origin.z);
+        set_double_attribute("prop.x", &dz.x);
+        set_double_attribute("prop.y", &dz.y);
+        set_double_attribute("prop.z", &dz.z);
         
-        atts  = H5Screate(H5S_SCALAR);
-        if (atts<0) throw(IOexception("FEL1D::write_output - error in H5Screate(N_steps)"));
-        attr = H5Acreate2(pdset, "N_steps", H5T_NATIVE_INT, atts, H5P_DEFAULT, H5P_DEFAULT);
-        if (attr<0) throw(IOexception("FEL1D::write_output - error in H5Acreate2(N_steps)"));
-        status = H5Awrite(attr, H5T_NATIVE_INT, &N_steps);
-        if (status<0) throw(IOexception("FEL1D::write_output - error in H5Awrite(N_steps)"));
-        status = H5Sclose (atts);
-        if (status<0) throw(IOexception("FEL1D::write_output - error in H5Sclose(N_steps)"));
-
-        atts  = H5Screate(H5S_SCALAR);
-        if (atts<0) throw(IOexception("FEL1D::write_output - error in H5Screate(dt)"));
-        attr = H5Acreate2(pdset, "dt", H5T_NATIVE_DOUBLE, atts, H5P_DEFAULT, H5P_DEFAULT);
-        if (attr<0) throw(IOexception("FEL1D::write_output - error in H5Acreate2(dt)"));
-        status = H5Awrite(attr, H5T_NATIVE_DOUBLE, &dt);
-        if (status<0) throw(IOexception("FEL1D::write_output - error in H5Awrite(dt)"));
-        status = H5Sclose (atts);
-        if (status<0) throw(IOexception("FEL1D::write_output - error in H5Sclose(dt)"));
-
         // Close and release resources.
         status = H5Pclose (pdcpl);
         if (status<0) throw(IOexception("SnapshotObserver::WriteFieldHDF5 - error in H5Pclose(pdcpl)"));

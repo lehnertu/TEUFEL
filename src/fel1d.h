@@ -127,6 +127,9 @@ private:
     //! the current position [m] of the first cell
     Vector  head;
     
+    //! the position [m] of the first cell at start time
+    Vector  origin;
+    
     //! The propagation direction of the electromagnetic wave:
     Vector prop;
     
@@ -142,6 +145,9 @@ private:
     
     //! the electric field [V/m] array (current values)
     std::vector<double> field_E;
+
+    //! the electric field [V/m] array from the last time step
+    std::vector<double> previous_E;
 
     //! storage of electric fields over the computed time-steps
     std::vector<std::vector<double>> field_storage;
