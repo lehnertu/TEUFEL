@@ -100,9 +100,22 @@ public:
 private:
 
     /*! Method called by all constructors for initialization and printout
-     *  @todo this needs to be extended by the definition of the envelope of the field
+     *
+     *  Here we define the envelope of the electromagnetic field.
+     *  The transverse properties are assumed to be constant along the stored field.
+     *  This is justified by the assumption that the propagates field is short
+     *  compared to the propagation length. The transverse profile does, however,
+     *  vary along the propagation (all cells synchronuously).
+     *
+     *  The field assumes a Gaussian optical mode. The central wavelength
+     *  is not known, so we declare the mode by specifying the Rayleigh range
+     *  and the position and size of the optical waist (this implicitly defines a wavelength).
+     *
+     *  \param ZR the Rayleigh length [m]
+     *  \param w0 the waist size [m]
+     *  \param z_wa [m] the distance of the waist from the origin in propagation direction
      */
-    void setup();
+    void setup(double zR, double w0, double z_w);
 
     /*! Seeding the field with a Gaussian wave packet:
      *  \param E0 peak amplitude of the electric field [V/m]
@@ -148,6 +161,15 @@ private:
      *  This vector is generated perpendicular to the propagation direction and the electric field.
      */
     Vector e_y;
+    
+    //! the Rayleight length [m] of the optical mode
+    double z_Rayleigh;
+    
+    //! the waist size [m] of the optical mode
+    double w_0;
+    
+    //! the distance of the waist from the origin
+    double z_waist;
     
     //! the electric field [V/m] array (current values)
     std::vector<double> field_E;

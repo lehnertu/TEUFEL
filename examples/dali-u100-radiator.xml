@@ -38,6 +38,9 @@
             <position x="0.0" y="0.0" z="5.0e-12*_c" />
             <prop x="0.0" y="0.0" z="1.0" />
             <pol x="1.0" y="0.0" z="0.0" />
+            <calc var="z_R" eq="0.5" />
+            <calc var="w_0" eq="sqrt(z_R*lambda/_pi)" />
+            <mode zR="z_R" w0="w_0" zwaist="0.75" />
             <seed E0="1.0e6" lambda="lambda" tau="1.0e-12" tstart="5.0e-12" />
             <log file="dali-u100_fel1d.hdf5" step="1" />
         </fel1d>

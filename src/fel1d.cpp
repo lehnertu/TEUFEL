@@ -41,7 +41,8 @@ FEL_1D::FEL_1D(
     head = Vector(0.0, 0.0, 0.0);
     origin = head;
     createOutput = false;
-    setup();
+    // assuming a 1mm waist with ZR=1m at 1m from the start
+    setup(1.0, 1.0e-3, 1.0);
 }
 
 FEL_1D::FEL_1D(
@@ -109,7 +110,17 @@ FEL_1D::FEL_1D(
     } else {
         createOutput = false;
     }
-    setup();
+    // read the optical mode definition
+    pugi::xml_node mode = node.child("mode");
+    if (mode)
+    {
+        double zR = parser->parseDouble(mode.attribute("zR"));
+        double w = parser->parseDouble(mode.attribute("w0"));
+        double zw = parser->parseDouble(mode.attribute("zwaist"));
+        setup(zR, w, zw);
+    }
+    else
+        throw(IOexception("InputParser::FEL1D - <mode> not found."));
     // seed the field if requested
     // this must be done after setup() so the fields have been created
     pugi::xml_node seednode = node.child("seed");
@@ -123,7 +134,7 @@ FEL_1D::FEL_1D(
     }
 }
 
-void FEL_1D::setup()
+void FEL_1D::setup(double ZR, double w0, double z_w)
 {
     // proper orthonormalization of (e_x, e_y, prop) is assumed
     dz = prop * (-dt*SpeedOfLight);
@@ -134,15 +145,23 @@ void FEL_1D::setup()
     field_storage.push_back(field_E);
     N_steps = 0;
     time = 0.0;
+    
+    // the initialization of the envelope
+    z_Rayleigh = ZR;
+    w_0 = w0;
+    z_waist = z_w;
+    
     // print properties
     if (teufel::rank==0)
     {
-        std::cout << "FEL-1D interaction  N = " << N_field << ",   dz = " << dz.norm() << " m" << std::endl;
+        std::cout << "FEL-1D interaction  N=" << N_field << ",   dz=" << dz.norm() << " m" << std::endl;
         std::cout << "  propagation = (" << prop.x << ", " << prop.y << ", " << prop.z << ")" << std::endl;
         std::cout << "  dz = (" << dz.x << ", " << dz.y << ", " << dz.z << ")" << std::endl;
         std::cout << "  e_E = (" << e_x.x << ", " << e_x.y << ", " << e_x.z << ")" << std::endl;
-        std::cout << "  e_b = (" << e_y.x << ", " << e_y.y << ", " << e_y.z << ")" << std::endl;
-        std::cout << "  logging to " << FileName << " every " << step_Output << " steps." << std::endl;
+        std::cout << "  e_B = (" << e_y.x << ", " << e_y.y << ", " << e_y.z << ")" << std::endl;
+        std::cout << "  opt. mode zR=" << z_Rayleigh << " m,  w0=" << w_0 << " m  at s=" << z_waist << " m" << std::endl;
+        if (createOutput)
+            std::cout << "  logging to " << FileName << " every " << step_Output << " steps." << std::endl;
     }
 }
 
@@ -192,6 +211,8 @@ void FEL_1D::step(Beam *beam)
     head += prop*ds;
     previous_E = field_E;
     field_E = next_E;
+    
+    // @todo we have to scale the fields according to the change in mode size
     
     // every number of steps we record the fields
     if (0 == N_steps % step_Output)
