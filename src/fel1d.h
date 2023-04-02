@@ -118,6 +118,9 @@ private:
     //! time step [s]
     double  dt;
     
+    //! the time of the current simulation step [s]
+    double  time;
+    
     //! the number of steps that the field has been propagated
     int N_steps;
     
@@ -130,8 +133,11 @@ private:
     //! the position [m] of the first cell at start time
     Vector  origin;
     
-    //! The propagation direction of the electromagnetic wave:
+    //! The propagation direction (unit vector) of the electromagnetic wave
     Vector prop;
+
+    //! The propagation step size [m] of the electromagnetic wave
+    double ds;
     
     /*! The polarization direction of the electric field.
      *  This vector is forced to be perpendicular to the propagation direction.

@@ -32,6 +32,8 @@ FEL_1D::FEL_1D(
 {
     N_field = field_size;
     dt = time_step;
+    ds = time_step * SpeedOfLight;
+    time = 0.0;
     N_steps = 0;
     prop = Vector(0.0, 0.0, 1.0);
     e_x = Vector(1.0, 0.0, 0.0);
@@ -48,6 +50,8 @@ FEL_1D::FEL_1D(
     InputParser *parser )
 {
     dt = time_step;
+    ds = time_step * SpeedOfLight;
+    time = 0.0;
     N_steps = 0;
     pugi::xml_attribute att = node.attribute("N");
     if (!att)
@@ -129,6 +133,7 @@ void FEL_1D::setup()
     field_storage.clear();
     field_storage.push_back(field_E);
     N_steps = 0;
+    time = 0.0;
     // print properties
     if (teufel::rank==0)
     {
@@ -183,6 +188,8 @@ void FEL_1D::step(Beam *beam)
     
     // the time step has been computed, now we move forward
     N_steps++;
+    time += dt;
+    head += prop*ds;
     previous_E = field_E;
     field_E = next_E;
     
@@ -301,5 +308,6 @@ FEL_1D::~FEL_1D()
 ElMagField FEL_1D::Field(double t, Vector X)
 //! @todo implementation missing
 {
+    //! @todo issue a warning if the query is too far in time (half step) from the current time step
     return ElMagFieldZero;
 }
