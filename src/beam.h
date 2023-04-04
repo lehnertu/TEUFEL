@@ -138,25 +138,6 @@ public:
      */
     void doStep(GeneralField *field);
     
-    /*! @brief Setup for tracking the whole beam using the Vay algorithm.
-     * 
-     * See ChargedParticle::InitVay for details
-     * 
-     * @todo Tracking particles which do not start all at the same time
-     * is not yet supported.
-     * 
-     * @param field the field through which the beam will be tracked
-     */
-    void InitVay(GeneralField *field);
-    
-    /*! @brief Perform one tracking step using the Vay algorithm.
-     * 
-     * See ChargedParticle::StepVay for details
-     * 
-     * @param field the field through which the beam is tracked
-     */
-    void StepVay(GeneralField *field);
-    
     /*! @brief Compute the buffer size for one step.
      * 
      * @return the number of doubles needed
@@ -264,6 +245,27 @@ public:
         Vector ObservationPoint,
         FieldTrace *trace);
 
+private:
+
+    /*! @brief Setup for tracking the whole beam using the Vay algorithm.
+     * 
+     * See ChargedParticle::InitVay for details
+     * 
+     * @todo Tracking particles which do not start all at the same time
+     * is not yet supported.
+     * 
+     * @param field the field through which the beam will be tracked
+     */
+    void InitVay(GeneralField *field);
+    
+    /*! @brief Perform one tracking step using the Vay algorithm.
+     * 
+     * See ChargedParticle::StepVay for details
+     * 
+     * @param field the field through which the beam is tracked
+     */
+    void StepVay(GeneralField *field);
+    
 private:
 
     //! Number of bunches in the beam.

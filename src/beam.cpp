@@ -181,6 +181,7 @@ void Beam::setStepFromBuffer(double *buffer)
         // the pointer is advanced as the buffer is consumed
         buf = B[i]->setStepFromBuffer(buf);
     }
+    NOTS++;
 }
 
 //! @todo how to store several bunches hierarchically ?

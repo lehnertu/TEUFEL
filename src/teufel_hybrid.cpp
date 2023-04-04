@@ -331,6 +331,9 @@ int main(int argc, char *argv[])
     // so we pre-allocate the necessary trajectory storage for every particle
     masterBeam->preAllocate(NOTS+1);
     masterBeam->setStepFromBuffer(masterBuffer);
+    // we have not performed any time step yet
+    // all particles just have the step=0 coordinates
+    masterBeam->setNOTS(0);
     // now all nodes have an identical beam containig all particles
     
     MPI_Barrier(MPI_COMM_WORLD);
@@ -477,10 +480,16 @@ int main(int argc, char *argv[])
         for (int il=0; il<(int)listLoggers.size(); il++)
             listLoggers.at(il)->update();
                     
+    // initalize the interaction fields
+    for (InteractionField* f : interactions) f->init(masterBeam);
+    
     // record the start time
     double start_time = MPI_Wtime();
     double print_time = start_time;
     double current_time = start_time;
+
+    std::cout << "start tracking : beam is at step=" << masterBeam->getNOTS() << std::endl;
+    std::cout << std::endl;
 
     // do the tracking of the beam
     // Shared memory parallelization is used for field integration only.
@@ -508,6 +517,12 @@ int main(int argc, char *argv[])
                       masterBuffer, TRACKING_BUFSIZE, MPI_DOUBLE, MPI_COMM_WORLD);
         // each node updates the master beam from the master buffer
         masterBeam->setStepFromBuffer(masterBuffer);
+        // stepping sanity check
+        if (masterBeam->getNOTS()!=step+1)
+        {
+            std::cout << "  beam is at step=" << masterBeam->getNOTS() << "  main() is at step=" << step << std::endl;
+            throw(IOexception("main() - beam is at wrong step"));
+        }
         MPI_Barrier(MPI_COMM_WORLD);
         // now we have all trajectory data available on all nodes
 

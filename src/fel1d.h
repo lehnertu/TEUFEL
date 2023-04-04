@@ -74,6 +74,17 @@ public:
     /*! All derived classes from GeneralField must provide a destructor */
     virtual ~FEL_1D();
 
+    /*! Do all necessary initializations before step() can be called.
+     *  Check the compatibility of the beam and field stepping.
+     * 
+     *  Here we do just one step. This is necessary to get the stepping
+     *  in sync with the particle tracking. Particle trajectories are computed
+     *  at "half-integer" steps with the fields queried at integer time steps.
+     *
+     *  The beam-generated fields are ignored at this step.
+     */
+    virtual void init(Beam *beam);
+
     /*! Advance the electromagnetic field one time step.
      *  The particles of the given beam drive the interaction.
      *  This method must be called in a leap-frog sequence interleaved with
@@ -81,21 +92,25 @@ public:
      */
     virtual void step(Beam *beam);
     
-    /*! Write logging data to file if requested (do nothing otherwise).
-     *  This will be called after the tracking is finished.
-     * 
-     * This must be implemented for all derived interactions.
-     */
-    virtual void write_output();
-
     /*!
      * The electromagnetic field at a given time and point in space.
+     * The time must be within a quarter time step from the current time of the interaction field.
+     * Particle positions are descretized onto the grid, no interpolation is done.
+     *
+     * @todo the transverse shape of the field is ignored so far
      * 
      * The coordinates [m] and the time [s] refer to the laboratory (rest) frame.
      * The field is returned as a tuple of electric field [V/m] and
      * magnetic field [T] vectors.
      */
     virtual ElMagField Field(double t, Vector X);
+
+    /*! Write logging data to file if requested (do nothing otherwise).
+     *  This will be called after the tracking is finished.
+     * 
+     * This must be implemented for all derived interactions.
+     */
+    virtual void write_output();
 
 private:
 

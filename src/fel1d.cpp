@@ -188,6 +188,40 @@ void FEL_1D::seed(double E0, double lambda, double tau, double t_start)
     }
 }
 
+void FEL_1D::init(Beam *beam)
+{
+    // sanity checks
+    if (1e-9 < fabs(beam->getTimeStep()-dt)/dt)
+        throw(IOexception("FEL1D::init() - time-step mismach to beam"));
+        
+    // the field after this step
+    // it is shifted in time by one index
+    std::vector<double> next_E = std::vector<double>(N_field, 0.0);
+    
+    // index 0 of next_E (the head) always remains zero (no field moving in from the front)
+    // index 1 of next_E is index 0 of field_E
+    next_E[1] = 2.0*field_E[0]; // @todo check if the derivatives really can be neglected
+    // we loop over the indices of the current field
+    for (int i=1; i<N_field-1; i++)
+    {
+        double d2E_dt2 = field_E[i-1] - 2.0*field_E[i] + field_E[i+1];
+        next_E[i+1] = 2.0*field_E[i] - previous_E[i-1] + d2E_dt2;
+    }
+    
+    // the time step has been computed, now we move forward
+    N_steps++;
+    time += dt;
+    head += prop*ds;
+    previous_E = field_E;
+    field_E = next_E;
+    
+    // every number of steps we record the fields
+    if (0 == N_steps % step_Output)
+    {
+        field_storage.push_back(field_E);
+    }
+}
+
 void FEL_1D::step(Beam *beam)
 {
     // the field after this step
@@ -203,7 +237,21 @@ void FEL_1D::step(Beam *beam)
         double d2E_dt2 = field_E[i-1] - 2.0*field_E[i] + field_E[i+1];
         next_E[i+1] = 2.0*field_E[i] - previous_E[i-1] + d2E_dt2;
     }
-    // @todo here we need to add the beam-induced fields
+
+    // check if the beam is at the same time as the field
+    int step_beam = beam->getNOTS();
+    if (fabs(step_beam*dt-time)>0.25*dt)
+    {
+        std::cout << "FEL1D::step() - time mismatch" << std::endl;
+        std::cout << "  step=" << N_steps << "   time=" << 1e9*time << " ns" << std::endl;
+        std::cout << "  beam is at step=" << step_beam << "  t=" << 1e9*step_beam*dt << " ns" << std::endl;
+        std::cout << "  first bunch particles average time t=" << 1e9*beam->getBunch(0)->avgTime() << " ns" << std::endl;
+        throw(IOexception("FEL1D::step() - beam is at different time"));
+    }
+
+    //! @todo get all particle coordinates
+    
+    //! @todo add the beam-induced fields
     
     // the time step has been computed, now we move forward
     N_steps++;
@@ -212,13 +260,43 @@ void FEL_1D::step(Beam *beam)
     previous_E = field_E;
     field_E = next_E;
     
-    // @todo we have to scale the fields according to the change in mode size
+    //! @todo we have to scale the fields according to the change in mode size
     
     // every number of steps we record the fields
     if (0 == N_steps % step_Output)
     {
         field_storage.push_back(field_E);
     }
+}
+
+ElMagField FEL_1D::Field(double t, Vector X)
+{
+    // issue a warning if the query is too far in time (quarter step) from the current time step
+    if (0.25*dt < fabs(t-time))
+    {
+        std::cout << "FEL1D::Field - time mismatch" << std::endl;
+        std::cout << "  step=" << N_steps << "   time=" << 1e9*time << " ns" << "   dt=" << 1e9*dt << " ns" << std::endl;
+        std::cout << "  requested t=" << 1e9*t << " ns" << std::endl;
+        throw(IOexception("FEL1D::Field() - time mismatch"));
+    }
+
+    // small time deviations in time are ignored in the field computation (no interpolation)
+    double delta_z = dot(head-X,prop);
+    int index = rint(delta_z/ds);
+    if ((index<0) || (index>=N_field))
+    {
+        std::cout << "FEL1D::Field - particle out off grid bounds" << std::endl;
+        std::cout << "  step=" << N_steps << "  delta_z=" << delta_z << "   index=" << index << std::endl;
+        throw(IOexception("FEL1D::Field() - particle out off grid bounds"));
+    }
+    
+    //! todo the transverse shape of the field is not yet included
+    
+    // field is discretized to grid (not interpolated)
+    Vector E = e_x * field_E[index];
+    Vector B = e_y * field_E[index]/SpeedOfLight;
+    
+    return ElMagField(E,B);
 }
 
 void FEL_1D::write_output()
@@ -307,11 +385,11 @@ void FEL_1D::write_output()
         
         // Close and release resources.
         status = H5Pclose (pdcpl);
-        if (status<0) throw(IOexception("SnapshotObserver::WriteFieldHDF5 - error in H5Pclose(pdcpl)"));
+        if (status<0) throw(IOexception("FEL1D::write_output - error in H5Pclose(pdcpl)"));
         status = H5Dclose (pdset);
-        if (status<0) throw(IOexception("SnapshotObserver::WriteFieldHDF5 - error in H5Dclose(pdset)"));
+        if (status<0) throw(IOexception("FEL1D::write_output - error in H5Dclose(pdset)"));
         status = H5Sclose (pspace);
-        if (status<0) throw(IOexception("SnapshotObserver::WriteFieldHDF5 - error in H5Dclose(pspace)"));
+        if (status<0) throw(IOexception("FEL1D::write_output - error in H5Dclose(pspace)"));
         delete buffer;
 
         status = H5Fclose(file);
@@ -326,9 +404,3 @@ FEL_1D::~FEL_1D()
 {
 }
 
-ElMagField FEL_1D::Field(double t, Vector X)
-//! @todo implementation missing
-{
-    //! @todo issue a warning if the query is too far in time (half step) from the current time step
-    return ElMagFieldZero;
-}

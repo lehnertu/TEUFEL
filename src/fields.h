@@ -317,6 +317,12 @@ public:
     /*! All derived classe must provide a destructor */
     virtual ~InteractionField() {};
     
+    /*! Do all necessary initializations before step() can be called.
+     * 
+     * This must be implemented for all derived interactions.
+     */
+    virtual void init(Beam *beam) = 0;
+
     /*! Advance the interaction field one time step.
      *  The particles of the given beam drive the interaction.
      *  This method must be called in a leap-frog sequence interleaved with
