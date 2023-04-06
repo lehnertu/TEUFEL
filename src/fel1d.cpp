@@ -249,6 +249,9 @@ void FEL_1D::step(Beam *beam)
         throw(IOexception("FEL1D::step() - beam is at different time"));
     }
 
+    //! @todo actually the beam should be half a time step ahead of the field here
+    //! @todo the last stored trajectory points should be at the center of this time-step
+    
     //! @todo get all particle coordinates
     
     //! @todo add the beam-induced fields
