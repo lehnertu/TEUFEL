@@ -29,6 +29,9 @@
 #include "SDDS.h"
 #include <complex>
 
+// we have to instantiate the class for every possible source type
+template class Logger<Bunch>;
+
 template <class objectT>
 ParameterLogger<objectT>::ParameterLogger(objectT *obj, const char *filename, int step)
 {
@@ -56,7 +59,7 @@ void ParameterLogger<objectT>::update()
     BG.push_back(Beam->avgMomentum());
     PosRMS.push_back(Beam->rmsPosition());
     Gamma.push_back(Beam->avgGamma());
-    //! @todo compute momentum spread ad correlation
+    //! @todo compute momentum spread and correlation
     BGRMS.push_back(Vector(0.0,0.0,0.0));
     PosBG.push_back(Vector(0.0,0.0,0.0));
     if (include_bunching)
@@ -70,7 +73,7 @@ void ParameterLogger<objectT>::update()
 }
 
 template <class objectT>
-int ParameterLogger<objectT>::WriteBeamParametersSDDS()
+int ParameterLogger<objectT>::WriteData()
 {
     cout << "writing SDDS file " << fn << endl;
     SDDS_DATASET data;
@@ -221,7 +224,7 @@ void TrajectoryLogger<objectT>::update()
 }
 
 template <class objectT>
-int TrajectoryLogger<objectT>::WriteBeamParametersSDDS()
+int TrajectoryLogger<objectT>::WriteData()
 {
     return 0;
 }

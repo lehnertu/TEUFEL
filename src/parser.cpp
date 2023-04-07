@@ -294,7 +294,7 @@ int InputParser::parseLattice(Lattice *lattice)
     return count;
 }
 
-int InputParser::parseBeam(Beam *beam, std::vector<ParameterLogger<Bunch>*> *logs)
+int InputParser::parseBeam(Beam *beam, std::vector<Logger<Bunch>*> *logs)
 {
     int count = 0;
     pugi::xml_node beamnode = root.child("beam");

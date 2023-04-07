@@ -25,6 +25,39 @@
 #include "vector.h"
 
 /*!
+ * \class Logger
+ * \brief General logger class.
+ * @author Ulf Lehnert
+ * @date 7.4.2023
+ * 
+ * This class handles logging during the tracking.
+ * This is pure virtual class for derivation.
+ */
+template <class objectT>
+class Logger
+{
+
+public:
+
+    /*! Default constructor with no functionality. */
+    Logger() {};
+
+    /*! A virtual class must have a destructor */
+    virtual ~Logger() {};
+
+    /*! Check whether the given tracking step should be logged */
+    virtual bool log_requested(int step) = 0;
+    
+    /*! The source has advanced one time step.
+     *  Compute and store the quantities of interest.
+     */
+    virtual void update() = 0;
+    
+    /*! Write the logged data to a file */
+    virtual int WriteData() = 0;
+};
+
+/*!
  * \class ParameterLogger
  * \brief Store beam parameters while tracking.
  * @author Ulf Lehnert
@@ -36,7 +69,7 @@
  * @todo could (optionally) log lattice fields at bunch center
  */
 template <class objectT>
-class ParameterLogger
+class ParameterLogger : public Logger<objectT>
 {
 
 public:
@@ -66,7 +99,7 @@ public:
     /*! The source has advanced one time step.
      *  Compute and store the quantities of interest.
      */
-    void update();
+    virtual void update();
 
     /*! Write the collected data into an SDDS file.
      * 
@@ -95,7 +128,7 @@ public:
      *	9  -  error in SDDS_Terminate \n
      * 
      */
-    int WriteBeamParametersSDDS();
+    virtual int WriteData();
 
 private:
 
@@ -150,14 +183,14 @@ private:
  * \class TrajectoryLogger
  * \brief Store particle coordinates while tracking.
  * @author Ulf Lehnert
- * @date 19.10.2017
+ * @date 7.4.2023
  * 
  * This class handles the storage of particle trajectories.
  * @todo specialization for beam still missing, only for bunch implemented
  * @todo could (optionally) log lattice fields at bunch center
  */
 template <class objectT>
-class TrajectoryLogger
+class TrajectoryLogger : public Logger<objectT>
 {
 
 public:
@@ -179,13 +212,14 @@ public:
     
     /*! The source has advanced one time step.
      *  Compute and store the quantities of interest.
+     *  @todo not yet implemented
      */
     void update();
 
     /*! Write the collected data into an HDF5 file.
-     * 
+     *  @todo not yet implemented
      */
-    int WriteBeamParametersSDDS();
+    int WriteData();
 
 private:
 
