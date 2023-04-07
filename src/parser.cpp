@@ -294,7 +294,7 @@ int InputParser::parseLattice(Lattice *lattice)
     return count;
 }
 
-int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs)
+int InputParser::parseBeam(Beam *beam, std::vector<ParameterLogger<Bunch>*> *logs)
 {
     int count = 0;
     pugi::xml_node beamnode = root.child("beam");
@@ -356,7 +356,7 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                     int step = 1;
                     pugi::xml_attribute st = lognode.attribute("step");
                     if (st) step = st.as_int();
-                    TrackingLogger<Bunch>* logger = new TrackingLogger<Bunch>(single, fn.as_string(), step);
+                    ParameterLogger<Bunch>* logger = new ParameterLogger<Bunch>(single, fn.as_string(), step);
                     logs->push_back(logger);
                 }
                 // add this bunch to the beam
@@ -486,7 +486,7 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                     int step = 1;
                     pugi::xml_attribute st = lognode.attribute("step");
                     if (fn) step = st.as_int();
-                    TrackingLogger<Bunch>* logger = new TrackingLogger<Bunch>(bunch, fn.as_string(), step);
+                    ParameterLogger<Bunch>* logger = new ParameterLogger<Bunch>(bunch, fn.as_string(), step);
                     pugi::xml_attribute bf = lognode.attribute("bunching-freq");
                     if (bf)
                     {
@@ -565,7 +565,7 @@ int InputParser::parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs
                     int step = 1;
                     pugi::xml_attribute st = lognode.attribute("step");
                     if (fn) step = st.as_int();
-                    TrackingLogger<Bunch>* logger = new TrackingLogger<Bunch>(bunch, fn.as_string(), step);
+                    ParameterLogger<Bunch>* logger = new ParameterLogger<Bunch>(bunch, fn.as_string(), step);
                     pugi::xml_attribute bf = lognode.attribute("bunching-freq");
                     if (bf)
                     {

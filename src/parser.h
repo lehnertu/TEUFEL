@@ -117,7 +117,7 @@ public:
      *
      *  @return The number of bunches is returned.
      */
-    int parseBeam(Beam *beam, std::vector<TrackingLogger<Bunch>*> *logs);
+    int parseBeam(Beam *beam, std::vector<ParameterLogger<Bunch>*> *logs);
     
     /*! Parse the input file and setup for tracking particles.
      *  If there is no child <tracking> under the root node

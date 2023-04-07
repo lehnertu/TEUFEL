@@ -30,7 +30,7 @@
 #include <complex>
 
 template <class objectT>
-TrackingLogger<objectT>::TrackingLogger(objectT *obj, const char *filename, int step)
+ParameterLogger<objectT>::ParameterLogger(objectT *obj, const char *filename, int step)
 {
     Beam = obj;
     NOTS = 0;
@@ -41,14 +41,14 @@ TrackingLogger<objectT>::TrackingLogger(objectT *obj, const char *filename, int 
 }
 
 template <class objectT>
-void TrackingLogger<objectT>::record_bunching(double freq)
+void ParameterLogger<objectT>::record_bunching(double freq)
 {
     include_bunching = true;
     bunching_freq = freq;
 }
 
 template <class objectT>
-void TrackingLogger<objectT>::update()
+void ParameterLogger<objectT>::update()
 {
     NOTS++;
     Time.push_back(Beam->avgTime());
@@ -70,7 +70,7 @@ void TrackingLogger<objectT>::update()
 }
 
 template <class objectT>
-int TrackingLogger<objectT>::WriteBeamParametersSDDS()
+int ParameterLogger<objectT>::WriteBeamParametersSDDS()
 {
     cout << "writing SDDS file " << fn << endl;
     SDDS_DATASET data;
@@ -202,5 +202,30 @@ int TrackingLogger<objectT>::WriteBeamParametersSDDS()
 }
 
 // we have to instantiate the class for every possible source type
-template class TrackingLogger<Bunch>;
-// template class TrackingLogger<Beam>;
+template class ParameterLogger<Bunch>;
+// template class ParameterLogger<Beam>;
+
+template <class objectT>
+TrajectoryLogger<objectT>::TrajectoryLogger(objectT *obj, const char *filename, int step)
+{
+    Beam = obj;
+    NOTS = 0;
+    fn = filename;
+    stepsize = step;
+}
+
+template <class objectT>
+void TrajectoryLogger<objectT>::update()
+{
+    NOTS++;
+}
+
+template <class objectT>
+int TrajectoryLogger<objectT>::WriteBeamParametersSDDS()
+{
+    return 0;
+}
+
+// we have to instantiate the class for every possible source type
+template class TrajectoryLogger<Bunch>;
+// template class TrajectoryLogger<Beam>;

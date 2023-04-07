@@ -214,7 +214,7 @@ int main(int argc, char *argv[])
     // the compute nodes will be re-gathered into this object.
     // Every node is doing that, so the total beam history is available for interactions.
     Beam *masterBeam = new Beam();
-    std::vector<TrackingLogger<Bunch>*> listLoggers;
+    std::vector<ParameterLogger<Bunch>*> listLoggers;
     int NoB = parse->parseBeam(masterBeam, &listLoggers);
     if (teufel::rank==0) std::cout << std::endl;
     if (teufel::rank==0) std::cout << "beam of " << NoB << " bunches created." << std::endl;

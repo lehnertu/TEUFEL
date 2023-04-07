@@ -25,7 +25,7 @@
 #include "vector.h"
 
 /*!
- * \class TrackingLogger
+ * \class ParameterLogger
  * \brief Store beam parameters while tracking.
  * @author Ulf Lehnert
  * @date 19.10.2017
@@ -36,7 +36,7 @@
  * @todo could (optionally) log lattice fields at bunch center
  */
 template <class objectT>
-class TrackingLogger
+class ParameterLogger
 {
 
 public:
@@ -51,7 +51,7 @@ public:
      * \param[in] filename The name of the file to write.
      * \param[in] the logging frequency in tracking steps
      */
-    TrackingLogger(objectT *obj, const char *filename, int step);
+    ParameterLogger(objectT *obj, const char *filename, int step);
 
     /*! Request the logger to record the bunching factor at a given frequency.
      *  The recorded value is a complex number including the phase information.
@@ -143,5 +143,62 @@ private:
     
     //! relative energy spread
     std::vector<double> Delta;
+    
+};
+
+/*!
+ * \class TrajectoryLogger
+ * \brief Store particle coordinates while tracking.
+ * @author Ulf Lehnert
+ * @date 19.10.2017
+ * 
+ * This class handles the storage of particle trajectories.
+ * @todo specialization for beam still missing, only for bunch implemented
+ * @todo could (optionally) log lattice fields at bunch center
+ */
+template <class objectT>
+class TrajectoryLogger
+{
+
+public:
+
+    /*! Standard constructor:<br>
+     * Storage of particle coordinates while tracking.
+     * 
+     * This class is templated and spezialized for
+     * Bunch() or Beam() being observed.
+     * 
+     * \param[in] obj The object (bunch or beam) to be observed.
+     * \param[in] filename The name of the file to write.
+     * \param[in] the logging frequency in tracking steps
+     */
+    TrajectoryLogger(objectT *obj, const char *filename, int step);
+
+    /*! Check whether the given tracking step should be logged */
+    bool log_requested(int step) { return 0 == (step % stepsize); };
+    
+    /*! The source has advanced one time step.
+     *  Compute and store the quantities of interest.
+     */
+    void update();
+
+    /*! Write the collected data into an HDF5 file.
+     * 
+     */
+    int WriteBeamParametersSDDS();
+
+private:
+
+    //! the observed beam object
+    objectT *Beam;
+    
+    //! the file name
+    const char* fn;
+
+    //! the number of stored datasets
+    unsigned int NOTS;
+    
+    //! the logging frequency in tracking steps
+    unsigned int stepsize;
     
 };
