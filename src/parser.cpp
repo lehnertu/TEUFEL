@@ -485,7 +485,7 @@ int InputParser::parseBeam(Beam *beam, std::vector<Logger<Bunch>*> *logs)
                     if (!fn) throw(IOexception("InputParser::parseBeam - <bunch> filename for log not found."));
                     int step = 1;
                     pugi::xml_attribute st = lognode.attribute("step");
-                    if (fn) step = st.as_int();
+                    if (st) step = st.as_int();
                     ParameterLogger<Bunch>* logger = new ParameterLogger<Bunch>(bunch, fn.as_string(), step);
                     pugi::xml_attribute bf = lognode.attribute("bunching-freq");
                     if (bf)
@@ -494,6 +494,21 @@ int InputParser::parseBeam(Beam *beam, std::vector<Logger<Bunch>*> *logs)
                         logger->record_bunching(freq);
                     };
                     logs->push_back(logger);
+                };
+                // create a particle trajectory logger for this bunch if defined in the input file
+                pugi::xml_node trajnode = entry.child("trajectories");
+                if (trajnode)
+                {
+                    pugi::xml_attribute fn = trajnode.attribute("file");
+                    if (!fn) throw(IOexception("InputParser::parseBeam - <bunch> filename for trajectories not found."));
+                    int step = 1;
+                    pugi::xml_attribute st = trajnode.attribute("step");
+                    if (st) step = st.as_int();
+                    int limit = 1000000;
+                    pugi::xml_attribute lm = trajnode.attribute("limit");
+                    if (lm) limit = lm.as_int();
+                    TrajectoryLogger<Bunch>* traj_logger = new TrajectoryLogger<Bunch>(bunch, fn.as_string(), step, limit);
+                    logs->push_back(traj_logger);
                 };
                 // add the bunch to the beam
                 beam->Add(bunch);

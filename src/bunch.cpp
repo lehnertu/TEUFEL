@@ -615,11 +615,7 @@ double* Bunch::bufferCoordinates(double *buffer, int size)
 {
     double *bp = buffer;
     int nop = NOP;
-    if (nop>size)
-    {
-        nop = size;
-        std::cout << "warning in Bunch::bufferCoordinates() - buffer too small" << std::endl;
-    }
+    if (nop>size) nop = size;
     for(int i=0; i<nop; i++)
     {
         Vector X = P[i]->getPosition();

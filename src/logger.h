@@ -203,9 +203,13 @@ public:
      * 
      * \param[in] obj The object (bunch or beam) to be observed.
      * \param[in] filename The name of the file to write.
-     * \param[in] the logging frequency in tracking steps
+     * \param[in] step the logging frequency in tracking steps.
+     * \param[in] limit the maximum number of particles to be logged.
      */
-    TrajectoryLogger(objectT *obj, const char *filename, int step);
+    TrajectoryLogger(objectT *obj, const char *filename, unsigned int step, unsigned int limit);
+
+    /*! The destructor frees all buffers*/
+    virtual ~TrajectoryLogger();
 
     /*! Check whether the given tracking step should be logged */
     bool log_requested(int step) { return 0 == (step % stepsize); };
@@ -227,12 +231,18 @@ private:
     objectT *Beam;
     
     //! the file name
-    const char* fn;
+    const char* FileName;
 
     //! the number of stored datasets
     unsigned int NOTS;
     
+    //! the number of stored particles
+    unsigned int NOP;
+    
     //! the logging frequency in tracking steps
     unsigned int stepsize;
+    
+    //! a list of pointer to the buffered data
+    std::vector<double*> trajectories;
     
 };

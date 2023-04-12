@@ -25,7 +25,6 @@
 #include "global.h"
 #include "SDDS.h"
 #include "hdf5.h"
-#include "SDDS.h"
 #include <math.h>
 #include <iostream>
 

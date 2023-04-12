@@ -176,8 +176,8 @@ void FEL_1D::seed(double E0, double lambda, double tau, double t_start)
     // the seed is a stable wave packet
     previous_E = field_E;
     // make intentionally wrong, I want to see the field split into 2 counter-propagating fractions
-    previous_E.erase(previous_E.begin()); // pop the first
-    previous_E.push_back(0.0); // extend the end
+    // previous_E.erase(previous_E.begin()); // pop the first
+    // previous_E.push_back(0.0); // extend the end
     // if we are seeding this one replaces the first storage array created by setup()
     field_storage.clear();
     field_storage.push_back(field_E);
@@ -306,7 +306,6 @@ void FEL_1D::write_output()
 {
     if (createOutput)
     {
-    
         cout << "FEL1D : writing HDF5 file " << FileName << endl;
 
         herr_t status;
@@ -399,7 +398,6 @@ void FEL_1D::write_output()
         if (status<0) throw(IOexception("FEL1D::write_output - error in H5Fclose()"));
         // no errors have occured if we made it 'til here
         cout << "writing HDF5 done." << endl;
-        return;
     }
 }
     

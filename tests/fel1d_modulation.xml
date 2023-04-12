@@ -19,11 +19,12 @@
         </undulator>
     </lattice>
     <beam>
-        <bunch gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" n="1" >
-            <calc print="bunchlength [s] = " var="tau" eq="1.0e-12"/>
-            <position x="0.0" y="0.0" z="-0.25*lambda" zrms="0" />
+        <bunch gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" n="100" >
+            <calc print="bunchlength [s] = " var="tau" eq="0.5*lambda/_c"/>
+            <position x="0.0" y="0.0" z="0.0" zrms="tau*_c" />
             <momentum x="0.0" y="0.0" z="1.0" delta="0.0" />
             <log file="fel1d_beam.sdds" step="100" bunching_freq="f" />
+            <trajectories file="fel1d_trajectories.hdf5" step="100" limit="10" />
         </bunch>
     </beam>
     <calc print="tracking length [m] = " var="total_L" eq="1.5" />
@@ -44,6 +45,7 @@
             <seed E0="1.0e8" lambda="lambda" tau="1.0e-12" tstart="5.0e-12" />
             <log file="fel1d.hdf5" step="1" />
         </fel1d>
+        <watch step="n_tracking" file="fel1d_final.hdf5" />
     </tracking>
     <observer>
     </observer>
