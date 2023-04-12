@@ -24,7 +24,7 @@
             <position x="0.0" y="0.0" z="0.0" zrms="tau*_c" />
             <momentum x="0.0" y="0.0" z="1.0" delta="0.0" />
             <log file="fel1d_beam.sdds" step="100" bunching_freq="f" />
-            <trajectories file="fel1d_trajectories.hdf5" step="100" limit="10" />
+            <trajectories file="fel1d_trajectories.hdf5" step="100" limit="20" />
         </bunch>
     </beam>
     <calc print="tracking length [m] = " var="total_L" eq="1.5" />
@@ -42,8 +42,8 @@
             <calc var="z_R" eq="0.5" />
             <calc var="w_0" eq="sqrt(z_R*lambda/_pi)" />
             <mode zR="z_R" w0="w_0" zwaist="0.75" />
-            <seed E0="1.0e8" lambda="lambda" tau="1.0e-12" tstart="5.0e-12" />
-            <log file="fel1d.hdf5" step="1" />
+            <seed E0="1.0e6" lambda="lambda" tau="1.0e-12" tstart="5.0e-12" />
+            <log file="fel1d.hdf5" step="100" />
         </fel1d>
         <watch step="n_tracking" file="fel1d_final.hdf5" />
     </tracking>

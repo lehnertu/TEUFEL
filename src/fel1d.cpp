@@ -392,7 +392,7 @@ void FEL_1D::write_output()
         if (status<0) throw(IOexception("FEL1D::write_output - error in H5Dclose(pdset)"));
         status = H5Sclose (pspace);
         if (status<0) throw(IOexception("FEL1D::write_output - error in H5Dclose(pspace)"));
-        delete buffer;
+        delete[] buffer;
 
         status = H5Fclose(file);
         if (status<0) throw(IOexception("FEL1D::write_output - error in H5Fclose()"));
