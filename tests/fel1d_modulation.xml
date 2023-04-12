@@ -23,7 +23,7 @@
             <calc print="bunchlength [s] = " var="tau" eq="1.0e-12"/>
             <position x="0.0" y="0.0" z="-0.25*lambda" zrms="0" />
             <momentum x="0.0" y="0.0" z="1.0" delta="0.0" />
-            <log file="fel1d_beam.sdds" step="100" />
+            <log file="fel1d_beam.sdds" step="100" bunching_freq="f" />
         </bunch>
     </beam>
     <calc print="tracking length [m] = " var="total_L" eq="1.5" />

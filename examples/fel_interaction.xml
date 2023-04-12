@@ -31,6 +31,7 @@
         <bunch gamma="gamma" charge="1.0e-9" cmr="-1.0" n="5000" >
             <position x="0.0" y="0.0" z="0.0" zrms="lambda_R" />
             <momentum x="0.0" y="0.0" z="1.0" delta="0.001" />
+            <log file="fel_interaction_beam.sdds" step="1" bunching-freq="_c/lambda_R" />
         </bunch>
     </beam>
     <calc print="tracking length [m] = " var="total_L" eq="4.0" />
