@@ -76,27 +76,40 @@ echo ''
 echo '==============================================================================='
 echo ''
 
-mpiexec -n 2 ./build/teufel examples/elbe-u300.xml; rc=$?
-if [ $rc = "0" ]
-then
-    echo -e "$green OK.$nc"
-else
-    echo -e "$red Error.$nc"
-num=$(($num + $rc))
-fi
+# this test does nothing but check if the code runs with parallel resource usage
+# either we compare to known results or we skip it
 
-echo ''
-echo '==============================================================================='
-echo ''
+# mpiexec -n 2 ./build/teufel examples/elbe-u300.xml; rc=$?
+# if [ $rc = "0" ]
+# then
+#     echo -e "$green OK.$nc"
+# else
+#     echo -e "$red Error.$nc"
+# num=$(($num + $rc))
+# fi
 
-./build/reflection tests/DiffractionScreenWithFields.h5 tests/BackwardDiffractionScreen.h5 tests/BackwardDiffractionFields.h5; rc=$?
-if [ $rc = "0" ]
-then
-    echo -e "$green OK.$nc"
-else
-    echo -e "$red Error.$nc"
+# echo ''
+# echo '==============================================================================='
+# echo ''
+
+# this test runs very long and also does no comparison to known values
+
+# ./build/reflection tests/DiffractionScreenWithFields.h5 tests/BackwardDiffractionScreen.h5 tests/BackwardDiffractionFields.h5; rc=$?
+# if [ $rc = "0" ]
+# then
+#     echo -e "$green OK.$nc"
+# else
+#     echo -e "$red Error.$nc"
+# num=$(($num + $rc))
+# fi
+
+# echo ''
+# echo '==============================================================================='
+# echo ''
+
+./build/teufel tests/fel_modulation.xml
+./tests/test.fel-modulation.py; rc=$?
 num=$(($num + $rc))
-fi
 
 echo ''
 echo '==============================================================================='
