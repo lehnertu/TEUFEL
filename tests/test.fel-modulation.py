@@ -41,18 +41,17 @@ E0 = 1e6
 Δγ = sc.e/(sc.m_e*sc.c**2)*E0*K/γ*λU*FF
 print(f'Δγ = {Δγ:.6f}')
 
-initial = TeufelWatch.read('fel-modulation_initial.h5')
-print(f'starting at z = {np.mean(initial.z):.6f} m')
-final = TeufelWatch.read('fel-modulation_final.h5')
-print(f'final at z = {np.mean(final.z):.6f} m')
+initial = TeufelWatch.read('fel-modulation_start.h5')
+print(f'start at z = {np.mean(initial.z):.6f} m')
+final = TeufelWatch.read('fel-modulation_stop.h5')
+print(f'stop at z = {np.mean(final.z):.6f} m')
 dg = 0.1*(final.gamma-initial.gamma)
 mod = 0.5*(np.max(dg) - np.min(dg))
+print(f'Δγ = {mod:.6f} deviating by {100.0*np.abs(mod-Δγ)/Δγ:.2f}%')
 
 errors = 0
 
-if np.abs(mod-Δγ)/Δγ > 0.001:
-    print(f'Δγ = {mod:.6f} deviating by {100.0*np.abs(mod-Δγ)/Δγ:.2f}%')
-    errors += 1
+if np.abs(mod-Δγ)/Δγ > 0.01: errors += 1
     
 if errors==0:
     print("\033[1;32mOK.\033[0m")

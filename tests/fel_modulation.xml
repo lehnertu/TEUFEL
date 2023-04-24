@@ -12,7 +12,7 @@
             <calc print="K(U100) = " var="K" eq="sqrt(2*(lambda_R/lambda_U*2*gamma*gamma-1))" />
             <!-- setup the undulator -->
             <field B="K/_c*2*_pi*_mec2/lambda_U"
-                   period="lambda_U" N="10" />
+                   period="lambda_U" N="14" />
             <position x="0.0" y="0.0" z="1.0"/>
         </undulator>
         <wave name="seed" type="gaussian">
@@ -31,11 +31,13 @@
             <log file="fel-modulation_beam.sdds" step="1" bunching-freq="_c/lambda_R" />
         </bunch>
     </beam>
-    <calc print="tracking length [m] = " var="total_L" eq="2.0+10*lambda_R" />
+    <calc print="tracking length [m] = " var="total_L" eq="2.0+14*lambda_R" />
     <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
     <calc print="dt = " var="dt" eq="total_t/4000" />
     <tracking method="Vay" delta_t="dt" n="4000" >
         <watch step="0" file="fel-modulation_initial.h5" />
+        <watch step="1000" file="fel-modulation_start.h5" />
+        <watch step="3000" file="fel-modulation_stop.h5" />
         <watch step="4000" file="fel-modulation_final.h5" />
     </tracking>
     <observer>

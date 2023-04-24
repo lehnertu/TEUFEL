@@ -119,6 +119,6 @@ if [ $num = "0" ]
 then
     echo -e "$green no errors - all tests passed.$nc"
 else
-    echo -e "$red there were errors - some test failed!$nc"
+    echo -e "$red there were " $rc " errors - some test failed!$nc"
 fi
 
