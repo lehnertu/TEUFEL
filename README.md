@@ -145,9 +145,11 @@ cd build
 </pre>
 
 Then we build the makefile from CMakeLists.txt contained in the root directory.
+The default is a Release type build.
+To include debugging information just one additional flag has to be set.
 
 <pre>
-cmake ..
+cmake [-DCMAKE_BUILD_TYPE=Debug] ..
 </pre>
 
 One can check the libraries and tools found and change the make options.
@@ -165,6 +167,8 @@ make
 </pre>
 
 creates the executable in the build directory.
+
+To include debugging information just one additional flag has to be set.
 
 Documentation
 -------------

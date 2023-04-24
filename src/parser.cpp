@@ -484,6 +484,7 @@ int InputParser::parseBeam(Beam *beam, std::vector<Logger<Bunch>*> *logs)
                     pugi::xml_attribute fn = lognode.attribute("file");
                     if (!fn) throw(IOexception("InputParser::parseBeam - <bunch> filename for log not found."));
                     int step = 1;
+                    //! @todo if step is not given it becomes 0 and leads to divide-by-zero errors
                     pugi::xml_attribute st = lognode.attribute("step");
                     if (st) step = st.as_int();
                     ParameterLogger<Bunch>* logger = new ParameterLogger<Bunch>(bunch, fn.as_string(), step);

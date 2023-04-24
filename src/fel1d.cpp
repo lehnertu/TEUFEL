@@ -175,7 +175,7 @@ void FEL_1D::seed(double E0, double lambda, double tau, double t_start)
     }
     // the seed is a stable wave packet
     previous_E = field_E;
-    // make intentionally wrong, I want to see the field split into 2 counter-propagating fractions
+    // @todo make intentionally wrong, I want to see the field split into 2 counter-propagating fractions
     // previous_E.erase(previous_E.begin()); // pop the first
     // previous_E.push_back(0.0); // extend the end
     // if we are seeding this one replaces the first storage array created by setup()
@@ -200,13 +200,12 @@ void FEL_1D::init(Beam *beam)
     
     // index 0 of next_E (the head) always remains zero (no field moving in from the front)
     // index 1 of next_E is index 0 of field_E
-    next_E[1] = 2.0*field_E[0]; // @todo check if the derivatives really can be neglected
+    next_E[1] = field_E[0];
+    // @todo check if the derivatives really can be neglected
+    // next_E[1] = field_E[1];
     // we loop over the indices of the current field
     for (int i=1; i<N_field-1; i++)
-    {
-        double d2E_dt2 = field_E[i-1] - 2.0*field_E[i] + field_E[i+1];
-        next_E[i+1] = 2.0*field_E[i] - previous_E[i-1] + d2E_dt2;
-    }
+        next_E[i+1] = field_E[i-1] + field_E[i+1] - previous_E[i-1];
     
     // the time step has been computed, now we move forward
     N_steps++;
@@ -230,13 +229,12 @@ void FEL_1D::step(Beam *beam)
     
     // index 0 of next_E (the head) always remains zero (no field moving in from the front)
     // index 1 of next_E is index 0 of field_E
-    next_E[1] = 2.0*field_E[0]; // @todo check if the derivatives really can be neglected
+    next_E[1] = field_E[0];
+    // @todo check if the derivatives really can be neglected
+    // next_E[1] = field_E[1];
     // we loop over the indices of the current field
     for (int i=1; i<N_field-1; i++)
-    {
-        double d2E_dt2 = field_E[i-1] - 2.0*field_E[i] + field_E[i+1];
-        next_E[i+1] = 2.0*field_E[i] - previous_E[i-1] + d2E_dt2;
-    }
+        next_E[i+1] = field_E[i-1] + field_E[i+1] - previous_E[i-1];
 
     // check if the beam is at the same time as the field
     int step_beam = beam->getNOTS();
