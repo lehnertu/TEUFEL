@@ -69,7 +69,7 @@ echo '==========================================================================
 echo ''
 
 ./build/teufel examples/undulator_matching.xml
-./scripts/test_matching.py; rc=$?
+./tests/test.matching.py; rc=$?
 num=$(($num + $rc))
 
 echo ''

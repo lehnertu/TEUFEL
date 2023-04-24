@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 # coding=UTF-8
 
-import sys, sdds
+import os, sys
 import numpy as np
+
+TEUFEL_ROOT = os.getcwd()
+sys.path.append(TEUFEL_ROOT+'/scripts')
+
+import sdds
 
 data = sdds.SDDS(0)
 data.load("matching.sdds")
