@@ -375,6 +375,7 @@ void FEL_1D::write_output()
         // attach scalar attributes
         set_int_attribute("N_field", &N_field);
         set_int_attribute("N_steps", &N_steps);
+        set_int_attribute("N_output", &step_Output);
         set_double_attribute("dt", &dt);
         set_double_attribute("origin.x", &origin.x);
         set_double_attribute("origin.y", &origin.y);

@@ -1,51 +1,53 @@
 <?xml version="1.0"?>
-<teufel description="Modulated beam emission from the DALI U100 radiator"
-    author="Ulf Lehnert 27.3.2023">
-    <calc print="beam energy [eV] = " var="E_beam" eq="30.0e6" />
-    <calc print="gamma = " var="gamma" eq="E_beam/_mec2"/>
-    <calc print="charge [nC] = " var="charge" eq="-1.0" />
+<teufel description="Energy modulation of an electron beam by FEL interaction with an electromagnetic wave inside an undulator"
+    author="Ulf Lehnert 25.4.2023">
+    <calc print="beam kinetic energy [eV] = " var="E_beam" eq="30.0e6" />
+    <calc print="gamma = " var="gamma" eq="E_beam/_mec2+1.0"/>
     <!-- set desired output frequency -->
-    <calc print="lambda [m] = " var="lambda" eq="0.000100"/>
-    <calc print="freq [Hz] = " var="f" eq="_c/lambda"/>
+    <calc print="resonance wavelength [m] = " var="lambda_R" eq="100.0e-6"/>
     <calc var="lambda_U" eq="0.100" />
     <lattice>
         <undulator name="U100" type="planar">
             <!-- compute undulator setting from desired output frequency -->
-            <calc print="K_rms(U100) = " var="K_rms" eq="sqrt(lambda/lambda_U*2*gamma*gamma-1)" />
+            <calc print="K(U100) = " var="K" eq="sqrt(2*(lambda_R/lambda_U*2*gamma*gamma-1))" />
             <!-- setup the undulator -->
-            <field B="K_rms*sqrt(2)/_c*2*_pi*_mec2/lambda_U"
-                   period="lambda_U" N="10" />
-            <position x="0.0" y="0.0" z="0.75"/>
+            <field B="K/_c*2*_pi*_mec2/lambda_U"
+                   period="lambda_U" N="14" />
+            <position x="0.0" y="0.0" z="1.0"/>
         </undulator>
     </lattice>
     <beam>
-        <bunch gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" n="100" >
-            <calc print="bunchlength [s] = " var="tau" eq="0.5*lambda/_c"/>
-            <position x="0.0" y="0.0" z="0.0" zrms="tau*_c" />
+        <bunch gamma="gamma" charge="_e" cmr="-1.0" n="200" >
+            <position x="0.0" y="0.0" z="0.0" zrms="0.5*lambda_R" />
             <momentum x="0.0" y="0.0" z="1.0" delta="0.0" />
-            <log file="fel1d_beam.sdds" step="100" bunching_freq="f" />
-            <trajectories file="fel1d_trajectories.hdf5" step="100" limit="20" />
+            <log file="fel1d-modulation_beam.sdds" step="1" bunching-freq="_c/lambda_R" />
+            <trajectories file="fel1d_trajectories.hdf5" step="100" limit="100" />
         </bunch>
     </beam>
-    <calc print="tracking length [m] = " var="total_L" eq="1.5" />
-    <calc print="tracking total time [s] = " var="total_t" eq="(total_L+10*lambda)/_c" />
+    <calc print="tracking length [m] = " var="total_L" eq="2.0+14*lambda_R" />
+    <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
     <!-- the field grid must match the time step c*dt = dz -->
-    <calc print="dz = " var="dz" eq="0.1*lambda" />
+    <calc print="dz = " var="dz" eq="0.04*lambda_R" />
     <calc print="dt = " var="dt" eq="dz/_c" />
     <calc print="tracking steps = " var="n_tracking" eq="total_t/dt" />
     <tracking method="Vay" delta_t="dt" n="n_tracking" >
-        <fel1d N="4000" >
+        <fel1d N="10000" >
             <!-- the field has to start ahead of the first particle -->
-            <position x="0.0" y="0.0" z="5.0e-11*_c" />
+            <position x="0.0" y="0.0" z="0.020" />
             <prop x="0.0" y="0.0" z="1.0" />
             <pol x="1.0" y="0.0" z="0.0" />
             <calc var="z_R" eq="0.5" />
-            <calc var="w_0" eq="sqrt(z_R*lambda/_pi)" />
+            <calc var="w_0" eq="sqrt(z_R*lambda_R/_pi)" />
             <mode zR="z_R" w0="w_0" zwaist="0.75" />
-            <seed E0="1.0e6" lambda="lambda" tau="1.0e-11" tstart="5.0e-11" />
+            <seed E0="1.0e6" lambda="lambda_R" tau="1.5e-11" tstart="0.0205/_c" />
             <log file="fel1d.hdf5" step="100" />
         </fel1d>
-        <watch step="n_tracking" file="fel1d_final.hdf5" />
+        <calc var="start_step" eq="0.25*n_tracking" />
+        <calc var="stop_step" eq="0.75*n_tracking" />
+        <watch step="0" file="fel-modulation_initial.h5" />
+        <watch step="start_step" file="fel-modulation_start.h5" />
+        <watch step="stop_step" file="fel-modulation_stop.h5" />
+        <watch step="n_tracking" file="fel-modulation_final.h5" />
     </tracking>
     <observer>
     </observer>

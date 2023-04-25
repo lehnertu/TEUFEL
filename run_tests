@@ -115,6 +115,14 @@ echo ''
 echo '==============================================================================='
 echo ''
 
+./build/teufel tests/fel1d_modulation.xml
+./tests/test.fel-modulation.py; rc=$?
+num=$(($num + $rc))
+
+echo ''
+echo '==============================================================================='
+echo ''
+
 if [ $num = "0" ]
 then
     echo -e "$green no errors - all tests passed.$nc"
