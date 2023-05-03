@@ -155,7 +155,7 @@ int ParameterLogger<objectT>::WriteData()
 	    cout << "WriteSDDS - error setting parameters\n";
 	    return 6;
     }
-    if  ( SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, "TotalCharge",Beam->getTotalCharge()*ElementaryCharge, NULL ) != 1 )
+    if  ( SDDS_SetParameters(&data,SDDS_SET_BY_NAME|SDDS_PASS_BY_VALUE, "TotalCharge",Beam->getTotalCharge(), NULL ) != 1 )
     {
 	    cout << "WriteSDDS - error setting parameters\n";
 	    return 6;

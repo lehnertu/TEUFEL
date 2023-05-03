@@ -109,6 +109,8 @@ int main()
 
     // one single electron
     ChargedParticle* electron = new ChargedParticle();
+    Bunch *bunch = new Bunch();
+    bunch->Add(electron);
 
     // initial position at the origin
     Vector X0 = Vector(0.0, 0.0, 0.0);
@@ -116,7 +118,10 @@ int main()
     Vector P0 = Vector(0.0, 0.0, betagamma);
     Vector A0 = Vector(0.0, 0.0, 0.0);
     electron->initTrajectory(0.0, X0, P0, A0);
-    
+
+    TrajectoryLogger<Bunch> *log = new TrajectoryLogger<Bunch>(bunch, "undulator_traj.hdf5", 1, 1);
+    log->update();
+  
     // Track the particle for 3.0 m in lab space.
     // Inside the undulator we have an additional pathlength of one radiation
     // wavelength per period. The radiation wavelength already includes the
@@ -125,11 +130,13 @@ int main()
     double tau = (double)N * (lambda + lambdar) / SpeedOfLight + (3.0 - (double)N * lambda) / (beta * SpeedOfLight);
     // double tau=06.8e-9;
     double deltaT = tau / NOTS;
-    electron->InitVay(deltaT, lattice);
+    bunch->InitVay(deltaT, lattice);
+ 
     double xdisp = 0;    //maximum displacement in + direction
     for (int i=0; i<NOTS; i++)
     {
-		electron->StepVay(lattice);
+		bunch->StepVay(lattice);
+		log->update();
 		// look for the maximum displacement
         Vector XP = electron->getPosition();
         if (XP.z > lambda && XP.z < N * lambda - lambda && xdisp < XP.x) xdisp = XP.x;
@@ -137,6 +144,9 @@ int main()
     
     // count the errors
     int errors = 0;
+
+	int res = log->WriteData();
+	errors += res;
 
     // time of the last timestep should be equal to tau
     double FinalTime = electron->getTime();

@@ -33,6 +33,10 @@ ChargedParticle::ChargedParticle()
     // no trajectory points
     NP = 0;
     Npre = 0;
+    t_current = 0.0;
+    X_current = VectorZero;
+    P_current = VectorZero;
+    A_current = VectorZero;
 }
 
 ChargedParticle::ChargedParticle(double charge, double mass)
@@ -43,6 +47,10 @@ ChargedParticle::ChargedParticle(double charge, double mass)
     // no trajectory points
     NP = 0;
     Npre = 0;
+    t_current = 0.0;
+    X_current = VectorZero;
+    P_current = VectorZero;
+    A_current = VectorZero;
 }
 
 ChargedParticle::ChargedParticle(double charge, double mass, int nTraj)
@@ -54,6 +62,10 @@ ChargedParticle::ChargedParticle(double charge, double mass, int nTraj)
     NP = 0;
     // pre-allocate memory
     preAllocate(nTraj);
+    t_current = 0.0;
+    X_current = VectorZero;
+    P_current = VectorZero;
+    A_current = VectorZero;
 }
 
 ChargedParticle::ChargedParticle(const ChargedParticle *origin)
@@ -62,6 +74,10 @@ ChargedParticle::ChargedParticle(const ChargedParticle *origin)
     Mass = origin->Mass;
     NP = origin->NP;
     Npre = origin->Npre;
+    t_current = origin->t_current;
+    X_current = origin->X_current;
+    P_current = origin->P_current;
+    A_current = origin->A_current;
     if (NP > 0)
     {
         Time = origin->Time;
@@ -89,7 +105,8 @@ ChargedParticle::ChargedParticle(double *buffer)
     Vector a = Vector(buffer[9],buffer[10],buffer[11]);
     // no memory pre-allocation
     Npre = 0;
-    // here NP=1 is set
+    // this sets NP=1
+    // this also initalizes the current values
     initTrajectory(t, x, p, a);
 }
 
@@ -127,6 +144,10 @@ ChargedParticle::ChargedParticle(double *buffer, int nTraj, int nPre)
         double az = *b++;
         A.push_back(Vector(ax,ay,az));
     }
+    t_current = Time.back();
+    X_current = X.back();
+    P_current = P.back();
+    A_current = A.back();
 }
 
 ChargedParticle::~ChargedParticle()
@@ -153,38 +174,6 @@ void ChargedParticle::preAllocate(int nTraj)
     P.reserve(nTraj);
     A.reserve(nTraj);
 }
-
-double ChargedParticle::getTime()
-{
-    if (NP>0)
-        return Time.back();
-    else
-        return 0.0;
-}
-
-Vector ChargedParticle::getPosition()
-{
-    if (NP>0)
-        return X.back();
-    else
-        return Vector(0.0, 0.0, 0.0);
-}
-
-Vector ChargedParticle::getMomentum()
-{
-    if (NP>0)
-        return P.back();
-    else
-        return Vector(0.0, 0.0, 0.0);
-}
-
-Vector ChargedParticle::getAccel()
-{
-    if (NP>0)
-        return A.back();
-    else
-        return Vector(0.0, 0.0, 0.0);
-}    
 
 void ChargedParticle::serialize(double *buffer)
 {
@@ -299,6 +288,10 @@ Vector ChargedParticle::TrajAccel(int step)
 void ChargedParticle::initTrajectory(double t, Vector x, Vector p, Vector a)
 {
     NP = 1;
+    t_current = t;
+    X_current = x;
+    P_current = p;
+    A_current = a;
     Time.clear();
     X.clear();
     P.clear();
@@ -311,6 +304,7 @@ void ChargedParticle::initTrajectory(double t, Vector x, Vector p, Vector a)
 
 void ChargedParticle::Shift(Vector delta, double f_charge)
 {
+    X_current += delta;
     for (int i=0; i<NP-1; i++)
     {
         Vector position = X[i];
@@ -325,11 +319,20 @@ void ChargedParticle::Mirror(Vector origin, Vector normal, double f_charge)
 {
     // make sure the normal vector has unit length
     normal.normalize();
+    // normal distance to mirror plane is added 2x to position
+    Vector dx = normal*dot(origin-X_current,normal);
+    X_current += dx*2.0;
+    // normal momentum is reversed
+    Vector dp = normal*dot(P_current,normal);
+    P_current -= dp*2.0;
+    // normal acceleration is reversed
+    Vector da = normal*dot(A_current,normal);
+    A_current -= da*2.0;
     for (int i=0; i<NP-1; i++)
     {
         // normal distance to mirror plane is added 2x to position
         Vector position = X[i];
-        Vector dx = normal*dot(origin-position,normal);
+        dx = normal*dot(origin-position,normal);
         X[i] = position + dx*2.0;
         // normal momentum is reversed
         Vector momentum = P[i];
@@ -375,12 +378,15 @@ void ChargedParticle::InitVay(
     qm = Charge/Mass * InvRestMass;
     qmt2 = qm * 0.5 * dt;
     // compute the fields at the center position of the step (which is stored in the trajectory)
-    ElMagField EB_h = field->Field(Time.back(), X.back());
+    t_current = Time.back();
+    X_current = X.back();
+    P_current = P.back();
+    ElMagField EB_h = field->Field(t_current, X_current);
     Vector E_h = EB_h.E();
     Vector B_h = EB_h.B();
     // perform the second half-step to compute the
     // velocity at the end of the time step
-    Vector p_prime = P.back() + E_h / SpeedOfLight * qmt2;
+    Vector p_prime = P_current + E_h / SpeedOfLight * qmt2;
     double gamma2_prime = p_prime.abs2nd() + 1.0;
     Vector tau = B_h * qmt2;
     double u_star = dot(p_prime, tau);
@@ -391,16 +397,25 @@ void ChargedParticle::InitVay(
     Vector t = tau / VY_gamma_i1;
     // eq. (12)
     VY_p_i1 = (p_prime + t * dot(p_prime, t) + cross(p_prime, t)) / (1 + t.abs2nd());
-    double gamma_h = sqrt(P.back().abs2nd() + 1.0);
-    Vector beta_h = P.back() / gamma_h;
-    A.back() = (cross(beta_h, B_h) + E_h / SpeedOfLight) * qm;
+    double gamma_h = sqrt(P_current.abs2nd() + 1.0);
+    Vector beta_h = P_current / gamma_h;
+    A_current = (cross(beta_h, B_h) + E_h / SpeedOfLight) * qm;
+    A.back() = A_current;
     // std::cout << "Particle::InitVay() : t=" << Time[0] << "  dt=" << dt << "  NP=" << NP  << "  qm=" << qm << std::endl;
     // std::cout << "  X = (" << X[0].x << ", " << X[0].y << ", " << X[0].z << ") m" << std::endl;
     // std::cout << "  P = (" << P[0].x << ", " << P[0].y << ", " << P[0].z << ")" << std::endl;
     // std::cout << "  B = (" << B_h.x << ", " << B_h.y << ", " << B_h.z << ") T" << std::endl;
 }
 
-void ChargedParticle::setStep(double time, Vector pos, Vector mom, Vector acc)
+void ChargedParticle::setCurrentPoint(double time, Vector pos, Vector mom, Vector acc)
+{
+    t_current = time;
+    X_current = pos;
+    P_current = mom;
+    A_current = acc;
+}
+
+void ChargedParticle::storeTrajectoryPoint(double time, Vector pos, Vector mom, Vector acc)
 {
     Time.push_back(time);
     X.push_back(pos);
@@ -433,20 +448,21 @@ void ChargedParticle::StepVay(GeneralField* field)
     Vector p_i = VY_p_i1;
     Vector beta_i = p_i / VY_gamma_i1;
     // use eq. (3) to compute the new center position
-    double t_h = Time.back() + dt;
-    Vector x_h = X.back() + beta_i * SpeedOfLight * dt;
+    t_current += dt;
+    X_current += beta_i * SpeedOfLight * dt;
     // compute the fields at the center position of the step
-    ElMagField EB_h = field->Field(t_h, x_h);
+    ElMagField EB_h = field->Field(t_current, X_current);
     Vector E_h = EB_h.E();
     Vector B_h = EB_h.B();
     // perform the first half-step to compute the
     // velocity at the center (half) point using eq. (13)
-    Vector p_h = VY_p_i1 + (E_h/SpeedOfLight + cross(beta_i, B_h)) * qmt2;
-    double gamma_h = sqrt(p_h.abs2nd() + 1.0);
-    Vector beta_h = p_h / gamma_h;
+    P_current = VY_p_i1 + (E_h/SpeedOfLight + cross(beta_i, B_h)) * qmt2;
+    double gamma_h = sqrt(P_current.abs2nd() + 1.0);
+    Vector beta_h = P_current / gamma_h;
+    A_current = (cross(beta_h, B_h) + E_h / SpeedOfLight) * qm;
     // perform the second half-step to compute the
     // velocity at the end of the time step
-    Vector p_prime = p_h + E_h / SpeedOfLight * qmt2;
+    Vector p_prime = P_current + E_h / SpeedOfLight * qmt2;
     double gamma2_prime = p_prime.abs2nd() + 1.0;
     Vector tau = B_h * qmt2;
     double u_star = dot(p_prime, tau);
@@ -458,7 +474,7 @@ void ChargedParticle::StepVay(GeneralField* field)
     // eq. (12)
     VY_p_i1 = (p_prime + t * dot(p_prime, t) + cross(p_prime, t)) / (1 + t.abs2nd());
     // store the trajectory data
-    setStep(t_h, x_h, p_h, (cross(beta_h, B_h) + E_h / SpeedOfLight) * qm);
+    storeTrajectoryPoint(t_current, X_current, P_current, A_current);
 }
 
 void ChargedParticle::CoordinatesAtTime(double time, Vector *position, Vector *momentum)

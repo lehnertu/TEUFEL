@@ -4,6 +4,7 @@ echo "removing all files created when running the test suite"
 
 rm teufel_bunch_start.sdds
 rm rad_push_log.sdds
+rm undulator_traj.hdf5
 rm matching.sdds
 rm fel1d*
 rm fel-modulation_*

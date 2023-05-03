@@ -530,7 +530,8 @@ double *Bunch::setStepFromBuffer(double *buffer)
         A.y = *bp++;
         A.z = *bp++;
         // update the particle
-        P[i]->setStep(time, X, BG, A);
+        P[i]->setCurrentPoint(time, X, BG, A);
+        P[i]->storeTrajectoryPoint(time, X, BG, A);
     }
     return bp;
 }

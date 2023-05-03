@@ -118,25 +118,17 @@ public:
     /*! Return the charge of the particle in C */
     double getCharge() { return Charge*ElementaryCharge; };
     
-    /*! Return the time of the last stored trajectory point
-     *  or zero if there is no trajectory.
-     */
-    double getTime();
+    //! Return the time of the particle at the last half-step
+    double getTime() { return t_current; };
     
-    /*! Return the position of the last stored trajectory point
-     *  or zero if there is no trajectory.
-     */
-    Vector getPosition();
+    //! Return the position of the particle at the last half-step
+    Vector getPosition() { return X_current; };
     
-    /*! Return the momentum of the last stored trajectory point
-     *  or zero if there is no trajectory.
-     */
-    Vector getMomentum();
+    //! Return the momentum of the particle at the last half-step
+    Vector getMomentum() { return P_current; };
     
-    /*! Return the acceleration of the last stored trajectory point
-     *  or zero if there is no trajectory.
-     */
-    Vector getAccel();
+    //! Return the acceleration of the particle at the last half-step
+    Vector getAccel() { return A_current; };
 
     /*! Copy all current information about the particle into one buffer
      *  of double type. This can be used to transfer the particle to a different
@@ -231,17 +223,35 @@ public:
     void InitVay(double tstep,
 		 GeneralField* field);
 
+    /*! @brief set current coordinates
+     *
+     *  This only affects the current particle coordinates.
+     *  Trajectory storage is not altered.
+     *
+     *  Using this method breaks tracking, as additional tracking state variables
+     *  are not set properly (VY_p_i1 and VY_gamma_i1).
+     *  It is OK to use this to tranfer particle properties from the tracked beam
+     *  onto the master beam which is not tracked but used to generate
+     *  interaction fields and log files.
+     * 
+     *  @param[in] time time stamp of the trajectory point
+     *  @param[in] pos position
+     *  @param[in] mom momentum
+     *  @param[in] acc accelearation
+     */
+    void setCurrentPoint(double time, Vector pos, Vector mom, Vector acc);
+    
     /*! @brief add trajectory point
      * 
-     * One trajectory point with the given coordinates is pushed
-     * onto the back of the existing paritcle trajectory.
+     *  One trajectory point with the given coordinates is pushed
+     *  onto the back of the existing paritcle trajectory.
      * 
-     * @param[in] time time stamp of the trajectory point
-     * @param[in] pos position
-     * @param[in] mom momentum
-     * @param[in] acc accelearation
+     *  @param[in] time time stamp of the trajectory point
+     *  @param[in] pos position
+     *  @param[in] mom momentum
+     *  @param[in] acc accelearation
      */
-    void setStep(double time, Vector pos, Vector mom, Vector acc);
+    void storeTrajectoryPoint(double time, Vector pos, Vector mom, Vector acc);
     
     /*! @brief Perform one tracking step using the Vay algorithm.
      * 
@@ -358,16 +368,32 @@ private:
     //! mass in unit of the electron rest mass
     double Mass;
     
-    //! time in lab frame [s]
+    //! current time in lab frame [s]
+    //! this is at the half-step position of the Vay tracking algorithm
+    double t_current;
+    
+    //! current position in lab frame [m]
+    //! this is at the half-step position of the Vay tracking algorithm
+    Vector X_current;
+    
+    //! current dimensionless momentum in lab frame : \f$\beta\gamma = \frac{c p}{mc^2}\f$
+    //! this is at the half-step position of the Vay tracking algorithm
+    Vector P_current;
+    
+    //! current acceleration [1/s] in lab frame \f$a = \frac{d}{dt}(\beta\gamma)\f$
+    //! this is at the half-step position of the Vay tracking algorithm
+    Vector A_current;
+    
+    //! trajectory time in lab frame [s]
     std::vector<double> Time;
     
-    //! position in lab frame [m]
+    //! trajectory position in lab frame [m]
     std::vector<Vector> X;
     
-    //! dimensionless momentum in lab frame : \f$\beta\gamma = \frac{c p}{mc^2}\f$
+    //! trajectory dimensionless momentum in lab frame : \f$\beta\gamma = \frac{c p}{mc^2}\f$
     std::vector<Vector> P;
     
-    //! acceleration [1/s] in lab frame \f$a = \frac{d}{dt}(\beta\gamma)\f$
+    //! trajectory acceleration [1/s] in lab frame \f$a = \frac{d}{dt}(\beta\gamma)\f$
     std::vector<Vector> A;
     
     //! time step for tracking - this will remain constant after being set at the start of tracking
@@ -379,10 +405,14 @@ private:
     //! charge over mass divided by the double time step - this will remain constant during tracking
     double qmt2;
     
-    //! \f$u^{i+1}/c\f$ of the Vay algorithm
+    //! \f$u^{i+1}/c\f$ of the Vay algorithm (beta*gamma)
     Vector VY_p_i1;
     
-    //! \f$\gamma^{i+1}/c\f$ of the Vay algorithm
+    /*! When one tracking step has been computed the particle is half a time step
+     *  ahead of its latest stored trajectory point. This is the relativistic
+     *  energy of the particle at that position.
+     *  \f$\gamma^{i+1}/c\f$ of the Vay algorithm
+     */
     double VY_gamma_i1;
     
 };
