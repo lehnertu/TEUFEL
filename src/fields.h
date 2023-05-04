@@ -207,10 +207,10 @@ public:
     HomogeneousField(Vector E, Vector B);
 
     //! this is an external field    
-    virtual bool is_external() { return true; };
+    bool is_external() override { return true; };
 
     //! Field report routine
-    ElMagField Field(double t, Vector X);
+    ElMagField Field(double t, Vector X) override;
     
 private:
     
@@ -255,7 +255,7 @@ public:
     LocalizedField(double time, Vector pos);
     
     //! all LocalizedFields are external fields
-    virtual bool is_external() { return true; };
+    bool is_external() override { return true; };
 
     /*! All derived classe must provide a destructor */
     virtual ~LocalizedField() {};
@@ -269,7 +269,7 @@ public:
      * This calls LocalField() with an appropriately transformed pposition
      * and transforms the returned fields into the laboratory frame.
      */
-    virtual ElMagField Field(double t, Vector X);
+    ElMagField Field(double t, Vector X) override;
 
 private:
 
@@ -312,7 +312,7 @@ public:
     InteractionField() {};
 
     //! InteractionFields are not external fields
-    virtual bool is_external() { return false; };
+    bool is_external() override { return false; };
 
     /*! All derived classe must provide a destructor */
     virtual ~InteractionField() {};
@@ -339,7 +339,7 @@ public:
      * 
      * This must be implemented for all derived interactions.
      */
-    virtual ElMagField Field(double t, Vector X) = 0;
+    ElMagField Field(double t, Vector X) override = 0;
 
     /*! Write logging data to file if requested (do nothing otherwise).
      *  This will be called after the tracking is finished.
@@ -375,7 +375,7 @@ public:
     Lattice();
 
     //! The lattice may contain both external and interaction fields
-    virtual bool is_external() { return false; };
+    bool is_external() override { return false; };
 
     /*! The destructor also destroys all elements belonging to the lattice */
     ~Lattice();
@@ -398,7 +398,7 @@ public:
      * The field is returned as a tuple of electric field [V/m] and
      * magnetic field [T] vectors.
      */
-    ElMagField Field(double t, Vector X);
+    ElMagField Field(double t, Vector X) override;
 
 private:
     

@@ -124,7 +124,7 @@ private:
      * For field computation LocalizedField::Field() is used which performs the
      * shift of origin in space and time.
      */
-    virtual ElMagField LocalField(double t, Vector X);
+    ElMagField LocalField(double t, Vector X) override;
 
     /*! Compute the center position of the grid cell
      *  from its indexes in local coordinates

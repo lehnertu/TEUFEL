@@ -94,12 +94,12 @@ public:
     void record_bunching(double freq);
     
     /*! Check whether the given tracking step should be logged */
-    bool log_requested(int step) { return 0 == (step % stepsize); };
+    bool log_requested(int step) override { return 0 == (step % stepsize); };
     
     /*! The source has advanced one time step.
      *  Compute and store the quantities of interest.
      */
-    virtual void update();
+    void update() override;
 
     /*! Write the collected data into an SDDS file.
      * 
@@ -128,7 +128,7 @@ public:
      *	9  -  error in SDDS_Terminate \n
      * 
      */
-    virtual int WriteData();
+    int WriteData() override;
 
 private:
 
@@ -212,18 +212,18 @@ public:
     virtual ~TrajectoryLogger();
 
     /*! Check whether the given tracking step should be logged */
-    bool log_requested(int step) { return 0 == (step % stepsize); };
+    bool log_requested(int step) override { return 0 == (step % stepsize); };
     
     /*! The source has advanced one time step.
      *  Compute and store the quantities of interest.
      *  @todo not yet implemented
      */
-    void update();
+    void update() override;
 
     /*! Write the collected data into an HDF5 file.
      *  @todo not yet implemented
      */
-    int WriteData();
+    int WriteData() override;
 
 private:
 

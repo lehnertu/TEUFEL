@@ -89,6 +89,8 @@ public:
      *  The particles of the given beam drive the interaction.
      *  This method must be called in a leap-frog sequence interleaved with
      *  the tracking steps of the beam.
+     *
+     *  @todo this should actually be OpenMP-parallelized
      */
     virtual void step(Beam *beam);
     

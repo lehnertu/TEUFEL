@@ -75,10 +75,10 @@ public:
     virtual ~PointObserver();
 
     //! Set the source of the fiels to be recorded
-    virtual void setSource(RadSource s);
+    void setSource(RadSource s) override;
 
     //! Report the source of the fiels to be recorded
-    virtual RadSource getSource();
+    RadSource getSource() override;
 
     /*! Integrate the fields emitted by the source
      *  during all of its history, falling onto the time frame
@@ -89,9 +89,9 @@ public:
      *
      *  This method is defined for Beam(), Bunch() and Lattice() as field sources.
      */
-    virtual void integrate(Beam *src);
-    virtual void integrate(Bunch *src);
-    virtual void integrate(Lattice *src);
+    void integrate(Beam *src) override;
+    void integrate(Bunch *src) override;
+    void integrate(Lattice *src) override;
 
     /*! Return the field value stored in one time slice
      */
@@ -107,20 +107,20 @@ public:
     /*! Get the number of doubles (not bytes!) for a buffer
      *  holding the trace data
      */
-    virtual std::size_t getBufferSize() { return 6*trace->get_N(); };
+    std::size_t getBufferSize() override { return 6*trace->get_N(); };
 
     /*! Return all field values in a newly allocated buffer.
      *  Memory for the buffer is allocated by this method and must be freeed
      *  by the caller. Returns a pointer to the allocated memory.
      *  An exception is thrown if the alloaction of the buffer fails.
      */
-    virtual double* getBuffer();
+    double* getBuffer() override;
 
     /*! Set all field values from a given allocated buffer.
      *  The count value gives the size of the buffer as a number of doubles.
      *  An exception is thrown if it doesn't match the actual field size.
      */
-    virtual void fromBuffer(double *buffer, std::size_t size);
+    void fromBuffer(double *buffer, std::size_t size) override;
 
     /*! @brief Write the time-domain field trace into an SDDS file.
      * 
@@ -141,7 +141,7 @@ public:
     /*! Generate the output file(s) from this observation.
      *  The present code just calls  WriteTimeDomainFieldSDDS().
      */
-    virtual void generateOutput();
+    void generateOutput() override;
 
 private:
 

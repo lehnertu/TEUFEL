@@ -113,10 +113,10 @@ public:
     ~ScreenObserver();
     
     //! Set the source of the fields to be recorded
-    virtual void setSource(RadSource s);
+    void setSource(RadSource s) override;
 
     //! Report the source of the fields to be recorded
-    virtual RadSource getSource();
+    RadSource getSource() override;
 
     /*! Integrate the fields emitted by the source
      *  during all of its history, falling onto the time frame
@@ -127,9 +127,9 @@ public:
      *
      *  This method is defined for Beam(), Bunch() and Lattice() as field sources.
      */
-    virtual void integrate(Beam *src);
-    virtual void integrate(Bunch *src);
-    virtual void integrate(Lattice *src);
+    void integrate(Beam *src) override;
+    void integrate(Bunch *src) override;
+    void integrate(Lattice *src) override;
     
     /*! Return the field value stored in one time slice
      *  with index it from the grid cell with indices ix, iy.
@@ -157,20 +157,20 @@ public:
     /*! The method gives the size of the buffer necessary to store
      *  the complete field information as a number of doubles (not bytes!).
      */
-    virtual std::size_t getBufferSize() { return Nx*Ny*NOTS*6; };
+    std::size_t getBufferSize() override { return Nx*Ny*NOTS*6; };
     
     /*! Return all field values in a newly allocated buffer.
      *  Memory for the buffer is allocated by this method and must be freeed
      *  by the caller. Returns a pointer to the allocated memory.
      *  An exception is thrown if the alloaction of the buffer fails.
      */
-    virtual double* getBuffer();
+    double* getBuffer() override;
 
     /*! Set all field values from a given allocated buffer.
      *  The count value gives the size of the buffer as a number of doubles.
      *  An exception is thrown if it doesn't match the actual field size.
      */
-    virtual void fromBuffer(double *buffer, std::size_t size);
+    void fromBuffer(double *buffer, std::size_t size) override;
 
     /*! @brief Write all the time-domain field traces into an HDF5 file.
      * 
@@ -223,7 +223,7 @@ public:
     /*! Generate the output file(s) from this observation.
      *  The present code just calls  WriteTimeDomainFieldHDF()
      */
-    virtual void generateOutput();
+    void generateOutput() override;
 
 private:
     

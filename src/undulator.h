@@ -85,7 +85,7 @@ public:
 
 private:
 
-    ElMagField LocalField(double t, Vector X);
+    ElMagField LocalField(double t, Vector X) override;
 
     double  BPeak;                              // peak field [T]
     double  LambdaU;                            // undulator period [m]
@@ -169,7 +169,7 @@ public:
 
 private:
 
-    ElMagField LocalField(double t, Vector X);
+    ElMagField LocalField(double t, Vector X) override;
 
     double  BPeak;                              // peak field [T]
     double  Modulation;                         // pole strength (fractional) deviation of positive and negative poles

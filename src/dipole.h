@@ -71,7 +71,7 @@ public:
 
 private:
 
-    ElMagField LocalField(double t, Vector X);
+    ElMagField LocalField(double t, Vector X) override;
 
     Vector  B_val;                              //! field value [T]
     Vector  p_1;                                //! position of the first limiting plane
@@ -131,7 +131,7 @@ public:
 
 private:
 
-    ElMagField LocalField(double t, Vector X);
+    ElMagField LocalField(double t, Vector X) override;
 
     Vector  B_val;                              //! field value [T]
     Vector  p_1;                                //! position of the first limiting plane

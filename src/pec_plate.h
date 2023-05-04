@@ -75,7 +75,7 @@ public:
      * The field is returned as a tuple of electric field [V/m] and
      * magnetic field [T] vectors.
      */
-    virtual ElMagField Field(double t, Vector X);
+    ElMagField Field(double t, Vector X) override;
 
     /*! The source has advanced one time step.
      *  Compute and store the quantities of interest.

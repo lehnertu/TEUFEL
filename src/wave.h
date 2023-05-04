@@ -100,7 +100,7 @@ public:
 private:
 
 	/*! compute the electromagnetic fields in local coordinates */
-    ElMagField LocalField(double t, Vector X);
+    ElMagField LocalField(double t, Vector X) override;
 
     //! wavelength [m]
     double lambda;
@@ -199,7 +199,7 @@ public:
 private:
 
 	/*! compute the electromagnetic fields in local coordinates */
-    ElMagField LocalField(double t, Vector X);
+    ElMagField LocalField(double t, Vector X) override;
 
     //! wavelength [m]
     double lambda;
