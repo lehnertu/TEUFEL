@@ -52,8 +52,8 @@ class Observer
 
 public:
 
-    /*! Default constructor with no functionality. */
-    Observer() {};
+    /*! Default constructor with only defaults. */
+    Observer() { source=BeamObservation; };
 
     /*!
      * The destructor must be overridden by derived classes.

@@ -211,8 +211,9 @@ MeshedScreen::MeshedScreen(std::string filename)
     status = H5Fclose (file);
     if (status<0) throw(IOexception("MeshedScreen - error closing the file."));
     
-    // set a default source
+    // set defaults
     source = BeamObservation;
+    total_area = 0.0;
 }
 
 MeshedScreen::~MeshedScreen()

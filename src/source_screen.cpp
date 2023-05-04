@@ -123,7 +123,7 @@ SourceScreen::SourceScreen(
     dY.normalize();
     ey = dY;
     dY *= dy;
-    delete buf;
+    delete[] buf;
     
     // done with the screen dataset
     status = H5Dclose(dataset);

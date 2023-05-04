@@ -35,6 +35,7 @@ FEL_1D::FEL_1D(
     ds = time_step * SpeedOfLight;
     time = 0.0;
     N_steps = 0;
+    step_Output = 1;
     prop = Vector(0.0, 0.0, 1.0);
     e_x = Vector(1.0, 0.0, 0.0);
     e_x = Vector(0.0, 1.0, 0.0);
@@ -247,12 +248,44 @@ void FEL_1D::step(Beam *beam)
         throw(IOexception("FEL1D::step() - beam is at different time"));
     }
 
-    //! @todo actually the beam should be half a time step ahead of the field here
-    //! @todo the last stored trajectory points should be at the center of this time-step
+
     
     //! @todo get all particle coordinates
-    
     //! @todo add the beam-induced fields
+    int NOB = beam->getNOB();
+    for(int ib=0; ib<NOB; ib++)
+    {
+        Bunch* B = beam->getBunch(ib);
+        int NOP = B->getNOP();
+        for(int ip=0; ip<NOP; ip++)
+        {
+            ChargedParticle* P = B->getParticle(ip);
+            double t = P->getTime();
+            //! @todo the particle time should be at the center of this time-step
+            //! @todo actually the beam should be half a time step ahead of the field here
+            if (0.25*dt < fabs(t-time))
+            {
+                std::cout << "FEL1D::step() - time mismatch" << std::endl;
+                std::cout << "  step=" << N_steps << "   time =" << 1e9*time << " ns";
+                std::cout << "   dt=" << 1e9*dt << " ns" << std::endl;
+                std::cout << "  particle is at t=" << 1e9*t << " ns" << std::endl;
+                throw(IOexception("FEL1D::step() - time mismatch"));
+            }
+            Vector X = P->getPosition();
+            // find the interaction field index from the longitudinal particle position
+            // small time deviations in time are ignored in the field computation (no interpolation)
+            double delta_z = dot(head-X,prop);
+            int index = rint(delta_z/ds);
+            if ((index<0) || (index>=N_field))
+            {
+                std::cout << "FEL1D::step() - particle out off grid bounds" << std::endl;
+                std::cout << "  step=" << N_steps << "  delta_z=" << delta_z << "   index=" << index << std::endl;
+                throw(IOexception("FEL1D::step() - particle out off grid bounds"));
+            }
+            Vector bg = P->getMomentum();
+        }
+    }
+    
     
     // the time step has been computed, now we move forward
     N_steps++;
@@ -275,7 +308,7 @@ ElMagField FEL_1D::Field(double t, Vector X)
     // issue a warning if the query is too far in time (quarter step) from the current time step
     if (0.25*dt < fabs(t-time))
     {
-        std::cout << "FEL1D::Field - time mismatch" << std::endl;
+        std::cout << "FEL1D::Field() - time mismatch" << std::endl;
         std::cout << "  step=" << N_steps << "   time=" << 1e9*time << " ns" << "   dt=" << 1e9*dt << " ns" << std::endl;
         std::cout << "  requested t=" << 1e9*t << " ns" << std::endl;
         throw(IOexception("FEL1D::Field() - time mismatch"));
@@ -286,7 +319,7 @@ ElMagField FEL_1D::Field(double t, Vector X)
     int index = rint(delta_z/ds);
     if ((index<0) || (index>=N_field))
     {
-        std::cout << "FEL1D::Field - particle out off grid bounds" << std::endl;
+        std::cout << "FEL1D::Field() - particle out off grid bounds" << std::endl;
         std::cout << "  step=" << N_steps << "  delta_z=" << delta_z << "   index=" << index << std::endl;
         throw(IOexception("FEL1D::Field() - particle out off grid bounds"));
     }

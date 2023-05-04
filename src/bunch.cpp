@@ -471,10 +471,9 @@ void Bunch::replaceParticle(int i, ChargedParticle* part)
 void Bunch::InitVay(double tstep,
                     GeneralField *field)
 {
-    dt = tstep;
     for(int i=0; i<NOP; i++)
     {
-        P[i]->InitVay(dt, field);
+        P[i]->InitVay(tstep, field);
     }
 }
 

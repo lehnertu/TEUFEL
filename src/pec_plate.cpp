@@ -25,8 +25,10 @@
 #include <math.h>
 
 template <class objectT>
-PlatePEC<objectT>::PlatePEC(objectT *obj, const char *filename)
+PlatePEC<objectT>::PlatePEC(objectT *obj, const char *filename):
+    Source(obj), fn(filename)
 {
+    NOTS = 0;
 }
 
 template <class objectT>

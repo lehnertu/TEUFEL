@@ -213,15 +213,24 @@ right away from the build directory, a script is provided in the main folder:
 - examples/elbe-u300.xml
 - reflection : propagation of CDR reflected from an annular diffraction screen to an observation screen
 
-To check for memory leaks the tool [Valgrind](http://valgrind.org) is recommended.
+For some testcases and examples python scripts for visualizing the data are
+provided in the scrips/ directory. For reading HDF5 files these scripts use the
+[h5py](http://www.h5py.org/) library which can be installed from the "python-h5py" package on most Linux systems.
+
+Code quality
+------------
+To check for memory leaks we use the tool [Valgrind](http://valgrind.org).
 
 <pre>
 valgrind --tool=memcheck build/teufel.xxx
 </pre>
 
-For some testcases and examples python scripts for visualizing the data are
-provided in the scrips/ directory. For reading HDF5 files these scripts use the
-[h5py](http://www.h5py.org/) library which can be installed from the "python-h5py" package on most Linux systems.
+We try to eliminate all warnings that a systax checker may give:
+
+<pre>
+cppcheck --enable=warning src
+</pre>
+
 
 Known Issues
 ------------

@@ -409,9 +409,6 @@ private:
     //! Number of Particles in the bunch
     int NOP;
 
-    //! time step for tracking - this will remain constant after being set at the start of tracking
-    double dt;
-
     //! we store references to all particles
     vector<ChargedParticle*> P;
 

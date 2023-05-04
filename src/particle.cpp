@@ -29,6 +29,7 @@ ChargedParticle::ChargedParticle()
 {
     Charge = -1.0;
     Mass = 1.0;
+    qm = Charge/Mass * InvRestMass;
     dt = 0.0;
     // no trajectory points
     NP = 0;
@@ -37,12 +38,16 @@ ChargedParticle::ChargedParticle()
     X_current = VectorZero;
     P_current = VectorZero;
     A_current = VectorZero;
+    // set defaults to silence cppcheck warnings
+    qmt2 = 0.0;
+    VY_gamma_i1 = 1.0;
 }
 
 ChargedParticle::ChargedParticle(double charge, double mass)
 {
     Charge = charge;
     Mass = mass;
+    qm = Charge/Mass * InvRestMass;
     dt = 0.0;
     // no trajectory points
     NP = 0;
@@ -51,12 +56,16 @@ ChargedParticle::ChargedParticle(double charge, double mass)
     X_current = VectorZero;
     P_current = VectorZero;
     A_current = VectorZero;
+    // set defaults to silence cppcheck warnings
+    qmt2 = 0.0;
+    VY_gamma_i1 = 1.0;
 }
 
 ChargedParticle::ChargedParticle(double charge, double mass, int nTraj)
 {
     Charge = charge;
     Mass = mass;
+    qm = Charge/Mass * InvRestMass;
     dt = 0.0;
     // no trajectory points
     NP = 0;
@@ -66,6 +75,9 @@ ChargedParticle::ChargedParticle(double charge, double mass, int nTraj)
     X_current = VectorZero;
     P_current = VectorZero;
     A_current = VectorZero;
+    // set defaults to silence cppcheck warnings
+    qmt2 = 0.0;
+    VY_gamma_i1 = 1.0;
 }
 
 ChargedParticle::ChargedParticle(const ChargedParticle *origin)
@@ -98,6 +110,7 @@ ChargedParticle::ChargedParticle(double *buffer)
 {
     Charge = buffer[0];
     Mass = buffer[1];
+    qm = Charge/Mass * InvRestMass;
     dt = 0.0;
     double t = buffer[2];
     Vector x = Vector(buffer[3],buffer[4],buffer[5]);
@@ -108,6 +121,9 @@ ChargedParticle::ChargedParticle(double *buffer)
     // this sets NP=1
     // this also initalizes the current values
     initTrajectory(t, x, p, a);
+    // set defaults to silence cppcheck warnings
+    qmt2 = 0.0;
+    VY_gamma_i1 = 1.0;
 }
 
 ChargedParticle::ChargedParticle(double *buffer, int nTraj, int nPre)
