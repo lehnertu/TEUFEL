@@ -130,7 +130,7 @@ private:
      *
      *  \param ZR the Rayleigh length [m]
      *  \param w0 the waist size [m]
-     *  \param z_wa [m] the distance of the waist from the origin in propagation direction
+     *  \param z_w [m] the distance of the waist from the origin in propagation direction
      */
     void setup(double zR, double w0, double z_w);
 
@@ -196,6 +196,9 @@ private:
 
     //! storage of electric fields over the computed time-steps
     std::vector<std::vector<double>> field_storage;
+    
+    //! storage of current densities over the computed time-steps
+    std::vector<std::vector<double>> J_storage;
     
     //! whether to create a field output file
     bool createOutput;

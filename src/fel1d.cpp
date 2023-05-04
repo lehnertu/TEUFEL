@@ -141,9 +141,11 @@ void FEL_1D::setup(double ZR, double w0, double z_w)
     dz = prop * (-dt*SpeedOfLight);
     field_E = std::vector<double>(N_field, 0.0);
     previous_E = field_E;
-    // the initialized field is the first stored array
+    // the initialized field is the first stored array (all zeros)
     field_storage.clear();
     field_storage.push_back(field_E);
+    J_storage.clear();
+    J_storage.push_back(field_E);
     N_steps = 0;
     time = 0.0;
     
@@ -182,6 +184,8 @@ void FEL_1D::seed(double E0, double lambda, double tau, double t_start)
     // if we are seeding this one replaces the first storage array created by setup()
     field_storage.clear();
     field_storage.push_back(field_E);
+    J_storage.clear();
+    J_storage.push_back(std::vector<double>(N_field, 0.0));
     N_steps = 0;
     if (teufel::rank==0)
     {
@@ -214,29 +218,10 @@ void FEL_1D::init(Beam *beam)
     head += prop*ds;
     previous_E = field_E;
     field_E = next_E;
-    
-    // every number of steps we record the fields
-    if (0 == N_steps % step_Output)
-    {
-        field_storage.push_back(field_E);
-    }
 }
 
 void FEL_1D::step(Beam *beam)
 {
-    // the field after this step
-    // it is shifted in time by one index
-    std::vector<double> next_E = std::vector<double>(N_field, 0.0);
-    
-    // index 0 of next_E (the head) always remains zero (no field moving in from the front)
-    // index 1 of next_E is index 0 of field_E
-    next_E[1] = field_E[0];
-    // @todo check if the derivatives really can be neglected
-    // next_E[1] = field_E[1];
-    // we loop over the indices of the current field
-    for (int i=1; i<N_field-1; i++)
-        next_E[i+1] = field_E[i-1] + field_E[i+1] - previous_E[i-1];
-
     // check if the beam is at the same time as the field
     int step_beam = beam->getNOTS();
     if (fabs(step_beam*dt-time)>0.25*dt)
@@ -248,7 +233,13 @@ void FEL_1D::step(Beam *beam)
         throw(IOexception("FEL1D::step() - beam is at different time"));
     }
 
-
+    // optical mode size
+    double z = N_steps * ds;
+    double w = w_0 * sqrt(1.0 + pow((z-z_waist)/z_Rayleigh,2));
+    double A_opt = 0.5*Pi*w*w;
+    
+    // the transverse current density
+    std::vector<double> J_x = std::vector<double>(N_field, 0.0);
     
     //! @todo get all particle coordinates
     //! @todo add the beam-induced fields
@@ -272,7 +263,7 @@ void FEL_1D::step(Beam *beam)
                 throw(IOexception("FEL1D::step() - time mismatch"));
             }
             Vector X = P->getPosition();
-            // find the interaction field index from the longitudinal particle position
+            // find the interaction field (slice) index from the longitudinal particle position
             // small time deviations in time are ignored in the field computation (no interpolation)
             double delta_z = dot(head-X,prop);
             int index = rint(delta_z/ds);
@@ -282,11 +273,29 @@ void FEL_1D::step(Beam *beam)
                 std::cout << "  step=" << N_steps << "  delta_z=" << delta_z << "   index=" << index << std::endl;
                 throw(IOexception("FEL1D::step() - particle out off grid bounds"));
             }
-            Vector bg = P->getMomentum();
+            Vector BetaGamma = P->getMomentum();
+            double bg2 = BetaGamma.abs2nd();
+            double gamma = sqrt(bg2 + 1.0);
+            Vector Beta_prime = P->getAccel()/gamma;
+            double Q = P->getCharge();
+            double j_x = dot(Beta_prime,e_x)*Q/A_opt/dt*MuNull*SpeedOfLight*SpeedOfLight;
+            J_x[index] += j_x;
         }
     }
     
+    // the field after this step
+    // it is shifted in time by one index
+    std::vector<double> next_E = std::vector<double>(N_field, 0.0);
     
+    // index 0 of next_E (the head) always remains zero (no field moving in from the front)
+    // index 1 of next_E is index 0 of field_E
+    next_E[1] = field_E[0];
+    // @todo check if the derivatives really can be neglected
+    // next_E[1] = field_E[1];
+    // we loop over the indices of the current field
+    for (int i=1; i<N_field-1; i++)
+        next_E[i+1] = field_E[i-1] + field_E[i+1] - previous_E[i-1];
+
     // the time step has been computed, now we move forward
     N_steps++;
     time += dt;
@@ -300,6 +309,7 @@ void FEL_1D::step(Beam *beam)
     if (0 == N_steps % step_Output)
     {
         field_storage.push_back(field_E);
+        J_storage.push_back(J_x);
     }
 }
 

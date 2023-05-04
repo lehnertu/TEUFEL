@@ -17,12 +17,10 @@
         </undulator>
     </lattice>
     <beam>
-        <bunch gamma="gamma" charge="_e" cmr="-1.0" n="200" >
-            <position x="0.0" y="0.0" z="0.0" zrms="0.5*lambda_R" />
-            <momentum x="0.0" y="0.0" z="1.0" delta="0.0" />
-            <log file="fel1d-modulation_beam.sdds" step="1" bunching-freq="_c/lambda_R" />
-            <trajectories file="fel1d-modulation_trajectories.hdf5" step="100" limit="100" />
-        </bunch>
+        <particle gamma="gamma" charge="1.0e-9" cmr="-1.0" >
+            <position x="0.0" y="0.0" z="0.0" />
+            <momentum x="0.0" y="0.0" z="1.0" />
+        </particle>
     </beam>
     <calc print="tracking length [m] = " var="total_L" eq="2.0+14*lambda_R" />
     <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
@@ -40,15 +38,8 @@
             <calc var="w_0" eq="sqrt(z_R*lambda_R/_pi)" />
             <mode zR="z_R" w0="w_0" zwaist="0.75" />
             <seed E0="1.0e6" lambda="lambda_R" tau="1.5e-11" tstart="0.0205/_c" />
-            <log file="fel1d-modulation_field.hdf5" step="100" />
+            <log file="fel1d-radiation_field.hdf5" step="100" />
         </fel1d>
-        <calc var="start_step" eq="0.25*n_tracking" />
-        <calc var="stop_step" eq="0.75*n_tracking" />
-        <watch step="0" file="fel1d-modulation_initial.h5" />
-        <!-- these file are named identical to the fel test case to use the same analysis script -->
-        <watch step="start_step" file="fel-modulation_start.h5" />
-        <watch step="stop_step" file="fel-modulation_stop.h5" />
-        <watch step="n_tracking" file="fel1d-modulation_final.h5" />
     </tracking>
     <observer>
     </observer>
