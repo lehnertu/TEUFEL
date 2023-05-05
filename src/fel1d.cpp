@@ -420,6 +420,9 @@ void FEL_1D::write_output()
         set_int_attribute("N_steps", &N_steps);
         set_int_attribute("N_output", &step_Output);
         set_double_attribute("dt", &dt);
+        set_double_attribute("w0", &w_0);
+        set_double_attribute("z_Rayl", &z_Rayleigh);
+        set_double_attribute("z_waist", &z_waist);
         set_double_attribute("origin.x", &origin.x);
         set_double_attribute("origin.y", &origin.y);
         set_double_attribute("origin.z", &origin.z);
