@@ -29,15 +29,14 @@
     <calc print="dt = " var="dt" eq="dz/_c" />
     <calc print="tracking steps = " var="n_tracking" eq="total_t/dt" />
     <tracking method="Vay" delta_t="dt" n="n_tracking" >
-        <fel1d N="10000" >
+        <fel1d N="1000" >
             <!-- the field has to start ahead of the first particle -->
-            <position x="0.0" y="0.0" z="0.020" />
+            <position x="0.0" y="0.0" z="0.001" />
             <prop x="0.0" y="0.0" z="1.0" />
             <pol x="1.0" y="0.0" z="0.0" />
-            <calc var="z_R" eq="0.5" />
+            <calc var="z_R" eq="1.0" />
             <calc var="w_0" eq="sqrt(z_R*lambda_R/_pi)" />
-            <mode zR="z_R" w0="w_0" zwaist="0.75" />
-            <seed E0="1.0e6" lambda="lambda_R" tau="1.5e-11" tstart="0.0205/_c" />
+            <mode zR="z_R" w0="w_0" zwaist="1.0" />
             <log file="fel1d-radiation_field.hdf5" step="100" />
         </fel1d>
     </tracking>

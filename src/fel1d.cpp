@@ -434,6 +434,45 @@ void FEL_1D::write_output()
         if (status<0) throw(IOexception("FEL1D::write_output - error in H5Dclose(pdset)"));
         status = H5Sclose (pspace);
         if (status<0) throw(IOexception("FEL1D::write_output - error in H5Dclose(pspace)"));
+
+        // Create dataspace for the current density
+        // Field size is exactly the same as the InteractionField
+        pspace = H5Screate_simple (2, pdims, NULL);
+        if (pspace<0) throw(IOexception("FEL1D::write_output - error in H5Screate(pspace)"));
+        // buffer the data
+        bp = buffer;
+        for (int ix=0; ix<N_steps; ix++)
+        {
+            std::vector<double> J_x = J_storage[ix];
+	        for (int iy = 0; iy < N_field; iy++)
+	            *bp++ = J_x[iy];
+	    }
+        // Create the dataset creation property list
+        pdcpl = H5Pcreate (H5P_DATASET_CREATE);
+        if (pdcpl<0) throw(IOexception("FEL1D::write_output - error in H5Pcreate(pdcpl)"));
+        // Create the dataset.
+        pdset = H5Dcreate(file,
+            "CurrentDensity",		// dataset name
+            H5T_NATIVE_DOUBLE,		// data type
+            pspace, H5P_DEFAULT,
+            pdcpl, H5P_DEFAULT);
+        if (pdset<0) throw(IOexception("FEL1D::write_output - error in H5Dcreate(pdset)"));
+        // Write the data to the dataset
+        status = H5Dwrite (pdset,
+            H5T_NATIVE_DOUBLE, 		// mem type id
+            H5S_ALL, 			    // mem space id
+            pspace,
+            H5P_DEFAULT,			// data transfer properties
+            buffer);
+        if (status<0) throw(IOexception("FEL1D::write_output - error in H5Dwrite(pdset)"));
+
+        // Close and release resources.
+        status = H5Pclose (pdcpl);
+        if (status<0) throw(IOexception("FEL1D::write_output - error in H5Pclose(pdcpl)"));
+        status = H5Dclose (pdset);
+        if (status<0) throw(IOexception("FEL1D::write_output - error in H5Dclose(pdset)"));
+        status = H5Sclose (pspace);
+        if (status<0) throw(IOexception("FEL1D::write_output - error in H5Dclose(pspace)"));
         delete[] buffer;
 
         status = H5Fclose(file);
