@@ -261,6 +261,28 @@ void ChargedParticle::serializeTraj(double *buffer)
         }
 }
 
+double* ChargedParticle::bufferProbe(double *buffer)
+{
+    double *bp = buffer;
+    *bp++ = t_current;
+    *bp++ = X_current.x;
+    *bp++ = X_current.y;
+    *bp++ = X_current.z;
+    *bp++ = P_current.x;
+    *bp++ = P_current.y;
+    *bp++ = P_current.z;
+    *bp++ = A_current.x;
+    *bp++ = A_current.y;
+    *bp++ = A_current.z;
+    *bp++ = E_current.x;
+    *bp++ = E_current.y;
+    *bp++ = E_current.z;
+    *bp++ = B_current.x;
+    *bp++ = B_current.y;
+    *bp++ = B_current.z;
+    return bp;
+}
+
 double ChargedParticle::TrajTime(int step)
 {
     double t = 0.0;
@@ -398,13 +420,13 @@ void ChargedParticle::InitVay(
     X_current = X.back();
     P_current = P.back();
     ElMagField EB_h = field->Field(t_current, X_current);
-    Vector E_h = EB_h.E();
-    Vector B_h = EB_h.B();
+    E_current = EB_h.E();
+    B_current = EB_h.B();
     // perform the second half-step to compute the
     // velocity at the end of the time step
-    Vector p_prime = P_current + E_h / SpeedOfLight * qmt2;
+    Vector p_prime = P_current + E_current / SpeedOfLight * qmt2;
     double gamma2_prime = p_prime.abs2nd() + 1.0;
-    Vector tau = B_h * qmt2;
+    Vector tau = B_current * qmt2;
     double u_star = dot(p_prime, tau);
     double tau2 = tau.abs2nd();
     double sigma = gamma2_prime - tau2;
@@ -415,12 +437,8 @@ void ChargedParticle::InitVay(
     VY_p_i1 = (p_prime + t * dot(p_prime, t) + cross(p_prime, t)) / (1 + t.abs2nd());
     double gamma_h = sqrt(P_current.abs2nd() + 1.0);
     Vector beta_h = P_current / gamma_h;
-    A_current = (cross(beta_h, B_h) + E_h / SpeedOfLight) * qm;
+    A_current = (cross(beta_h, B_current) + E_current / SpeedOfLight) * qm;
     A.back() = A_current;
-    // std::cout << "Particle::InitVay() : t=" << Time[0] << "  dt=" << dt << "  NP=" << NP  << "  qm=" << qm << std::endl;
-    // std::cout << "  X = (" << X[0].x << ", " << X[0].y << ", " << X[0].z << ") m" << std::endl;
-    // std::cout << "  P = (" << P[0].x << ", " << P[0].y << ", " << P[0].z << ")" << std::endl;
-    // std::cout << "  B = (" << B_h.x << ", " << B_h.y << ", " << B_h.z << ") T" << std::endl;
 }
 
 void ChargedParticle::setCurrentPoint(double time, Vector pos, Vector mom, Vector acc)
@@ -468,19 +486,19 @@ void ChargedParticle::StepVay(GeneralField* field)
     X_current += beta_i * SpeedOfLight * dt;
     // compute the fields at the center position of the step
     ElMagField EB_h = field->Field(t_current, X_current);
-    Vector E_h = EB_h.E();
-    Vector B_h = EB_h.B();
+    E_current = EB_h.E();
+    B_current = EB_h.B();
     // perform the first half-step to compute the
     // velocity at the center (half) point using eq. (13)
-    P_current = VY_p_i1 + (E_h/SpeedOfLight + cross(beta_i, B_h)) * qmt2;
+    P_current = VY_p_i1 + (E_current/SpeedOfLight + cross(beta_i, B_current)) * qmt2;
     double gamma_h = sqrt(P_current.abs2nd() + 1.0);
     Vector beta_h = P_current / gamma_h;
-    A_current = (cross(beta_h, B_h) + E_h / SpeedOfLight) * qm;
+    A_current = (cross(beta_h, B_current) + E_current / SpeedOfLight) * qm;
     // perform the second half-step to compute the
     // velocity at the end of the time step
-    Vector p_prime = P_current + E_h / SpeedOfLight * qmt2;
+    Vector p_prime = P_current + E_current / SpeedOfLight * qmt2;
     double gamma2_prime = p_prime.abs2nd() + 1.0;
-    Vector tau = B_h * qmt2;
+    Vector tau = B_current * qmt2;
     double u_star = dot(p_prime, tau);
     double tau2 = tau.abs2nd();
     double sigma = gamma2_prime - tau2;

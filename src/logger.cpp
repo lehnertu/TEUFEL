@@ -33,9 +33,6 @@
 
 // ********** class Logger **********
 
-// we have to instantiate the class for every possible source type
-template class Logger<Bunch>;
-
 
 // ********** class ParameterLogger **********
 
@@ -219,14 +216,14 @@ template class ParameterLogger<Bunch>;
 // ********** class TrajectoryLogger **********
 
 template <class objectT>
-TrajectoryLogger<objectT>::TrajectoryLogger(objectT *obj, const char *filename, unsigned int step, unsigned int limit)
+TrajectoryLogger<objectT>::TrajectoryLogger(objectT *obj, const char *filename, unsigned int step, unsigned int number)
 {
     Beam = obj;
     NOTS = 0;
-    NOP = Beam->getNOP();
-    if (NOP>limit) NOP=limit;
     FileName = filename;
     stepsize = step;
+    NOP = Beam->getNOP();
+    if (NOP>number) NOP=number;
 }
 
 template <class objectT>
@@ -234,7 +231,7 @@ TrajectoryLogger<objectT>::~TrajectoryLogger()
 {
     // free all the buffers
     for(unsigned int i=0; i<NOTS; i++)
-        delete[] trajectories[i]; 
+        delete[] data[i]; 
 }
 
 template <class objectT>
@@ -243,14 +240,15 @@ void TrajectoryLogger<objectT>::update()
     // this is only called if log_requested() is true - no need to check here
     double *buffer = new double[NOP*6];
     Beam->bufferCoordinates(buffer, NOP);
-    trajectories.push_back(buffer);
+    data.push_back(buffer);
     NOTS++;
+    // the buffer remains as part of the data array
 }
 
 template <class objectT>
 int TrajectoryLogger<objectT>::WriteData()
 {
-    cout << "writing trajectories to " << FileName << endl;
+    cout << "TrajectoryLogger : writing probe data to " << FileName << endl;
 
     herr_t status;
     // Create a new file using the default properties.
@@ -271,7 +269,7 @@ int TrajectoryLogger<objectT>::WriteData()
     double *bp = buffer;
     for(unsigned int i=0; i<NOTS; i++)
     {
-        double *source = trajectories[i];
+        double *source = data[i];
         for (unsigned int k=0; k<6*NOP; k++) *bp++ = *source++;
     }
     
@@ -280,7 +278,7 @@ int TrajectoryLogger<objectT>::WriteData()
     if (pdcpl<0) throw(IOexception("TrajectoryLogger::WriteData() - error in H5Pcreate(pdcpl)"));
     // Create the dataset.
     hid_t pdset = H5Dcreate(file,
-        "Trajectories",	     	// dataset name
+        "Trajectories",	     	    // dataset name
         H5T_NATIVE_DOUBLE,		// data type
         pspace, H5P_DEFAULT,
         pdcpl, H5P_DEFAULT);
@@ -332,3 +330,132 @@ int TrajectoryLogger<objectT>::WriteData()
 // we have to instantiate the class for every possible source type
 template class TrajectoryLogger<Bunch>;
 // template class TrajectoryLogger<Beam>;
+
+
+// ********** class ProbeLogger **********
+
+template <class objectT>
+ProbeLogger<objectT>::ProbeLogger(objectT *obj, const char *filename, unsigned int step, unsigned int number)
+{
+    Beam = obj;
+    NOTS = 0;
+    FileName = filename;
+    stepsize = step;
+    NOP = Beam->getNOP();
+    if (NOP>number) NOP=number;
+    NOD = Beam->getProbeBufferSize(1);
+}
+
+template <class objectT>
+ProbeLogger<objectT>::~ProbeLogger()
+{
+    // free all the buffers
+    for(unsigned int i=0; i<NOTS; i++)
+        delete[] data[i]; 
+}
+
+template <class objectT>
+void ProbeLogger<objectT>::update()
+{
+    // this is only called if log_requested() is true - no need to check here
+    double *buffer = new double[Beam->getProbeBufferSize(NOP)];
+    Beam->bufferProbe(buffer, NOP);
+    data.push_back(buffer);
+    NOTS++;
+    // the buffer remains as part of the data array
+}
+
+template <class objectT>
+int ProbeLogger<objectT>::WriteData()
+{
+    cout << "ProbeLogger : writing probe data to " << FileName << endl;
+
+    herr_t status;
+    // Create a new file using the default properties.
+    hid_t file = H5Fcreate (FileName, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    if (file<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Fcreate()"));
+    
+    // Create dataspace for the observation positions.
+    // Setting maximum size to NULL sets the maximum size to be the current size.
+    hsize_t pdims[3];
+    pdims[0] = NOTS;
+    pdims[1] = NOP;
+    pdims[2] = NOD;
+    hid_t pspace = H5Screate_simple (3, pdims, NULL);
+    if (pspace<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Screate(pspace)"));
+
+    // buffer the data
+    double *buffer = new double[NOTS*NOP*NOD];
+    double *bp = buffer;
+    for(unsigned int i=0; i<NOTS; i++)
+    {
+        double *source = data[i];
+        for (unsigned int k=0; k<NOD*NOP; k++) *bp++ = *source++;
+    }
+    
+    // Create the dataset creation property list
+    hid_t pdcpl = H5Pcreate (H5P_DATASET_CREATE);
+    if (pdcpl<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Pcreate(pdcpl)"));
+    // Create the dataset.
+    hid_t pdset = H5Dcreate(file,
+        "Probe",	     	    // dataset name
+        H5T_NATIVE_DOUBLE,		// data type
+        pspace, H5P_DEFAULT,
+        pdcpl, H5P_DEFAULT);
+    if (pdset<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Dcreate(pdset)"));
+    // Write the data to the dataset
+    status = H5Dwrite (pdset,
+        H5T_NATIVE_DOUBLE, 		// mem type id
+        H5S_ALL, 			    // mem space id
+        pspace,
+        H5P_DEFAULT,			// data transfer properties
+        buffer);
+    if (status<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Dwrite(pdset)"));
+    
+    // attach scalar attributes
+    hid_t atts  = H5Screate(H5S_SCALAR);
+    if (atts<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Screate(NOTS)"));
+    hid_t attr = H5Acreate2(pdset, "NOTS", H5T_NATIVE_INT, atts, H5P_DEFAULT, H5P_DEFAULT);
+    if (attr<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Acreate2(NOTS)"));
+    status = H5Awrite(attr, H5T_NATIVE_INT, &NOTS);
+    if (status<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Awrite(NOTS)"));
+    status = H5Sclose (atts);
+    if (status<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Sclose(NOTS)"));
+    
+    atts  = H5Screate(H5S_SCALAR);
+    if (atts<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Screate(NOP)"));
+    attr = H5Acreate2(pdset, "NOP", H5T_NATIVE_INT, atts, H5P_DEFAULT, H5P_DEFAULT);
+    if (attr<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Acreate2(NOP)"));
+    status = H5Awrite(attr, H5T_NATIVE_INT, &NOP);
+    if (status<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Awrite(NOP)"));
+    status = H5Sclose (atts);
+    if (status<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Sclose(NOP)"));
+    
+    atts  = H5Screate(H5S_SCALAR);
+    if (atts<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Screate(NOD)"));
+    attr = H5Acreate2(pdset, "NOD", H5T_NATIVE_INT, atts, H5P_DEFAULT, H5P_DEFAULT);
+    if (attr<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Acreate2(NOD)"));
+    status = H5Awrite(attr, H5T_NATIVE_INT, &NOD);
+    if (status<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Awrite(NOD)"));
+    status = H5Sclose (atts);
+    if (status<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Sclose(NOD)"));
+    
+    // Close and release resources.
+    status = H5Pclose (pdcpl);
+    if (status<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Pclose(pdcpl)"));
+    status = H5Dclose (pdset);
+    if (status<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Dclose(pdset)"));
+    status = H5Sclose (pspace);
+    if (status<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Dclose(pspace)"));
+    delete[] buffer;
+
+    status = H5Fclose(file);
+    if (status<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Fclose()"));
+    // no errors have occured if we made it 'til here
+    cout << "writing HDF5 done." << endl;
+    return 0;
+}
+
+// we have to instantiate the class for every possible source type
+// template class ProbeLogger<Bunch>;
+template class ProbeLogger<Beam>;

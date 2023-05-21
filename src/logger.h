@@ -23,6 +23,7 @@
 
 #include <vector>
 #include "vector.h"
+#include "beam.h"
 
 /*!
  * \class Logger
@@ -33,7 +34,6 @@
  * This class handles logging during the tracking.
  * This is pure virtual class for derivation.
  */
-template <class objectT>
 class Logger
 {
 
@@ -69,7 +69,7 @@ public:
  * @todo could (optionally) log lattice fields at bunch center
  */
 template <class objectT>
-class ParameterLogger : public Logger<objectT>
+class ParameterLogger : public Logger
 {
 
 public:
@@ -181,16 +181,15 @@ private:
 
 /*!
  * \class TrajectoryLogger
- * \brief Store particle coordinates while tracking.
+ * \brief Store particle coordinates and perceived fields while tracking.
  * @author Ulf Lehnert
  * @date 7.4.2023
  * 
- * This class handles the storage of particle trajectories.
- * @todo specialization for beam still missing, only for bunch implemented
- * @todo could (optionally) log lattice fields at bunch center
+ * This class handles the storage of particle trajectories fro a limited.
+ * number of particles (just the first few of the probed beam).
  */
 template <class objectT>
-class TrajectoryLogger : public Logger<objectT>
+class TrajectoryLogger : public Logger
 {
 
 public:
@@ -243,6 +242,94 @@ private:
     unsigned int stepsize;
     
     //! a list of pointer to the buffered data
-    std::vector<double*> trajectories;
+    std::vector<double*> data;
+    
+};
+
+//! all information needed to construct a ProbeLogger
+struct ProbeInfo
+{
+    bool requested;
+    Beam *beam;
+    const char *filename;
+    unsigned int step;
+    unsigned int number;
+};
+
+/*!
+ * \class ProbeLogger
+ * \brief Store particle coordinates and perceived fields while tracking.
+ * @author Ulf Lehnert
+ * @date 7.4.2023
+ * 
+ * This class handles the storage of particle trajectories fro a limited.
+ * number of particles (just the first few of the probed beam).
+ * Along with the coordinates the lattice fields felt by the particle are recorded.
+ *
+ * The field data are only available for those particles that are
+ * actually tracked, not for the master beam that only receives coordinate data copies.
+ * This is usefull for probing the tracked beam on the master node, only.
+ */
+template <class objectT>
+class ProbeLogger : public Logger
+{
+
+public:
+
+    /*! Standard constructor:<br>
+     * Storage of particle coordinates while tracking.
+     * 
+     * This class is templated and spezialized for
+     * Bunch() or Beam() being observed.
+     * After construction the source is not yet known
+     * and must be defined with set_Beam().
+     * Failing to set the beam will result in runtime errors.
+     * 
+     * \param[in] obj The object (bunch or beam) to be observed.
+     * \param[in] filename The name of the file to write.
+     * \param[in] step the logging frequency in tracking steps.
+     * \param[in] limit the maximum number of particles to be logged.
+     */
+    ProbeLogger(objectT *obj, const char *filename, unsigned int step, unsigned int limit);
+
+    /*! The destructor frees all buffers*/
+    virtual ~ProbeLogger();
+
+    /*! Check whether the given tracking step should be logged */
+    bool log_requested(int step) override { return 0 == (step % stepsize); };
+    
+    /*! The source has advanced one time step.
+     *  Compute and store the quantities of interest.
+     *  @todo not yet implemented
+     */
+    void update() override;
+
+    /*! Write the collected data into an HDF5 file.
+     *  @todo not yet implemented
+     */
+    int WriteData() override;
+
+private:
+
+    //! the observed beam object
+    objectT *Beam;
+    
+    //! the file name
+    const char* FileName;
+
+    //! the number of stored datasets
+    unsigned int NOTS;
+    
+    //! the number of stored particles
+    unsigned int NOP;
+    
+    //! the size of one data block
+    unsigned int NOD;
+    
+    //! the logging frequency in tracking steps
+    unsigned int stepsize;
+    
+    //! a list of pointer to the buffered data
+    std::vector<double*> data;
     
 };

@@ -21,6 +21,7 @@
             <position x="0.0" y="0.0" z="0.0" />
             <momentum x="0.0" y="0.0" z="1.0" />
         </particle>
+        <probe file="fel1d-radiation_probe.hdf5" number="1" step="100" />
     </beam>
     <calc print="tracking length [m] = " var="total_L" eq="2.0+14*lambda_R" />
     <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />

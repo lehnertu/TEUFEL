@@ -115,9 +115,11 @@ public:
      *  If requested in the parsed entry a logger to be updated
      *  while tracking the beam will be added to the given list
      *
+     *  Information about a requested number of probe particles is gathered.
+     *
      *  @return The number of bunches is returned.
      */
-    int parseBeam(Beam *beam, std::vector<Logger<Bunch>*> *logs);
+    int parseBeam(Beam *beam, std::vector<Logger*> *logs, ProbeInfo *probe);
     
     /*! Parse the input file and setup for tracking particles.
      *  If there is no child <tracking> under the root node

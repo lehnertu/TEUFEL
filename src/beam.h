@@ -166,6 +166,26 @@ public:
      */
     void setStepFromBuffer(double *buffer);
     
+    /*! @brief Compute the buffer size for one set of probe particles.
+     *
+     *  @param[in] the number of particles requested
+     *  @return the number of doubles needed
+     */
+    unsigned int getProbeBufferSize(unsigned int number);
+
+    /*! @brief Buffer particle information.
+     * 
+     *  Particle coordinates (time,position,momentum,acceleration)
+     *  perceived fields (E,B)
+     *
+     *  The necessary buffer size is given by getProbeBufferSize().
+     *  There is no memory check for the buffer size performed.
+     * 
+     *  @param[in] buffer memory pointer of the buffer
+     *  @param[in] the number of particles requested
+     */
+    void bufferProbe(double *buffer, unsigned int number);
+
     /*! Dump all particle information into an HDF5 file.
      *  The written quantities include:
      *  - time t

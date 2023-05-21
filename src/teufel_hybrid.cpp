@@ -214,8 +214,9 @@ int main(int argc, char *argv[])
     // the compute nodes will be re-gathered into this object.
     // Every node is doing that, so the total beam history is available for interactions.
     Beam *masterBeam = new Beam();
-    std::vector<Logger<Bunch>*> listLoggers;
-    int NoB = parse->parseBeam(masterBeam, &listLoggers);
+    std::vector<Logger*> listLoggers;
+    ProbeInfo probe{false, 0, "", 0, 0};
+    int NoB = parse->parseBeam(masterBeam, &listLoggers, &probe);
     if (teufel::rank==0) std::cout << std::endl;
     if (teufel::rank==0) std::cout << "beam of " << NoB << " bunches created." << std::endl;
     if (teufel::rank==0) std::cout << "total number of particles : " << masterBeam->getNOP() << std::endl;
@@ -418,6 +419,18 @@ int main(int argc, char *argv[])
     trackedBeam->setTimeStep(masterBeam->getTimeStep());
     // prepare the tracking of the beam
     trackedBeam->setupTracking(lattice);
+
+    // setup the ProbeLogger to observe trackedBeam
+    if (teufel::rank == 0)
+        if (probe.requested)
+        {
+            std::cout << "writing " << probe.number << " particles ";
+            std::cout << "every " << probe.step << " steps ";
+            std::cout << "to " << probe.filename << std::endl;
+            std::cout << std::endl;
+            ProbeLogger<Beam>* pl = new ProbeLogger<Beam>(trackedBeam, probe.filename, probe.step, probe.number);
+            listLoggers.push_back(pl);
+        };
     
     std::cout << "node " << teufel::rank << " tracking a beam of " <<
         trackedBeam->getNOP() << " particles." << std::endl;

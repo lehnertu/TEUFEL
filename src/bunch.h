@@ -149,6 +149,9 @@ private:
     
     Creating a beam does not define inital coordinates of the particles.
     This is done when initalizing the tracking algorithm (e.g. InitVay() ).
+    
+    @todo: This class should be removed alltogether. The distinction between
+    bunch and beam is not necessary and only creates additional overhead.
  */
 class Bunch
 {

@@ -294,7 +294,7 @@ int InputParser::parseLattice(Lattice *lattice)
     return count;
 }
 
-int InputParser::parseBeam(Beam *beam, std::vector<Logger<Bunch>*> *logs)
+int InputParser::parseBeam(Beam *beam, std::vector<Logger*> *logs, ProbeInfo *probe)
 {
     int count = 0;
     pugi::xml_node beamnode = root.child("beam");
@@ -505,10 +505,10 @@ int InputParser::parseBeam(Beam *beam, std::vector<Logger<Bunch>*> *logs)
                     int step = 1;
                     pugi::xml_attribute st = trajnode.attribute("step");
                     if (st) step = st.as_int();
-                    int limit = 1000000;
-                    pugi::xml_attribute lm = trajnode.attribute("limit");
-                    if (lm) limit = lm.as_int();
-                    TrajectoryLogger<Bunch>* traj_logger = new TrajectoryLogger<Bunch>(bunch, fn.as_string(), step, limit);
+                    int particles = 1000000;
+                    pugi::xml_attribute np = trajnode.attribute("particles");
+                    if (np) particles = np.as_int();
+                    TrajectoryLogger<Bunch>* traj_logger = new TrajectoryLogger<Bunch>(bunch, fn.as_string(), step, particles);
                     logs->push_back(traj_logger);
                 };
                 // add the bunch to the beam
@@ -580,7 +580,7 @@ int InputParser::parseBeam(Beam *beam, std::vector<Logger<Bunch>*> *logs)
                     if (!fn) throw(IOexception("InputParser::parseBeam - <bunch> filename for log not found."));
                     int step = 1;
                     pugi::xml_attribute st = lognode.attribute("step");
-                    if (fn) step = st.as_int();
+                    if (st) step = st.as_int();
                     ParameterLogger<Bunch>* logger = new ParameterLogger<Bunch>(bunch, fn.as_string(), step);
                     pugi::xml_attribute bf = lognode.attribute("bunching-freq");
                     if (bf)
@@ -593,6 +593,20 @@ int InputParser::parseBeam(Beam *beam, std::vector<Logger<Bunch>*> *logs)
                 // add the bunch to the beam
                 beam->Add(bunch);
                 count++;
+            }
+            else if (type == "probe")
+            {
+                probe->requested = true;
+                pugi::xml_attribute filename = entry.attribute("file");
+                if (!filename)
+                    throw(IOexception("InputParser::parseBeam - <probe> attribute file not found."));
+                probe->filename = filename.as_string();
+                probe->step = 1;
+                pugi::xml_attribute st = entry.attribute("step");
+                if (st) probe->step = st.as_int();
+                probe->number = 1;
+                pugi::xml_attribute nm = entry.attribute("number");
+                if (nm) probe->number = nm.as_int();
             }
             else
                 throw(IOexception("InputParser::parseBeam - unknown type of beam entry."));

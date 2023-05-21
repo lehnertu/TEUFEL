@@ -7,6 +7,7 @@ rm rad_push_log.sdds
 rm undulator_traj.hdf5
 rm matching.sdds
 rm fel1d-modulation*
+rm fel1d-radiation*
 rm fel-modulation*
 rm tests/DiffractionScreenWithFields.h5
 

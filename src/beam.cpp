@@ -183,6 +183,41 @@ void Beam::setStepFromBuffer(double *buffer)
     NOTS++;
 }
 
+unsigned int Beam::getProbeBufferSize(unsigned int number)
+{
+    // we create a new particle to report the size of the data field
+    // (all particles are equal)
+    ChargedParticle p = ChargedParticle();
+    return number*p.getProbeBufferSize();
+}
+
+void Beam::bufferProbe(double *buffer, unsigned int number)
+{
+    unsigned int N = 0;
+    int i_bunch = 0;
+    int i_in_bunch = 0;
+    double *bp = buffer;
+    while (N<number)
+    {
+        // buffer perticle if the bunch contains the sufficient number
+        if (i_in_bunch < B[i_bunch]->getNOP())
+        {
+            ChargedParticle *p = B[i_bunch]->getParticle(i_in_bunch);
+            // when buffering the data the particle returns the new buffer pointer
+            bp = p->bufferProbe(bp);
+            N++;
+        };
+        // we first buffer the i-th particles from all bunches in sequence
+        i_bunch++;
+        if (i_bunch==NOB)
+        {
+            i_bunch = 0;
+            // after going through all bunches the next particle index within the bunches is chosen
+            i_in_bunch++;
+        }
+    }
+}
+
 //! @todo how to store several bunches hierarchically ?
 int Beam::WriteWatchPointHDF5(std::string filename)
 {

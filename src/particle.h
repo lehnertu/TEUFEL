@@ -173,7 +173,29 @@ public:
      *  There is no check for sufficient buffer size.
      */
     void serializeTraj(double *buffer);
+
+    /*! Return the size of a buffer (number of doubles)
+     *  that can hold all current particle data including fields.
+     *  This buffer size is needed to call bufferProbe()
+     *
+     */
+    unsigned int getProbeBufferSize() { return 16; };
     
+    /*! @brief Buffer particle information.
+     * 
+     *  Particle coordinates (time,position,momentum,acceleration)
+     *  perceived fields (E,B)
+     *  1x time, 3x position, 3x momentum, 3x acceleration
+     *  3x E, 3x B
+     *
+     *  The necessary buffer size is given by getProbeBufferSize().
+     *  There is no memory check for the buffer size performed.
+     * 
+     *  @param[in] buffer memory pointer of the buffer
+     *  @return the buffer pointer to the next free byte
+     */
+    double* bufferProbe(double *buffer);
+
     /*! Return the time [s] for one point of the trajectory */
     double TrajTime(int step);
     
@@ -384,6 +406,14 @@ private:
     //! this is at the half-step position of the Vay tracking algorithm
     Vector A_current;
     
+    //! current electric field [V/m] in lab frame \f$a = \frac{d}{dt}(\beta\gamma)\f$
+    //! this is at the half-step position of the Vay tracking algorithm
+    Vector E_current;
+
+    //! current magnetic field [T] in lab frame \f$a = \frac{d}{dt}(\beta\gamma)\f$
+    //! this is at the half-step position of the Vay tracking algorithm
+    Vector B_current;
+
     //! trajectory time in lab frame [s]
     std::vector<double> Time;
     

@@ -21,7 +21,7 @@
             <position x="0.0" y="0.0" z="0.0" zrms="0.5*lambda_R" />
             <momentum x="0.0" y="0.0" z="1.0" delta="0.0" />
             <log file="fel1d-modulation_beam.sdds" step="1" bunching-freq="_c/lambda_R" />
-            <trajectories file="fel1d-modulation_trajectories.hdf5" step="100" limit="100" />
+            <trajectories file="fel1d-modulation_trajectories.hdf5" step="100" particles="100" />
         </bunch>
     </beam>
     <calc print="tracking length [m] = " var="total_L" eq="2.0+14*lambda_R" />
