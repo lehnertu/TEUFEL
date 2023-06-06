@@ -34,6 +34,8 @@
     
     @return The number of errors encountered.
     
+    @todo write a python script that analyzes the particle dump
+    
  */
 
 #include <math.h>

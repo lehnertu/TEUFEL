@@ -241,8 +241,8 @@ void FEL_1D::step(Beam *beam)
     // the transverse current density
     std::vector<double> J_x = std::vector<double>(N_field, 0.0);
     
-    //! @todo get all particle coordinates
-    //! @todo add the beam-induced fields
+    double TwoSigmaSquared = 2.0*pow(ds,2);
+    double SqrtTwoPi = sqrt(2.0*Pi);
     int NOB = beam->getNOB();
     for(int ib=0; ib<NOB; ib++)
     {
@@ -264,13 +264,11 @@ void FEL_1D::step(Beam *beam)
             }
             Vector X = P->getPosition();
             // find the interaction field (slice) index from the longitudinal particle position
-            // small time deviations in time are ignored in the field computation (no interpolation)
             double delta_z = dot(head-X,prop);
-            int index = rint(delta_z/ds);
-            if ((index<0) || (index>=N_field))
+            if ((delta_z<0.0) || (delta_z>N_field*ds))
             {
                 std::cout << "FEL1D::step() - particle out off grid bounds" << std::endl;
-                std::cout << "  step=" << N_steps << "  delta_z=" << delta_z << "   index=" << index << std::endl;
+                std::cout << "  step=" << N_steps << "  delta_z=" << delta_z << std::endl;
                 throw(IOexception("FEL1D::step() - particle out off grid bounds"));
             }
             Vector BetaGamma = P->getMomentum();
@@ -279,22 +277,37 @@ void FEL_1D::step(Beam *beam)
             Vector Beta_prime = P->getAccel()/gamma;
             double Q = P->getCharge();
             double j_x = dot(Beta_prime,e_x)*Q/A_opt/dt*MuNull*SpeedOfLight*SpeedOfLight;
-            J_x[index] += j_x;
+            // Every particle gives a gaussian pulse with sigma=ds.
+            // This effectively introduces a filter about 1/3rd of the Nyquist frequency
+            int center_index = rint(delta_z/ds);
+            int start_index = center_index-5;
+            if (start_index<0) start_index = 0;
+            int stop_index = center_index+6;
+            if (stop_index>N_field) stop_index = N_field;
+            for (int i=start_index; i<stop_index; i++)
+            {
+                J_x[i] += j_x * exp(-pow((delta_z-i*ds),2)/TwoSigmaSquared) / SqrtTwoPi;
+            }
         }
     }
     
     // the field after this step
     // it is shifted in time by one index
+    //! @todo use a static class member instead - save all the memory work
     std::vector<double> next_E = std::vector<double>(N_field, 0.0);
     
     // index 0 of next_E (the head) always remains zero (no field moving in from the front)
     // index 1 of next_E is index 0 of field_E
     next_E[1] = field_E[0];
-    // @todo check if the derivatives really can be neglected
+    //! @todo check if the derivatives really can be neglected
     // next_E[1] = field_E[1];
     // we loop over the indices of the current field
     for (int i=1; i<N_field-1; i++)
-        next_E[i+1] = field_E[i-1] + field_E[i+1] - previous_E[i-1];
+        next_E[i+1] = field_E[i-1] + field_E[i+1] - previous_E[i-1] + dt*dt*J_x[i];
+    // we also correct the current field (which will be previous in the next step
+    // in order not to have the derivative of the induced fields
+    for (int i=1; i<N_field-1; i++)
+        field_E[i] += dt*dt*J_x[i];
 
     // the time step has been computed, now we move forward
     N_steps++;
