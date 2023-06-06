@@ -16,10 +16,24 @@ import h5py
 # --------------------------------------------------------------------------
 
 class MeshedField():
+    """
+    A triangular mesh in 3D space representing a surface electromagnetic field.
+    
+    points : node coordinates of the mesh [3 float]
+    triangles : connection list of triangles [3 int references into the array of points]
+    Np : number of triangles
+    pos : center positions of the triangular patches
+    Nt : length of the field traces (number of time steps)
+    A : electromagnetic field traces recorded at the triangle center points (Nt*6 floats)
+    t0 : start time of the field traces for every triangle
+    dt : time step common for all triangles
+    """
     
     def __init__(self, pts=[], tris=[]):
         """
-        Create an empty MeshedFiled object
+        Create an empty MeshedFiled object.
+        pts is an array of 3D point coordinates [3 double].
+        tri is a connection list of triangles [3 int references into the array of points]
         """
         self.points = pts
         self.triangles = tris

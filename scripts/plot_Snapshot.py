@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # coding=UTF-8
 
 import sys, time
@@ -13,38 +13,38 @@ parser.add_argument('file', help='the file name of the snapshot HDF5 file')
 parser.add_argument('-Emax', help="plot range for the E field [V/m]", dest="emax", type=float)
 parser.add_argument('-Bmax', help="plot range for the B field [T]", dest="bmax", type=float)
 
-print
+print()
 args = parser.parse_args()
 
 radfile = args.file
 radOK = os.path.isfile(radfile)
 if not radOK:
-  print "file not found"
+  print("file not found")
   sys.exit()
 
 # Open the file for reading
-print "reading ",radfile
+print("reading ",radfile)
 hdf = h5py.File(radfile, "r")
-print hdf
-print
+print(hdf)
+print()
 
 # Get the groups
 pos = hdf['ObservationPosition']
 Nx = pos.attrs.get('Nx')
 Ny = pos.attrs.get('Ny')
-print "Nx=%d Ny=%d" % (Nx,Ny)
-print pos
+print("Nx=%d Ny=%d" % (Nx,Ny))
+print(pos)
 field = hdf['ElMagField']
-print field
+print(field)
 pos = np.array(pos)
 a = np.array(field)
 hdf.close()
-print
+print()
 
-xcenter = (Nx-1)/2
-ycenter = (Ny-1)/2
+xcenter = (Nx-1)//2
+ycenter = (Ny-1)//2
 centerposition = pos[xcenter][ycenter]
-print "center position = ",centerposition
+print("center position = ",centerposition)
 
 Ex = a[:,:,0]
 Ey = a[:,:,1]
@@ -60,7 +60,7 @@ if args.emax == None:
     emax = np.max(np.array([exmax,eymax,ezmax]))
 else:
     emax = args.emax
-print "scale E = ",emax
+print("scale E = ",emax)
 elevels = np.linspace(-emax, emax, num=11)
 
 if args.bmax == None:
@@ -70,7 +70,7 @@ if args.bmax == None:
     bmax = np.max(np.array([bxmax,bymax,bzmax]))
 else:
     bmax = args.bmax
-print "scale B = ",bmax
+print("scale B = ",bmax)
 blevels = np.linspace(-bmax, bmax, num=11)
 
 print("Ex range %g ... %g"%(np.min(Ex),np.max(Ex)))
@@ -94,7 +94,8 @@ ax3 = plt.subplot(2,3,3)
 ax4 = plt.subplot(2,3,4)
 ax5 = plt.subplot(2,3,5)
 ax6 = plt.subplot(2,3,6)
-ax1.contourf(LogEx,loglevels,cmap='jet')
+ax1.contourf(Ex,elevels,cmap='jet')
+#ax1.contourf(LogEx,loglevels,cmap='jet')
 ax2.contourf(Ey,elevels,cmap='jet')
 ax3.contourf(Ez,elevels,cmap='jet')
 ax4.contourf(Bx,blevels,cmap='jet')
