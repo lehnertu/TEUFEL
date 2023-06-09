@@ -1,0 +1,49 @@
+<?xml version="1.0"?>
+<teufel description="Space charge fields near the ELBE beam for EOS"
+    author="Ulf Lehnert 2.6.2023">
+    <calc print="beam energy [eV] = " var="E_beam" eq="30.0e6" />
+    <calc print="gamma = " var="gamma" eq="E_beam/_mec2"/>
+    <calc print="beta*gamma = " var="betagamma" eq="sqrt(gamma*gamma-1)"/>
+    <calc print="charge [nC] = " var="charge" eq="-0.050" />
+    <calc print="bunchlength [ps] = " var="tau" eq="2.0"/>
+    <calc print="bunchlength [m] = " var="zrms" eq="1.0e-12*tau*_c" />
+    <calc print="beam size [mm] = " var="sigma" eq="1.0" />
+    <calc print="normalized emittance [mm mrad] = " var="norm_emit" eq="10.0" />
+    <calc print="geometric emittance [m rad] = " var="emit" eq="1.0e-6*norm_emit/betagamma" />
+    <calc print="beta function [m] = " var="beta" eq="1.0e-6*sigma*sigma/emit" />
+    <lattice />
+    <beam>
+        <bunch gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" n="1000" >
+            <position x="0.0" y="0.0" z="-1.0" xrms="1.0e-3*sigma" yrms="1.0e-3*sigma" zrms="zrms" />
+            <momentum x="0.0" y="0.0" z="1.0" xrms="sqrt(emit/beta)" yrms="sqrt(emit/beta)" delta="0.0" />
+            <!-- Above definition is valid at the waist, so
+                 back propagate the distribution 1 m to the start
+              -->
+            <correlations>
+                <linear indep="3" dep="0" factor="-1.0/betagamma" />
+                <linear indep="4" dep="1" factor="-1.0/betagamma" />
+            </correlations>
+            <log file="elbe-EOS.sdds" step="1" />
+        </bunch>
+    </beam>
+    <calc print="tracking length [m] = " var="total_L" eq="1.2" />
+    <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
+    <calc print="dt = " var="dt" eq="total_t/1200" />
+    <tracking method="Vay" delta_t="dt" n="1200" >
+        <watch step="0" file="elbe-EOS_0.h5" />
+        <watch step="1000" file="elbe-EOS_1000.h5" />
+    </tracking>
+    <observer>
+        <calc print="observation start time t0 = " var="t0" eq="1.0/_c"/>
+        <point file="elbe-EOS_obs_17mm.sdds">
+            <position x="0.017" y="0.000" z="0.0" />
+            <time t0="t0-10.0e-12" dt="1e-13" n="300" />
+        </point>
+        <snapshot file="elbe-EOS_snap.h5">
+            <time t0="1000*dt" />
+            <position x="0.0" y="0.0" z="0.0" />
+            <hpitch x="0.000500" y="0.0" z="0.0" n="101" />
+            <vpitch x="0.0" y="0.0" z="0.000100" n="101" />
+        </snapshot>
+    </observer>
+</teufel>

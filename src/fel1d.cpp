@@ -241,8 +241,8 @@ void FEL_1D::step(Beam *beam)
     // the transverse current density
     std::vector<double> J_x = std::vector<double>(N_field, 0.0);
     
-    double TwoSigmaSquared = 2.0*pow(ds,2);
-    double SqrtTwoPi = sqrt(2.0*Pi);
+    double TwoSigmaSquared = 2.0*pow(2.0*ds,2);
+    double SigmaSqrtTwoPi = 2.0*sqrt(2.0*Pi);
     int NOB = beam->getNOB();
     for(int ib=0; ib<NOB; ib++)
     {
@@ -277,16 +277,16 @@ void FEL_1D::step(Beam *beam)
             Vector Beta_prime = P->getAccel()/gamma;
             double Q = P->getCharge();
             double j_x = dot(Beta_prime,e_x)*Q/A_opt/dt*MuNull*SpeedOfLight*SpeedOfLight;
-            // Every particle gives a gaussian pulse with sigma=ds.
-            // This effectively introduces a filter about 1/3rd of the Nyquist frequency
+            // Every particle gives a gaussian pulse with sigma=2*ds.
+            // This effectively introduces a filter about 1/5th of the Nyquist frequency
             int center_index = rint(delta_z/ds);
-            int start_index = center_index-5;
+            int start_index = center_index-10;
             if (start_index<0) start_index = 0;
-            int stop_index = center_index+6;
+            int stop_index = center_index+11;
             if (stop_index>N_field) stop_index = N_field;
             for (int i=start_index; i<stop_index; i++)
             {
-                J_x[i] += j_x * exp(-pow((delta_z-i*ds),2)/TwoSigmaSquared) / SqrtTwoPi;
+                J_x[i] += j_x * exp(-pow((delta_z-i*ds),2)/TwoSigmaSquared) / SigmaSqrtTwoPi;
             }
         }
     }
