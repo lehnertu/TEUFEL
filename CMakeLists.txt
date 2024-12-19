@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 2.6)
 project (TEUFEL)
 
 set (TEUFEL_VERSION_MAJOR 0)
-set (TEUFEL_VERSION_MINOR 11)
+set (TEUFEL_VERSION_MINOR 10)
 set (TEUFEL_VERSION_PATCH 1)
 
 # where to find modules

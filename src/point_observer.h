@@ -45,8 +45,7 @@
  * It provides a time-trace of electromagnetic field values.
  * It adds position information and file I/O to the FieldTrace:
  */
-template <typename SourceT>
-class PointObserver : public Observer<SourceT>
+class PointObserver : public Observer
 {
 
 public:
@@ -75,6 +74,12 @@ public:
     /*! Destructor */
     virtual ~PointObserver();
 
+    //! Set the source of the fiels to be recorded
+    void setSource(RadSource s) override;
+
+    //! Report the source of the fiels to be recorded
+    RadSource getSource() override;
+
     /*! Integrate the fields emitted by the source
      *  during all of its history, falling onto the time frame
      *  of observation.
@@ -84,7 +89,9 @@ public:
      *
      *  This method is defined for Beam(), Bunch() and Lattice() as field sources.
      */
-    void integrate() override;
+    void integrate(Beam *src) override;
+    void integrate(Bunch *src) override;
+    void integrate(Lattice *src) override;
 
     /*! Return the field value stored in one time slice
      */

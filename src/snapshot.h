@@ -44,8 +44,7 @@
  * It provides the electromagnetic fields at a single moment in time
  * observed on a 2-dimensional grid in space.
  */
-template <typename SourceT>
-class SnapshotObserver : public Observer<SourceT>
+class SnapshotObserver : public Observer
 {
 
 public:
@@ -80,34 +79,23 @@ public:
         unsigned int ny,
         double t);
 
-    /*! Destructor: if necessary delete particleBuffer
-     */
-    ~SnapshotObserver() override;
+    //! Set the source of the fiels to be recorded
+    void setSource(RadSource s) override;
+
+    //! Report the source of the fiels to be recorded
+    RadSource getSource() override;
 
     /*! Integrate the fields emitted by all particles of the source
-     *  during all of their history, induced a the time and point of observation.
+     *  during all of their history, induced a th time of observation.
      *  Should be called after tracking all particles at least to the time of observation.
      * 
      * \param[in] src The source generating the field.
      *
      *  This method is defined for Beam(), Bunch() and Lattice() as field sources.
      */
-    void integrate() override;
-    
-    /*! Get the number of particles contributing to the observation
-     * 
-     * \param[in] src The source generating the field.
-     *
-     *  This method is defined for Beam() and Bunch() as field sources.
-     */
-    int getNumParticles();
-
-    /*! Store all particle positions interpolated to the time of observation
-     *  \return The number of particles actually written to the buffer
-     *  This method is only defined for Beam() as field source.
-     *  There are 6 double values per particle (position and momentum=Beta*Gamma) stored into the buffer.
-     */
-    int storeParticlePositions();
+    void integrate(Beam *src) override;
+    void integrate(Bunch *src) override;
+    void integrate(Lattice *src) override;
     
     /*! Return the field value stored in one grid cell with indices ix, iy.
      *  This method throws an exception in case of an out-of-range index.
@@ -153,7 +141,7 @@ public:
      *  Data is divided into 2 data sets
      * 
      *  "ObservationPosition" :
-     *  - 2D array [Nx,Ny] of cell center position (Vector) [m]
+     *  - 2D array of cell center position (Vector) [m]
      *  - Attributes : Nx, Ny
      * 
      *  "ElMagField" :
@@ -162,21 +150,12 @@ public:
      *      - 3 componenets of the magnetic field [T]
      *  - Atributes : t_obs
      * 
-     *  If the source of observation consists of particles another data set
-     *  containing the particle positions and momenta is generated
-     *
-     *  "ParticleCoordinates" :
-     *  - 2D array [N,6] of double
-     *      - 3 components of position [m]
-     *      - 3 components of Beta*Gamma
-     *  - Attributes : N_particles
-     *
      * @throws IOexception
      */
     void WriteFieldHDF5();
 
     /*! Generate the output file(s) from this observation.
-     *  The present code just calls  WriteFieldHDF5()
+     *  The present code just calls  WriteFieldHDF()
      */
     void generateOutput() override;
 
@@ -204,7 +183,7 @@ private:
     //! the number of grid cells in x direction
     unsigned int Nx;
     
-    //! the number of grid cells in y direction
+    //! the number of grid cells in x direction
     unsigned int Ny;
     
     //! the observation time
@@ -216,9 +195,5 @@ private:
      */ 
     std::vector<std::vector<ElMagField>> FieldArray;
 
-    //! buffer for particle coordinates
-    double *particleBuffer;
-    int particlesStored;
-    
 };
 

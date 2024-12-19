@@ -77,7 +77,7 @@ int main(int argc, char* argv[])
     // **************************************
 
     std::cout << std::endl << "=== Source Screen ===" << std::endl;
-    MeshedScreen<Beam> *source = new MeshedScreen<Beam>(sourcefile);
+    MeshedScreen *source = new MeshedScreen(sourcefile);
     source->init();
     // print report
     source->writeReport(&cout);
@@ -385,7 +385,7 @@ int main(int argc, char* argv[])
     // **************************************
 
     std::cout << std::endl << "=== Target Screen ===" << std::endl;
-    MeshedScreen<Beam> *target = new MeshedScreen<Beam>(infile);
+    MeshedScreen *target = new MeshedScreen(infile);
     target->init();
     target->zero();
     // print report
