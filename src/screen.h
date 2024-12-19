@@ -44,7 +44,8 @@
  * For every point on a 2-dimensional planar rectangular grid
  * time-traces of the observed electromagnetic field are generated.
  */
-class ScreenObserver : public Observer
+template <typename SourceT>
+class ScreenObserver : public Observer<SourceT>
 {
     
 public:
@@ -110,14 +111,8 @@ public:
         unsigned int nots);
     
     //! We need a destructor to release the memory for the field traces
-    ~ScreenObserver();
+    ~ScreenObserver() override;
     
-    //! Set the source of the fields to be recorded
-    void setSource(RadSource s) override;
-
-    //! Report the source of the fields to be recorded
-    RadSource getSource() override;
-
     /*! Integrate the fields emitted by the source
      *  during all of its history, falling onto the time frame
      *  of observation.
@@ -127,9 +122,7 @@ public:
      *
      *  This method is defined for Beam(), Bunch() and Lattice() as field sources.
      */
-    void integrate(Beam *src) override;
-    void integrate(Bunch *src) override;
-    void integrate(Lattice *src) override;
+    void integrate() override;
     
     /*! Return the field value stored in one time slice
      *  with index it from the grid cell with indices ix, iy.

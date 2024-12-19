@@ -546,7 +546,7 @@ void ChargedParticle::CoordinatesAtTime(double time, Vector *position, Vector *m
             *momentum = P[i1];
         } else {
             // interpolate the coordinates within the interval
-            // interpolation could be improved using higher-order terms
+            // TODO: interpolation could be improved using higher-order terms
             double frac = (time - t1) / (t2 - t1);
             *position = X[i1] * (1.0 - frac) + X[i2] * frac;
             *momentum = P[i1] * (1.0 - frac) + P[i2] * frac;
@@ -730,12 +730,15 @@ ElMagField ChargedParticle::RetardedField(double obs_time, Vector obs_pos)
             SourceX = X1*(1.0-frac) + X2*frac;
             if (number_ref>=10)
             {
-                printf("WARNING : no convergence in ChargedParticle::RetardedField\n");
-                printf("Obs    : t=%9.6g  X=(%9.6g, %9.6g, %9.6g)\n",obs_time,obs_pos.x,obs_pos.y,obs_pos.z);
-                printf("Source : t=%9.6g  X=(%9.6g, %9.6g, %9.6g)\n",SourceT,SourceX.x,SourceX.y,SourceX.z);
                 R = (obs_pos-SourceX).norm();
                 dt = SourceT + R / SpeedOfLight - obs_time;
-                printf("frac=%12.9f  R=%9.6g  dt=%9.6g => dfrac=%12.9f\n",frac,R,dt,-dfrac);
+                if (DEBUGLEVEL>=2)
+                {
+                    printf("WARNING : no convergence in ChargedParticle::RetardedField\n");
+                    printf("Obs    : t=%9.6g  X=(%9.6g, %9.6g, %9.6g)\n",obs_time,obs_pos.x,obs_pos.y,obs_pos.z);
+                    printf("Source : t=%9.6g  X=(%9.6g, %9.6g, %9.6g)\n",SourceT,SourceX.x,SourceX.y,SourceX.z);
+                    printf("frac=%12.9f  R=%9.6g  dt=%9.6g => dfrac=%12.9f\n",frac,R,dt,-dfrac);
+                }
             }
             SourceBeta = P[i1]*(1.0-frac) + P[i2]*frac;
             betagamma2 = SourceBeta.abs2nd();

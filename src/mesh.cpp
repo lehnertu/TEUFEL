@@ -27,7 +27,8 @@
 #include <omp.h>
 #include "hdf5.h"
 
-MeshedScreen::MeshedScreen(std::string filename)
+template <typename SourceT>
+MeshedScreen<SourceT>::MeshedScreen(std::string filename)
 {
     FileName = filename;
     if (teufel::rank==0) std::cout << "meshed screen observer : " << filename << std::endl;
@@ -212,26 +213,18 @@ MeshedScreen::MeshedScreen(std::string filename)
     if (status<0) throw(IOexception("MeshedScreen - error closing the file."));
     
     // set defaults
-    source = BeamObservation;
+    this->source_type = BeamObservation;
     total_area = 0.0;
 }
 
-MeshedScreen::~MeshedScreen()
+template <typename SourceT>
+MeshedScreen<SourceT>::~MeshedScreen()
 {
     for (int i=0; i<Np; i++) delete A[i];
 }
 
-void MeshedScreen::setSource(RadSource s)
-{
-    source = s;
-}
-
-RadSource MeshedScreen::getSource()
-{ 
-    return source;
-}
-
-void MeshedScreen::init()
+template <typename SourceT>
+void MeshedScreen<SourceT>::init()
 {
     area = std::vector<double>(Np);
     total_area = 0.0;
@@ -285,16 +278,18 @@ void MeshedScreen::init()
     }
 }
 
-void MeshedScreen::zero()
+template <typename SourceT>
+void MeshedScreen<SourceT>::zero()
 {
     for (int i=0; i<Np; i++)
         A[i]->zero();
 }
 
-void MeshedScreen::integrate(Beam *src)
+template <>
+void MeshedScreen<Beam>::integrate()
 {
     if (DEBUGLEVEL>=2) cout << "MeshedScreen::integrate(Beam)" << std::endl;
-    if (DEBUGLEVEL>=2) cout << "beam number of particles = " << src->getNOP() << std::endl;
+    if (DEBUGLEVEL>=2) cout << "beam number of particles = " << source->getNOP() << std::endl;
     int counter = 0;
     double now = current_time();
     double print_time = now;
@@ -303,7 +298,7 @@ void MeshedScreen::integrate(Beam *src)
     {
         #pragma omp atomic
         counter++;
-        src->integrateFieldTrace(get_point(i), A[i]);
+        source->integrateFieldTrace(get_point(i), A[i]);
         if (omp_get_thread_num() == 0)
         {
             now = current_time();
@@ -318,10 +313,11 @@ void MeshedScreen::integrate(Beam *src)
     };
 }
 
-void MeshedScreen::integrate(Bunch *src)
+template <>
+void MeshedScreen<Bunch>::integrate()
 {
     if (DEBUGLEVEL>=2) cout << "MeshedScreen::integrate(Bunch)" << std::endl;
-    if (DEBUGLEVEL>=2) cout << "bunch number of particles = " << src->getNOP() << std::endl;
+    if (DEBUGLEVEL>=2) cout << "bunch number of particles = " << source->getNOP() << std::endl;
     int counter = 0;
     double now = current_time();
     double print_time = now;
@@ -330,7 +326,7 @@ void MeshedScreen::integrate(Bunch *src)
     {
         #pragma omp atomic
         counter++;
-        src->integrateFieldTrace(get_point(i), A[i]);
+        source->integrateFieldTrace(get_point(i), A[i]);
         if (omp_get_thread_num() == 0)
         {
             now = current_time();
@@ -345,7 +341,8 @@ void MeshedScreen::integrate(Bunch *src)
     };
 }
 
-void MeshedScreen::integrate(Lattice *src)
+template <>
+void MeshedScreen<Lattice>::integrate()
 {
     int counter = 0;
     double now = current_time();
@@ -359,7 +356,7 @@ void MeshedScreen::integrate(Lattice *src)
         for (int it=0; it<Nt; it++)
         {
             FieldTrace *trace = A[i];
-            trace->add(it,src->Field(trace->get_time(it),pos));
+            trace->add(it,source->Field(trace->get_time(it),pos));
         }
         if (omp_get_thread_num() == 0)
         {
@@ -375,7 +372,8 @@ void MeshedScreen::integrate(Lattice *src)
     }
 }
 
-double* MeshedScreen::getBuffer()
+template <typename SourceT>
+double* MeshedScreen<SourceT>::getBuffer()
 {
     double* buffer = new double[getBufferSize()];
     if (buffer==0) throw(IOexception("MeshedScreen::getBuffer() - error allocating memory."));
@@ -400,7 +398,8 @@ double* MeshedScreen::getBuffer()
     return buffer;
 }
 
-void MeshedScreen::fromBuffer(double *buffer, std::size_t size)
+template <typename SourceT>
+void MeshedScreen<SourceT>::fromBuffer(double *buffer, std::size_t size)
 {
     if (size==getBufferSize())
     {
@@ -425,7 +424,8 @@ void MeshedScreen::fromBuffer(double *buffer, std::size_t size)
     }
 }
 
-void MeshedScreen::writeFile(std::string filename)
+template <typename SourceT>
+void MeshedScreen<SourceT>::writeFile(std::string filename)
 {
     //! @todo
     herr_t status;
@@ -735,12 +735,14 @@ void MeshedScreen::writeFile(std::string filename)
     return;
 }
 
-void MeshedScreen::writeFile()
+template <typename SourceT>
+void MeshedScreen<SourceT>::writeFile()
 {
     writeFile(FileName);
 }
 
-double MeshedScreen::totalEnergy()
+template <typename SourceT>
+double MeshedScreen<SourceT>::totalEnergy()
 {
     double total = 0.0;
     for (int ip=0; ip<Np; ip++)
@@ -751,7 +753,8 @@ double MeshedScreen::totalEnergy()
     return total;
 }
 
-int MeshedScreen::get_Neighbourhood(int index, int *buffer)
+template <typename SourceT>
+int MeshedScreen<SourceT>::get_Neighbourhood(int index, int *buffer)
 {
     // the indexed triangle
     int i1 = triangles[index].p1;
@@ -777,7 +780,8 @@ int MeshedScreen::get_Neighbourhood(int index, int *buffer)
     return count;
 }
 
-void MeshedScreen::writeReport(std::ostream *st)
+template <typename SourceT>
+void MeshedScreen<SourceT>::writeReport(std::ostream *st)
 {
     *st << std::endl;
     *st << "   Meshed Screen" << std::endl;
@@ -815,7 +819,13 @@ void MeshedScreen::writeReport(std::ostream *st)
     *st << std::endl;
 }
 
-void MeshedScreen::generateOutput()
+template <typename SourceT>
+void MeshedScreen<SourceT>::generateOutput()
 {
     writeFile();
 }
+
+template class MeshedScreen<Beam>;
+template class MeshedScreen<Bunch>;
+template class MeshedScreen<Lattice>;
+

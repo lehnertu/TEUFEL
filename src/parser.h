@@ -145,7 +145,7 @@ public:
      *  Will not cause problems, if no observers are defined (tracking only)
      *  but the main nodes <observer> should still be present.
      */
-    void parseObservers(std::vector<Observer*> *listObservers);
+    void parseObservers(std::vector<BaseObserver*> *listObservers);
 
 private:
     

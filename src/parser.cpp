@@ -688,7 +688,7 @@ void InputParser::parseTracking(
     }
 }
 
-void InputParser::parseObservers(std::vector<Observer*> *listObservers)
+void InputParser::parseObservers(std::vector<BaseObserver*> *listObservers)
 {
     pugi::xml_node obsroot = root.child("observer");
     if (!obsroot)
@@ -741,19 +741,42 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                 pugi::xml_attribute nv = vnode.attribute("n");
                 if (!nv)
                     throw(IOexception("InputParser::parseObservers - <snapshot> <vpitch> attribute n not found."));
-                SnapshotObserver *snapObs = new SnapshotObserver(
-                    fn.as_string(),
-                    pos, h, v,
-                    nh.as_int(),
-                    nv.as_int(),
-                    t0 );
                 pugi::xml_attribute src = obs.attribute("source");
+                BaseObserver *snapObs;
                 if (src)
                 {
-                    if (std::string(src.value()) == "beam") snapObs->setSource(BeamObservation);
-                    else if (std::string(src.value()) == "lattice") snapObs->setSource(LatticeObservation);
+                    if (std::string(src.value()) == "beam")
+                    {
+                        snapObs = new SnapshotObserver<Beam>(
+                            fn.as_string(),
+                            pos, h, v,
+                            nh.as_int(),
+                            nv.as_int(),
+                            t0 );
+                        snapObs->setSourceType(BeamObservation);
+                    }
+                    else if (std::string(src.value()) == "lattice")
+                    {
+                        snapObs = new SnapshotObserver<Lattice>(
+                            fn.as_string(),
+                            pos, h, v,
+                            nh.as_int(),
+                            nv.as_int(),
+                            t0 );
+                        snapObs->setSourceType(LatticeObservation);
+                    }
                     else throw(IOexception("InputParser::parseObservers - <snapshot> illegal source attribute."));
-                };
+                }
+                else
+                {
+                    snapObs = new SnapshotObserver<Beam>(
+                        fn.as_string(),
+                        pos, h, v,
+                        nh.as_int(),
+                        nv.as_int(),
+                        t0 );
+                    snapObs->setSourceType(BeamObservation);
+                }
                 listObservers->push_back(snapObs);
             }
             else if (type == "screen")
@@ -809,19 +832,42 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                 pugi::xml_attribute nt = tnode.attribute("n");
                 if (!nt)
                     throw(IOexception("InputParser::parseObservers - <screen> <time> attribute n not found."));
-                ScreenObserver *screenObs = new ScreenObserver(
-                    fn.as_string(),
-                    pos, dx, dy,
-                    nh.as_int(),
-                    nv.as_int(),
-                    t0, dt, dtx, dty, nt.as_int() );
                 pugi::xml_attribute src = obs.attribute("source");
+                BaseObserver *screenObs;
                 if (src)
                 {
-                    if (std::string(src.value()) == "beam") screenObs->setSource(BeamObservation);
-                    else if (std::string(src.value()) == "lattice") screenObs->setSource(LatticeObservation);
+                    if (std::string(src.value()) == "beam")
+                    {
+                        screenObs = new ScreenObserver<Beam>(
+                            fn.as_string(),
+                            pos, dx, dy,
+                            nh.as_int(),
+                            nv.as_int(),
+                            t0, dt, dtx, dty, nt.as_int() );
+                        screenObs->setSourceType(BeamObservation);
+                    }
+                    else if (std::string(src.value()) == "lattice")
+                    {
+                        screenObs = new ScreenObserver<Lattice>(
+                            fn.as_string(),
+                            pos, dx, dy,
+                            nh.as_int(),
+                            nv.as_int(),
+                            t0, dt, dtx, dty, nt.as_int() );
+                        screenObs->setSourceType(LatticeObservation);
+                    }
                     else throw(IOexception("InputParser::parseObservers - <screen> illegal source attribute."));
-                };
+                }
+                else
+                {
+                    screenObs = new ScreenObserver<Beam>(
+                        fn.as_string(),
+                        pos, dx, dy,
+                        nh.as_int(),
+                        nv.as_int(),
+                        t0, dt, dtx, dty, nt.as_int() );
+                    screenObs->setSourceType(BeamObservation);
+                }
                 listObservers->push_back(screenObs);
             }
             else if (type == "mesh")
@@ -830,18 +876,38 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                 if (!fn)
                     throw(IOexception("InputParser::parseObservers - <mesh> attribute file not found."));                
                 parseCalcChildren(obs);
-                MeshedScreen *meshObs = new MeshedScreen(fn.as_string());
-                meshObs->init();
-                meshObs->zero();
                 pugi::xml_attribute src = obs.attribute("source");
                 if (src)
                 {
-                    if (std::string(src.value()) == "beam") meshObs->setSource(BeamObservation);
-                    else if (std::string(src.value()) == "lattice") meshObs->setSource(LatticeObservation);
+                    if (std::string(src.value()) == "beam")
+                    {
+                        MeshedScreen<Beam> *obs = new MeshedScreen<Beam>(fn.as_string());
+                        obs->init();
+                        obs->zero();
+                        obs->setSourceType(BeamObservation);
+                        listObservers->push_back(obs);
+                        if (teufel::rank==0) obs->writeReport(&cout); 
+                    }
+                    else if (std::string(src.value()) == "lattice")
+                    {
+                        MeshedScreen<Lattice> *obs = new MeshedScreen<Lattice>(fn.as_string());
+                        obs->init();
+                        obs->zero();
+                        obs->setSourceType(LatticeObservation);
+                        listObservers->push_back(obs);
+                        if (teufel::rank==0) obs->writeReport(&cout);
+                    }
                     else throw(IOexception("InputParser::parseObservers - <mesh> illegal source attribute."));
-                };
-                if (teufel::rank==0) meshObs->writeReport(&cout);
-                listObservers->push_back(meshObs);
+                }
+                else
+                {
+                    MeshedScreen<Beam> *obs = new MeshedScreen<Beam>(fn.as_string());
+                    obs->init();
+                    obs->zero();
+                    obs->setSourceType(BeamObservation);
+                    listObservers->push_back(obs);
+                    if (teufel::rank==0) obs->writeReport(&cout);
+                }
             }
             else if (type == "point")
             {
@@ -866,18 +932,38 @@ void InputParser::parseObservers(std::vector<Observer*> *listObservers)
                 pugi::xml_attribute nt = tnode.attribute("n");
                 if (!nt)
                     throw(IOexception("InputParser::parseObservers - <point> <time> attribute n not found."));
-                PointObserver *pointObs = new PointObserver(
-                    fn.as_string(),
-                    pos,
-                    t0, dt, nt.as_int() );
                 pugi::xml_attribute src = obs.attribute("source");
                 if (src)
                 {
-                    if (std::string(src.value()) == "beam") pointObs->setSource(BeamObservation);
-                    else if (std::string(src.value()) == "lattice") pointObs->setSource(LatticeObservation);
-                    else throw(IOexception("InputParser::parseObservers - <point> illegal source attribute."));
-                };
-                listObservers->push_back(pointObs);
+                    if (std::string(src.value()) == "beam")
+                    {
+                        PointObserver<Beam> *pointObs = new PointObserver<Beam>(
+                            fn.as_string(),
+                            pos,
+                            t0, dt, nt.as_int() );
+                        pointObs->setSourceType(BeamObservation);
+                        listObservers->push_back(pointObs);
+                    }
+                    else if (std::string(src.value()) == "lattice")
+                    {
+                        PointObserver<Lattice> *pointObs = new PointObserver<Lattice>(
+                            fn.as_string(),
+                            pos,
+                            t0, dt, nt.as_int() );
+                        pointObs->setSourceType(LatticeObservation);
+                        listObservers->push_back(pointObs);
+                    }
+                    else throw(IOexception("InputParser::parseObservers - <mesh> illegal source attribute."));
+                }
+                else
+                {
+                    PointObserver<Beam> *pointObs = new PointObserver<Beam>(
+                        fn.as_string(),
+                        pos,
+                        t0, dt, nt.as_int() );
+                    pointObs->setSourceType(BeamObservation);
+                    listObservers->push_back(pointObs);
+                }
             }
             else
                 throw(IOexception("InputParser::parseObservers - unknown observer type."));

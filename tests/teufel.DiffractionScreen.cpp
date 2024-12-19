@@ -133,13 +133,14 @@ int main ()
     try
     {
         // read the screen setup from file
-        MeshedScreen* screen = new MeshedScreen(INFILE);
+        MeshedScreen<Bunch>* screen = new MeshedScreen<Bunch>(INFILE);
         screen->init();
         screen->zero();
         screen->writeReport(&cout);
         // accumulate the fields
         printf("computing fields ...\n");
-        screen->integrate(bunch);
+        screen->setSource(bunch);
+        screen->integrate();
         // check the computed radiation intensity
         double EuJ = screen->totalEnergy()*1.0e6;
         double EuJ_th = 0.463;

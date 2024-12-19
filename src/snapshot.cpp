@@ -27,10 +27,12 @@
 
 #include <iostream>
 #include <math.h>
+#include <omp.h>
 #include "SDDS.h"
 #include "hdf5.h"
 
-SnapshotObserver::SnapshotObserver(
+template <typename SourceT>
+SnapshotObserver<SourceT>::SnapshotObserver(
     std::string filename,
     Vector position,
     Vector dx,
@@ -54,41 +56,100 @@ SnapshotObserver::SnapshotObserver(
     	for (unsigned int iy = 0; iy < Ny; iy++)
     	    FieldArray[ix].push_back(field);
     // set a default source
-    source = BeamObservation;
+    this->source_type = BeamObservation;
+    // set a NULL pointer indicating no particle coordinates stored
+    particleBuffer = 0;
+    particlesStored = 0;
 }
 
-void SnapshotObserver::setSource(RadSource s)
+template <typename SourceT>
+SnapshotObserver<SourceT>::~SnapshotObserver()
 {
-    source = s;
+    if (particlesStored>0) delete particleBuffer;
 }
 
-RadSource SnapshotObserver::getSource()
-{ 
-    return source;
-}
-
-void SnapshotObserver::integrate(Beam *src)
+template <>
+void SnapshotObserver<Beam>::integrate()
 {
-    for (unsigned int ix = 0; ix < Nx; ix++)
-    	for (unsigned int iy = 0; iy < Ny; iy++)
-	        FieldArray[ix][iy] = src->RetardedField(t_obs, CellPosition(ix, iy));
+    #pragma omp parallel for collapse(2)
+    for (unsigned int ix = 0; ix < Nx; ix++) {
+    	for (unsigned int iy = 0; iy < Ny; iy++) {
+	        FieldArray[ix][iy] = source->RetardedField(t_obs, CellPosition(ix, iy));
+	    }
+	}
 }
 
-void SnapshotObserver::integrate(Bunch *src)
+template <>
+void SnapshotObserver<Bunch>::integrate()
 {
-    for (unsigned int ix = 0; ix < Nx; ix++)
-    	for (unsigned int iy = 0; iy < Ny; iy++)
-	        FieldArray[ix][iy] = src->RetardedField(t_obs, CellPosition(ix, iy));
+    #pragma omp parallel for collapse(2)
+    for (unsigned int ix = 0; ix < Nx; ix++) {
+    	for (unsigned int iy = 0; iy < Ny; iy++) {
+	        FieldArray[ix][iy] = source->RetardedField(t_obs, CellPosition(ix, iy));
+	    }
+	}
 }
 
-void SnapshotObserver::integrate(Lattice *src)
+template <>
+void SnapshotObserver<Lattice>::integrate()
 {
-    for (unsigned int ix = 0; ix < Nx; ix++)
-    	for (unsigned int iy = 0; iy < Ny; iy++)
-	        FieldArray[ix][iy] = src->Field(t_obs, CellPosition(ix, iy));
+    #pragma omp parallel for collapse(2)
+    for (unsigned int ix = 0; ix < Nx; ix++) {
+    	for (unsigned int iy = 0; iy < Ny; iy++) {
+	        FieldArray[ix][iy] = source->Field(t_obs, CellPosition(ix, iy));
+	    }
+	}
 }
 
-ElMagField SnapshotObserver::getField(
+template <>
+int SnapshotObserver<Beam>::getNumParticles()
+{
+    if (source)
+        return source->getNOP();
+    else
+        return 0;
+}
+
+template <>
+int SnapshotObserver<Beam>::storeParticlePositions()
+{
+    Vector X, BG;
+    int NOP = getNumParticles();
+    particleBuffer = new double[6*NOP];
+    if (particleBuffer==0)
+    {
+        throw(IOexception("SnapshotObserver::storeParticlePositions() - error allocating memory."));
+        particlesStored = 0;
+    }
+    double *bp = particleBuffer;
+    if (source)
+    {
+        int NOB = source->getNOB();
+        for (int bunch_index=0; bunch_index<NOB; bunch_index++)
+        {
+            Bunch *b = source->getBunch(bunch_index);
+            int b_NOP = b->getNOP();
+            for (int i = 0; i < b_NOP; i++)
+            {
+                ChargedParticle* p = b->getParticle(i);
+                p->CoordinatesAtTime(t_obs, &X, &BG);
+                *bp++ = X.x;
+                *bp++ = X.y;
+                *bp++ = X.z;
+                *bp++ = BG.x;
+                *bp++ = BG.y;
+                *bp++ = BG.z;
+            }
+        }
+        particlesStored = NOP;
+    }
+    else
+        particlesStored = 0;
+    return particlesStored;
+}
+
+template <typename SourceT>
+ElMagField SnapshotObserver<SourceT>::getField(
         unsigned int ix,
         unsigned int iy)
 {
@@ -101,7 +162,8 @@ ElMagField SnapshotObserver::getField(
     return field;
 }
 
-void SnapshotObserver::setField(
+template <typename SourceT>
+void SnapshotObserver<SourceT>::setField(
         unsigned int ix,
         unsigned int iy,
         ElMagField field)
@@ -112,7 +174,8 @@ void SnapshotObserver::setField(
 	    throw(IOexception("SnapshotObserver::setField() - requested index out of range."));
 }
 
-double* SnapshotObserver::getBuffer()
+template <typename SourceT>
+double* SnapshotObserver<SourceT>::getBuffer()
 {
     double* buffer = new double[getBufferSize()];
     if (buffer==0)
@@ -135,7 +198,8 @@ double* SnapshotObserver::getBuffer()
     return buffer;
 }
 
-void SnapshotObserver::fromBuffer(double *buffer, std::size_t size)
+template <typename SourceT>
+void SnapshotObserver<SourceT>::fromBuffer(double *buffer, std::size_t size)
 {
     if (size==Nx*Ny*6)
     {
@@ -158,7 +222,8 @@ void SnapshotObserver::fromBuffer(double *buffer, std::size_t size)
     }
 }
 
-void SnapshotObserver::WriteFieldHDF5()
+template <typename SourceT>
+void SnapshotObserver<SourceT>::WriteFieldHDF5()
 {
     herr_t status;
     cout << "writing HDF5 file " << FileName << endl;
@@ -275,6 +340,54 @@ void SnapshotObserver::WriteFieldHDF5()
     if (status<0) throw(IOexception("SnapshotObserver::WriteFieldHDF5 - error in H5Sclose(space)"));
     delete[] buffer;
 
+    // If available create a dataset with the particle coordinates
+    if (particleBuffer and (particlesStored > 0))
+    {
+        if (DEBUGLEVEL>=2) std::cout << "SnaphotObserver saving coordinates of " << particlesStored << " particles - ";
+        // Create dataspace for the field data.
+        // Setting maximum size to NULL sets the maximum size to be the current size.
+        hsize_t cdims[2];
+        cdims[0] = particlesStored;
+        cdims[1] = 6;
+        space = H5Screate_simple (2, cdims, NULL);
+        if (space<0) throw(IOexception("SnapshotObserver::WriteFieldHDF5 - error in H5Screate(space)"));
+        // Create the dataset creation property list
+        dcpl = H5Pcreate (H5P_DATASET_CREATE);
+        if (dcpl<0) throw(IOexception("SnapshotObserver::WriteFieldHDF5 - error in H5Pcreate(dcpl)"));
+        // Create the dataset.
+        dset = H5Dcreate (file,
+            "ParticleCoordinates",  // dataset name
+            H5T_NATIVE_DOUBLE,		// data type
+            space, H5P_DEFAULT,
+            dcpl, H5P_DEFAULT);
+        if (dset<0) throw(IOexception("SnapshotObserver::WriteFieldHDF5 - error in H5Dcreate(dset)"));
+        // Write the data to the dataset
+        status = H5Dwrite (dset,
+            H5T_NATIVE_DOUBLE, 		// mem type id
+            H5S_ALL, 			    // mem space id
+            space,
+            H5P_DEFAULT,			// data transfer properties
+            particleBuffer);
+        if (status<0) throw(IOexception("SnapshotObserver::WriteFieldHDF5 - error in H5Dwrite(dset)"));
+        // attach scalar attributes
+        atts  = H5Screate(H5S_SCALAR);
+        if (atts<0) throw(IOexception("SnapshotObserver::WriteFieldHDF5 - error in H5Screate(N_particles)"));
+        attr = H5Acreate2(dset, "N_particles", H5T_NATIVE_INT, atts, H5P_DEFAULT, H5P_DEFAULT);
+        if (attr<0) throw(IOexception("SnapshotObserver::WriteFieldHDF5 - error in H5Acreate2(N_particles)"));
+        status = H5Awrite(attr, H5T_NATIVE_INT, &particlesStored);
+        if (status<0) throw(IOexception("SnapshotObserver::WriteFieldHDF5 - error in H5Awrite(N_particles)"));
+        status = H5Sclose (atts);
+        if (status<0) throw(IOexception("SnapshotObserver::WriteFieldHDF5 - error in H5Sclose(N_particles)"));
+        // Close and release resources.
+        status = H5Pclose (dcpl);
+        if (status<0) throw(IOexception("SnapshotObserver::WriteFieldHDF5 - error in H5Pclose(dcpl)"));
+        status = H5Dclose (dset);
+        if (status<0) throw(IOexception("SnapshotObserver::WriteFieldHDF5 - error in H5Dclose(dset)"));
+        status = H5Sclose (space);
+        if (status<0) throw(IOexception("SnapshotObserver::WriteFieldHDF5 - error in H5Sclose(space)"));
+        if (DEBUGLEVEL>=2) std::cout << "done." << std::endl << std::flush;
+    }
+    
     status = H5Fclose (file);
     if (status<0) throw(IOexception("SnapshotObserver::WriteFieldHDF5 - error in H5Fclose()"));
     // no errors have occured if we made it 'til here
@@ -282,14 +395,19 @@ void SnapshotObserver::WriteFieldHDF5()
     return;
 }
 
-void SnapshotObserver::generateOutput()
+template <typename SourceT>
+void SnapshotObserver<SourceT>::generateOutput()
 {
     WriteFieldHDF5();
 }
 
-Vector SnapshotObserver::CellPosition(int ix, int iy)
+template <typename SourceT>
+Vector SnapshotObserver<SourceT>::CellPosition(int ix, int iy)
 {
     return O + dX*((double)ix-0.5*((double)Nx-1.0)) + dY*((double)iy-0.5*((double)Ny-1.0));
 }
 
+template class SnapshotObserver<Beam>;
+template class SnapshotObserver<Bunch>;
+template class SnapshotObserver<Lattice>;
 

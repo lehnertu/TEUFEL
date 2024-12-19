@@ -31,7 +31,8 @@
 #include "SDDS.h"
 #include "hdf5.h"
 
-ScreenObserver::ScreenObserver(
+template <typename SourceT>
+ScreenObserver<SourceT>::ScreenObserver(
     std::string filename,
     Vector position,
     Vector dx,
@@ -83,39 +84,33 @@ ScreenObserver::ScreenObserver(
     }
 
     // set a default source
-    source = BeamObservation;
+    this->source_type = BeamObservation;
 }
 
-ScreenObserver::~ScreenObserver()
+template <typename SourceT>
+ScreenObserver<SourceT>::~ScreenObserver()
 {
     for (unsigned int ix = 0; ix < Nx; ix++)
     	for (unsigned int iy = 0; iy < Ny; iy++)
             delete Traces[ix][iy];
 }
 
-void ScreenObserver::setSource(RadSource s)
-{
-    source = s;
-}
-
-RadSource ScreenObserver::getSource()
-{ 
-    return source;
-}
-
-Vector ScreenObserver::CellPosition(unsigned int ix, unsigned int iy)
+template <typename SourceT>
+Vector ScreenObserver<SourceT>::CellPosition(unsigned int ix, unsigned int iy)
 {
     // center index is Nx/2 Ny/2 (integer division!)
     return Origin + dX*(double)((int)ix-(int)Nx/2) + dY*(double)((int)iy-(int)Ny/2);
 }
 
-double ScreenObserver::CellTimeZero(unsigned int ix, unsigned int iy)
+template <typename SourceT>
+double ScreenObserver<SourceT>::CellTimeZero(unsigned int ix, unsigned int iy)
 {
     // center index is Nx/2 Ny/2 (integer division!)
     return t0_obs + dtx_obs*(double)((int)ix-(int)Nx/2) + dty_obs*(double)((int)iy-(int)Ny/2);
 }
 
-void ScreenObserver::integrate(Beam *src)
+template <>
+void ScreenObserver<Beam>::integrate()
 {
     int counter = 0;
     double now = current_time();
@@ -131,7 +126,7 @@ void ScreenObserver::integrate(Beam *src)
                 #pragma omp atomic
                 counter++;
                 // all timing information is already stored in the trace
-                src->integrateFieldTrace(CellPosition(ix, iy), Traces[ix][iy]);
+                source->integrateFieldTrace(CellPosition(ix, iy), Traces[ix][iy]);
             };
             if (omp_get_thread_num() == 0)
             {
@@ -149,7 +144,8 @@ void ScreenObserver::integrate(Beam *src)
     }
 }
 
-void ScreenObserver::integrate(Bunch *src)
+template <>
+void ScreenObserver<Bunch>::integrate()
 {
     int counter = 0;
     double now = current_time();
@@ -165,7 +161,7 @@ void ScreenObserver::integrate(Bunch *src)
                 #pragma omp atomic
                 counter++;
                 // all timing information is already stored in the trace
-                src->integrateFieldTrace(CellPosition(ix, iy), Traces[ix][iy]);
+                source->integrateFieldTrace(CellPosition(ix, iy), Traces[ix][iy]);
             };
             if (omp_get_thread_num() == 0)
             {
@@ -183,7 +179,8 @@ void ScreenObserver::integrate(Bunch *src)
     }
 }
 
-void ScreenObserver::integrate(Lattice *src)
+template <>
+void ScreenObserver<Lattice>::integrate()
 {
     int counter = 0;
     double now = current_time();
@@ -201,7 +198,7 @@ void ScreenObserver::integrate(Lattice *src)
                 for (unsigned int it = 0; it < NOTS; it++)
                 {
                     Traces[ix][iy]->add(it,
-                        src->Field(CellTimeZero(ix,iy)+(double)it*dt_obs, CellPosition(ix,iy)) );
+                        source->Field(CellTimeZero(ix,iy)+(double)it*dt_obs, CellPosition(ix,iy)) );
                 }
                 if (omp_get_thread_num() == 0)
                 {
@@ -220,7 +217,8 @@ void ScreenObserver::integrate(Lattice *src)
     };
 }
 
-ElMagField ScreenObserver::getField(
+template <typename SourceT>
+ElMagField ScreenObserver<SourceT>::getField(
 	unsigned int ix,
 	unsigned int iy,
 	unsigned int it)
@@ -234,7 +232,8 @@ ElMagField ScreenObserver::getField(
     return field;
 }
 
-void ScreenObserver::setField(
+template <typename SourceT>
+void ScreenObserver<SourceT>::setField(
 	unsigned int ix,
 	unsigned int iy,
 	unsigned int it,
@@ -246,7 +245,8 @@ void ScreenObserver::setField(
 	    throw(IOexception("ScreenObserver::setField() - requested index out of range."));
 }
 
-double* ScreenObserver::getBuffer()
+template <typename SourceT>
+double* ScreenObserver<SourceT>::getBuffer()
 {
     double* buffer = new double[getBufferSize()];
     if (buffer==0)
@@ -270,7 +270,8 @@ double* ScreenObserver::getBuffer()
     return buffer;
 }
 
-void ScreenObserver::fromBuffer(double *buffer, std::size_t size)
+template <typename SourceT>
+void ScreenObserver<SourceT>::fromBuffer(double *buffer, std::size_t size)
 {
     if (size==Nx*Ny*NOTS*6)
     {
@@ -293,7 +294,8 @@ void ScreenObserver::fromBuffer(double *buffer, std::size_t size)
     }
 }
 
-void ScreenObserver::WriteTimeDomainFieldHDF5()
+template <typename SourceT>
+void ScreenObserver<SourceT>::WriteTimeDomainFieldHDF5()
 {
     hid_t atts, attr;
     herr_t status;
@@ -555,7 +557,13 @@ void ScreenObserver::WriteTimeDomainFieldHDF5()
     return;
 }
 
-void ScreenObserver::generateOutput()
+template <typename SourceT>
+void ScreenObserver<SourceT>::generateOutput()
 {
     WriteTimeDomainFieldHDF5();
 }
+
+template class ScreenObserver<Beam>;
+template class ScreenObserver<Bunch>;
+template class ScreenObserver<Lattice>;
+

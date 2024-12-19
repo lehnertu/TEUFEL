@@ -66,6 +66,7 @@
 #include "observer.h"
 #include "parser.h"
 #include "particle.h"
+#include "snapshot.h"
 #include "undulator.h"
 
 #include "pugixml.hpp"
@@ -245,7 +246,7 @@ int main(int argc, char *argv[])
     MPI_Barrier(MPI_COMM_WORLD);
     
     // parse all observer definitions
-    std::vector<Observer*> listObservers;
+    std::vector<BaseObserver*> listObservers;
     parse->parseObservers(&listObservers);
     if (teufel::rank==0) std::cout << std::endl;
     if (teufel::rank==0) std::cout << "defined " << (int)listObservers.size() << " observers." << std::endl;
@@ -695,15 +696,22 @@ int main(int argc, char *argv[])
         {
             std::cout << std::endl << "computing observer No. " << i+1 << std::endl;
         };
-        Observer *obs = listObservers.at(i);
+        BaseObserver *observer = listObservers.at(i);
         MPI_Barrier(MPI_COMM_WORLD);
         usleep(100000);
         std::cout << "node " << teufel::rank << " integrating ... " << std::endl;
         // OpenMP parallelization is handled inside the observer object
-        if (obs->getSource()==BeamObservation)
-            obs->integrate(trackedBeam);
-        if (obs->getSource()==LatticeObservation)
-            obs->integrate(lattice);
+        // try and handle the different observer types
+        if (auto obs = dynamic_cast<Observer<Beam>*>(observer))
+        {
+            obs->setSource(trackedBeam);
+            obs->integrate();
+        }
+        if (auto obs = dynamic_cast<Observer<Lattice>*>(observer))
+        {
+            obs->setSource(lattice);
+            obs->integrate();
+        }
         double stop_time = MPI_Wtime();
         MPI_Barrier(MPI_COMM_WORLD);
         usleep(100000);
@@ -715,10 +723,10 @@ int main(int argc, char *argv[])
         // collect all the field computed on the individual nodes into the master node
         //! @todo this should be done in chunks, otherwise we temporarily need
         // 3 times the observer memory (original and 2 buffers).
-        unsigned int count = obs->getBufferSize();
+        unsigned int count = observer->getBufferSize();
         std::cout << "Node " << teufel::rank << " allocating buffers for "<< count << " doubles" << std::endl;
         // fill the buffer and get its address
-        double* nodeBuffer = obs->getBuffer();
+        double* nodeBuffer = observer->getBuffer();
         if (nodeBuffer==0)
         {
             std::cout << "MPI_Reduce for Obsserver : node " << teufel::rank << " was unable to get the node buffer." << std::endl;
@@ -752,11 +760,21 @@ int main(int argc, char *argv[])
         // and writes it to the output file
         if (teufel::rank == 0)
         {
-            obs->fromBuffer(reduceBuffer,count);
+            observer->fromBuffer(reduceBuffer,count);
+            // a SnapshotObserver need special attention - it needs to
+            // buffer all particle positions from the master beam
+            if (SnapshotObserver<Beam> *obs = dynamic_cast<SnapshotObserver<Beam>*>(observer))
+            {
+                obs->setSource(masterBeam);
+                std::cout << "SnaphotObserver collecting particle coordinates from master beam." << std::endl << std::flush;
+                int num = obs->storeParticlePositions();
+                std::cout << "SnaphotObserver stored coordinates of " << num << " particles." << std::endl << std::flush;
+            }
+            // produce the output
             try
             { 
-                    obs->generateOutput();
-                    std::cout << "Observer output file written." << std::endl;
+                observer->generateOutput();
+                std::cout << "Observer output file written." << std::endl;
             }
             catch (exception const & e) { cout << e.what() << endl;}
         }

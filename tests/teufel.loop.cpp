@@ -172,8 +172,9 @@ int main ()
     }
 
     // just one time slice of (essentially) zero duration at t=tau
-    PointObserver Obs = PointObserver("teufel.loop_field.sdds", Vector(-Radius,0.0,0.0), tau-1.0e-15, 2.0e-15, 2);
-    Obs.integrate(bunch);
+    PointObserver<Bunch> Obs = PointObserver<Bunch>("teufel.loop_field.sdds", Vector(-Radius,0.0,0.0), tau-1.0e-15, 2.0e-15, 2);
+    Obs.setSource(bunch);
+    Obs.integrate();
     
     // check the field value
     ElMagField field = Obs.getField(0);    

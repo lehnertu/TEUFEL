@@ -30,7 +30,8 @@
 #include "SDDS.h"
 #include "hdf5.h"
 
-PointObserver::PointObserver(
+template <typename SourceT>
+PointObserver<SourceT>::PointObserver(
     std::string filename,
     Vector position,
     double t0,
@@ -41,7 +42,7 @@ PointObserver::PointObserver(
     Pos = position;
     trace = new FieldTrace(t0,dt,nots);
     // set a default source
-    source = BeamObservation;
+    this->source_type = BeamObservation;
     
     if (teufel::rank==0)
     {
@@ -52,38 +53,33 @@ PointObserver::PointObserver(
     }    
 }
 
-PointObserver::~PointObserver()
+template <typename SourceT>
+PointObserver<SourceT>::~PointObserver()
 {
     delete trace;
 }
 
-void PointObserver::setSource(RadSource s)
+template <>
+void PointObserver<Beam>::integrate()
 {
-    source = s;
+    source->integrateFieldTrace(Pos, trace);
 }
 
-RadSource PointObserver::getSource()
-{ 
-    return source;
-}
-
-void PointObserver::integrate(Beam *src)
+template <>
+void PointObserver<Bunch>::integrate()
 {
-    src->integrateFieldTrace(Pos, trace);
+    source->integrateFieldTrace(Pos, trace);
 }
 
-void PointObserver::integrate(Bunch *src)
-{
-    src->integrateFieldTrace(Pos, trace);
-}
-
-void PointObserver::integrate(Lattice *src)
+template <>
+void PointObserver<Lattice>::integrate()
 {
     for (std::size_t it=0; it<trace->get_N(); it++)
-        trace->add(it,src->Field(trace->get_time(it),Pos));
+        trace->add(it,source->Field(trace->get_time(it),Pos));
 }
 
-double* PointObserver::getBuffer()
+template <typename SourceT>
+double* PointObserver<SourceT>::getBuffer()
 {
     // buffer size of the trace is given in ElMagField units
     std::size_t Nb = trace->get_N();
@@ -95,7 +91,8 @@ double* PointObserver::getBuffer()
     return buffer;
 }
 
-void PointObserver::fromBuffer(double *buffer, std::size_t size)
+template <typename SourceT>
+void PointObserver<SourceT>::fromBuffer(double *buffer, std::size_t size)
 {
     // buffer size of the trace is given in ElMagField units
     std::size_t Nb = trace->get_N();
@@ -119,7 +116,8 @@ void PointObserver::fromBuffer(double *buffer, std::size_t size)
     }
 }
 
-void PointObserver::WriteTimeDomainFieldSDDS()
+template <typename SourceT>
+void PointObserver<SourceT>::WriteTimeDomainFieldSDDS()
 {
     cout << "writing SDDS file " << FileName << endl;
     unsigned int NOTS = trace->get_N();
@@ -182,8 +180,13 @@ void PointObserver::WriteTimeDomainFieldSDDS()
     return;
 }
 
-void PointObserver::generateOutput()
+template <typename SourceT>
+void PointObserver<SourceT>::generateOutput()
 {
     WriteTimeDomainFieldSDDS();
 }
+
+template class PointObserver<Beam>;
+template class PointObserver<Bunch>;
+template class PointObserver<Lattice>;
 

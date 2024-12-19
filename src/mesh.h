@@ -54,7 +54,8 @@ struct tri_ref {
  * have the same number and value of the time steps.
  * The start time t0 is individual for each trace.
  */
-class MeshedScreen : public Observer
+template <typename SourceT>
+class MeshedScreen : public Observer<SourceT>
 {
     
 public:
@@ -99,7 +100,7 @@ public:
     
     /*! Default destructor:<br>
      */
-    ~MeshedScreen();
+    ~MeshedScreen() override;
 
     /*! This method computes a number of internal data
      *  like cell areas, normals and performs some sanity checks.
@@ -147,12 +148,6 @@ public:
     /*! Set the fields of one cell */
     void set_trace(int ip, FieldTrace trace) { *A[ip]=trace; };
     
-    //! Set the source of the fiels to be recorded
-    void setSource(RadSource s) override;
-
-    //! Report the source of the fiels to be recorded
-    RadSource getSource() override;
-
     /*! Integrate the fields emitted by the source
      *  during all of its history, falling onto the time frame
      *  of observation.
@@ -162,9 +157,7 @@ public:
      *
      *  This method is defined for Beam(), Bunch() and Lattice() as field sources.
      */
-    void integrate(Beam *src) override;
-    void integrate(Bunch *src) override;
-    void integrate(Lattice *src) override;
+    void integrate() override;
     
     /*! The method gives the size of the buffer necessary to store
      *  the complete field information as a number of doubles (not bytes!).
