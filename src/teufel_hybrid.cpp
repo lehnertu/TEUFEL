@@ -496,13 +496,20 @@ int main(int argc, char *argv[])
                     
     // initalize the interaction fields
     for (InteractionField* f : interactions) f->init(masterBeam);
+    // TODO: we should not compute the interaction from the master beam
+    // but from the tracked beam and gather the fields
     
     // record the start time
     double start_time = MPI_Wtime();
     double print_time = start_time;
     double current_time = start_time;
 
-    std::cout << "start tracking : beam is at step=" << masterBeam->getNOTS() << std::endl;
+    // this is the global tracking clock
+    // if the beam internal clock deviates this will result in exceptions from the interaction fields
+    double tracking_time = 0.0;
+    double tracking_time_step = masterBeam->getTimeStep();
+    std::cout << "start tracking : beam is at step=" << masterBeam->getNOTS();
+    std::cout << " t=" << tracking_time << " s" << std::endl;
     std::cout << std::endl;
 
     // do the tracking of the beam
@@ -513,9 +520,16 @@ int main(int argc, char *argv[])
     for (int step=0; step<NOTS; step++)
     {
     
+        // compute the interactions on all nodes independently
+        // source is the master beam containing all particles
+        // TODO: we should not compute the interaction from the master beam
+        // but from the tracked beam and gather the fields
+        for (InteractionField* f : interactions) f->update(tracking_time, tracking_time_step);
+        
         // do a step
         trackedBeam->doStep(lattice);
-
+        tracking_time += tracking_time_step;
+        
         // for (int i=0; i<trackedBunch->getNOP(); i++)
         // {
         //     ChargedParticle *p = trackedBunch->getParticle(i);
@@ -575,10 +589,6 @@ int main(int argc, char *argv[])
                     };
                 }
             }
-        
-        // compute the interactions on all nodes independently
-        // source is the master beam containing all particles
-        for (InteractionField* f : interactions) f->step(masterBeam);
         
         // make a print once every 30s
         current_time = MPI_Wtime();

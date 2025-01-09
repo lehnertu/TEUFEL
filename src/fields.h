@@ -317,23 +317,25 @@ public:
     /*! All derived classe must provide a destructor */
     virtual ~InteractionField() {};
     
-    /*! Do all necessary initializations before step() can be called.
+    /*! Do all necessary initializations and define the field source.
+     *  The particles of the given beam drive the interaction.
      * 
      * This must be implemented for all derived interactions.
      */
     virtual void init(Beam *beam) = 0;
 
-    /*! Advance the interaction field one time step.
-     *  The particles of the given beam drive the interaction.
+    /*! Compute the interaction field for the current state of the beam
+     *  given by the tracking_time.
+     *
+     *  After the call the fields can be used for tracking within on time_step.
      *  This method must be called in a leap-frog sequence interleaved with
      *  the tracking steps of the beam.
      * 
      * This must be implemented for all derived interactions.
      */
-    virtual void step(Beam *beam) = 0;
+    virtual void update(double tracking_time, double tracking_time_step) = 0;
 
     /*! The electromagnetic field at a given time and point in space.
-     * in element-local coordinates.
      * The field is returned as a tuple of electric field [V/m] and
      * magnetic field [T] vectors.
      * 
@@ -343,10 +345,9 @@ public:
 
     /*! Write logging data to file if requested (do nothing otherwise).
      *  This will be called after the tracking is finished.
-     * 
-     * This must be implemented for all derived interactions.
+     *  The InteractionField object needs to store the information until then.
      */
-    virtual void write_output() = 0;
+    virtual void write_output() {};
 
 };
 

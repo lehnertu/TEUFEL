@@ -23,8 +23,8 @@
 #include <iomanip>
 #include <math.h>
 
+#include "csr2d.h"
 #include "dipole.h"
-#include "fel1d.h"
 #include "fields.h"
 #include "global.h"
 #include "mesh.h"
@@ -650,13 +650,13 @@ void InputParser::parseTracking(
             std::string type = child.name();
             if (type == "calc")
                 parseCalc(child);
-            else if (type == "fel1d")
+            else if (type == "csr2d")
             {
                 parseCalcChildren(child);
                 // the interaction object parses its own input, we provide a reference to the parser
                 // the timestep attribute has already been evaluated - thats necessary
-                FEL_1D* fel_interaction = new FEL_1D(parseDouble(timestep), child, this);
-                interactions->push_back(fel_interaction);
+                CSR_2D* csr_interaction = new CSR_2D(child, this);
+                interactions->push_back(csr_interaction);
             }
             else if (type == "watch")
             {
