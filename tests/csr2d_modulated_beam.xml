@@ -1,0 +1,59 @@
+<?xml version="1.0"?>
+<teufel description="Emission from an energy-modulated beam inside an undulator"
+    author="Ulf Lehnert 09.01.2025">
+    <calc print="beam energy [eV] = " var="E_beam" eq="30.0e6" />
+    <calc print="gamma = " var="gamma" eq="E_beam/_mec2"/>
+    <calc print="charge [nC] = " var="charge" eq="-1.0" />
+    <!-- set desired output frequency -->
+    <calc print="lambda [m] = " var="lambda" eq="100.0e-6"/>
+    <calc print="freq [Hz] = " var="f" eq="_c/lambda"/>
+    <calc var="lambda_U" eq="0.100" />
+    <lattice>
+        <undulator name="U100" type="planar">
+            <!-- compute undulator setting from desired output frequency -->
+            <calc print="K_rms(U100) = " var="K_rms" eq="sqrt(lambda/lambda_U*2*gamma*gamma-1)" />
+            <!-- setup the undulator -->
+            <field B="K_rms*sqrt(2)/_c*2*_pi*_mec2/lambda_U"
+                   period="lambda_U" N="20" />
+            <position x="0.0" y="0.0" z="2.0"/>
+        </undulator>
+    </lattice>
+    <beam>
+        <SDDS file="tests/modulated_beam.sdds">
+            <log file="modulated_beam_log.sdds" step="10" bunching-freq="f" />
+        </SDDS>
+    </beam>
+    <calc print="tracking length [m] = " var="total_L" eq="4.0" />
+    <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
+    <calc print="dt = " var="dt" eq="total_t/4000" />
+    <tracking method="Vay" delta_t="dt" n="4000" >
+        <csr2d>
+            <log file="csr2d_interaction_fields.hdf5" step="100" />
+        </csr2d>
+        <watch step="0" file="modulated_beam_0.h5" />
+        <watch step="1000" file="modulated_beam_1000.h5" />
+        <watch step="2000" file="modulated_beam_2000.h5" />
+        <watch step="3000" file="modulated_beam_3000.h5" />
+        <watch step="4000" file="modulated_beam_4000.h5" />
+    </tracking>
+    <observer>
+        <snapshot file="modulated_beam_snap_1000.h5">
+            <time t0="1000*dt" />
+            <position x="0.0" y="0.0" z="1000*dt*_c-0.000020*100" />
+            <hpitch x="0.000500" y="0.0" z="0.0" n="101" />
+            <vpitch x="0.0" y="0.0" z="0.000020" n="251" />
+        </snapshot>
+        <snapshot file="modulated_beam_snap_2000.h5">
+            <time t0="2000*dt" />
+            <position x="0.0" y="0.0" z="2000*dt*_c-0.000020*100" />
+            <hpitch x="0.000500" y="0.0" z="0.0" n="101" />
+            <vpitch x="0.0" y="0.0" z="0.000020" n="251" />
+        </snapshot>
+        <snapshot file="modulated_beam_snap_3000.h5">
+            <time t0="3000*dt" />
+            <position x="0.0" y="0.0" z="3000*dt*_c-0.000020*100" />
+            <hpitch x="0.000500" y="0.0" z="0.0" n="101" />
+            <vpitch x="0.0" y="0.0" z="0.000020" n="251" />
+        </snapshot>
+    </observer>
+</teufel>

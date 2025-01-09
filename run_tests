@@ -112,6 +112,7 @@ echo ''
 ./build/teufel tests/fel_modulation.xml; rc=$?
 if [ $rc = "0" ]
 then
+    # evaluate results
     ./tests/test.fel-modulation.py; rc=$?
     num=$(($num + $rc))
 else
@@ -139,6 +140,21 @@ echo ''
 # echo ''
 # echo '==============================================================================='
 # echo ''
+
+# testing the CSR-2D interaction
+
+./build/teufel tests/csr2d_modulated_beam.xml; rc=$?
+if [ $rc = "0" ]
+then
+    echo -e "$green OK.$nc"
+else
+    echo -e "$red Error.$nc"
+    num=$(($num+"1"))
+fi
+
+echo ''
+echo '==============================================================================='
+echo ''
 
 if [ $num = "0" ]
 then

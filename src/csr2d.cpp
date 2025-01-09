@@ -41,6 +41,8 @@ CSR_2D::CSR_2D(
     const pugi::xml_node node,
     InputParser *parser )
 {
+    if (teufel::rank==0)
+        std::cout << "CSR-2D interaction" << std::endl;
 }
 
 void CSR_2D::init(Beam *beam)
