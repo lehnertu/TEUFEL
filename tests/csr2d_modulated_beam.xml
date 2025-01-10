@@ -27,7 +27,9 @@
     <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
     <calc print="dt = " var="dt" eq="total_t/4000" />
     <tracking method="Vay" delta_t="dt" n="4000" >
-        <csr2d>
+        <csr2d N_long="20" N_trans="10">
+            <longitudinal x="0.0" y="0.0" z="1.0"/>
+            <transversal x="1.0" y="0.0" z="0.0"/>
             <log file="csr2d_interaction_fields.hdf5" step="100" />
         </csr2d>
         <watch step="0" file="modulated_beam_0.h5" />

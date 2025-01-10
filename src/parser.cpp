@@ -359,6 +359,15 @@ int InputParser::parseBeam(Beam *beam, std::vector<Logger*> *logs, ProbeInfo *pr
                     ParameterLogger<Bunch>* logger = new ParameterLogger<Bunch>(single, fn.as_string(), step);
                     logs->push_back(logger);
                 }
+                // create a particle trajectory logger for this bunch if defined in the input file
+                pugi::xml_node trajnode = entry.child("trajectory");
+                if (trajnode)
+                {
+                    pugi::xml_attribute fn = trajnode.attribute("file");
+                    if (!fn) throw(IOexception("InputParser::parseBeam - <particle> filename for trajectory not found."));
+                    TrajectoryLogger<Bunch>* traj_logger = new TrajectoryLogger<Bunch>(single, fn.as_string(), 1, 1);
+                    logs->push_back(traj_logger);
+                };
                 // add this bunch to the beam
                 beam->Add(single);
                 count++;

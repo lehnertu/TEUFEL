@@ -41,8 +41,61 @@ CSR_2D::CSR_2D(
     const pugi::xml_node node,
     InputParser *parser )
 {
+    pugi::xml_attribute att = node.attribute("N_long");
+    if (!att)
+        throw(IOexception("InputParser::CSR_2D - attribute N_long not found."));
+    N_long = parser->parseInt(att);
+    att = node.attribute("N_trans");
+    if (!att)
+        throw(IOexception("InputParser::CSR_2D - attribute N_trans not found."));
+    N_trans = parser->parseInt(att);
+    pugi::xml_node vec = node.child("longitudinal");
+    if (!vec)
+        throw(IOexception("InputParser::CSR_2D - <longitudinal> not found."));
+    else
+    {
+        double x, y, z;
+        x = parser->parseDouble(vec.attribute("x"));
+        y = parser->parseDouble(vec.attribute("y"));
+        z = parser->parseDouble(vec.attribute("z"));
+        e_long = Vector(x,y,z);
+        e_long.normalize();
+    }
+    vec = node.child("transversal");
+    if (!vec)
+        throw(IOexception("InputParser::CSR_2D - <transversal> not found."));
+    else
+    {
+        double x, y, z;
+        x = parser->parseDouble(vec.attribute("x"));
+        y = parser->parseDouble(vec.attribute("y"));
+        z = parser->parseDouble(vec.attribute("z"));
+        e_trans = Vector(x,y,z);
+        e_trans -= e_long * dot(e_trans,e_long);
+        e_trans.normalize();
+    }
+    // define file output if requested
+    pugi::xml_node lognode = node.child("log");
+    if (lognode)
+    {
+        pugi::xml_attribute fn = lognode.attribute("file");
+        if (!fn) throw(IOexception("InputParser::CSR_2D - <log> filename for log not found."));
+        FileName = fn.as_string();
+        step_Output = 1;
+        pugi::xml_attribute st = lognode.attribute("step");
+        if (st) step_Output = st.as_int();
+        createOutput = true;
+    } else {
+        createOutput = false;
+    }
     if (teufel::rank==0)
+    {
         std::cout << "CSR-2D interaction" << std::endl;
+        std::cout << "  " << N_long << " x " << N_trans << " grid";
+        std::cout << " (" << e_long.x << ", " << e_long.y << ", " << e_long.z <<") x";
+        std::cout << " (" << e_trans.x << ", " << e_trans.y << ", " << e_trans.z <<")";
+        std::cout << std::endl;
+    }
 }
 
 void CSR_2D::init(Beam *beam)
