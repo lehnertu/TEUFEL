@@ -31,7 +31,7 @@
     This test case tracks puts a single charge at rest into observed space.
     The observed field should be the classical electrostatic field of a point charge.
 
-    The the charge is given a uniform momentum \f$\beta\gamma \approx 10\f$.
+    Then, the charge is given a uniform momentum \f$\beta\gamma \approx 10\f$.
     Now the fields should be deformed due to the observation in lab space.
     In addition magnetic fields arise. The fields are checked near the
     starting point of the trajectory testing the back-extrapolation algorithm
@@ -60,7 +60,7 @@ int NOTS = 2000;                // number of time steps
 
 int main ()
 {
-    printf("\nTEUFEL - Electrostatic\n");
+    printf("\nTEUFEL - Electrostatic\n\n");
 
     // a simple lattice with zero E and B fields
     Vector E, B;
@@ -82,20 +82,22 @@ int main ()
     double Eref = 1e-12 / (4.0*Pi*EpsNull*1.0e-3*1.0e-3);
     
     // check the fiels of the particle at rest
+    printf("particle at rest\n");
+    printf("----------------\n");
     ElMagField EB;
     EB = particle->RetardedField(0.0, Vector(0.001,0.0,0.0));
     Vector ObsE = EB.E();
-    printf("E =  (%9.6g,%9.6g,%9.6g) V/m",ObsE.x,ObsE.y,ObsE.z);
+    printf("E(0.001,0.0,0.0) =  (%9.6g,%9.6g,%9.6g) V/m",ObsE.x,ObsE.y,ObsE.z);
     if ( (Vector(-1.0,0.0,0.0)*Eref - ObsE).norm() < 1.0e-3 ) {
 	    printf(" - \033[1;32m OK\033[0m\n");
     } else {
     	errors++;
     	printf(" - \033[1;31m test failed!\033[0m\n");
     }
-    EB = particle->RetardedField(0.0, Vector(-0.001,0.0,0.0));
+    EB = particle->RetardedField(0.0, Vector(0,0.001,0.0));
     ObsE = EB.E();
-    printf("E =  (%9.6g,%9.6g,%9.6g) V/m",ObsE.x,ObsE.y,ObsE.z);
-    if ( (Vector(1.0,0.0,0.0)*Eref - ObsE).norm() < 1.0e-3 ) {
+    printf("E(0.0,0.001,0.0) =  (%9.6g,%9.6g,%9.6g) V/m",ObsE.x,ObsE.y,ObsE.z);
+    if ( (Vector(0.0,-1.0,0.0)*Eref - ObsE).norm() < 1.0e-3 ) {
 	    printf(" - \033[1;32m OK\033[0m\n");
     } else {
     	errors++;
@@ -103,7 +105,7 @@ int main ()
     }
     EB = particle->RetardedField(0.0, Vector(0.0,0.0,0.001));
     ObsE = EB.E();
-    printf("E =  (%9.6g,%9.6g,%9.6g) V/m",ObsE.x,ObsE.y,ObsE.z);
+    printf("E(0.0,0.0,0.001) =  (%9.6g,%9.6g,%9.6g) V/m",ObsE.x,ObsE.y,ObsE.z);
     if ( (Vector(0.0,0.0,-1.0)*Eref - ObsE).norm()/Eref < 1.0e-6 ) {
 	    printf(" - \033[1;32m OK\033[0m\n");
     } else {
@@ -113,13 +115,14 @@ int main ()
     printf("\n");
     
     // create the trajectory of the particle in motion
+    printf("particle in motion\n");
+    printf("------------------\n");
     double gamma = 10.0;
     double beta = sqrt(1.0-1.0/(gamma*gamma));
     double betagamma= sqrt(gamma*gamma-1.0);
     // create an arbitrary unit vector and generate particle's momentum
-    Vector Dir= Vector(2.0,3.0,5.0);
     // make it easy for debugging only
-    // Vector Dir= Vector(0.0,0.0,1.0);
+    Vector Dir= Vector(0.0,0.0,1.0);
     Dir.normalize();
     Vector Perpendicular = cross(Dir,Vector(1.0,0.0,0.0));
     Perpendicular.normalize();
@@ -132,6 +135,7 @@ int main ()
     // track the particle for a little more than 1m
     double tau=4.0e-9;
     double deltaT = tau/NOTS;
+    printf("tracking particle for %9.2g s in %d steps",tau,NOTS);
     particle->InitVay(deltaT, lattice);
     for (int i=0; i<NOTS; i++)
 	    particle->StepVay(lattice);
@@ -145,33 +149,46 @@ int main ()
 
     // check the field near the origin
     Vector ObsPos = Perpendicular*0.001;
+    printf("observation point (%9.6f,%9.6f,%9.6f)m  t=0.0s\n",ObsPos.x,ObsPos.y,ObsPos.z);
+    std::optional<ParticleInfo> source = particle->SolveRetardation(0.0, ObsPos);
+    if (source)
+    {
+        double SourceT = source->time;
+        Vector SourceX = source->X;
+        printf("source point (%9.6f,%9.6f,%9.6f)m  t=%9.6gs\n",SourceX.x,SourceX.y,SourceX.z,SourceT);
+    }
+    else
+    {
+        printf("no valid source point found");
+        errors++;
+    }
     EB = particle->RetardedField(0.0, ObsPos);
     ObsE = EB.E();
     Vector ObsB = EB.B();
-    printf("E =  %9.6g V/m (%9.6g,%9.6g,%9.6g) V/m",ObsE.norm(),ObsE.x,ObsE.y,ObsE.z);
+    printf("E =  %9.6g V/m (%9.6g,%9.6g,%9.6g) V/m", ObsE.norm(),ObsE.x,ObsE.y,ObsE.z);
     if ( (ErefV-ObsE).norm()/ErefV.norm() < 1.0e-5 ) {
 	    printf(" - \033[1;32m OK\033[0m\n");
     } else {
     	errors++;
     	printf(" - \033[1;31m test failed!\033[0m\n");
     }
-    printf("B =  %9.6g T (%9.6g,%9.6g,%9.6g) T",ObsB.norm(),ObsB.x,ObsB.y,ObsB.z);
+    printf("B =  %9.6g T (%9.6g,%9.6g,%9.6g) T", ObsB.norm(),ObsB.x,ObsB.y,ObsB.z);
     if ( (BrefV-ObsB).norm()/BrefV.norm() < 1.0e-5 ) {
 	    printf(" - \033[1;32m OK\033[0m\n");
     } else {
     	errors++;
     	printf(" - \033[1;31m test failed!\033[0m\n");
     }
-    // list the transverse electric field for 0.01mm of trajectory
-    printf("trace : ");
+    // list the transverse electric field for some time
+    printf("trace ( t= -5 ps ... +5 ps ): \n");
     double ETransListNull[11];
     for (int i=0; i<11; i++)
     {
-        double l = -0.005+i*0.001;
-        EB = particle->RetardedField(0.0, ObsPos+Dir*l);
+        double dt = -5.0e-12 + i*1.0e-12;
+        EB = particle->RetardedField(dt, ObsPos);
         ObsE = EB.E();
         ETransListNull[i]=dot(ObsE,Perpendicular);
-        printf("%9.6g  ",ETransListNull[i]);
+        printf("  %9.6g\n",ETransListNull[i]);
     };
     printf("\n\n");
         
@@ -190,33 +207,48 @@ int main ()
     printf("\n");
     
     ObsPos += Perpendicular*0.001;
+    printf("observation point (%9.6f,%9.6f,%9.6f)m  t=%9.6gs\n",ObsPos.x,ObsPos.y,ObsPos.z,ObsTime);
+    source = particle->SolveRetardation(ObsTime, ObsPos);
+    if (source)
+    {
+        double SourceT = source->time;
+        Vector SourceX = source->X;
+        printf("source point (%9.6f,%9.6f,%9.6f)m  t=%9.6gs\n",SourceX.x,SourceX.y,SourceX.z,SourceT);
+    }
+    else
+    {
+        printf("no valid source point found");
+        errors++;
+    }
     EB = particle->RetardedField(ObsTime, ObsPos);
     ObsE = EB.E();
     ObsB = EB.B();
-    printf("E =  %9.6g V/m (%9.6g,%9.6g,%9.6g) V/m",ObsE.norm(),ObsE.x,ObsE.y,ObsE.z);
+    printf("E(%7.4f,%7.4f,%7.4f) =  %9.6g V/m (%9.6g,%9.6g,%9.6g) V/m",
+        ObsPos.x,ObsPos.y,ObsPos.z,ObsE.norm(),ObsE.x,ObsE.y,ObsE.z);
     if ( (ErefV-ObsE).norm()/ErefV.norm() < 1.0e-3 ) {
 	    printf(" - \033[1;32m OK\033[0m\n");
     } else {
     	errors++;
     	printf(" - \033[1;31m test failed!\033[0m\n");
     }
-    printf("B =  %9.6g T (%9.6g,%9.6g,%9.6g) T",ObsB.norm(),ObsB.x,ObsB.y,ObsB.z);
+    printf("B(%7.4f,%7.4f,%7.4f) =  %9.6g T (%9.6g,%9.6g,%9.6g) T",
+        ObsPos.x,ObsPos.y,ObsPos.z,ObsB.norm(),ObsB.x,ObsB.y,ObsB.z);
     if ( (BrefV-ObsB).norm()/BrefV.norm() < 1.0e-3 ) {
 	    printf(" - \033[1;32m OK\033[0m\n");
     } else {
     	errors++;
     	printf(" - \033[1;31m test failed!\033[0m\n");
     }
-    // list the transverse electric field for 0.01mm of trajectory
-    printf("trace : ");
+    // list the transverse electric field for some time
+    printf("trace ( t= -5 ps ... +5 ps ): \n");
     double ETransList[11];
     for (int i=0; i<11; i++)
     {
-        double l = -0.005+i*0.001;
-        EB = particle->RetardedField(ObsTime, ObsPos+Dir*l);
+        double dt = -5.0e-12 + i*1.0e-12;
+        EB = particle->RetardedField(ObsTime+dt, ObsPos);
         ObsE = EB.E();
         ETransList[i]=dot(ObsE,Perpendicular);
-        printf("%9.6g  ",ETransList[i]);
+        printf("  %9.6g\n",ETransList[i]);
     };
     printf("\n\n");
 

@@ -102,7 +102,7 @@ configure_file (
   )
 
 # compiler flags
-add_definitions(-std=c++11 -Wall -m64 -pthread)
+add_definitions(-std=c++17 -Wall -m64 -pthread)
 
 add_executable(teufel ${PROJECT_SOURCE_DIR}/src/teufel_hybrid.cpp)
 set_target_properties(teufel PROPERTIES

@@ -12,21 +12,21 @@
             <!-- compute field setting from bending radius -->
             <calc print="B*r [T m] = " var="Brho" eq="betagamma*_mec2/_c"/>
             <calc print="B [T] = " var="By" eq="Brho/radius"/>
-            <B x="0.0" y="By" z="0.0" />
+            <B x="0.0" y="-By" z="0.0" />
         </background>
     </lattice>
     <beam>
         <!-- a single particle moving in the x-z plane crosses the origin at half-way -->
         <particle gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" >
-            <position x="radius*(1.0-1.0/sqrt(2))" y="0.0" z="-radius/sqrt(2)" />
-            <momentum x="-1.0/sqrt(2)" y="0.0" z="1.0/sqrt(2)" />
-            <trajectory file="csr2d_trajectory.hdf5"/>
+            <position x="-2.0*radius" y="0.0" z="0.0" />
+            <momentum x="0.0" y="0.0" z="-1.0" />
         </particle>
+        <probe file="csr2d_probe.h5" step="1" number="1" />
     </beam>
-    <calc print="tracking length [m] = " var="total_L" eq="radius*_pi/2.0" />
-    <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
-    <calc print="dt = " var="dt" eq="total_t/1000" />
-    <tracking method="Vay" delta_t="dt" n="1000" >
+    <calc print="tracking length [m] = " var="total_L" eq="radius*2.0*_pi" />
+    <calc print="tracking total time [s] = " var="total_t" eq="total_L/(beta*_c)" />
+    <calc print="dt = " var="dt" eq="total_t/2000" />
+    <tracking method="Vay" delta_t="dt" n="2000" >
         <csr2d N_long="20" N_trans="10">
             <longitudinal x="0.0" y="0.0" z="1.0"/>
             <transversal x="1.0" y="0.0" z="0.0"/>
@@ -34,23 +34,11 @@
         </csr2d>
     </tracking>
     <observer>
-        <snapshot file="csr2d_snap_499.h5">
-            <time t0="499*dt" />
+        <snapshot file="csr2d_snap_1000.h5">
+            <time t0="1000*dt" />
             <position x="0.0" y="0.0" z="0.0" />
             <hpitch x="0.000050" y="0.0" z="0.0" n="101" />
-            <vpitch x="0.0" y="0.0" z="0.000010" n="251" />
-        </snapshot>
-        <snapshot file="csr2d_snap_500.h5">
-            <time t0="500*dt" />
-            <position x="0.0" y="0.0" z="0.0" />
-            <hpitch x="0.000050" y="0.0" z="0.0" n="101" />
-            <vpitch x="0.0" y="0.0" z="0.000010" n="251" />
-        </snapshot>
-        <snapshot file="csr2d_snap_501.h5">
-            <time t0="501*dt" />
-            <position x="0.0" y="0.0" z="0.0" />
-            <hpitch x="0.000050" y="0.0" z="0.0" n="101" />
-            <vpitch x="0.0" y="0.0" z="0.000005" n="251" />
+            <vpitch x="0.0" y="0.0" z="0.000002" n="251" />
         </snapshot>
     </observer>
 </teufel>

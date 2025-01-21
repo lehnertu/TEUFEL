@@ -30,10 +30,14 @@ using namespace std;
     @author Ulf Lehnert
     @date 10.2.2017
  */
-class Vector
+class __attribute__((packed)) Vector
 {
 
   public:
+
+    double x;
+    double y;
+    double z;
 
     /*!
 	Default constructor: <br>
@@ -46,10 +50,6 @@ class Vector
 	All components are initalized with given values.
     */
     Vector(double x0, double y0, double z0);
-
-    double x;
-    double y;
-    double z;
 
     /*! element-wise square of a vector */
     Vector square();

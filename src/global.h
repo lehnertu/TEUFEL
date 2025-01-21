@@ -52,7 +52,7 @@
  *  2: show all warnings
  *  3: print additional debugging information
  */
-#define DEBUGLEVEL 1
+#define DEBUGLEVEL 0
 
 namespace teufel
 {

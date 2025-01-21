@@ -30,7 +30,7 @@ ChargedParticle::ChargedParticle()
     Charge = -1.0;
     Mass = 1.0;
     qm = Charge/Mass * InvRestMass;
-    dt = 0.0;
+    t_step = 0.0;
     // no trajectory points
     NP = 0;
     Npre = 0;
@@ -48,7 +48,7 @@ ChargedParticle::ChargedParticle(double charge, double mass)
     Charge = charge;
     Mass = mass;
     qm = Charge/Mass * InvRestMass;
-    dt = 0.0;
+    t_step = 0.0;
     // no trajectory points
     NP = 0;
     Npre = 0;
@@ -66,7 +66,7 @@ ChargedParticle::ChargedParticle(double charge, double mass, int nTraj)
     Charge = charge;
     Mass = mass;
     qm = Charge/Mass * InvRestMass;
-    dt = 0.0;
+    t_step = 0.0;
     // no trajectory points
     NP = 0;
     // pre-allocate memory
@@ -99,7 +99,7 @@ ChargedParticle::ChargedParticle(const ChargedParticle *origin)
     }
     if (Npre > NP)
         preAllocate(Npre);
-    dt = origin->dt;
+    t_step = origin->t_step;
     qm = origin->qm;
     qmt2 = origin->qmt2;
     VY_p_i1 = origin->VY_p_i1;
@@ -111,7 +111,7 @@ ChargedParticle::ChargedParticle(double *buffer)
     Charge = buffer[0];
     Mass = buffer[1];
     qm = Charge/Mass * InvRestMass;
-    dt = 0.0;
+    t_step = 0.0;
     double t = buffer[2];
     Vector x = Vector(buffer[3],buffer[4],buffer[5]);
     Vector p = Vector(buffer[6],buffer[7],buffer[8]);
@@ -131,7 +131,7 @@ ChargedParticle::ChargedParticle(double *buffer, int nTraj, int nPre)
     double *b = buffer;
     Charge = *b++;
     Mass = *b++;
-    dt = *b++;
+    t_step = *b++;
     qm = *b++;
     qmt2 = *b++;
     double vx = *b++;
@@ -235,7 +235,7 @@ void ChargedParticle::serializeTraj(double *buffer)
     double *b = buffer;
     *b++ = Charge;
     *b++ = Mass;
-    *b++ = dt;
+    *b++ = t_step;
     *b++ = qm;
     *b++ = qmt2;
     *b++ = VY_p_i1.x;
@@ -402,7 +402,7 @@ void ChargedParticle::Mirror(Vector origin, Vector normal, double f_charge)
  * In addition, we store the relativistic factor belonging to this momentum ChargedParticle::VY_gamma_i1,
  * the charge over mass ratio ChargedParticle::qm
  * and charge over mass divided by the double time step ChargedParticle::qmt2.
- * These values as well as the time step ChargedParticle::dt are constant during the tracking.
+ * These values as well as the time step ChargedParticle::t_step are constant during the tracking.
  */
 void ChargedParticle::InitVay(
 	   double tstep,
@@ -412,9 +412,9 @@ void ChargedParticle::InitVay(
     if (NP<1)
         throw(RANGEexception("ChargedParticle::InitVay() - must initalize trajectory before tracking"));
     // preset the fixed values
-    dt = tstep;
+    t_step = tstep;
     qm = Charge/Mass * InvRestMass;
-    qmt2 = qm * 0.5 * dt;
+    qmt2 = qm * 0.5 * t_step;
     // compute the fields at the center position of the step (which is stored in the trajectory)
     t_current = Time.back();
     X_current = X.back();
@@ -471,7 +471,7 @@ void ChargedParticle::storeTrajectoryPoint(double time, Vector pos, Vector mom, 
  * 
  * This stepper assumes that InitVay() has been called to perform the frist tracking
  * step. This sets a number of variables which carry data from one tracking step to the next.
- * These are : ChargedParticle::dt ChargedParticle::qm ChargedParticle::qmt2 ChargedParticle::VY_p_i1
+ * These are : ChargedParticle::t_step ChargedParticle::qm ChargedParticle::qmt2 ChargedParticle::VY_p_i1
  * 
  * The time step and particle properties can not change during the tracking. Only the field
  * is allowed to change. Therefore, the field reference is given for every tracking step.
@@ -482,8 +482,8 @@ void ChargedParticle::StepVay(GeneralField* field)
     Vector p_i = VY_p_i1;
     Vector beta_i = p_i / VY_gamma_i1;
     // use eq. (3) to compute the new center position
-    t_current += dt;
-    X_current += beta_i * SpeedOfLight * dt;
+    t_current += t_step;
+    X_current += beta_i * SpeedOfLight * t_step;
     // compute the fields at the center position of the step
     ElMagField EB_h = field->Field(t_current, X_current);
     E_current = EB_h.E();
@@ -607,12 +607,13 @@ ElMagField ChargedParticle::RetardedField(int index,
  * arrive early, no field can be generated. If both are late the trajectory
  * will be extrapolated to negative times. In the intermediate case a bisection
  * of the trajectory interval is done until the trajectory interval has been reduced
- * to a single time step.
+ * to a single time step. Then, we use Newton-Raphson method
+ * starting from the endpoint of the interval to find the accurate source position.
  */
-ElMagField ChargedParticle::RetardedField(double obs_time, Vector obs_pos)
+std::optional<ParticleInfo> ChargedParticle::SolveRetardation(double obs_time, Vector obs_pos)
 {
     // check prerequisites
-    if (NP<1) throw(RANGEexception("ChargedParticle::LightConePosition() - must initalize trajectory before calling"));
+    if (NP<1) throw(RANGEexception("ChargedParticle::SolveRetardation() - must initalize trajectory before calling"));
     // consider the first point of the trajectory.
     int i1 = 0;
     Vector RVec1 = obs_pos - X[i1];
@@ -623,135 +624,164 @@ ElMagField ChargedParticle::RetardedField(double obs_time, Vector obs_pos)
     Vector RVec2 = obs_pos - X[i2];
     double R2 = RVec2.norm();
     double t2 = obs_time - (Time[i2] + R2 / SpeedOfLight);
+    // If t2 is positive no signal can be generated
+    if (t2>0.0) return std::nullopt;
+    
+    // these are the quantities we need from the trajectory
+    double SourceT;
+    Vector SourceX;
+    Vector SourceP;
+    Vector SourceBeta;
+    Vector SourceA;
+    // relativistic factors
+    double betagamma2, gamma2, gamma;
+    
+    if (t1<=0.0)
+    {
+        // extrapolating from zero to negative trajectory times
+        // if the is only one trajectory point available (i1==i2) we will be here as well
+        if (DEBUGLEVEL>=3)
+            printf("ChargedParticle::SolveRetardation() - extrapolating from zero\n");
+        Vector Rc = (obs_pos - X[0]) / SpeedOfLight;
+        SourceP = P[0];
+        betagamma2 = SourceP.abs2nd();
+        gamma2 = betagamma2 + 1.0;
+        gamma = sqrt(gamma2);
+        SourceBeta=SourceP/gamma;
+        // compute the time t at emission of the signal (field)
+        // t is always negative
+        double t0 = obs_time;
+        double bR = dot(SourceBeta,Rc);
+        double bb = dot(SourceBeta,SourceBeta);
+        double RR = dot(Rc,Rc);
+        SourceT = (t0-bR-sqrt((t0-bR)*(t0-bR)-(1-bb)*(t0*t0-RR)))/(1-bb);
+        // compute the trajectory point at emission
+        SourceX = X[0] + SourceBeta*SpeedOfLight*SourceT;
+        SourceA = Vector(0.0,0.0,0.0);
+        if (DEBUGLEVEL>=3)
+            printf("    source point (%9.6f,%9.6f,%9.6f)m  t=%9.6gs\n",SourceX.x,SourceX.y,SourceX.z,SourceT);
+        return ParticleInfo{Charge,Mass,SourceT,SourceX,SourceP,SourceA};
+    }
+    else
+    {
+        // Bisect the trajectory interval until only a single
+        // step is left for interpolation (i2-i2 == 1).
+        // There always must be t2<=0 and t1>0.
+        while (i2-i1 > 1)
+        {
+            int iMid = (i2+i1)/2;
+            Vector RVecMid = obs_pos - X[iMid];
+            double RMid = RVecMid.norm();
+            double tMid = obs_time - (Time[iMid] + RMid / SpeedOfLight);
+            if (tMid > 0.0)
+            {
+                i1 = iMid;
+                t1 = tMid;
+            }
+            else
+            {
+                i2 = iMid;
+                t2 = tMid;
+            }
+        }
+        if (DEBUGLEVEL>=3)
+            printf("ChargedParticle::SolveRetardation() - interpolating between %d and %d\n",i1,i2);
+
+        // Find the accurate position within the identified trajectory interval.
+        // The dependency of the time on frac is highly nonlinear
+        // if the observation point is close to the trajectory.
+        // Use Newton-Raphson method starting from the endpoint of the interval.
+        // At the endpoint the derivative is highest, while it can nearly vanish
+        // at the start of the interval where the particle may be approaching
+        // the observation point straight ahead.
+
+        double t1 = Time[i1];
+        double t2 = Time[i2];
+        Vector X1 = X[i1];
+        Vector X2 = X[i2];
+        Vector SourceP1 = P[i1];
+        Vector SourceP2 = P[i2];
+        betagamma2 = ((SourceP1+SourceP2)*0.5).abs2nd();
+        gamma2 = betagamma2 + 1.0;
+        gamma = sqrt(gamma2);
+        Vector SourceBeta1=SourceP1/gamma;
+        Vector SourceBeta2=SourceP2/gamma;
+
+        double frac = 1.0;
+        double dfrac = 1.0;
+        int number_refinement=0;
+        while (fabs(dfrac)>1e-3 && number_refinement<10)
+        {
+            number_refinement++;
+            // do a second-order interpolation within the trajectory segment
+            SourceT = t1*(1.0-frac) + t2*frac;
+            SourceX = X1*(1.0-frac) + X2*frac +
+                      (SourceBeta1-SourceBeta2)*0.5*frac*(1.0-frac)*t_step*SpeedOfLight;
+            SourceBeta = SourceBeta1*(1.0-frac) + SourceBeta2*frac;
+            // distance from source to observation point            
+            Vector RVec = obs_pos - SourceX;
+            double R = RVec.norm();
+            // how much off is the time (positive means signal is late, distance is too large)
+            double dt = SourceT + R / SpeedOfLight - obs_time;
+            // the derivative of the arrival time with respect to the fraction is
+            // d/df(t_obs) = t_step * (1 - dot(n,beta))
+            // where n is the normal vector from the source point to the observation point
+            // and beta is the particle velocity at the source point
+            double dtdf = t_step * ( 1.0 - dot(RVec/R, SourceBeta) );
+            // dtdf is always positive
+            // how much to change frac to compensate for the dt being off
+            dfrac = -dt/dtdf;
+            if (DEBUGLEVEL>=2)
+            {
+                if ((number_refinement>=10) && fabs(dfrac)>1e-3)
+                {
+                    printf("WARNING : no convergence in ChargedParticle::SolveRetardation\n");
+                    printf("Obs    : t=%10.7g  X=(%10.7g, %10.7g, %10.7g)\n",obs_time,obs_pos.x,obs_pos.y,obs_pos.z);
+                    printf("Source : t=%10.7g  X=(%10.7g, %10.7g, %10.7g)\n",SourceT,SourceX.x,SourceX.y,SourceX.z);
+                    printf("i1=%d  t1=%10.7g  i2=%d  t2=%10.7g\n",i1,t1,i2,t2);
+                    printf("frac=%12.9f  R=%10.7g  dt=%10.7g => dfrac=%12.9f\n",frac,R,dt,dfrac);
+                }
+            }
+            frac += dfrac;
+        }
+        // finalize with correct frac
+        SourceT = t1*(1.0-frac) + t2*frac;
+        SourceX = X1*(1.0-frac) + X2*frac +
+                  (SourceBeta1-SourceBeta2)*0.5*frac*(1.0-frac)*t_step*SpeedOfLight;
+        SourceP = SourceP1*(1.0-frac) + SourceP2*frac;
+        SourceA = A[i1]*(1.0-frac) + A[i2]*frac;
+        if (DEBUGLEVEL>=3)
+            printf("    source point (%9.6f,%9.6f,%9.6f)m  t=%9.6gs\n",SourceX.x,SourceX.y,SourceX.z,SourceT);
+        return ParticleInfo{Charge,Mass,SourceT,SourceX,SourceP,SourceA};
+    }
+    
+}
+
+ElMagField ChargedParticle::RetardedField(double obs_time, Vector obs_pos)
+{
+    // check prerequisites
+    if (NP<1) throw(RANGEexception("ChargedParticle::RetardedField() - must initalize trajectory before calling"));
     // initialize fields as zero
     Vector EField;
     Vector BField;
-    // If t2 is positive no signal can be generated
-    if (t2<=0.0)
+    // find the trajectory point from which the radiation stems
+    std::optional<ParticleInfo> source = SolveRetardation(obs_time, obs_pos);
+    if (source)
     {
-        // these are the quantities we need from the trajectory
-        double SourceT;
-        Vector SourceX;
-        Vector SourceBeta;
-        Vector SourceBetaPrime;
-        // reletivistic factors to be computed in every case
-        double betagamma2, gamma2, gamma;
-        if (t1<=0.0)
-        {
-            // printf("ChargedParticle::RetardedField - extrapolating from zero\n");
-            // one has to extrapolate to negative trajectory times
-            // if the is only one trajectory point available (i1==i2) we will be here as well
-            Vector Rc = (obs_pos - X[0]) / SpeedOfLight;
-            SourceBeta = P[0];
-            betagamma2 = SourceBeta.abs2nd();
-            gamma2 = betagamma2 + 1.0;
-            gamma = sqrt(gamma2);
-            SourceBeta/=gamma;
-            // compute the time t at emission of the signal (field)
-            // t is always negative
-            double t0 = obs_time;
-            double bR = dot(SourceBeta,Rc);
-            double bb = dot(SourceBeta,SourceBeta);
-            double RR = dot(Rc,Rc);
-            SourceT = (t0-bR-sqrt((t0-bR)*(t0-bR)-(1-bb)*(t0*t0-RR)))/(1-bb);
-            // compute the trajectory point at emission
-            SourceX = X[0] + SourceBeta*SpeedOfLight*SourceT;
-            SourceBetaPrime = Vector(0.0,0.0,0.0);
-        }
-        else
-        {
-            // printf("ChargedParticle::RetardedField - interpolating within trajectory\n");
-            // Bisect the trajectory interval until only a single
-            // step is left for interpolation (i2-i2 == 1).
-            // There always must be t2<0 and t1>0.
-            while (i2-i1 > 1)
-            {
-                int iMid = (i2+i1)/2;
-                Vector RVecMid = obs_pos - X[iMid];
-                double RMid = RVecMid.norm();
-                double tMid = obs_time - (Time[iMid] + RMid / SpeedOfLight);
-                if (tMid > 0.0)
-                {
-                    i1 = iMid;
-                    t1 = tMid;
-                }
-                else
-                {
-                    i2 = iMid;
-                    t2 = tMid;
-                }
-            }
-            double frac = t1/(t1-t2);
-            // printf("i1=%d  i2=%d  frac=%12.9f\n",i1,i2,frac);
-            // Simple linear interpolation is not enough.
-            // Do a refinement until the interpolaed position changes
-            // by less than a 1.0e-5 fraction of the trajectory step.
-            //! @todo Linear interpolation fails, as does recursive refinement.<br>
-            //! One should do ananalytic solution as it is done for the back-extrapolation.
-            //! The present code works at suffucuently large distances from the trajectory.
-            double t1 = Time[i1];
-            double t2 = Time[i2];
-            Vector X1 = X[i1];
-            Vector X2 = X[i2];
-            SourceT = t1*(1.0-frac) + t2*frac;
-            SourceX = X1*(1.0-frac) + X2*frac;
-            double R = (obs_pos-SourceX).norm();
-            // how much off is the time
-            double dt = SourceT + R / SpeedOfLight - obs_time;
-            // how does dt change with frac
-            // the first refinement step uses the trajectory time step for computing the derivative
-            double r1 = (obs_pos-X1).norm();
-            double r2 = (obs_pos-X2).norm();
-            double dtdfrac = (t2-t1) + (r2-r1)/SpeedOfLight;
-            double dfrac = dt/dtdfrac;
-            // printf("frac= %12.9f R=%9.6g  SourceT=%9.6g  dt=%9.6g => dfrac=%12.9f\n",frac,R,SourceT,dt,-dfrac);
-            int number_ref=1;
-            while (fabs(dfrac)>1e-5 && number_ref<10)
-            {
-                // for subsequent refinement steps we use the change from the last step
-                // to compute the drivative
-                // before
-                double Lastdt = dt;
-                // after
-                frac -=dfrac;
-                SourceT = t1*(1.0-frac) + t2*frac;
-                SourceX = X1*(1.0-frac) + X2*frac;
-                R = (obs_pos-SourceX).norm();
-                dt = SourceT + R / SpeedOfLight - obs_time;
-                // how does dt change with frac
-                dtdfrac = -(dt-Lastdt)/dfrac;
-                dfrac = dt/dtdfrac; 
-                // printf("frac=%12.9f  R=%9.6g  SourceT=%9.6g  dt=%9.6g => dfrac=%12.9f\n",frac,R,SourceT,dt,-dfrac);
-                number_ref++;
-            }
-            // repeat with corrected frac
-            frac -=dfrac;
-            SourceT = t1*(1.0-frac) + t2*frac;
-            SourceX = X1*(1.0-frac) + X2*frac;
-            if (number_ref>=10)
-            {
-                R = (obs_pos-SourceX).norm();
-                dt = SourceT + R / SpeedOfLight - obs_time;
-                if (DEBUGLEVEL>=2)
-                {
-                    printf("WARNING : no convergence in ChargedParticle::RetardedField\n");
-                    printf("Obs    : t=%9.6g  X=(%9.6g, %9.6g, %9.6g)\n",obs_time,obs_pos.x,obs_pos.y,obs_pos.z);
-                    printf("Source : t=%9.6g  X=(%9.6g, %9.6g, %9.6g)\n",SourceT,SourceX.x,SourceX.y,SourceX.z);
-                    printf("frac=%12.9f  R=%9.6g  dt=%9.6g => dfrac=%12.9f\n",frac,R,dt,-dfrac);
-                }
-            }
-            SourceBeta = P[i1]*(1.0-frac) + P[i2]*frac;
-            betagamma2 = SourceBeta.abs2nd();
-            gamma2 = betagamma2 + 1.0;
-            gamma = sqrt(gamma2);
-            SourceBeta/=gamma;
-            SourceBetaPrime = A[i1]*(1.0-frac) + A[i2]*frac;
-            SourceBetaPrime/=gamma;
-        }
-        // printf("ChargedParticle::RetardedField - SourceX = (%9.6g, %9.6g, %9.6g)\n",SourceX.x,SourceX.y,SourceX.z);
+        double SourceT = source->time;
+        Vector SourceX = source->X;
+        Vector SourceP = source->P;
+        double betagamma2 = SourceP.abs2nd();
+        double gamma2 = betagamma2 + 1.0;
+        double gamma = sqrt(gamma2);
+        Vector SourceBeta = SourceP/gamma;
+        Vector SourceBetaPrime = (source->A)/gamma;
+        // there exists a valid retardation source position
+        if (DEBUGLEVEL>=3)
+            printf("ChargedParticle::RetardedField - SourceX = (%9.6g, %9.6g, %9.6g)  t=%9.6gs\n",
+                SourceX.x,SourceX.y,SourceX.z,SourceT);
         // compute the distance and direction to the observer
         Vector RVec = obs_pos - SourceX;
-        // printf("ChargedParticle::RetardedField - RVec = (%9.6g, %9.6g, %9.6g)\n",RVec.x,RVec.y,RVec.z);
         double R = RVec.norm();
         Vector N = RVec;
         N.normalize();
@@ -764,7 +794,15 @@ ElMagField ChargedParticle::RetardedField(double obs_time, Vector obs_pos)
         EField += cross(N, cross(N - SourceBeta, SourceBetaPrime)) / (R*bn3rd*SpeedOfLight);
         EField *= scale;
         BField = cross(N,EField) / SpeedOfLight;
-    };
+    }
+    else
+    {
+        if (DEBUGLEVEL>=2)
+        {
+            printf("WARNING : no valid source point found in ChargedParticle::SolveRetardation()\n");
+            printf("Obs    : t=%10.7g  X=(%10.7g, %10.7g, %10.7g)\n",obs_time,obs_pos.x,obs_pos.y,obs_pos.z);
+        }
+    }
     return ElMagField(EField, BField);
 }
 
