@@ -4,6 +4,7 @@ echo "removing all files created when running the test suite"
 
 rm teufel_bunch_start.sdds
 rm rad_push_log.sdds
+rm single_particle_u300*
 rm matching.sdds
 rm fel-modulation*
 rm tests/DiffractionScreenWithFields.h5

@@ -109,6 +109,19 @@ echo ''
 echo '==============================================================================='
 echo ''
 
+./build/teufel tests/single_particle_u300.xml
+if [ $rc = "0" ]
+then
+    echo -e "${green}return=0 - OK.${nc}"
+else
+    echo -e "${red}return=${rc} - Error.${nc}"
+    num=$(($num + "1"))
+fi
+
+echo ''
+echo '==============================================================================='
+echo ''
+
 ./build/teufel examples/undulator_matching.xml
 ./tests/test.matching.py; rc=$?
 if [ $rc = "0" ]
