@@ -6,63 +6,117 @@ green='\033[1;32m'
 nc='\033[0m'
 
 ./build/teufel.integrate_field; rc=$?
-num=$(($num + $rc))
+if [ $rc = "0" ]
+then
+    echo -e "${green}return=0 - OK.${nc}"
+else
+    echo -e "${red}return=${rc} - Error.${nc}"
+    num=$(($num + $rc))
+fi
 
 echo ''
 echo '==============================================================================='
 echo ''
 
 ./build/teufel.bunch; rc=$?
-num=$(($num + $rc))
+if [ $rc = "0" ]
+then
+    echo -e "${green}return=0 - OK.${nc}"
+else
+    echo -e "${red}return=${rc} - Error.${nc}"
+    num=$(($num + $rc))
+fi
 
 echo ''
 echo '==============================================================================='
 echo ''
 
 ./build/teufel.magnet; rc=$?
-num=$(($num + $rc))
+if [ $rc = "0" ]
+then
+    echo -e "${green}return=0 - OK.${nc}"
+else
+    echo -e "${red}return=${rc} - Error.${nc}"
+    num=$(($num + $rc))
+fi
 
 echo ''
 echo '==============================================================================='
 echo ''
 
 ./build/teufel.undulator; rc=$?
-num=$(($num + $rc))
+if [ $rc = "0" ]
+then
+    echo -e "${green}return=0 - OK.${nc}"
+else
+    echo -e "${red}return=${rc} - Error.${nc}"
+    num=$(($num + $rc))
+fi
 
 echo ''
 echo '==============================================================================='
 echo ''
 
 ./build/teufel.loop; rc=$?
-num=$(($num + $rc))
+if [ $rc = "0" ]
+then
+    echo -e "${green}return=0 - OK.${nc}"
+else
+    echo -e "${red}return=${rc} - Error.${nc}"
+    num=$(($num + $rc))
+fi
 
 echo ''
 echo '==============================================================================='
 echo ''
 
 ./build/teufel.EcrossB; rc=$?
-num=$(($num + $rc))
+if [ $rc = "0" ]
+then
+    echo -e "${green}return=0 - OK.${nc}"
+else
+    echo -e "${red}return=${rc} - Error.${nc}"
+    num=$(($num + $rc))
+fi
 
 echo ''
 echo '==============================================================================='
 echo ''
 
 ./build/teufel.electrostatic; rc=$?
-num=$(($num + $rc))
+if [ $rc = "0" ]
+then
+    echo -e "${green}return=0 - OK.${nc}"
+else
+    echo -e "${red}return=${rc} - Error.${nc}"
+    num=$(($num + $rc))
+fi
 
 echo ''
 echo '==============================================================================='
 echo ''
 
 ./build/teufel.RadPush; rc=$?
-num=$(($num + $rc))
+if [ $rc = "0" ]
+then
+    echo -e "${green}return=0 - OK.${nc}"
+else
+    echo -e "${red}return=${rc} - Error.${nc}"
+    num=$(($num + $rc))
+fi
 
 echo ''
 echo '==============================================================================='
 echo ''
 
 ./build/teufel.diffraction; rc=$?
-num=$(($num + $rc))
+if [ $rc = "0" ]
+then
+    echo -e "${green}return=0 - OK.${nc}"
+else
+    echo -e "${red}return=${rc} - Error.${nc}"
+    num=$(($num + $rc))
+fi
 
 echo ''
 echo '==============================================================================='
@@ -70,7 +124,13 @@ echo ''
 
 ./build/teufel examples/undulator_matching.xml
 ./tests/test.matching.py; rc=$?
-num=$(($num + $rc))
+if [ $rc = "0" ]
+then
+    echo -e "${green}return=0 - OK.${nc}"
+else
+    echo -e "${red}return=${rc} - Error.${nc}"
+    num=$(($num + $rc))
+fi
 
 echo ''
 echo '==============================================================================='
@@ -112,11 +172,18 @@ echo ''
 ./build/teufel tests/fel_modulation.xml; rc=$?
 if [ $rc = "0" ]
 then
+    echo -e "${green}return=0 - OK.${nc}"
     # evaluate results
     ./tests/test.fel-modulation.py; rc=$?
-    num=$(($num + $rc))
+    if [ $rc = "0" ]
+    then
+        echo -e "${green}return=0 - OK.${nc}"
+    else
+        echo -e "${red}return=${rc} - Error.${nc}"
+        num=$(($num + $rc))
+    fi
 else
-    echo -e "$red Error.$nc"
+    echo -e "${red}return=${rc} - Error.${nc}"
     num=$(($num+"1"))
 fi
 
@@ -146,9 +213,9 @@ echo ''
 ./build/teufel tests/csr2d_modulated_beam.xml; rc=$?
 if [ $rc = "0" ]
 then
-    echo -e "$green OK.$nc"
+    echo -e "${green}return=0 - OK.${nc}"
 else
-    echo -e "$red Error.$nc"
+    echo -e "${red}return=${rc} - Error.${nc}"
     num=$(($num+"1"))
 fi
 
@@ -158,8 +225,8 @@ echo ''
 
 if [ $num = "0" ]
 then
-    echo -e "$green no errors - all tests passed.$nc"
+    echo -e "${green}no errors - all tests passed.${nc}"
 else
-    echo -e "$red there were " $num " errors - some test failed!$nc"
+    echo -e "${red}there were ${num} errors - some test failed!${nc}"
 fi
 
