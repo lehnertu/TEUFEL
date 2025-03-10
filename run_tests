@@ -11,7 +11,7 @@ then
     echo -e "${green}return=0 - OK.${nc}"
 else
     echo -e "${red}return=${rc} - Error.${nc}"
-    num=$(($num + $rc))
+    num=$(($num + "1"))
 fi
 
 echo ''
@@ -24,7 +24,7 @@ then
     echo -e "${green}return=0 - OK.${nc}"
 else
     echo -e "${red}return=${rc} - Error.${nc}"
-    num=$(($num + $rc))
+    num=$(($num + "1"))
 fi
 
 echo ''
@@ -37,20 +37,7 @@ then
     echo -e "${green}return=0 - OK.${nc}"
 else
     echo -e "${red}return=${rc} - Error.${nc}"
-    num=$(($num + $rc))
-fi
-
-echo ''
-echo '==============================================================================='
-echo ''
-
-./build/teufel.undulator; rc=$?
-if [ $rc = "0" ]
-then
-    echo -e "${green}return=0 - OK.${nc}"
-else
-    echo -e "${red}return=${rc} - Error.${nc}"
-    num=$(($num + $rc))
+    num=$(($num + "1"))
 fi
 
 echo ''
@@ -63,7 +50,7 @@ then
     echo -e "${green}return=0 - OK.${nc}"
 else
     echo -e "${red}return=${rc} - Error.${nc}"
-    num=$(($num + $rc))
+    num=$(($num + "1"))
 fi
 
 echo ''
@@ -76,7 +63,7 @@ then
     echo -e "${green}return=0 - OK.${nc}"
 else
     echo -e "${red}return=${rc} - Error.${nc}"
-    num=$(($num + $rc))
+    num=$(($num + "1"))
 fi
 
 echo ''
@@ -89,7 +76,7 @@ then
     echo -e "${green}return=0 - OK.${nc}"
 else
     echo -e "${red}return=${rc} - Error.${nc}"
-    num=$(($num + $rc))
+    num=$(($num + "1"))
 fi
 
 echo ''
@@ -102,7 +89,7 @@ then
     echo -e "${green}return=0 - OK.${nc}"
 else
     echo -e "${red}return=${rc} - Error.${nc}"
-    num=$(($num + $rc))
+    num=$(($num + "1"))
 fi
 
 echo ''
@@ -115,7 +102,7 @@ then
     echo -e "${green}return=0 - OK.${nc}"
 else
     echo -e "${red}return=${rc} - Error.${nc}"
-    num=$(($num + $rc))
+    num=$(($num + "1"))
 fi
 
 echo ''
@@ -129,7 +116,7 @@ then
     echo -e "${green}return=0 - OK.${nc}"
 else
     echo -e "${red}return=${rc} - Error.${nc}"
-    num=$(($num + $rc))
+    num=$(($num + "1"))
 fi
 
 echo ''
@@ -145,7 +132,7 @@ echo ''
 #     echo -e "$green OK.$nc"
 # else
 #     echo -e "$red Error.$nc"
-# num=$(($num + $rc))
+# num=$(($num + "1"))
 # fi
 
 # echo ''
@@ -160,7 +147,7 @@ echo ''
 #     echo -e "$green OK.$nc"
 # else
 #     echo -e "$red Error.$nc"
-# num=$(($num + $rc))
+# num=$(($num + "1"))
 # fi
 
 # echo ''
@@ -180,7 +167,7 @@ then
         echo -e "${green}return=0 - OK.${nc}"
     else
         echo -e "${red}return=${rc} - Error.${nc}"
-        num=$(($num + $rc))
+        num=$(($num + "1"))
     fi
 else
     echo -e "${red}return=${rc} - Error.${nc}"

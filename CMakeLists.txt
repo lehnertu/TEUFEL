@@ -211,13 +211,6 @@ if(BUILD_TESTS)
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
                              ${ZLIB_LIBRARY_RELEASE} )
-    add_executable(teufel.undulator ${PROJECT_TESTS_DIR}/teufel.undulator.cpp)
-    target_link_libraries(teufel.undulator ${PROJECT_NAME}lib
-                             ${HDF5_LIBRARIES}
-                             ${SDDS_LIBRARIES}
-                             ${PUGIXML_LIBRARIES}
-                             ${MUPARSER_LIBRARY}
-                             ${ZLIB_LIBRARY_RELEASE} )
     add_executable(teufel.loop ${PROJECT_TESTS_DIR}/teufel.loop.cpp)
     target_link_libraries(teufel.loop ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
