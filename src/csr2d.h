@@ -72,23 +72,32 @@ public:
     virtual ~CSR_2D();
 
     /*! Do all necessary initializations before update() can be called.
-     *  The given beam is defined as the field source.
+     *  Allocate memiry for the field map.
      */
-    virtual void init(Beam *beam);
+    virtual void init();
 
     /*! Compute the interaction field for the current state of the beam
      *  given by the tracking_time. If the last stored trajectory point
      *  deviates by more than a fraction (presently 0.5) of a time_step
-     *  an Exception is thrown.
+     *  an Exception is thrown. The field map is then valid for one tracking_time_step.
      *
-     *  After the call the fields can be used for tracking within on time_step.
+     *  For computation of the field map all particle positions are
+     *  shifted to the center positions of the grid cell they reside in.
+     *  The field is computed on the grid nodes and then interpolated for tracking.
+     *  This prevents outliers resulting from computing fields too close
+     *  to a particle.
+     *
+     *  After the call the fields can be used for tracking within one time_step.
+     *  It is assumed that the field map moves along with the particle beam
+     *  So the relative positions of a particle within the field map undergo
+     *  negligible changes during one tracking step.
      *  This method must be called in a leap-frog sequence interleaved with
      *  the tracking steps of the beam.
      *
      *  Every step_Output number of steps (including the first call)
      *  the computed grid is stored for later writing to a log file.
      */
-    virtual void update(double tracking_time, double tracking_time_step);
+    virtual void update(Beam *beam, double tracking_time);
     
     /*!
      * The electromagnetic field at a given time and point in space.
@@ -112,8 +121,8 @@ public:
 
 private:
 
-    //! This is the field source as defined by init().
-    Beam *source;
+    //! flag for initialization and allocation of the field map memory.
+    bool is_initialized;
     
     //! number of the field grid cells in direction of motion
     int  N_long;
@@ -121,36 +130,63 @@ private:
     //! number of the field grid cells transverse to the direction of motion
     int  N_trans;
     
+    //! normal vector of the plane used for CSR computation (typically the bending plane)
+    Vector e_normal;
+    
     /*! The grid vector in propagation direction.
-     *  This should be colinear with the average direction of motion of the beam
-     *  but this is in the responsibility of the user  and not checked.
+     *  This should be colinear with the average direction of motion of the beam.
+     *  This will be computed by update() and forced to be perpendicular to e_normal.
+     *  Significant out-off-plane components wil result in a warning.
+     *
+     *  The fields are considered to move with speed of light in this direction
+     *  and not to change over one tracking time-step.
      */
-    Vector e_long;
+    Vector d_long;
 
     /*! The grid vector in transverse direction.
-     *  This vector is forced to be perpendicular to the propagation direction.
-     *  It should lay in the bending plane of the trajectory
-     *  but this is in the responsibility of the user  and not checked.
+     *  This will be computed by update().
+     *  This vector is forced to be perpendicular to e_normal and d_long.
      */
-    Vector e_trans;
+    Vector d_trans;
 
-    //! the interaction field array
-    std::vector<ElMagField> interaction_field;
-
-    //! nunmber of stored field maps
-    int N_stored;
+    //! the tracking time when the update() was done.
+    //! The interaction_filed is then valid for one time step.
+    double update_time;
     
-    //! storage of fields over the computed time-steps
-    std::vector<std::vector<ElMagField>> field_storage;
+    //! origin [m] corresponding to index [0,0] of the field map - computed by update()
+    Vector origin;
+    
+    //! the interaction field map - index is running [0,N_long-1], [0,N_trans-1]
+    ElMagField *interaction_field;
+
+    //! number of particles in the beam
+    //! It is assumed that the number of particles stays constant during simulation.
+    //! @todo we should safeguard the code against lost particles
+    int NOP;
+    
+    //! storage of particle coordinates for the requested time-steps
+    std::vector<Vector *> position_storage;
+    std::vector<Vector *> momentum_storage;
+
+    //! storage of map geometry  for the requested time-steps
+    std::vector<Vector> origin_storage;
+    std::vector<Vector> dl_storage;
+    std::vector<Vector> dt_storage;
+    
+    //! storage of fields for the requested time-steps
+    std::vector<ElMagField *> field_storage;
     
     //! whether to create a field output file
     bool createOutput;
     
     //! how often to store a field output
     int step_Output;
+    
+    //! counter for steps to determine the output step
+    int step_counter;
 
     //! the output file name
-    std::string FileName;
+    const char* FileName;
 
 };
 

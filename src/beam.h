@@ -109,7 +109,8 @@ public:
     double getTimeStep() { return dt; };
     
     //! Set the tracking time step to be used.
-    void setTimeStep(double step) { dt = step; };
+    //! This is propagated to all contained particles.
+    void setTimeStep(double step);
     
     //! Report the number of time steps
     int getNOTS() { return NOTS; };
@@ -138,6 +139,15 @@ public:
      */
     void doStep(GeneralField *field);
     
+    /*! @brief write coordinates (6D: position and momentum) of all particles to a buffer
+     *  @param buffer address of the buffer
+     *  @param size maximum number of particles the buffer can hold
+     *      The data writing stops when the buffer limit is reached
+     *      even if not all particles have been written.
+     *  @return pointer to the next empty memory place in the buffer.
+     */
+    double* bufferCoordinates(double *buffer, int size);
+
     /*! @brief Compute the buffer size for one step.
      * 
      * @return the number of doubles needed

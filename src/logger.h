@@ -187,6 +187,8 @@ private:
  * 
  * This class handles the storage of particle trajectories fro a limited.
  * number of particles (just the first few of the probed beam).
+ *
+ * @todo specialization for beam still missing, only for bunch implemented
  */
 template <class objectT>
 class TrajectoryLogger : public Logger
@@ -215,12 +217,10 @@ public:
     
     /*! The source has advanced one time step.
      *  Compute and store the quantities of interest.
-     *  @todo not yet implemented
      */
     void update() override;
 
     /*! Write the collected data into an HDF5 file.
-     *  @todo not yet implemented
      */
     int WriteData() override;
 
@@ -269,6 +269,8 @@ struct ProbeInfo
  * The field data are only available for those particles that are
  * actually tracked, not for the master beam that only receives coordinate data copies.
  * This is usefull for probing the tracked beam on the master node, only.
+ *
+ * @todo specialization for bunch still missing, only for beam implemented
  */
 template <class objectT>
 class ProbeLogger : public Logger
@@ -300,12 +302,10 @@ public:
     
     /*! The source has advanced one time step.
      *  Compute and store the quantities of interest.
-     *  @todo not yet implemented
      */
     void update() override;
 
     /*! Write the collected data into an HDF5 file.
-     *  @todo not yet implemented
      */
     int WriteData() override;
 

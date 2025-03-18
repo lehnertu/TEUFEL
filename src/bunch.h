@@ -281,6 +281,14 @@ public:
      */
     void StepVay(GeneralField *field);
 
+    /*! @brief Set the tracking time step to be used.
+     *
+     *  This is propagated to all contained particles.
+     *  It needs to be called for particles that are not tracked themselves
+     *  but copied from other particles.
+     */
+    void setTimeStep(double step);
+
     /*! @brief Buffer particle coordinates.
      * 
      * Particle coordinates (time,position,momentum,acceleration)
@@ -341,7 +349,7 @@ public:
      */
     std::complex<double> BunchingFactor(double freq);
     
-    /*! @brief write coordinates of all particles to a buffer
+    /*! @brief write coordinates (6D: position and momentum) of all particles to a buffer
      *  @param buffer address of the buffer
      *  @param size maximum number of particles the buffer can hold
      *      The data writing stops when the buffer limit is reached

@@ -260,7 +260,8 @@ int main(int argc, char *argv[])
     // This has been set by the parser, but will be cleared when
     // initalizing the trajectories for actual tracking.
     int NOTS = masterBeam->getNOTS();
-    if (teufel::rank==0) std::cout << "tracking for " << NOTS << " time steps." << std::endl;
+    double time_step = masterBeam->getTimeStep();
+    if (teufel::rank==0) std::cout << "tracking for " << NOTS << " time steps dt=" << time_step << " s" << std::endl;
     if (teufel::rank==0) std::cout << "master beam trajectory storage : "
         << (double)masterBeam->getNOP() * NOTS * 10.0 * sizeof(double) / 1e6
         << " MB  for " << masterBeam->getNOP() << " particles" << std::endl;
@@ -336,6 +337,7 @@ int main(int argc, char *argv[])
     // we have not performed any time step yet
     // all particles just have the step=0 coordinates
     masterBeam->setNOTS(0);
+    masterBeam->setTimeStep(time_step);
     // now all nodes have an identical beam containig all particles
     
     MPI_Barrier(MPI_COMM_WORLD);
@@ -495,9 +497,7 @@ int main(int argc, char *argv[])
             listLoggers.at(il)->update();
                     
     // initalize the interaction fields
-    for (InteractionField* f : interactions) f->init(masterBeam);
-    // TODO: we should not compute the interaction from the master beam
-    // but from the tracked beam and gather the fields
+    for (InteractionField* f : interactions) f->init();
     
     // record the start time
     double start_time = MPI_Wtime();
@@ -524,7 +524,10 @@ int main(int argc, char *argv[])
         // source is the master beam containing all particles
         // TODO: we should not compute the interaction from the master beam
         // but from the tracked beam and gather the fields
-        for (InteractionField* f : interactions) f->update(tracking_time, tracking_time_step);
+        // TODO: but we should compute the geometry of the interaction field
+        // commonly for all nodes from the master beam before updating
+        // TODO: we should gather the storage information from all nodes to the master node
+        for (InteractionField* f : interactions) f->update(masterBeam, tracking_time);
         
         // do a step
         trackedBeam->doStep(lattice);
@@ -657,7 +660,7 @@ int main(int argc, char *argv[])
     if (teufel::rank == 0)
     {
         double stop_time = MPI_Wtime();
-        std::cout << "time elapsed during tracking : " << stop_time-start_time << " s" << std::endl;
+        std::cout << "time elapsed during tracking : " << stop_time-start_time << " s" << std::endl << std::endl;
     };
 
     // write the logged data

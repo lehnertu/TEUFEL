@@ -485,6 +485,11 @@ void Bunch::StepVay(GeneralField *field)
     }
 }
 
+void Bunch::setTimeStep(double step)
+{
+    for(int i=0; i<NOP; i++) P[i]->setTimeStep(step);
+};
+
 double *Bunch::bufferStep(double *buffer)
 {
     double *bp = buffer;

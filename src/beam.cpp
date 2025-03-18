@@ -103,6 +103,12 @@ double Beam::getTotalCharge()
     return charge;
 }
 
+void Beam::setTimeStep(double step)
+{
+    dt = step;
+    for(int i=0; i<NOB; i++) B[i]->setTimeStep(step);
+};
+
 void Beam::setupTracking(GeneralField *field)
 {
     switch (tracker)
@@ -155,6 +161,20 @@ void Beam::StepVay(GeneralField *field)
     {
         B[i]->StepVay(field);
     }
+}
+
+double* Beam::bufferCoordinates(double *buffer, int size)
+{
+    double *bp = buffer;
+    int size_remaining = size;
+    // handle all bunches in sequence
+    for(int i=0; i<NOB; i++)
+    {
+        bp = B[i]->bufferCoordinates(bp, size_remaining);
+        size_remaining -= B[i]->getNOP();
+        if (size_remaining<0) size_remaining=0;
+    }
+    return bp;
 }
 
 int Beam::getStepBufferSize()

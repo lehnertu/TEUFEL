@@ -311,21 +311,22 @@ public:
     /*! The default constructor */
     InteractionField() {};
 
-    //! InteractionFields are not external fields
+    //! InteractionFields are not external fields.
+    //! They will be removed from the lattice before computing observations.
     bool is_external() override { return false; };
 
     /*! All derived classe must provide a destructor */
     virtual ~InteractionField() {};
     
-    /*! Do all necessary initializations and define the field source.
-     *  The particles of the given beam drive the interaction.
-     * 
+    /*! Do all necessary initializations.
      * This must be implemented for all derived interactions.
      */
-    virtual void init(Beam *beam) = 0;
+    virtual void init() = 0;
 
-    /*! Compute the interaction field for the current state of the beam
-     *  given by the tracking_time.
+    /*! Compute the interaction field for the current state of the given beam
+     *  acting as a field source.
+     *  This method is called by the main program before every tracking step.
+     *  This ensures valid particle trajectories are available.
      *
      *  After the call the fields can be used for tracking within on time_step.
      *  This method must be called in a leap-frog sequence interleaved with
@@ -333,7 +334,7 @@ public:
      * 
      * This must be implemented for all derived interactions.
      */
-    virtual void update(double tracking_time, double tracking_time_step) = 0;
+    virtual void update(Beam *beam, double tracking_time) = 0;
 
     /*! The electromagnetic field at a given time and point in space.
      * The field is returned as a tuple of electric field [V/m] and

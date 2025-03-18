@@ -21,15 +21,33 @@
             <position x="-2.0*radius" y="0.0" z="0.0" />
             <momentum x="0.0" y="0.0" z="-1.0" />
         </particle>
+        <!-- four particles surrounding it -->
+        <calc var="dx" eq="0.001"/>
+        <calc var="dz" eq="0.0002"/>
+        <particle gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" >
+            <position x="-2.0*radius-dx" y="0.0" z="0.0" />
+            <momentum x="0.0" y="0.0" z="-1.0" />
+        </particle>
+        <particle gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" >
+            <position x="-2.0*radius+dx" y="0.0" z="0.0" />
+            <momentum x="0.0" y="0.0" z="-1.0" />
+        </particle>
+        <particle gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" >
+            <position x="-2.0*radius" y="0.0" z="-dz" />
+            <momentum x="0.0" y="0.0" z="-1.0" />
+        </particle>
+        <particle gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" >
+            <position x="-2.0*radius" y="0.0" z="dz" />
+            <momentum x="0.0" y="0.0" z="-1.0" />
+        </particle>
         <probe file="csr2d_probe.h5" step="1" number="1" />
     </beam>
     <calc print="tracking length [m] = " var="total_L" eq="radius*2.0*_pi" />
     <calc print="tracking total time [s] = " var="total_t" eq="total_L/(beta*_c)" />
     <calc print="dt = " var="dt" eq="total_t/2000" />
     <tracking method="Vay" delta_t="dt" n="2000" >
-        <csr2d N_long="20" N_trans="10">
-            <longitudinal x="0.0" y="0.0" z="1.0"/>
-            <transversal x="1.0" y="0.0" z="0.0"/>
+        <csr2d N_long="100" N_trans="20">
+            <normal x="0.0" y="1.0" z="0.0"/>
             <log file="csr2d_interaction_fields.hdf5" step="100" />
         </csr2d>
     </tracking>

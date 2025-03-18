@@ -65,7 +65,7 @@ SnapshotObserver<SourceT>::SnapshotObserver(
 template <typename SourceT>
 SnapshotObserver<SourceT>::~SnapshotObserver()
 {
-    if (particlesStored>0) delete particleBuffer;
+    if (particlesStored>0) delete[] particleBuffer;
 }
 
 template <>

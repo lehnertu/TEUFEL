@@ -274,6 +274,13 @@ public:
      */
     void setCurrentPoint(double time, Vector pos, Vector mom, Vector acc);
     
+    /*! @brief Set the tracking time step to be used.
+     *
+     *  This needs to be called for particles that are not tracked themselves
+     *  but copied from other particles.
+     */
+    void setTimeStep(double step) { t_step = step; };
+
     /*! @brief add trajectory point
      * 
      *  One trajectory point with the given coordinates is pushed

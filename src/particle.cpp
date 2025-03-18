@@ -640,8 +640,6 @@ std::optional<ParticleInfo> ChargedParticle::SolveRetardation(double obs_time, V
     {
         // extrapolating from zero to negative trajectory times
         // if the is only one trajectory point available (i1==i2) we will be here as well
-        if (DEBUGLEVEL>=3)
-            printf("ChargedParticle::SolveRetardation() - extrapolating from zero\n");
         Vector Rc = (obs_pos - X[0]) / SpeedOfLight;
         SourceP = P[0];
         betagamma2 = SourceP.abs2nd();
@@ -658,8 +656,22 @@ std::optional<ParticleInfo> ChargedParticle::SolveRetardation(double obs_time, V
         // compute the trajectory point at emission
         SourceX = X[0] + SourceBeta*SpeedOfLight*SourceT;
         SourceA = Vector(0.0,0.0,0.0);
-        if (DEBUGLEVEL>=3)
-            printf("    source point (%9.6f,%9.6f,%9.6f)m  t=%9.6gs\n",SourceX.x,SourceX.y,SourceX.z,SourceT);
+        // TODO: remove debugging check
+        if (DEBUGLEVEL>=2)
+        {   
+            if (std::isnan(SourceT) ||
+                std::isnan(SourceX.x) || std::isnan(SourceX.y) || std::isnan(SourceX.z) ||
+                std::isnan(SourceP.x) || std::isnan(SourceP.y) || std::isnan(SourceP.z) )
+                {
+                    printf("ChargedParticle::SolveRetardation() extrapolating from zero:\n");
+                    printf("Particle : t=%10.7g  X[0]=(%10.7g, %10.7g, %10.7g) P[0]=(%10.7g, %10.7g, %10.7g)\n",
+                        t_current,X[0].x,X[0].y,X[0].z,P[0].x,P[0].y,P[0].z);
+                    printf("Obs      : t=%10.7g  X=(%10.7g, %10.7g, %10.7g)\n",obs_time,obs_pos.x,obs_pos.y,obs_pos.z);
+                    printf("ChargedParticle::SolveRetardation - SourceX = (%9.6g, %9.6g, %9.6g)  t=%9.6gs\n",
+                        SourceX.x,SourceX.y,SourceX.z,SourceT);
+                    throw std::runtime_error("ChargedParticle::RetardedField(): source is NaN!");
+                }
+        }
         return ParticleInfo{Charge,Mass,SourceT,SourceX,SourceP,SourceA};
     }
     else
@@ -684,8 +696,6 @@ std::optional<ParticleInfo> ChargedParticle::SolveRetardation(double obs_time, V
                 t2 = tMid;
             }
         }
-        if (DEBUGLEVEL>=3)
-            printf("ChargedParticle::SolveRetardation() - interpolating between %d and %d\n",i1,i2);
 
         // Find the accurate position within the identified trajectory interval.
         // The dependency of the time on frac is highly nonlinear
@@ -733,16 +743,39 @@ std::optional<ParticleInfo> ChargedParticle::SolveRetardation(double obs_time, V
             dfrac = -dt/dtdf;
             if (DEBUGLEVEL>=2)
             {
+                if (std::isnan(dfrac))
+                {
+                    printf("ERROR  : NaN in ChargedParticle::SolveRetardation refinement step=%d\n",number_refinement);
+                    printf("Obs    : t=%10.7g  X=(%10.7g, %10.7g, %10.7g)\n",obs_time,obs_pos.x,obs_pos.y,obs_pos.z);
+                    printf("Source : t=%10.7g  X=(%10.7g, %10.7g, %10.7g)\n",SourceT,SourceX.x,SourceX.y,SourceX.z);
+                    printf("Source : Beta=(%10.7g, %10.7g, %10.7g)\n",SourceBeta.x,SourceBeta.y,SourceBeta.z);
+                    printf("RVec/R : (%10.7g, %10.7g, %10.7g)  (RVec/R . Beta)=%10.7g\n",
+                        (RVec/R).x,(RVec/R).y,(RVec/R).z,dot(RVec/R, SourceBeta));                   
+                    printf("i1=%d  t1=%10.7g  i2=%d  t2=%10.7g  dt=%10.7g  t_step=%10.7g\n",i1,t1,i2,t2,dt,t_step);
+                    printf("frac=%12.9f  R=%10.7g  dt=%10.7g  dtdf=%10.7g => dfrac=%12.9f\n",frac,R,dt,dtdf,dfrac);
+                };
                 if ((number_refinement>=10) && fabs(dfrac)>1e-3)
                 {
                     printf("WARNING : no convergence in ChargedParticle::SolveRetardation\n");
                     printf("Obs    : t=%10.7g  X=(%10.7g, %10.7g, %10.7g)\n",obs_time,obs_pos.x,obs_pos.y,obs_pos.z);
                     printf("Source : t=%10.7g  X=(%10.7g, %10.7g, %10.7g)\n",SourceT,SourceX.x,SourceX.y,SourceX.z);
                     printf("i1=%d  t1=%10.7g  i2=%d  t2=%10.7g\n",i1,t1,i2,t2);
-                    printf("frac=%12.9f  R=%10.7g  dt=%10.7g => dfrac=%12.9f\n",frac,R,dt,dfrac);
+                    printf("frac=%12.9f  R=%10.7g  dt=%10.7g  dtdf=%10.7g => dfrac=%12.9f\n",frac,R,dt,dtdf,dfrac);
                 }
             }
             frac += dfrac;
+            if (frac<0.0) frac=0.0;
+            if (DEBUGLEVEL>=2)
+            {
+                if (frac>10)
+                {
+                    printf("WARNING : divergence in ChargedParticle::SolveRetardation\n");
+                    printf("Obs    : t=%10.7g  X=(%10.7g, %10.7g, %10.7g)\n",obs_time,obs_pos.x,obs_pos.y,obs_pos.z);
+                    printf("Source : t=%10.7g  X=(%10.7g, %10.7g, %10.7g)\n",SourceT,SourceX.x,SourceX.y,SourceX.z);
+                    printf("i1=%d  t1=%10.7g  i2=%d  t2=%10.7g\n",i1,t1,i2,t2);
+                    printf("frac=%12.9f  R=%10.7g  dt=%10.7g  dtdf=%10.7g => dfrac=%12.9f\n",frac,R,dt,dtdf,dfrac);
+                }
+            }
         }
         // finalize with correct frac
         SourceT = t1*(1.0-frac) + t2*frac;
@@ -750,8 +783,26 @@ std::optional<ParticleInfo> ChargedParticle::SolveRetardation(double obs_time, V
                   (SourceBeta1-SourceBeta2)*0.5*frac*(1.0-frac)*t_step*SpeedOfLight;
         SourceP = SourceP1*(1.0-frac) + SourceP2*frac;
         SourceA = A[i1]*(1.0-frac) + A[i2]*frac;
-        if (DEBUGLEVEL>=3)
-            printf("    source point (%9.6f,%9.6f,%9.6f)m  t=%9.6gs\n",SourceX.x,SourceX.y,SourceX.z,SourceT);
+        // TODO: remove debugging check
+        if (DEBUGLEVEL>=2)
+        {   
+            if (std::isnan(SourceT) ||
+                std::isnan(SourceX.x) || std::isnan(SourceX.y) || std::isnan(SourceX.z) ||
+                std::isnan(SourceP.x) || std::isnan(SourceP.y) || std::isnan(SourceP.z) )
+                {
+                    printf("ChargedParticle::SolveRetardation() interpolating\n");
+                    printf("between %d and %d (NP=%d) frac=%10.7g\n",i1,i2,NP,frac);
+                    printf("Particle : t=%10.7g  X[%d]=(%10.7g, %10.7g, %10.7g) P[%d]=(%10.7g, %10.7g, %10.7g)\n",
+                        t_current,i1,X[i1].x,X[i1].y,X[i1].z,i1,P[i1].x,P[i1].y,P[i1].z);
+                    printf("Particle : t=%10.7g  X[%d]=(%10.7g, %10.7g, %10.7g) P[%d]=(%10.7g, %10.7g, %10.7g)\n",
+                        t_current,i2,X[i2].x,X[i2].y,X[i2].z,i2,P[i2].x,P[i2].y,P[i2].z);
+                    printf("Obs      : t=%10.7g  X=(%10.7g, %10.7g, %10.7g)\n",obs_time,obs_pos.x,obs_pos.y,obs_pos.z);
+                    printf("ChargedParticle::SolveRetardation - SourceX = (%9.6g, %9.6g, %9.6g)  t=%9.6gs\n",
+                        SourceX.x,SourceX.y,SourceX.z,SourceT);
+                    printf("Runtime ERROR: source is NaN\n\n");
+                    // throw std::runtime_error("ChargedParticle::RetardedField(): source is NaN!");
+                }
+        }
         return ParticleInfo{Charge,Mass,SourceT,SourceX,SourceP,SourceA};
     }
     
@@ -794,6 +845,21 @@ ElMagField ChargedParticle::RetardedField(double obs_time, Vector obs_pos)
         EField += cross(N, cross(N - SourceBeta, SourceBetaPrime)) / (R*bn3rd*SpeedOfLight);
         EField *= scale;
         BField = cross(N,EField) / SpeedOfLight;
+        // TODO: remove debugging check
+        if (DEBUGLEVEL>=2)
+        {   
+            if (std::isnan(EField.x) || std::isnan(EField.y) || std::isnan(EField.z) ||
+                std::isnan(BField.x) || std::isnan(BField.y) || std::isnan(BField.z) )
+                {
+                    printf("ChargedParticle::RetardedField():\n");
+                    printf("Particle : t=%10.7g  X=(%10.7g, %10.7g, %10.7g) P=(%10.7g, %10.7g, %10.7g)\n",
+                        t_current,X_current.x,X_current.y,X_current.z,P_current.x,P_current.y,P_current.z);
+                    printf("Obs      : t=%10.7g  X=(%10.7g, %10.7g, %10.7g)\n",obs_time,obs_pos.x,obs_pos.y,obs_pos.z);
+                    printf("ChargedParticle::RetardedField - SourceX = (%9.6g, %9.6g, %9.6g)  t=%9.6gs\n",
+                        SourceX.x,SourceX.y,SourceX.z,SourceT);
+                    throw std::runtime_error("ChargedParticle::RetardedField(): field value is NaN!");
+                }
+        }
     }
     else
     {

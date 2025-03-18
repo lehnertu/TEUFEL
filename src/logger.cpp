@@ -204,7 +204,7 @@ int ParameterLogger<objectT>::WriteData()
 	    return 9;
     }	
     // no errors have occured if we made it 'til here
-    // cout << "writing SDDS done." << endl;
+    cout << "writing SDDS done." << endl;
     return 0;
 }
 
@@ -451,6 +451,7 @@ int ProbeLogger<objectT>::WriteData()
 
     status = H5Fclose(file);
     if (status<0) throw(IOexception("ProbeLogger::WriteData() - error in H5Fclose()"));
+    
     // no errors have occured if we made it 'til here
     cout << "writing HDF5 done." << endl;
     return 0;
