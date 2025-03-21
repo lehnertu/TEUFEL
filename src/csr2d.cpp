@@ -218,8 +218,11 @@ void CSR_2D::update(Beam *beam, double tracking_time)
             for (int il=0; il<N_long; il ++)
                 for (int it=0; it<N_trans; it ++)
                 {
-                    // the shifted grid position
-                    Vector grid = origin + d_long*il + d_trans*it + shift;
+                    // TODO: use the shifted grid position - temporarily removed for debugging
+                    // it does not change the outcome - only the artifacts appear at different positions
+                    // Vector grid = origin + d_long*il + d_trans*it + shift;
+                    Vector grid = origin + d_long*il + d_trans*it;
+                    
                     // TODO: remove debugging check
                     if (DEBUGLEVEL>=2)
                     {   

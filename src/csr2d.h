@@ -86,6 +86,8 @@ public:
      *  The field is computed on the grid nodes and then interpolated for tracking.
      *  This prevents outliers resulting from computing fields too close
      *  to a particle.
+     *  TODO: This shifting does not remove the artifacts - 
+     *  those just occur at different locations.
      *
      *  After the call the fields can be used for tracking within one time_step.
      *  It is assumed that the field map moves along with the particle beam
