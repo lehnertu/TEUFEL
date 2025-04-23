@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <teufel description="Coherent synchrotron radiation from a homogeneous dipole"
-    author="Ulf Lehnert 29.6.2020">
-    <calc print="beam energy [eV] = " var="E_beam" eq="50.0e6" />
+    author="Ulf Lehnert 18.4.2025">
+    <calc print="beam energy [eV] = " var="E_beam" eq="20.0e6" />
     <calc print="gamma = " var="gamma" eq="E_beam/_mec2"/>
     <calc print="beta*gamma = " var="betagamma" eq="sqrt(gamma*gamma-1.0)"/>
     <calc print="beta = " var="beta" eq="sqrt(1.0-1.0/(gamma*gamma))"/>
@@ -16,7 +16,7 @@
         </background>
     </lattice>
     <beam>
-        <!-- a single particle moving in the x-z plane crosses the origin at half-way -->
+        <!-- a few particles moving in the x-z plane cross the origin at half-way -->
         <particle gamma="gamma" charge="1.0e-9*charge" cmr="-1.0" >
             <position x="-2.0*radius" y="0.0" z="0.0" />
             <momentum x="0.0" y="0.0" z="-1.0" />
@@ -46,7 +46,7 @@
     <calc print="tracking total time [s] = " var="total_t" eq="total_L/(beta*_c)" />
     <calc print="dt = " var="dt" eq="total_t/2000" />
     <tracking method="Vay" delta_t="dt" n="2000" >
-        <csr2d N_long="100" N_trans="20">
+        <csr2d N_long="500" N_trans="50">
             <normal x="0.0" y="1.0" z="0.0"/>
             <log file="csr2d_interaction_fields.hdf5" step="100" />
         </csr2d>
