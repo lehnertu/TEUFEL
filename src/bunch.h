@@ -83,7 +83,7 @@ public:
      *  @todo: This should generate a strictly sequential Gaussian.
      *  The present code shoud be renamed generateNormalDist()
      */
-    void generateGaussian( int dim, double sigma);
+    void generateGaussian( int dim, double mean, double sigma);
     
     /*! Add a correlation between two axis.
      *  The value of the independent coordinate multiplied with a factor
@@ -93,6 +93,14 @@ public:
      */
     void addCorrelation(int independent, int dependent, double factor);
     
+    /*! Multiply the values of one coordinate with those of another coordinate.
+     *  The value of the working axis is change in place,
+     *  the value of the factor axis is left unchanged.
+     *
+     *  The method is safeguarded against illegal corrdinate indexes.
+     */
+    void multiplyCoordinate(int working, int factor);
+
     /*! Get one coordinate of one particle with given index.
      *  Out of range indices will not lead to errors, just return zero
      */

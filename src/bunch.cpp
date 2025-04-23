@@ -69,7 +69,7 @@ void Distribution::scale( int dim, double factor)
     }
 }
 
-void Distribution::generateGaussian(int dim, double sigma)
+void Distribution::generateGaussian(int dim, double mean, double sigma)
 {
     if (dim>=0 && dim<DIM)
     {
@@ -77,7 +77,7 @@ void Distribution::generateGaussian(int dim, double sigma)
         std::random_device rd;
         // pseudo-random generator of 32-bit numbers with a state size of 19937 bits
         std::mt19937 mt(rd());
-        std::normal_distribution<double> dist(0.0, sigma);
+        std::normal_distribution<double> dist(mean, sigma);
         for (int i=0; i<NOP; i++)
             A[i*DIM+dim] = dist(mt);
     }
@@ -90,6 +90,16 @@ void Distribution::addCorrelation(int independent, int dependent, double factor)
     {
         for (int i=0; i<NOP; i++)
             A[i*DIM+dependent] += factor * A[i*DIM+independent];
+    }
+}
+
+void Distribution::multiplyCoordinate(int working, int factor)
+{
+    if (working>=0 && working<DIM &&
+        factor>=0 && factor<DIM && working!=factor)
+    {
+        for (int i=0; i<NOP; i++)
+            A[i*DIM+working] = A[i*DIM+working] * A[i*DIM+factor];
     }
 }
 
@@ -180,6 +190,7 @@ Bunch::Bunch(Distribution *dist, double reftime, Vector refpos, Vector refmom, d
             Vector(dist->getCoordinate(i,3),
                    dist->getCoordinate(i,4),
                    dist->getCoordinate(i,5));
+        P0 *= (1.0+dist->getCoordinate(i,7));
         Vector A0 = Vector(0,0,0);
         p->initTrajectory(t0, X0, P0, A0);
         P.push_back(p);

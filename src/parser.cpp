@@ -385,7 +385,6 @@ int InputParser::parseBeam(Beam *beam, std::vector<Logger*> *logs, ProbeInfo *pr
                 double xrms = 0.0;
                 double yrms = 0.0;
                 double zrms = 0.0;
-                double zft = 0.0;
                 // parse start time
                 pugi::xml_node timenode = entry.child("time");
                 if (timenode)
@@ -410,11 +409,10 @@ int InputParser::parseBeam(Beam *beam, std::vector<Logger*> *logs, ProbeInfo *pr
                 if (yrmsatt) yrms=parseDouble(yrmsatt);
                 pugi::xml_attribute zrmsatt = posnode.attribute("zrms");
                 if (zrmsatt) zrms=parseDouble(zrmsatt);
-                pugi::xml_attribute zftatt = posnode.attribute("zft");
-                if (zftatt) zft=parseDouble(zftatt);
                 // parse momentum
                 double xprms = 0.0;
                 double yprms = 0.0;
+                double zprms = 0.0;
                 double delta = 0.0;
                 pugi::xml_node momnode = entry.child("momentum");
                 if (!momnode)
@@ -431,22 +429,22 @@ int InputParser::parseBeam(Beam *beam, std::vector<Logger*> *logs, ProbeInfo *pr
                 if (xpatt) xprms=parseDouble(xpatt);
                 pugi::xml_attribute ypatt = momnode.attribute("yrms");
                 if (ypatt) yprms=parseDouble(ypatt);
+                pugi::xml_attribute zpatt = momnode.attribute("zrms");
+                if (zpatt) zprms=parseDouble(zpatt);
                 pugi::xml_attribute delatt = momnode.attribute("delta");
                 if (delatt) delta=parseDouble(delatt);
                 // create the bunch particle distribution
-                Distribution *dist = new Distribution(6, NoP);
-                dist->generateGaussian(0, xrms);
-                dist->generateGaussian(1, yrms);
-                if (zft != 0.0)
-                    dist->scale(2, zft);
-                else
-                    {
-                        if (zrms != 0.0) dist->generateGaussian(2, zrms);
-                        else dist->scale(2, 0.0);
-                    };
-                dist->generateGaussian(3, betagamma*xprms);
-                dist->generateGaussian(4, betagamma*yprms);
-                dist->generateGaussian(5, betagamma*delta);
+                // the distribution is created with 8 axes
+                // x, y, z, px, py, pz, t, delta
+                Distribution *dist = new Distribution(8, NoP);
+                dist->generateGaussian(0, 0.0, xrms);
+                dist->generateGaussian(1, 0.0, yrms);
+                dist->generateGaussian(2, 0.0, zrms);
+                dist->generateGaussian(3, 0.0, betagamma*xprms);
+                dist->generateGaussian(4, 0.0, betagamma*yprms);
+                dist->generateGaussian(5, 0.0, betagamma*zprms);
+                dist->scale(6, 0.0);
+                dist->generateGaussian(7, 0.0, delta);
                 // parse and add correlations
                 pugi::xml_node corrnode = entry.child("correlations");
                 if (corrnode)

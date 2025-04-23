@@ -92,7 +92,7 @@ int main(int argc, char *argv[])
         std::cout.width(2);
         std::cout.fill('0');
         std::cout << TEUFEL_VERSION_PATCH << std::endl;
-        cout << std::endl <<" THz-Emission From Undulators and Free-Electron Lasers" << std::endl << std::endl;
+        cout << std::endl <<" THz-Emission from Undulators and Free-Electron Lasers" << std::endl << std::endl;
         cout << std::endl <<" TEUFEL parallel computing on " << NumberOfNodes << " nodes." << std::endl;
         cout << std::endl;
     }
@@ -514,7 +514,7 @@ int main(int argc, char *argv[])
 
     // do the tracking of the beam
     // Shared memory parallelization is used for field integration only.
-    // It may be emploeyed in the future during tracking for
+    // It may be employed in the future during tracking for
     // computing the interaction field between the particles.
     // With a-priori fields tracking will only be MPI parallelized.
     for (int step=0; step<NOTS; step++)

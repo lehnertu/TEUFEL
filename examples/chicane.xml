@@ -1,0 +1,60 @@
+<?xml version="1.0"?>
+<teufel description="electron beam transport through a magnetic chicane"
+    author="Ulf Lehnert 23.4.2025">
+    <calc print="beam energy [eV] = " var="E_beam" eq="20.0e6" />
+    <calc print="gamma = " var="gamma" eq="E_beam/_mec2"/>
+    <calc print="beta*gamma = " var="betagamma" eq="sqrt(gamma*gamma-1.0)"/>
+    <calc print="B*r [T m] = " var="Brho" eq="betagamma*_mec2/_c"/>
+    <lattice>
+        <calc print="r [m] = " var="radius" eq="0.3"/>
+        <calc print="B [T] = " var="B" eq="Brho/radius"/>
+        <dipole type="soft edge" name="D1">
+            <B x="0.0" y="-B" z="0.0" />
+            <p1 x="0.0" y="0.0" z="0.0" />
+            <n1 x="-1.0" y="0.0" z="0.0" />
+            <p2 x="0.1" y="0.0" z="0.0" />
+            <n2 x="1.0" y="0.0" z="0.0" />
+            <transition l1="0.01" l2="0.01" />
+        </dipole>
+        <dipole type="soft edge" name="D2">
+            <B x="0.0" y="B" z="0.0" />
+            <p1 x="0.6" y="0.0" z="0.0" />
+            <n1 x="-1.0" y="0.0" z="0.0" />
+            <p2 x="0.7" y="0.0" z="0.0" />
+            <n2 x="1.0" y="0.0" z="0.0" />
+            <transition l1="0.01" l2="0.01" />
+        </dipole>
+        <dipole type="soft edge" name="D3">
+            <B x="0.0" y="B" z="0.0" />
+            <p1 x="0.9" y="0.0" z="0.0" />
+            <n1 x="-1.0" y="0.0" z="0.0" />
+            <p2 x="1.0" y="0.0" z="0.0" />
+            <n2 x="1.0" y="0.0" z="0.0" />
+            <transition l1="0.01" l2="0.01" />
+        </dipole>
+        <dipole type="soft edge" name="D4">
+            <B x="0.0" y="-B" z="0.0" />
+            <p1 x="1.5" y="0.0" z="0.0" />
+            <n1 x="-1.0" y="0.0" z="0.0" />
+            <p2 x="1.6" y="0.0" z="0.0" />
+            <n2 x="1.0" y="0.0" z="0.0" />
+            <transition l1="0.01" l2="0.01" />
+        </dipole>
+    </lattice>
+    <beam>
+        <bunch gamma="gamma" charge="1.0e-9" cmr="-1.0" n="1000" >
+            <position x="-0.1" y="0.0" z="0.0" xrms="0.0001" yrms="0.001" zrms="0.001" />
+            <momentum x="1.0" y="0.0" z="0.0" delta="0.01" />
+            <log file="chicane_beam.sdds" step="1" />
+        </bunch>
+    </beam>
+    <calc print="tracking length [m] = " var="total_L" eq="2.0" />
+    <calc print="tracking step [m] = " var="ds" eq="0.001" />
+    <calc print="tracking time step [s] = " var="dt" eq="ds/_c" />
+    <tracking method="Vay" delta_t="dt" n="rint(total_L/ds)" >
+        <watch step="0" file="chicane_beam_start.h5" />
+        <watch step="rint(total_L/ds)" file="chicane_beam_final.h5" />
+    </tracking>
+    <observer>
+    </observer>
+</teufel>
