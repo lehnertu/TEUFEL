@@ -383,4 +383,27 @@ def readTeufelBeamLog(filename):
     z_rms = np.array(data.getColumnData("z_rms"))
     return {'x_avg':x, 'y_avg':y, 'z_avg':z, 't':t, 'x_rms':x_rms, 'y_rms':y_rms, 'z_rms':z_rms,
         'bgx_avg':bgx, 'bgy_avg':bgy, 'bgz_avg':bgz, 'gamma':gamma, 'delta':delta, 'BF':bf}
+        
+# =============================================================================
+
+def readTeufelTrajectories(filename):
+    """
+    This procedure reads a log of particle trajectories
+    from an HDF5 file written by TEUFEL during particle tracking.
+    It returns a dictionary with NOP (the number of particles),
+    NOTS (the number of time steps recorded) and
+    coordinates (a numpy array of shape(NOTS,NOP,6).
+    The coordinates comprise the position (x,y,z) and the
+    relativistic momentum Beta*Gamma (bgx, bgy, bgz).
+    """
+    if not os.path.exists(filename):
+        print('file not found.')
+        return {}
+    print("reading ",filename)
+    hdf = h5py.File(filename, "r")
+    tdata = hdf['Trajectories']
+    data_dict = dict(tdata.attrs)
+    data_dict.update({'coordinates':np.array(tdata)})
+    hdf.close()
+    return data_dict
 
