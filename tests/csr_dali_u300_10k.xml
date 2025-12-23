@@ -1,0 +1,53 @@
+<?xml version="1.0"?>
+<teufel description="Superradiant emission from the DALI U300 undulator"
+    author="Ulf Lehnert 23.12.2025">
+    <calc print="beam energy [eV] = " var="E_beam" eq="50.0e6" />
+    <calc print="gamma = " var="gamma" eq="E_beam/_mec2"/>
+    <calc print="beta*gamma = " var="betagamma" eq="sqrt(gamma*gamma-1)"/>
+    <calc print="charge [nC] = " var="charge" eq="-1.0" />
+    <!-- set desired output frequency -->
+    <calc print="freq [Hz] = " var="f" eq="1.0e12"/>
+    <calc print="lambda [m] = " var="lambda" eq="_c/f"/>
+    <calc var="lambda_U" eq="0.300" />
+    <lattice>
+        <undulator name="U300" type="planar">
+            <!-- compute undulator setting from desired output frequency -->
+            <calc print="K_rms(U300) = " var="K_rms" eq="sqrt(lambda/lambda_U*2*gamma*gamma-1)" />
+            <!-- setup the undulator -->
+            <field B="K_rms*sqrt(2)/_c*2*_pi*_mec2/lambda_U"
+                   period="lambda_U" N="8" />
+            <position x="0.0" y="0.0" z="1.4"/>
+        </undulator>
+    </lattice>
+    <beam>
+        <calc print="for FF=0.5 bunchlength [s] = " var="tau" eq="0.1325/0.315e12" />
+        <calc print="longitudinal emittance [eV s]" var="eps_z" eq="50.0*1e3*1e-12" />
+        <calc print="dE/E = " var="delta" eq="eps_z/tau/E_kin" />
+        <calc print="undulator center R56 = " var="R56" eq="8*lambda_R" />
+        <bunch gamma="gamma" charge="-1.0e-9" cmr="-1.0" n="1e4" >
+            <position x="0.0" y="0.0" z="0.0" zrms="tau*_c" />
+            <momentum x="0.0" y="0.0" z="1.0" delta="delta" />
+            <!-- correct for R56 -->
+            <correlations>
+                <linear indep="5" dep="2" factor="-R56/gamma" />
+            </correlations>
+            <log file="csr_dali_u300_beamlog.sdds" step="10" bunching-freq="f" />
+        </bunch>
+    </beam>
+    <calc print="tracking length [m] = " var="total_L" eq="2.75" />
+    <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
+    <calc print="dt = " var="dt" eq="total_t/4000" />
+    <tracking method="Vay" delta_t="dt" n="4000" >
+        <csr N_slices="50" >
+            <log file="csr_dali_u300_interaction_slices.hdf5" />
+        </csr>
+    </tracking>
+    <observer>
+        <calc print="screen position z0 = " var="z0" eq="10.0+1.4"/>
+        <calc print="screen start time t0 = " var="t0" eq="z0/_c"/>
+        <point file="csr_dali_u300_obs_10m.sdds">
+            <position x="0.0" y="0.0" z="z0" />
+            <time t0="t0-5.0e-12" dt="1e-13" n="300" />
+        </point>
+    </observer>
+</teufel>

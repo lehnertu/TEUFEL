@@ -37,7 +37,7 @@
         </dipole>
     </lattice>
     <beam>
-        <SDDS file="tests/test.sdds">
+        <SDDS file="test.sdds">
             <log file="sdds_beam_log.sdds" step="10" />
         </SDDS>
     </beam>

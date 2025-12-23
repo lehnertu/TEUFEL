@@ -23,6 +23,7 @@
 #include <iomanip>
 #include <math.h>
 
+#include "csr.h"
 #include "csr2d.h"
 #include "dipole.h"
 #include "fields.h"
@@ -672,6 +673,14 @@ void InputParser::parseTracking(
             std::string type = child.name();
             if (type == "calc")
                 parseCalc(child);
+            else if (type == "csr")
+            {
+                parseCalcChildren(child);
+                // the interaction object parses its own input, we provide a reference to the parser
+                // the timestep attribute has already been evaluated - thats necessary
+                CSR* csr_interaction = new CSR(child, this);
+                interactions->push_back(csr_interaction);
+            }
             else if (type == "csr2d")
             {
                 parseCalcChildren(child);

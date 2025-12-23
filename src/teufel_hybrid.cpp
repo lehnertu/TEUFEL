@@ -702,6 +702,10 @@ int main(int argc, char *argv[])
         }
     }
     
+    // TODO: one should not delete the interaction fields but move them
+    // to an own list. Then an observer could look at either the beam,
+    // the lattice or the interaction fields
+    
     // compute all observations
     for (int i=0; i<(int)listObservers.size(); i++)
     {

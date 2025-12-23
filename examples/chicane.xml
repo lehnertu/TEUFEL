@@ -1,54 +1,62 @@
 <?xml version="1.0"?>
-<teufel description="electron beam transport through a magnetic chicane"
+<teufel description="Electron beam transport through the TELBE magnetic chicane"
     author="Ulf Lehnert 23.4.2025">
-    <calc print="beam energy [eV] = " var="E_beam" eq="20.0e6" />
+    <calc print="total beam energy [eV] = " var="E_beam" eq="24.0e6" />
     <calc print="gamma = " var="gamma" eq="E_beam/_mec2"/>
     <calc print="beta*gamma = " var="betagamma" eq="sqrt(gamma*gamma-1.0)"/>
     <calc print="B*r [T m] = " var="Brho" eq="betagamma*_mec2/_c"/>
+    <calc print="nominal current I [A] = " var="current" eq="35.0"/>
+    <calc print="magnetic field B [T] = " var="B" eq="0.004794 * current"/>
+    <calc print="trajectory radius r [m] = " var="radius" eq="Brho/B"/>
+    <calc print="deflection angle alpha [deg] = " var="alpha" eq="180.0/_pi*asin(0.15/radius)"/>
+    <!-- set the beam such that after the given R56 the minimum bunch length is reached -->
+    <calc print="R_56 = " var="R56" eq="0.131875"/>
     <lattice>
-        <calc print="r [m] = " var="radius" eq="0.3"/>
-        <calc print="B [T] = " var="B" eq="Brho/radius"/>
         <dipole type="soft edge" name="D1">
             <B x="0.0" y="-B" z="0.0" />
             <p1 x="0.0" y="0.0" z="0.0" />
             <n1 x="-1.0" y="0.0" z="0.0" />
-            <p2 x="0.1" y="0.0" z="0.0" />
+            <p2 x="0.15" y="0.0" z="0.0" />
             <n2 x="1.0" y="0.0" z="0.0" />
             <transition l1="0.01" l2="0.01" />
         </dipole>
         <dipole type="soft edge" name="D2">
             <B x="0.0" y="B" z="0.0" />
-            <p1 x="0.6" y="0.0" z="0.0" />
+            <p1 x="0.65" y="0.0" z="0.0" />
             <n1 x="-1.0" y="0.0" z="0.0" />
-            <p2 x="0.7" y="0.0" z="0.0" />
+            <p2 x="0.8" y="0.0" z="0.0" />
             <n2 x="1.0" y="0.0" z="0.0" />
             <transition l1="0.01" l2="0.01" />
         </dipole>
         <dipole type="soft edge" name="D3">
             <B x="0.0" y="B" z="0.0" />
-            <p1 x="0.9" y="0.0" z="0.0" />
+            <p1 x="1.1" y="0.0" z="0.0" />
             <n1 x="-1.0" y="0.0" z="0.0" />
-            <p2 x="1.0" y="0.0" z="0.0" />
+            <p2 x="1.25" y="0.0" z="0.0" />
             <n2 x="1.0" y="0.0" z="0.0" />
             <transition l1="0.01" l2="0.01" />
         </dipole>
         <dipole type="soft edge" name="D4">
             <B x="0.0" y="-B" z="0.0" />
-            <p1 x="1.5" y="0.0" z="0.0" />
+            <p1 x="1.75" y="0.0" z="0.0" />
             <n1 x="-1.0" y="0.0" z="0.0" />
-            <p2 x="1.6" y="0.0" z="0.0" />
+            <p2 x="1.9" y="0.0" z="0.0" />
             <n2 x="1.0" y="0.0" z="0.0" />
             <transition l1="0.01" l2="0.01" />
         </dipole>
     </lattice>
     <beam>
-        <bunch gamma="gamma" charge="1.0e-9" cmr="-1.0" n="1000" >
+        <bunch gamma="gamma" charge="1.0e-9" cmr="-1.0" n="10000" >
             <position x="-0.1" y="0.0" z="0.0" xrms="0.0001" yrms="0.001" zrms="0.001" />
             <momentum x="1.0" y="0.0" z="0.0" delta="0.01" />
+            <correlations>
+                <!-- the 7th column of the distribution is the energy deviation delta -->
+                <linear indep="7" dep="0" factor="-R56" />
+            </correlations>
             <log file="chicane_beam.sdds" step="1" />
         </bunch>
     </beam>
-    <calc print="tracking length [m] = " var="total_L" eq="2.0" />
+    <calc print="tracking length [m] = " var="total_L" eq="2.1" />
     <calc print="tracking step [m] = " var="ds" eq="0.001" />
     <calc print="tracking time step [s] = " var="dt" eq="ds/_c" />
     <tracking method="Vay" delta_t="dt" n="rint(total_L/ds)" >
