@@ -49,6 +49,9 @@ class CSR : public InteractionField
 public:
 
     /*! All data stored for a single slice of the beam.
+     *  Position, momentum and acceleration of all slices are independent.
+     *  Slice.length refers to the average momentum direction of the beam
+     *  which is defined per Snapshot.
      */
     struct Slice {
         double charge;
@@ -58,7 +61,23 @@ public:
         double length;
         double radius;
     };
-
+    
+    /*! All data stored for a complete snapshot of the history
+     *  of the beam at a given point in time during tracking.
+     *
+     *  The position and momentum define a plane through the center
+     *  of the bunch perpendicular to its direction of motion.
+     *  This plane is the reference for the longitudinal particle position
+     *  used for slicing the bunch and computing arrival times.
+     *  Slice.length is determined perpendicular to this plane.
+     */
+    struct Snapshot {
+        double tracking_time;
+        Vector central_position;
+        Vector central_momentum;
+        std::vector<Slice> slices;
+    };
+     
     /*! The default contructor just calls the default constructor of the base class
      *  and initalizes all variables with sane values. This will not yet produce any fields.
      */
@@ -84,39 +103,16 @@ public:
      */
     virtual void init();
 
-    /*! Compute the interaction field for the current state of the beam
-     *  given by the tracking_time. If the last stored trajectory point
-     *  deviates by more than a fraction (presently 0.5) of a time_step
-     *  an Exception is thrown. The field map is then valid for one tracking_time_step.
-     *
-     *  For computation of the field map all particle positions are
-     *  shifted to the center positions of the grid cell they reside in.
-     *  The field is computed on the grid nodes and then interpolated for tracking.
-     *  This prevents outliers resulting from computing fields too close
-     *  to a particle.
-     *  TODO: This shifting does not remove the artifacts - 
-     *  those just occur at different locations.
-     *
-     *  After the call the fields can be used for tracking within one time_step.
-     *  It is assumed that the field map moves along with the particle beam
-     *  So the relative positions of a particle within the field map undergo
-     *  negligible changes during one tracking step.
+    /*! Subdivide the beam into a number of slices and store the slice data
+     *  for logging and future field computations.
+     *  After the call the fields can be used for tracking or computing observations.
      *  This method must be called in a leap-frog sequence interleaved with
      *  the tracking steps of the beam.
-     *
-     *  Every step_Output number of steps (including the first call)
-     *  the computed grid is stored for later writing to a log file.
      */
     virtual void update(Beam *beam, double tracking_time);
     
     /*!
      * The electromagnetic field at a given time and point in space.
-     * The time must be within a time step from the current time of the interaction field.
-     * 
-     * The requested position is projected into the grid plane.
-     * The field is reported  with a constant value for out-off-plane positions.
-     * If the requested position is projected outside the grid
-     * an exception is thrown.
      * 
      * The coordinates [m] and the time [s] refer to the laboratory (rest) frame.
      * The field is returned as a tuple of electric field [V/m] and
@@ -125,7 +121,7 @@ public:
     virtual ElMagField Field(double t, Vector X);
 
     /*! Write stored field data to file if requested (do nothing otherwise).
-     *  This will be called after the tracking is finished.
+     *  This will be called once after the tracking is finished.
      */
     virtual void write_output();
 
@@ -135,7 +131,7 @@ private:
     bool is_initialized;
     
     //! number of slices
-    int  N_slices;
+    size_t  numSlices;
     
     //! the storage for the complete history of the beam
     std::vector<Slice *> history;

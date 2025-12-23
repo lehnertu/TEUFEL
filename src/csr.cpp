@@ -29,7 +29,7 @@
 CSR::CSR()
 {
     is_initialized = false;
-    N_slices = 0;
+    numSlices = 0;
     createOutput = false;
 }
 
@@ -42,7 +42,7 @@ CSR::CSR(
     pugi::xml_attribute att = node.attribute("N_slices");
     if (!att)
         throw(IOexception("InputParser::CSR_2D - attribute N_slices not found."));
-    N_slices = parser->parseInt(att);
+    numSlices = parser->parseInt(att);
     // define file output if requested
     pugi::xml_node lognode = node.child("log");
     if (lognode)
@@ -57,7 +57,7 @@ CSR::CSR(
     if (teufel::rank==0)
     {
         std::cout << "CSR interaction" << std::endl;
-        std::cout << "  " << N_slices << " slices" << std::endl;
+        std::cout << "  " << numSlices << " slices" << std::endl;
     }
 }
 
