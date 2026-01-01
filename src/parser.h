@@ -77,6 +77,8 @@ public:
      * 
      *  A number of constants is pre-defined for use in calculations
      *  "_c", "_e", "_mec2", "_eps0", "_mu0"
+     *
+     *  TODO: errors while parsing clculated values should lead to a stop of the program.
      */
     void parseCalc(const pugi::xml_node node);
     

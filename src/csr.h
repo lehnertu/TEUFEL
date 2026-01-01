@@ -95,19 +95,24 @@ public:
         InputParser *parser
         );
 
-    /*! All derived classes from GeneralField must provide a destructor */
+    /*! All derived classes from GeneralField must provide a destructor.
+     *  This one just cleans up the stored history.
+     */
     virtual ~CSR();
 
     /*! Do all necessary initializations before update() can be called.
-     *  Allocate memiry for the field map.
      */
     virtual void init();
 
     /*! Subdivide the beam into a number of slices and store the slice data
      *  for logging and future field computations.
      *  After the call the fields can be used for tracking or computing observations.
+     *
      *  This method must be called in a leap-frog sequence interleaved with
      *  the tracking steps of the beam.
+     *  In the tracking loop update() is called before the tracking step is executed.
+     *  The first time update() is called just the initialized beam is available.
+     *  Initalizing the tracking computes the fields 
      */
     virtual void update(Beam *beam, double tracking_time);
     
@@ -134,7 +139,7 @@ private:
     size_t  numSlices;
     
     //! the storage for the complete history of the beam
-    std::vector<Slice *> history;
+    std::vector<Snapshot *> history;
     
     //! whether to create a field output file
     bool createOutput;

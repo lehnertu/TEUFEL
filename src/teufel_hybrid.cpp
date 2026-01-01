@@ -214,6 +214,7 @@ int main(int argc, char *argv[])
     // After every tracking step, the current particle information distributed over
     // the compute nodes will be re-gathered into this object.
     // Every node is doing that, so the total beam history is available for interactions.
+    if (teufel::rank==0) std::cout << "TEUFEL: creating master beam." << std::endl << std::endl;
     Beam *masterBeam = new Beam();
     std::vector<Logger*> listLoggers;
     ProbeInfo probe{false, 0, "", 0, 0};
@@ -416,6 +417,7 @@ int main(int argc, char *argv[])
     // ===============================================================
 
     // this is the beam we will actually track (private per node)
+    std::cout << "TEUFEL: node " << teufel::rank << " setup tracked beam." << std::endl;
     Beam *trackedBeam = new Beam();
     trackedBeam->Add(trackedBunch);
     // copy the tracking information from the master beam
@@ -436,7 +438,7 @@ int main(int argc, char *argv[])
             listLoggers.push_back(pl);
         };
     
-    std::cout << "node " << teufel::rank << " tracking a beam of " <<
+    std::cout << "TEUFEL: node " << teufel::rank << " tracking a beam of " <<
         trackedBeam->getNOP() << " particles." << std::endl;
     ss.str(std::string());
     ss << "/proc/" << PID << "/status";
@@ -498,6 +500,10 @@ int main(int argc, char *argv[])
             listLoggers.at(il)->update();
                     
     // initalize the interaction fields
+    if (teufel::rank==0)
+    {
+        std::cout << "TEUFEL: initializing interactions." << std::endl;
+    }
     for (InteractionField* f : interactions) f->init();
     
     // record the start time

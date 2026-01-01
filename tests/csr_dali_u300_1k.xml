@@ -21,10 +21,10 @@
     </lattice>
     <beam>
         <calc print="for FF=0.5 bunchlength [s] = " var="tau" eq="0.1325/0.315e12" />
-        <calc print="longitudinal emittance [eV s]" var="eps_z" eq="50.0*1e3*1e-12" />
-        <calc print="dE/E = " var="delta" eq="eps_z/tau/E_kin" />
-        <calc print="undulator center R56 = " var="R56" eq="8*lambda_R" />
-        <bunch gamma="gamma" charge="-1.0e-9" cmr="-1.0" n="1e4" >
+        <calc print="longitudinal emittance [eV s] = " var="eps_z" eq="50.0*1e3*1e-12" />
+        <calc print="dE/E = " var="delta" eq="eps_z/tau/E_beam" />
+        <calc print="undulator center R56 = " var="R56" eq="8*lambda" />
+        <bunch gamma="gamma" charge="-1.0e-9" cmr="-1.0" n="1000" >
             <position x="0.0" y="0.0" z="0.0" zrms="tau*_c" />
             <momentum x="0.0" y="0.0" z="1.0" delta="delta" />
             <!-- correct for R56 -->
@@ -36,9 +36,9 @@
     </beam>
     <calc print="tracking length [m] = " var="total_L" eq="2.75" />
     <calc print="tracking total time [s] = " var="total_t" eq="total_L/_c" />
-    <calc print="dt = " var="dt" eq="total_t/4000" />
-    <tracking method="Vay" delta_t="dt" n="4000" >
-        <csr N_slices="50" >
+    <calc print="dt = " var="dt" eq="total_t/2000" />
+    <tracking method="Vay" delta_t="dt" n="2000" >
+        <csr N_slices="20" >
             <log file="csr_dali_u300_interaction_slices.hdf5" />
         </csr>
     </tracking>
