@@ -1,9 +1,15 @@
-cmake_minimum_required (VERSION 2.6)
-project (TEUFEL)
+cmake_minimum_required (VERSION 3.16)
+project (TEUFEL LANGUAGES CXX)
 
 set (TEUFEL_VERSION_MAJOR 0)
 set (TEUFEL_VERSION_MINOR 12)
 set (TEUFEL_VERSION_PATCH 0)
+
+# compiler flags
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+add_compile_options(-Wall -m64 -pthread)
 
 # where to find modules
 # we add teufel/lib to the search path
@@ -93,6 +99,7 @@ list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/reflection.cpp)
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/cavity.cpp)
 message(STATUS "Found source files ${lib_sources}")
 add_library(${PROJECT_NAME}lib ${lib_sources})
+target_compile_options(${PROJECT_NAME}lib PRIVATE -Wall -m64 -pthread)
 
 # configure a header file to pass some of the CMake settings
 # to the source code
@@ -101,14 +108,10 @@ configure_file (
   "config.h" @ONLY
   )
 
-# compiler flags
-add_definitions(-std=c++17 -Wall -m64 -pthread)
 
 add_executable(teufel ${PROJECT_SOURCE_DIR}/src/teufel_hybrid.cpp)
-set_target_properties(teufel PROPERTIES
-    COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
-set_target_properties(teufel PROPERTIES
-    LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
+target_compile_options(teufel PRIVATE ${MPI_CXX_COMPILE_FLAGS})
+target_link_options(teufel PRIVATE ${MPI_CXX_LINK_FLAGS})
 target_link_libraries(teufel
                              ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
@@ -118,6 +121,7 @@ target_link_libraries(teufel
                              ${MUPARSER_LIBRARY}
                              ${ZLIB_LIBRARY_RELEASE} )
 
+#[[
 add_executable(propagate ${PROJECT_SOURCE_DIR}/src/propagate.cpp)
 set_target_properties(propagate PROPERTIES
     COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
@@ -143,6 +147,7 @@ target_link_libraries(reflection ${PROJECT_NAME}lib
                              ${PUGIXML_LIBRARIES}
                              ${MUPARSER_LIBRARY}
                              ${ZLIB_LIBRARY_RELEASE} )
+]]#
 
 # for building test binaries
 option(BUILD_TESTS "Build binaries for the test cases" ON)
