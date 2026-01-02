@@ -529,11 +529,11 @@ int main(int argc, char *argv[])
     
         // compute the interactions on all nodes independently
         // source is the master beam containing all particles
-        // TODO: we should not compute the interaction from the master beam
-        // but from the tracked beam and gather the fields
-        // TODO: but we should compute the geometry of the interaction field
-        // commonly for all nodes from the master beam before updating
-        // TODO: we should gather the storage information from all nodes to the master node
+        //! @todo we should not compute the interaction from the master beam
+        //! but from the tracked beam and gather the fields
+        //! @todo but we should compute the geometry of the interaction field
+        //! commonly for all nodes from the master beam before updating
+        //! @todo we should gather the storage information from all nodes to the master node
         for (InteractionField* f : interactions) f->update(masterBeam, tracking_time);
         
         // do a step
@@ -708,9 +708,9 @@ int main(int argc, char *argv[])
         }
     }
     
-    // TODO: one should not delete the interaction fields but move them
-    // to an own list. Then an observer could look at either the beam,
-    // the lattice or the interaction fields
+    //! @todo one should not delete the interaction fields but move them
+    //! to an own list. Then an observer could look at either the beam,
+    //! the lattice or the interaction fields
     
     // compute all observations
     for (int i=0; i<(int)listObservers.size(); i++)
@@ -746,7 +746,7 @@ int main(int argc, char *argv[])
         
         // collect all the field computed on the individual nodes into the master node
         //! @todo this should be done in chunks, otherwise we temporarily need
-        // 3 times the observer memory (original and 2 buffers).
+        //! 3 times the observer memory (original and 2 buffers).
         unsigned int count = observer->getBufferSize();
         std::cout << "Node " << teufel::rank << " allocating buffers for "<< count << " doubles" << std::endl;
         // fill the buffer and get its address

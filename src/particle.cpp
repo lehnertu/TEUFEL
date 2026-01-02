@@ -546,7 +546,7 @@ void ChargedParticle::CoordinatesAtTime(double time, Vector *position, Vector *m
             *momentum = P[i1];
         } else {
             // interpolate the coordinates within the interval
-            // TODO: interpolation could be improved using higher-order terms
+            //! @todo interpolation could be improved using higher-order terms
             double frac = (time - t1) / (t2 - t1);
             *position = X[i1] * (1.0 - frac) + X[i2] * frac;
             *momentum = P[i1] * (1.0 - frac) + P[i2] * frac;
@@ -656,7 +656,7 @@ std::optional<ParticleInfo> ChargedParticle::SolveRetardation(double obs_time, V
         // compute the trajectory point at emission
         SourceX = X[0] + SourceBeta*SpeedOfLight*SourceT;
         SourceA = Vector(0.0,0.0,0.0);
-        // TODO: remove debugging check
+        //! @todo remove debugging check
         if (DEBUGLEVEL>=2)
         {   
             if (std::isnan(SourceT) ||
@@ -783,7 +783,7 @@ std::optional<ParticleInfo> ChargedParticle::SolveRetardation(double obs_time, V
                   (SourceBeta1-SourceBeta2)*0.5*frac*(1.0-frac)*t_step*SpeedOfLight;
         SourceP = SourceP1*(1.0-frac) + SourceP2*frac;
         SourceA = A[i1]*(1.0-frac) + A[i2]*frac;
-        // TODO: remove debugging check
+        //! @todo remove debugging check
         if (DEBUGLEVEL>=2)
         {   
             if (std::isnan(SourceT) ||
@@ -845,7 +845,7 @@ ElMagField ChargedParticle::RetardedField(double obs_time, Vector obs_pos)
         EField += cross(N, cross(N - SourceBeta, SourceBetaPrime)) / (R*bn3rd*SpeedOfLight);
         EField *= scale;
         BField = cross(N,EField) / SpeedOfLight;
-        // TODO: remove debugging check
+        //! @todo remove debugging check
         if (DEBUGLEVEL>=2)
         {   
             if (std::isnan(EField.x) || std::isnan(EField.y) || std::isnan(EField.z) ||

@@ -114,7 +114,7 @@ void CSR::update(Beam *beam, double tracking_time)
         accel[i].y = *bp++;
         accel[i].z = *bp++;
     };
-    // TODO: all particles should have the same time stamp anyway - maybe better check
+    //! @todo all particles should have the same time stamp anyway - maybe better check
     double avg_time = 0;
     Vector avg_pos = VectorZero;
     Vector avg_mom = VectorZero;
@@ -162,7 +162,7 @@ void CSR::update(Beam *beam, double tracking_time)
 
 ElMagField CSR::Field(double t, Vector X)
 {
-    // TODO: returning zero fields for now
+    //! @todo returning zero fields for now
     return ElMagField();
 }
 
@@ -239,7 +239,7 @@ void CSR::write_output()
         status = H5Sclose (snap_space);
         if (status<0) throw(IOexception("CSR::write_output() - error in H5Dclose(snap_space)"));
 
-        // TODO: write slice data
+        //! @todo write slice data
 
         status = H5Fclose(file);
         if (status<0) throw(IOexception("CSR::write_output() - error in H5Fclose()"));

@@ -119,7 +119,7 @@ CSR_2D::~CSR_2D()
 void CSR_2D::update(Beam *beam, double tracking_time)
 {
     update_time = tracking_time;
-    // TODO: remove debugging check
+    //! @todo remove debugging check
     if (DEBUGLEVEL>=2)
     {   
         if (std::isnan(update_time))
@@ -208,29 +208,29 @@ void CSR_2D::update(Beam *beam, double tracking_time)
             // we cannot esily shift the whole trajectory so we
             // shift the grid nodes in opposite direction just for the computation
             Vector shift = (d_long*f_long+d_trans*f_trans) - (d_long*0.5+d_trans*0.5);
-            // TODO: remove debugging check
+            //! @todo remove debugging check
             if (DEBUGLEVEL>=2)
             {   
                 if (std::isnan(shift.x) || std::isnan(shift.y) || std::isnan(shift.z))
                     throw std::runtime_error("CSR_2D::update(): shift value is NaN!");
             }
-            // TODO: OMP parallelize the loop over the grid
+            //! @todo OMP parallelize the loop over the grid
             for (int il=0; il<N_long; il ++)
                 for (int it=0; it<N_trans; it ++)
                 {
-                    // TODO: use the shifted grid position - temporarily removed for debugging
+                    //! @todo use the shifted grid position - temporarily removed for debugging
                     // it does not change the outcome - only the artifacts appear at different positions
                     // Vector grid = origin + d_long*il + d_trans*it + shift;
                     Vector grid = origin + d_long*il + d_trans*it;
                     
-                    // TODO: remove debugging check
+                    //! @todo remove debugging check
                     if (DEBUGLEVEL>=2)
                     {   
                         if (std::isnan(grid.x) || std::isnan(grid.y) || std::isnan(grid.z))
                             throw std::runtime_error("CSR_2D::update(): grid value is NaN!");
                     }
                     ElMagField p_field = p->RetardedField(tracking_time, grid);
-                    // TODO: remove debugging check
+                    //! @todo remove debugging check
                     if (DEBUGLEVEL>=2)
                     {   
                         double *check_ptr = (double *)&p_field;
@@ -280,7 +280,7 @@ void CSR_2D::update(Beam *beam, double tracking_time)
 
 ElMagField CSR_2D::Field(double t, Vector X)
 {
-    // TODO: returning zero fields for now
+    //! @todo returning zero fields for now
     return ElMagField();
 }
 
@@ -290,7 +290,7 @@ void CSR_2D::write_output()
     {
         cout << "CSR_2D : writing interaction field data to " << FileName << endl;
 
-        // TODO: write actual data
+        //! @todo write actual data
 
         herr_t status;
         // Create a new file using the default properties.

@@ -83,7 +83,7 @@ find_package(Doxygen)
 if(DOXYGEN_FOUND)
     add_custom_target(doc
         COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_SOURCE_DIR}/setup.dox
-        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
         COMMENT "Generating documentation with Doxygen"
         VERBATIM
     )
