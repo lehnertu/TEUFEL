@@ -41,7 +41,7 @@ CSR::CSR(
     is_initialized = false;
     pugi::xml_attribute att = node.attribute("N_slices");
     if (!att)
-        throw(IOexception("InputParser::CSR_2D - attribute N_slices not found."));
+        throw(IOexception("InputParser::CSR - attribute N_slices not found."));
     numSlices = parser->parseInt(att);
     // define file output if requested
     pugi::xml_node lognode = node.child("log");
@@ -114,7 +114,7 @@ void CSR::update(Beam *beam, double tracking_time)
         accel[i].y = *bp++;
         accel[i].z = *bp++;
     };
-    // all particles should have the same time stamp anyway - maybe better check
+    // TODO: all particles should have the same time stamp anyway - maybe better check
     double avg_time = 0;
     Vector avg_pos = VectorZero;
     Vector avg_mom = VectorZero;
@@ -172,7 +172,77 @@ void CSR::write_output()
     {
         cout << "CSR : writing slice data to " << FileName << endl;
 
-        // TODO: write actual data
+        herr_t status;
+        // Create a new file using the default properties.
+        hid_t file = H5Fcreate (FileName, H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+        if (file<0) throw(IOexception("CSR::write_output() - error in H5Fcreate()"));
+
+        // --------- write snapshot data ----------
+
+        // Create dataspace for the center coordinates (time, position, momentum).
+        // Setting maximum size to NULL sets the maximum size to be the current size.
+        int NOS = history.size();
+        hsize_t snap_dims[2];
+        snap_dims[0] = NOS;
+        snap_dims[1] = 7;
+        hid_t snap_space = H5Screate_simple (2, snap_dims, NULL);
+        if (snap_space<0) throw(IOexception("CSR::write_output() - error in H5Screate(snap_space)"));
+
+        // buffer the data
+        double *snap_buffer = new double[NOS*7];
+        double *bp = (double *)snap_buffer;
+        for(int i=0; i<NOS; i++)
+        {
+            *bp++ = history[i]->tracking_time;
+            *bp++ = history[i]->central_position.x;
+            *bp++ = history[i]->central_position.y;
+            *bp++ = history[i]->central_position.z;
+            *bp++ = history[i]->central_momentum.x;
+            *bp++ = history[i]->central_momentum.y;
+            *bp++ = history[i]->central_momentum.z;
+        }
+
+        // Create the dataset creation property list
+        hid_t snap_dcpl = H5Pcreate (H5P_DATASET_CREATE);
+        if (snap_dcpl<0) throw(IOexception("CSR::write_output() - error in H5Pcreate(snap_dcpl)"));
+        // Create the dataset
+        hid_t snap_dset = H5Dcreate(file,
+            "Snapshots",	     	    // dataset name
+            H5T_NATIVE_DOUBLE,		// data type
+            snap_space, H5P_DEFAULT,
+            snap_dcpl, H5P_DEFAULT);
+        if (snap_dset<0) throw(IOexception("CSR::write_output() - error in H5Dcreate(snap_dset)"));
+        // Write the data to the dataset
+        status = H5Dwrite (snap_dset,
+            H5T_NATIVE_DOUBLE, 		// mem type id
+            H5S_ALL, 			    // mem space id
+            snap_space,
+            H5P_DEFAULT,			// data transfer properties
+            snap_buffer);
+        if (status<0) throw(IOexception("CSR::write_output() - error in H5Dwrite(snap_dset)"));
+
+        // attach scalar attributes
+        hid_t atts  = H5Screate(H5S_SCALAR);
+        if (atts<0) throw(IOexception("CSR::write_output() - error in H5Screate(N_steps)"));
+        hid_t attr = H5Acreate2(snap_dset, "N_steps", H5T_NATIVE_INT, atts, H5P_DEFAULT, H5P_DEFAULT);
+        if (attr<0) throw(IOexception("CSR::write_output() - error in H5Acreate2(N_steps)"));
+        status = H5Awrite(attr, H5T_NATIVE_INT, &NOS);
+        if (status<0) throw(IOexception("CSR::write_output() - error in H5Awrite(N_steps)"));
+        status = H5Sclose (atts);
+        if (status<0) throw(IOexception("CSR::write_output() - error in H5Sclose(N_steps)"));
+
+        // Close and release resources.
+        status = H5Pclose (snap_dcpl);
+        if (status<0) throw(IOexception("CSR::write_output() - error in H5Pclose(snap_dcpl)"));
+        status = H5Dclose (snap_dset);
+        if (status<0) throw(IOexception("CSR::write_output() - error in H5Dclose(snap_dset)"));
+        status = H5Sclose (snap_space);
+        if (status<0) throw(IOexception("CSR::write_output() - error in H5Dclose(snap_space)"));
+
+        // TODO: write slice data
+
+        status = H5Fclose(file);
+        if (status<0) throw(IOexception("CSR::write_output() - error in H5Fclose()"));
 
         // no errors have occured if we made it 'til here
         cout << "writing HDF5 done." << endl;

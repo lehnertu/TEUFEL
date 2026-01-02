@@ -39,7 +39,7 @@
     <calc print="dt = " var="dt" eq="total_t/2000" />
     <tracking method="Vay" delta_t="dt" n="2000" >
         <csr N_slices="20" >
-            <log file="csr_dali_u300_interaction_slices.hdf5" />
+            <log file="csr_dali_u300_interaction_slices.h5" />
         </csr>
     </tracking>
     <observer>

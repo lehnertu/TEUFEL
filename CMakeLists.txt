@@ -78,6 +78,19 @@ if (MPI_CXX_FOUND)
     message(STATUS "MPI link flags ${MPI_CXX_LINK_FLAGS}")
 endif ()
 
+# use Doxygen to create the documentation
+find_package(Doxygen)
+if(DOXYGEN_FOUND)
+    add_custom_target(doc
+        COMMAND ${DOXYGEN_EXECUTABLE} ${CMAKE_SOURCE_DIR}/setup.dox
+        WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+        COMMENT "Generating documentation with Doxygen"
+        VERBATIM
+    )
+else()
+    message(STATUS "Doxygen not found — doc target disabled")
+endif()
+
 # where to find header files
 include_directories( ${PROJECT_BINARY_DIR}
                      ${PROJECT_SOURCE_DIR}/src
