@@ -319,12 +319,14 @@ public:
     virtual ~InteractionField() {};
     
     /*! Do all necessary initializations.
-     * This must be implemented for all derived interactions.
+     *  This must be implemented for all derived interactions.
+     *  The reference to the beam which is the source of the interaction fields
+     *  is given here and stored in the interaction object.
      */
-    virtual void init() = 0;
+    virtual void init(Beam *beam) = 0;
 
     /*! Compute the interaction field for the current state of the given beam
-     *  acting as a field source.
+     *  (defined with init() ) acting as a field source.
      *  This method is called by the main program before every tracking step.
      *  This ensures valid particle trajectories are available.
      *
@@ -332,9 +334,9 @@ public:
      *  This method must be called in a leap-frog sequence interleaved with
      *  the tracking steps of the beam.
      * 
-     * This must be implemented for all derived interactions.
+     *  This must be implemented for all derived interactions.
      */
-    virtual void update(Beam *beam, double tracking_time) = 0;
+    virtual void update(double tracking_time) = 0;
 
     /*! The electromagnetic field at a given time and point in space.
      * The field is returned as a tuple of electric field [V/m] and

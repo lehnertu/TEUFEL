@@ -24,7 +24,6 @@
 #include <math.h>
 
 #include "csr.h"
-#include "csr2d.h"
 #include "dipole.h"
 #include "fields.h"
 #include "global.h"
@@ -679,14 +678,6 @@ void InputParser::parseTracking(
                 // the interaction object parses its own input, we provide a reference to the parser
                 // the timestep attribute has already been evaluated - thats necessary
                 CSR* csr_interaction = new CSR(child, this);
-                interactions->push_back(csr_interaction);
-            }
-            else if (type == "csr2d")
-            {
-                parseCalcChildren(child);
-                // the interaction object parses its own input, we provide a reference to the parser
-                // the timestep attribute has already been evaluated - thats necessary
-                CSR_2D* csr_interaction = new CSR_2D(child, this);
                 interactions->push_back(csr_interaction);
             }
             else if (type == "watch")

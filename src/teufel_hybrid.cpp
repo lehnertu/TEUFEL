@@ -500,11 +500,14 @@ int main(int argc, char *argv[])
             listLoggers.at(il)->update();
                     
     // initalize the interaction fields
+    // field source is the master beam - it is queried before every tracking step
+    // at that time identical information is available on all nodes
+    // the fields act on the tracked beam
     if (teufel::rank==0)
     {
         std::cout << "TEUFEL: initializing interactions." << std::endl;
     }
-    for (InteractionField* f : interactions) f->init();
+    for (InteractionField* f : interactions) f->init(masterBeam);
     
     // record the start time
     double start_time = MPI_Wtime();
@@ -534,7 +537,7 @@ int main(int argc, char *argv[])
         //! @todo but we should compute the geometry of the interaction field
         //! commonly for all nodes from the master beam before updating
         //! @todo we should gather the storage information from all nodes to the master node
-        for (InteractionField* f : interactions) f->update(masterBeam, tracking_time);
+        for (InteractionField* f : interactions) f->update(tracking_time);
         
         // do a step
         trackedBeam->doStep(lattice);

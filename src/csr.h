@@ -101,8 +101,11 @@ public:
     virtual ~CSR();
 
     /*! Do all necessary initializations before update() can be called.
+     *  The reference to the beam which is the source of the interaction fields is given here.
+     *  init() stores references to all particles forming the beam
+     *  so CSR objects can access the coordinates and particle properties.
      */
-    virtual void init();
+    virtual void init(Beam *beam);
 
     /*! Subdivide the beam into a number of slices and store the slice data
      *  for logging and future field computations.
@@ -112,9 +115,9 @@ public:
      *  the tracking steps of the beam.
      *  In the tracking loop update() is called before the tracking step is executed.
      *  The first time update() is called just the initialized beam is available.
-     *  Initalizing the tracking computes the fields 
+     *  Initalizing the tracking computes the fields.
      */
-    virtual void update(Beam *beam, double tracking_time);
+    virtual void update(double tracking_time);
     
     /*!
      * The electromagnetic field at a given time and point in space.
@@ -132,11 +135,14 @@ public:
 
 private:
 
+    //! the beam which is the field source
+    Beam *source_beam;
+
     //! flag for initialization and allocation of the field map memory.
     bool is_initialized;
     
-    //! number of slices
-    size_t  numSlices;
+    //! number of slices stored for every step
+    size_t numSlices;
     
     //! the storage for the complete history of the beam
     std::vector<Snapshot *> history;

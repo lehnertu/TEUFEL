@@ -60,8 +60,9 @@ CSR::CSR(
     }
 }
 
-void CSR::init()
+void CSR::init(Beam *beam)
 {
+    source_beam = beam;
     if (teufel::rank==0)
     {
         std::cout << "CSR::init()" << std::endl;
@@ -81,10 +82,10 @@ CSR::~CSR()
 // ChatGPT created
 }
 
-void CSR::update(Beam *beam, double tracking_time)
+void CSR::update(double tracking_time)
 {
-    int NOP = beam->getNOP();
-    size_t bufsize = beam->getStepBufferSize();
+    size_t NOP = source_beam->getNOP();
+    size_t bufsize = source_beam->getStepBufferSize();
     if (teufel::rank==0)
     {
         std::cout << "CSR::update() at tracking time " << tracking_time << " s";
@@ -95,13 +96,13 @@ void CSR::update(Beam *beam, double tracking_time)
     // the data obtained here correspond to the half-step positions
     // which are stored 
     double *buffer = new double[bufsize];
-    beam->bufferStep(buffer);
+    source_beam->bufferStep(buffer);
     double *ptime = new double[NOP];
     Vector *position = new Vector[NOP];
     Vector *momentum = new Vector[NOP];
     Vector *accel = new Vector[NOP];
     double *bp = buffer;
-    for(int i=0; i<NOP; i++)
+    for(size_t i=0; i<NOP; i++)
     {
         ptime[i] = *bp++;
         position[i].x = *bp++;
@@ -118,7 +119,7 @@ void CSR::update(Beam *beam, double tracking_time)
     double avg_time = 0;
     Vector avg_pos = VectorZero;
     Vector avg_mom = VectorZero;
-    for(int i=0; i<NOP; i++)
+    for(size_t i=0; i<NOP; i++)
     {
         avg_time += ptime[i];
         avg_pos += position[i];
@@ -136,21 +137,66 @@ void CSR::update(Beam *beam, double tracking_time)
         {}      // slices (start empty)
     };
 
-    /* Fill slices  - ChatGPT created
-    snap->slices.reserve(numSlices);
-    for (unsigned int i = 0; i < numSlices; ++i) {
-        snap->slices.push_back(Slice{
-            1.0,                    // charge
-            Vector{0.0, 0.0, 0.0},  // position
-            Vector{0.0, 0.0, 0.0},  // momentum
-            Vector{0.0, 0.0, 0.0},  // accel
-            0.1,                    // length
-            0.01                    // radius
-        });
-    }
-    */
+    // compute particle distance from center reference plane
+    Vector forward = avg_mom;
+    forward.normalize();
+    double *s = new double[NOP];
+    for(size_t  i=0; i<NOP; i++)
+        s[i] = dot(position[i]-avg_pos, forward);
+    // sort by longitudinal position
+    size_t *sorting = new size_t[NOP];
+    // fill sorting with indices 0..NOP-1
+    std::iota(sorting, sorting + NOP, 0);
+    // sort indices by comparing s[]
+    std::sort(sorting, sorting + NOP,
+          [&](size_t i, size_t j) { return s[i] < s[j]; });
+    if (DEBUGLEVEL>=2)
+    {
+        std::cout << "   s[0]=" << s[sorting[0]] << " s[N]=" << s[sorting[NOP-1]] << std::endl;
+    };
     
-    // Append to history
+    // the first N_rem slices contain N_mod+1 particles, the rest N_mod
+    size_t N_mod = NOP / numSlices;
+    size_t N_rem = NOP % numSlices;
+    size_t p_index = 0;
+
+    // distribute the particles over the slices
+    for (size_t sl=0; sl<numSlices; sl++)
+    {
+        // number of particles for this slice
+        size_t n_sl = N_mod;
+        if (sl<N_rem) n_sl++;
+        // compute slice properties
+        double total_charge = 0.0;
+        avg_pos = VectorZero;
+        avg_mom = VectorZero;
+        for (size_t i_sl=0; i_sl<n_sl; i_sl++)
+        {
+            //! @todo some slice properties still missing
+            // total_charge += 
+            avg_pos += position[sorting[p_index]];
+            avg_mom += momentum[sorting[p_index]];
+            p_index++;
+        }
+        avg_pos /= n_sl;
+        avg_mom /= n_sl;
+        // append the slice to the snapshot
+        snap->slices.push_back(
+            Slice{
+                1.0,                       // charge
+                avg_pos,                   // position
+                avg_mom,                   // momentum
+                VectorZero,                // accel
+                0.1,                       // length
+                0.01}                      // radius
+        );
+    }
+    if (DEBUGLEVEL>=2)
+    {
+        std::cout << "   particle index after slicing = " << p_index << std::endl;
+    };
+
+    // Append the snapshot to history
     history.push_back(snap);
     
     delete[] buffer;
