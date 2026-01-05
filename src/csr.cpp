@@ -22,9 +22,13 @@
 #include "csr.h"
 #include "global.h"
 
+#include <cstddef>
+#include <numeric>
+#include <algorithm>
 #include <iostream>
 #include <math.h>
 #include "hdf5.h"
+#include "particle.h"
 
 CSR::CSR()
 {
@@ -62,13 +66,26 @@ CSR::CSR(
 
 void CSR::init(Beam *beam)
 {
-    source_beam = beam;
-    if (teufel::rank==0)
-    {
-        std::cout << "CSR::init()" << std::endl;
-    }
+    if (teufel::rank==0) std::cout << "CSR::init()" << std::endl;
     if (is_initialized)
         throw(IOexception("error - CSR::init() called twice."));
+    source_beam = beam;
+    // iterate over the beam to create a list of all particles
+    // making up the field source
+    NoP = source_beam->getNOP();
+    size_t NoB = source_beam->getNOB();
+    for (size_t ib=0; ib<NoB; ib++)
+    {
+        Bunch *B = source_beam->getBunch(ib);
+        size_t B_NoP = B->getNOP();
+        std::cout << "reading bunch No. " << ib << " with " << B_NoP << " particles." << std::endl;
+        for (size_t ip=0; ip<B_NoP; ip++)
+        {
+            ChargedParticle *p = B->getParticle(ip);
+            particles.push_back(p);
+        };
+    }
+    if (teufel::rank==0) std::cout << "CSR::init() stored references to " << particles.size() << " particles." << std::endl;
     is_initialized = true;
 }
 
@@ -84,50 +101,26 @@ CSR::~CSR()
 
 void CSR::update(double tracking_time)
 {
-    size_t NOP = source_beam->getNOP();
-    size_t bufsize = source_beam->getStepBufferSize();
     if (teufel::rank==0)
-    {
-        std::cout << "CSR::update() at tracking time " << tracking_time << " s";
-        std::cout << "   NOP=" << NOP << " BUF=" << bufsize << std::endl;
-    }
+        std::cout << "CSR::update() at tracking time " << tracking_time << " s" << std::endl;
+    if (NoP != source_beam->getNOP())
+        throw(IOexception("error - CSR::update() mismatch of particle numbers."));
     
     // get the particle coordinates
     // the data obtained here correspond to the half-step positions
-    // which are stored 
-    double *buffer = new double[bufsize];
-    source_beam->bufferStep(buffer);
-    double *ptime = new double[NOP];
-    Vector *position = new Vector[NOP];
-    Vector *momentum = new Vector[NOP];
-    Vector *accel = new Vector[NOP];
-    double *bp = buffer;
-    for(size_t i=0; i<NOP; i++)
-    {
-        ptime[i] = *bp++;
-        position[i].x = *bp++;
-        position[i].y = *bp++;
-        position[i].z = *bp++;
-        momentum[i].x = *bp++;
-        momentum[i].y = *bp++;
-        momentum[i].z = *bp++;
-        accel[i].x = *bp++;
-        accel[i].y = *bp++;
-        accel[i].z = *bp++;
-    };
     //! @todo all particles should have the same time stamp anyway - maybe better check
     double avg_time = 0;
     Vector avg_pos = VectorZero;
     Vector avg_mom = VectorZero;
-    for(size_t i=0; i<NOP; i++)
+    for(size_t i=0; i<NoP; i++)
     {
-        avg_time += ptime[i];
-        avg_pos += position[i];
-        avg_mom += momentum[i];
+        avg_time += particles[i]->getTime();
+        avg_pos += particles[i]->getPosition();
+        avg_mom += particles[i]->getMomentum();
     }
-    avg_time /= NOP;
-    avg_pos /= NOP;
-    avg_mom /= NOP;
+    avg_time /= NoP;
+    avg_pos /= NoP;
+    avg_mom /= NoP;
         
     // create a snapshot of the beam
     Snapshot* snap = new Snapshot{
@@ -140,24 +133,24 @@ void CSR::update(double tracking_time)
     // compute particle distance from center reference plane
     Vector forward = avg_mom;
     forward.normalize();
-    double *s = new double[NOP];
-    for(size_t  i=0; i<NOP; i++)
-        s[i] = dot(position[i]-avg_pos, forward);
+    double *s = new double[NoP];
+    for(size_t  i=0; i<NoP; i++)
+        s[i] = dot(particles[i]->getPosition()-avg_pos, forward);
     // sort by longitudinal position
-    size_t *sorting = new size_t[NOP];
+    size_t *sorting = new size_t[NoP];
     // fill sorting with indices 0..NOP-1
-    std::iota(sorting, sorting + NOP, 0);
+    std::iota(sorting, sorting + NoP, 0);
     // sort indices by comparing s[]
-    std::sort(sorting, sorting + NOP,
+    std::sort(sorting, sorting + NoP,
           [&](size_t i, size_t j) { return s[i] < s[j]; });
     if (DEBUGLEVEL>=2)
     {
-        std::cout << "   s[0]=" << s[sorting[0]] << " s[N]=" << s[sorting[NOP-1]] << std::endl;
+        std::cout << "   s[0]=" << s[sorting[0]] << " s[N]=" << s[sorting[NoP-1]] << std::endl;
     };
     
     // the first N_rem slices contain N_mod+1 particles, the rest N_mod
-    size_t N_mod = NOP / numSlices;
-    size_t N_rem = NOP % numSlices;
+    size_t N_mod = NoP / numSlices;
+    size_t N_rem = NoP % numSlices;
     size_t p_index = 0;
 
     // distribute the particles over the slices
@@ -174,8 +167,8 @@ void CSR::update(double tracking_time)
         {
             //! @todo some slice properties still missing
             // total_charge += 
-            avg_pos += position[sorting[p_index]];
-            avg_mom += momentum[sorting[p_index]];
+            avg_pos += particles[sorting[p_index]]->getPosition();
+            avg_mom += particles[sorting[p_index]]->getMomentum();
             p_index++;
         }
         avg_pos /= n_sl;
@@ -198,12 +191,6 @@ void CSR::update(double tracking_time)
 
     // Append the snapshot to history
     history.push_back(snap);
-    
-    delete[] buffer;
-    delete[] ptime;
-    delete[] position;
-    delete[] momentum;
-    delete[] accel;
 }
 
 ElMagField CSR::Field(double t, Vector X)

@@ -21,6 +21,7 @@
 
 #pragma once
 
+#include "particle.h"
 #include "pugixml.hpp"
 #include "vector.h"
 #include "fields.h"
@@ -137,6 +138,12 @@ private:
 
     //! the beam which is the field source
     Beam *source_beam;
+
+    //! the number of particles in the beam
+    size_t NoP;
+
+    //! references to all source particles
+    std::vector<ChargedParticle *> particles;
 
     //! flag for initialization and allocation of the field map memory.
     bool is_initialized;
