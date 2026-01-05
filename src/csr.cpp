@@ -103,7 +103,7 @@ void CSR::update(double tracking_time)
 {
     if (teufel::rank==0)
         std::cout << "CSR::update() at tracking time " << tracking_time << " s" << std::endl;
-    if (NoP != source_beam->getNOP())
+    if ((int)NoP != source_beam->getNOP())
         throw(IOexception("error - CSR::update() mismatch of particle numbers."));
     
     // get the particle coordinates
@@ -160,7 +160,7 @@ void CSR::update(double tracking_time)
         size_t n_sl = N_mod;
         if (sl<N_rem) n_sl++;
         // compute slice properties
-        double total_charge = 0.0;
+        // double total_charge = 0.0;
         avg_pos = VectorZero;
         avg_mom = VectorZero;
         for (size_t i_sl=0; i_sl<n_sl; i_sl++)
