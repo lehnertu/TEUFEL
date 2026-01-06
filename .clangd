@@ -5,6 +5,10 @@ CompileFlags:
     - -isystem/usr/include/x86_64-linux-gnu/c++/11
     - -isystem/usr/include/c++/11/backward
     - -isystem/usr/lib/gcc/x86_64-linux-gnu/11/include
+    - -isystem/usr/include/c++/9
+    - -isystem/usr/include/x86_64-linux-gnu/c++/9
+    - -isystem/usr/include/c++/9/backward
+    - -isystem/usr/lib/gcc/x86_64-linux-gnu/9/include
     - -isystem/usr/local/include
     - -isystem/usr/include/x86_64-linux-gnu
     - -isystem/usr/include

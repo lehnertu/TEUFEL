@@ -55,12 +55,13 @@ public:
      *  which is defined per Snapshot.
      */
     struct Slice {
-        double charge;
-        Vector position;
-        Vector momentum;
-        Vector accel;
-        double length;
-        double radius;
+        double s_min;       //! minimum s referenced to the center of the snapshot
+        double s_max;       //! maximum s referenced to the center of the snapshot
+        double charge;      //! total charge within the slice
+        Vector position;    //! average position of the particles
+        Vector momentum;    //! average momentum of the particles
+        Vector accel;       //! average acceleration of the particles
+        double radius;      //! rms radius of the particle distribution
     };
     
     /*! All data stored for a complete snapshot of the history

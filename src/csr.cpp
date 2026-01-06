@@ -112,6 +112,7 @@ void CSR::update(double tracking_time)
     double avg_time = 0;
     Vector avg_pos = VectorZero;
     Vector avg_mom = VectorZero;
+    Vector avg_acc = VectorZero;
     for(size_t i=0; i<NoP; i++)
     {
         avg_time += particles[i]->getTime();
@@ -159,29 +160,40 @@ void CSR::update(double tracking_time)
         // number of particles for this slice
         size_t n_sl = N_mod;
         if (sl<N_rem) n_sl++;
-        // compute slice properties
-        // double total_charge = 0.0;
+        // compute slice properties - weighted average by charge
+        //! @todo slice radius still missing
+        double total_charge = 0.0;
+        double min_s = s[sorting[p_index]];
+        double max_s = s[sorting[p_index]];
         avg_pos = VectorZero;
         avg_mom = VectorZero;
+        avg_acc = VectorZero;
         for (size_t i_sl=0; i_sl<n_sl; i_sl++)
         {
-            //! @todo some slice properties still missing
-            // total_charge += 
-            avg_pos += particles[sorting[p_index]]->getPosition();
-            avg_mom += particles[sorting[p_index]]->getMomentum();
+            ChargedParticle *p = particles[sorting[p_index]];
+            double p_charge = p->getCharge();
+            total_charge += p_charge;
+            double p_s = s[sorting[p_index]];
+            if (min_s > p_s) min_s = p_s;
+            if (max_s < p_s) max_s = p_s;
+            avg_pos += p->getPosition() * p_charge;
+            avg_mom += p->getMomentum() * p_charge;
+            avg_acc += p->getAccel() * p_charge;
             p_index++;
         }
-        avg_pos /= n_sl;
-        avg_mom /= n_sl;
+        avg_pos /= total_charge;
+        avg_mom /= total_charge;
+        avg_acc /= total_charge;
         // append the slice to the snapshot
         snap->slices.push_back(
             Slice{
-                1.0,                       // charge
-                avg_pos,                   // position
-                avg_mom,                   // momentum
-                VectorZero,                // accel
-                0.1,                       // length
-                0.01}                      // radius
+                .s_min = min_s,
+                .s_max = max_s,
+                .charge = total_charge,
+                .position = avg_pos,
+                .momentum = avg_mom,
+                .accel = avg_acc,
+                .radius = 1.0}
         );
     }
     if (DEBUGLEVEL>=2)
@@ -223,16 +235,17 @@ void CSR::write_output()
 
         // buffer the data
         double *snap_buffer = new double[NOS*7];
-        double *bp = (double *)snap_buffer;
+        double *bp = snap_buffer;
         for(int i=0; i<NOS; i++)
         {
-            *bp++ = history[i]->tracking_time;
-            *bp++ = history[i]->central_position.x;
-            *bp++ = history[i]->central_position.y;
-            *bp++ = history[i]->central_position.z;
-            *bp++ = history[i]->central_momentum.x;
-            *bp++ = history[i]->central_momentum.y;
-            *bp++ = history[i]->central_momentum.z;
+            Snapshot* snap = history[i];
+            *bp++ = snap->tracking_time;
+            *bp++ = snap->central_position.x;
+            *bp++ = snap->central_position.y;
+            *bp++ = snap->central_position.z;
+            *bp++ = snap->central_momentum.x;
+            *bp++ = snap->central_momentum.y;
+            *bp++ = snap->central_momentum.z;
         }
 
         // Create the dataset creation property list
@@ -274,8 +287,95 @@ void CSR::write_output()
 
         //! @todo write slice data
 
+        // --------- write slice data ----------
+
+        // Create dataspace for the slice properties.
+        // Setting maximum size to NULL sets the maximum size to be the current size.
+        size_t NoSteps = history.size();
+        hsize_t slc_dims[3];
+        slc_dims[0] = NoSteps;
+        slc_dims[1] = numSlices;
+        slc_dims[2] = 13; // the size of the Slice struct in doubles
+        hid_t slc_space = H5Screate_simple (3, slc_dims, NULL);
+        if (slc_space<0) throw(IOexception("CSR::write_output() - error in H5Screate(slc_space)"));
+
+        // buffer the data
+        double *slc_buffer = new double[NoSteps*numSlices*13];
+        bp = slc_buffer;
+        for (size_t i_st=0; i_st<NoSteps; i_st++)
+        {
+            Snapshot* snap = history[i_st];
+            for (size_t i_slc=0; i_slc<numSlices; i_slc++)
+            {
+                Slice slc = snap->slices[i_slc];
+                *bp++ = slc.s_min;
+                *bp++ = slc.s_max;
+                *bp++ = slc.charge;
+                *bp++ = slc.position.x;
+                *bp++ = slc.position.y;
+                *bp++ = slc.position.z;
+                *bp++ = slc.momentum.x;
+                *bp++ = slc.momentum.y;
+                *bp++ = slc.momentum.z;
+                *bp++ = slc.accel.x;
+                *bp++ = slc.accel.x;
+                *bp++ = slc.accel.x;
+                *bp++ = slc.radius;
+            }
+        }
+
+        // Create the dataset creation property list
+        hid_t slc_dcpl = H5Pcreate (H5P_DATASET_CREATE);
+        if (slc_dcpl<0) throw(IOexception("CSR::write_output() - error in H5Pcreate(slc_dcpl)"));
+        // Create the dataset
+        hid_t slc_dset = H5Dcreate(file,
+            "Slices",  	     	    // dataset name
+            H5T_NATIVE_DOUBLE,		// data type
+            slc_space, H5P_DEFAULT,
+            slc_dcpl, H5P_DEFAULT);
+        if (slc_dset<0) throw(IOexception("CSR::write_output() - error in H5Dcreate(slc_dset)"));
+
+        // Write the data to the dataset
+        status = H5Dwrite (slc_dset,
+            H5T_NATIVE_DOUBLE, 		// mem type id
+            H5S_ALL, 			    // mem space id
+            slc_space,
+            H5P_DEFAULT,			// data transfer properties
+            slc_buffer);
+        if (status<0) throw(IOexception("CSR::write_output() - error in H5Dwrite(slc_dset)"));
+
+        // attach scalar attributes
+        atts  = H5Screate(H5S_SCALAR);
+        if (atts<0) throw(IOexception("CSR::write_output() - error in H5Screate(N_steps)"));
+        attr = H5Acreate2(slc_dset, "N_steps", H5T_NATIVE_INT, atts, H5P_DEFAULT, H5P_DEFAULT);
+        if (attr<0) throw(IOexception("CSR::write_output() - error in H5Acreate2(N_steps)"));
+        status = H5Awrite(attr, H5T_NATIVE_INT, &NoSteps);
+        if (status<0) throw(IOexception("CSR::write_output() - error in H5Awrite(N_steps)"));
+        status = H5Sclose (atts);
+        if (status<0) throw(IOexception("CSR::write_output() - error in H5Sclose(N_steps)"));
+
+        atts  = H5Screate(H5S_SCALAR);
+        if (atts<0) throw(IOexception("CSR::write_output() - error in H5Screate(N_slices)"));
+        attr = H5Acreate2(slc_dset, "N_slices", H5T_NATIVE_INT, atts, H5P_DEFAULT, H5P_DEFAULT);
+        if (attr<0) throw(IOexception("CSR::write_output() - error in H5Acreate2(N_slices)"));
+        status = H5Awrite(attr, H5T_NATIVE_INT, &numSlices);
+        if (status<0) throw(IOexception("CSR::write_output() - error in H5Awrite(N_slices)"));
+        status = H5Sclose (atts);
+        if (status<0) throw(IOexception("CSR::write_output() - error in H5Sclose(N_slices)"));
+
+        // Close and release resources.
+        status = H5Pclose (slc_dcpl);
+        if (status<0) throw(IOexception("CSR::write_output() - error in H5Pclose(slc_dcpl)"));
+        status = H5Dclose (slc_dset);
+        if (status<0) throw(IOexception("CSR::write_output() - error in H5Dclose(slc_dset)"));
+        status = H5Sclose (slc_space);
+        if (status<0) throw(IOexception("CSR::write_output() - error in H5Dclose(slc_space)"));
+
         status = H5Fclose(file);
         if (status<0) throw(IOexception("CSR::write_output() - error in H5Fclose()"));
+        
+        delete[] snap_buffer;
+        delete[] slc_buffer;
 
         // no errors have occured if we made it 'til here
         cout << "writing HDF5 done." << endl;
