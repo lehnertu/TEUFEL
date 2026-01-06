@@ -29,6 +29,7 @@
 #include <math.h>
 #include "hdf5.h"
 #include "particle.h"
+#include "vector.h"
 
 CSR::CSR()
 {
@@ -161,13 +162,13 @@ void CSR::update(double tracking_time)
         size_t n_sl = N_mod;
         if (sl<N_rem) n_sl++;
         // compute slice properties - weighted average by charge
-        //! @todo slice radius still missing
         double total_charge = 0.0;
         double min_s = s[sorting[p_index]];
         double max_s = s[sorting[p_index]];
         avg_pos = VectorZero;
         avg_mom = VectorZero;
         avg_acc = VectorZero;
+        size_t p_index_before_slice = p_index;
         for (size_t i_sl=0; i_sl<n_sl; i_sl++)
         {
             ChargedParticle *p = particles[sorting[p_index]];
@@ -184,6 +185,19 @@ void CSR::update(double tracking_time)
         avg_pos /= total_charge;
         avg_mom /= total_charge;
         avg_acc /= total_charge;
+        // scan the same slice again to compute the rms radius
+        p_index = p_index_before_slice;
+        double rms_radius = 0.0;
+        for (size_t i_sl=0; i_sl<n_sl; i_sl++)
+        {
+            ChargedParticle *p = particles[sorting[p_index]];
+            double p_charge = p->getCharge();
+            Vector rad = cross(p->getPosition()-avg_pos, forward);
+            double r_sq = rad.abs2nd();
+            rms_radius += p_charge * r_sq;
+            p_index++;
+        }
+        rms_radius = sqrt(rms_radius/total_charge);
         // append the slice to the snapshot
         snap->slices.push_back(
             Slice{
@@ -193,7 +207,7 @@ void CSR::update(double tracking_time)
                 .position = avg_pos,
                 .momentum = avg_mom,
                 .accel = avg_acc,
-                .radius = 1.0}
+                .radius = rms_radius}
         );
     }
     if (DEBUGLEVEL>=2)

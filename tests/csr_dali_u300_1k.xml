@@ -25,7 +25,7 @@
         <calc print="dE/E = " var="delta" eq="eps_z/tau/E_beam" />
         <calc print="undulator center R56 = " var="R56" eq="8*lambda" />
         <bunch gamma="gamma" charge="-1.0e-9" cmr="-1.0" n="1000" >
-            <position x="0.0" y="0.0" z="0.0" zrms="tau*_c" />
+            <position x="0.0" y="0.0" z="0.0" xrms="0.001" yrms="0.001" zrms="tau*_c" />
             <momentum x="0.0" y="0.0" z="1.0" delta="delta" />
             <!-- correct for R56 -->
             <correlations>
