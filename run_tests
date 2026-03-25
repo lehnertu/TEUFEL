@@ -6,6 +6,12 @@ green='\033[1;32m'
 nc='\033[0m'
 
 ./build/teufel.integrate_field; rc=$?
+if [ $rc = "0" ]
+then
+    echo -e "$green OK.$nc"
+else
+     echo -e "$red Error.$nc"
+fi
 num=$(($num + $rc))
 
 echo ''
@@ -13,6 +19,12 @@ echo '==========================================================================
 echo ''
 
 ./build/teufel.bunch; rc=$?
+if [ $rc = "0" ]
+then
+    echo -e "$green OK.$nc"
+else
+     echo -e "$red Error.$nc"
+fi
 num=$(($num + $rc))
 
 echo ''
@@ -20,13 +32,12 @@ echo '==========================================================================
 echo ''
 
 ./build/teufel.magnet; rc=$?
-num=$(($num + $rc))
-
-echo ''
-echo '==============================================================================='
-echo ''
-
-./build/teufel.undulator; rc=$?
+if [ $rc = "0" ]
+then
+    echo -e "$green OK.$nc"
+else
+     echo -e "$red Error.$nc"
+fi
 num=$(($num + $rc))
 
 echo ''
@@ -34,6 +45,12 @@ echo '==========================================================================
 echo ''
 
 ./build/teufel.loop; rc=$?
+if [ $rc = "0" ]
+then
+    echo -e "$green OK.$nc"
+else
+     echo -e "$red Error.$nc"
+fi
 num=$(($num + $rc))
 
 echo ''
@@ -41,6 +58,12 @@ echo '==========================================================================
 echo ''
 
 ./build/teufel.EcrossB; rc=$?
+if [ $rc = "0" ]
+then
+    echo -e "$green OK.$nc"
+else
+     echo -e "$red Error.$nc"
+fi
 num=$(($num + $rc))
 
 echo ''
@@ -48,6 +71,12 @@ echo '==========================================================================
 echo ''
 
 ./build/teufel.electrostatic; rc=$?
+if [ $rc = "0" ]
+then
+    echo -e "$green OK.$nc"
+else
+     echo -e "$red Error.$nc"
+fi
 num=$(($num + $rc))
 
 echo ''
@@ -55,6 +84,12 @@ echo '==========================================================================
 echo ''
 
 ./build/teufel.RadPush; rc=$?
+if [ $rc = "0" ]
+then
+    echo -e "$green OK.$nc"
+else
+     echo -e "$red Error.$nc"
+fi
 num=$(($num + $rc))
 
 echo ''
@@ -62,14 +97,33 @@ echo '==========================================================================
 echo ''
 
 ./build/teufel.diffraction; rc=$?
+if [ $rc = "0" ]
+then
+    echo -e "$green OK.$nc"
+else
+     echo -e "$red Error.$nc"
+fi
 num=$(($num + $rc))
 
 echo ''
 echo '==============================================================================='
 echo ''
 
-./build/teufel examples/undulator_matching.xml
+./build/teufel examples/undulator_matching.xml; rc=$?
+if [ $rc = "0" ]
+then
+    echo -e "$green OK.$nc"
+else
+     echo -e "$red Error.$nc"
+fi
+num=$(($num + $rc))
 ./tests/test.matching.py; rc=$?
+if [ $rc = "0" ]
+then
+    echo -e "$green OK.$nc"
+else
+     echo -e "$red Error.$nc"
+fi
 num=$(($num + $rc))
 
 echo ''
@@ -85,8 +139,8 @@ echo ''
 #     echo -e "$green OK.$nc"
 # else
 #     echo -e "$red Error.$nc"
-# num=$(($num + $rc))
 # fi
+# num=$(($num + $rc))
 
 # echo ''
 # echo '==============================================================================='
@@ -107,16 +161,42 @@ echo ''
 # echo '==============================================================================='
 # echo ''
 
-./build/teufel tests/fel_modulation.xml
+./build/teufel tests/fel_modulation.xml; rc=$?
+if [ $rc = "0" ]
+then
+    echo -e "$green OK.$nc"
+else
+     echo -e "$red Error.$nc"
+fi
+num=$(($num + $rc))
 ./tests/test.fel-modulation.py; rc=$?
+if [ $rc = "0" ]
+then
+    echo -e "$green OK.$nc"
+else
+     echo -e "$red Error.$nc"
+fi
 num=$(($num + $rc))
 
 echo ''
 echo '==============================================================================='
 echo ''
 
-./build/teufel tests/fel1d_modulation.xml
+./build/teufel tests/fel1d_modulation.xml; rc=$?
+if [ $rc = "0" ]
+then
+    echo -e "$green OK.$nc"
+else
+     echo -e "$red Error.$nc"
+fi
+num=$(($num + $rc))
 ./tests/test.fel-modulation.py; rc=$?
+if [ $rc = "0" ]
+then
+    echo -e "$green OK.$nc"
+else
+     echo -e "$red Error.$nc"
+fi
 num=$(($num + $rc))
 
 echo ''
@@ -127,6 +207,6 @@ if [ $num = "0" ]
 then
     echo -e "$green no errors - all tests passed.$nc"
 else
-    echo -e "$red there were " $rc " errors - some test failed!$nc"
+    echo -e "$red there were " $num " errors - some test failed!$nc"
 fi
 

@@ -102,7 +102,7 @@ configure_file (
   )
 
 # compiler flags
-add_definitions(-std=c++11 -Wall -m64 -pthread)
+add_definitions(-std=c++17 -Wall -m64 -pthread)
 
 add_executable(teufel ${PROJECT_SOURCE_DIR}/src/teufel_hybrid.cpp)
 set_target_properties(teufel PROPERTIES
@@ -118,79 +118,31 @@ target_link_libraries(teufel
                              ${MUPARSER_LIBRARY}
                              ${ZLIB_LIBRARY_RELEASE} )
 
-add_executable(propagate ${PROJECT_SOURCE_DIR}/src/propagate.cpp)
-set_target_properties(propagate PROPERTIES
-    COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
-set_target_properties(propagate PROPERTIES
-    LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
-target_link_libraries(propagate ${PROJECT_NAME}lib
-                             ${HDF5_LIBRARIES}
-                             ${SDDS_LIBRARIES}
-                             Eigen3::Eigen
-                             ${PUGIXML_LIBRARIES}
-                             ${MUPARSER_LIBRARY}
-                             ${ZLIB_LIBRARY_RELEASE} )
+# add_executable(propagate ${PROJECT_SOURCE_DIR}/src/propagate.cpp)
+# set_target_properties(propagate PROPERTIES
+#     COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
+# set_target_properties(propagate PROPERTIES
+#     LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
+# target_link_libraries(propagate ${PROJECT_NAME}lib
+#                              ${HDF5_LIBRARIES}
+#                              ${SDDS_LIBRARIES}
+#                              Eigen3::Eigen
+#                              ${PUGIXML_LIBRARIES}
+#                              ${MUPARSER_LIBRARY}
+#                              ${ZLIB_LIBRARY_RELEASE} )
 
-add_executable(reflection ${PROJECT_SOURCE_DIR}/src/reflection.cpp)
-set_target_properties(reflection PROPERTIES
-    COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
-set_target_properties(reflection PROPERTIES
-    LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
-target_link_libraries(reflection ${PROJECT_NAME}lib
-                             ${HDF5_LIBRARIES}
-                             ${SDDS_LIBRARIES}
-                             Eigen3::Eigen
-                             ${PUGIXML_LIBRARIES}
-                             ${MUPARSER_LIBRARY}
-                             ${ZLIB_LIBRARY_RELEASE} )
-
-# for building the documentation
-option(BUILD_DOCUMENTATION "Generate makefiles for documentation" ON)
-option(BUILD_DOCUMENTATION_DEFAULT "Build documentation by default" OFF)
-if(BUILD_DOCUMENTATION)
-    find_package(Doxygen)
-        if(NOT DOXYGEN_FOUND)
-            message(FATAL_ERROR "Doxygen is not installed or not properly configured")
-        endif(NOT DOXYGEN_FOUND)
-    find_package(LATEX COMPONENTS PDFLATEX)
-        if(NOT LATEX_FOUND)
-            message(FATAL_ERROR "LaTeX is not installed or not properly configured")
-        endif(NOT LATEX_FOUND)
-    set(DOC_SRC_DIR ${CMAKE_CURRENT_SOURCE_DIR}/doc)
-    message(DOC_SRC_DIR = ${DOC_SRC_DIR})
-    set(DOC_BUILD_DIR ${CMAKE_CURRENT_BINARY_DIR}/doc)
-    message(DOC_BUILD_DIR = ${DOC_BUILD_DIR})
-    file(MAKE_DIRECTORY ${DOC_BUILD_DIR})
-    if(BUILD_DOCUMENTATION_DEFAULT)
-        add_custom_target(doc ALL
-            ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/setup.dox
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            COMMENT "Generating API documentation with Doxygen")
-        add_custom_target(man ALL
-            # we first compile with LaTeX to generate all indices
-            COMMAND ${LATEX_COMPILER} ${DOC_SRC_DIR}/UserManual.tex 
-            # then we use PDFLATEX to generate the final output
-            COMMAND ${PDFLATEX_COMPILER} ${CMAKE_CURRENT_SOURCE_DIR}/doc/UserManual.tex
-            COMMAND cp -f UserManual.pdf ${DOC_SRC_DIR}/
-            WORKING_DIRECTORY ${DOC_BUILD_DIR}
-            COMMENT "Generating user manual with LaTeX"
-            )
-    else()
-        add_custom_target(doc
-            ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/setup.dox
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            COMMENT "Generating API documentation with Doxygen")
-        add_custom_target(man
-            # we first compile with LaTeX to generate all indices
-            COMMAND ${LATEX_COMPILER} ${DOC_SRC_DIR}/UserManual.tex 
-            # then we use PDFLATEX to generate the final output
-            COMMAND ${PDFLATEX_COMPILER} ${CMAKE_CURRENT_SOURCE_DIR}/doc/UserManual.tex
-            COMMAND cp -f UserManual.pdf ${DOC_SRC_DIR}/
-            WORKING_DIRECTORY ${DOC_BUILD_DIR}
-            COMMENT "Generating user manual with LaTeX"
-            )
-    endif()
-endif()
+# add_executable(reflection ${PROJECT_SOURCE_DIR}/src/reflection.cpp)
+# set_target_properties(reflection PROPERTIES
+#     COMPILE_FLAGS "${MPI_CXX_COMPILE_FLAGS}")
+# set_target_properties(reflection PROPERTIES
+#     LINK_FLAGS "${MPI_CXX_LINK_FLAGS}")
+# target_link_libraries(reflection ${PROJECT_NAME}lib
+#                              ${HDF5_LIBRARIES}
+#                              ${SDDS_LIBRARIES}
+#                              Eigen3::Eigen
+#                              ${PUGIXML_LIBRARIES}
+#                              ${MUPARSER_LIBRARY}
+#                              ${ZLIB_LIBRARY_RELEASE} )
 
 # for building test binaries
 option(BUILD_TESTS "Build binaries for the test cases" ON)
@@ -210,13 +162,6 @@ if(BUILD_TESTS)
     target_link_libraries(teufel.magnet ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
-                             ${ZLIB_LIBRARY_RELEASE} )
-    add_executable(teufel.undulator ${PROJECT_TESTS_DIR}/teufel.undulator.cpp)
-    target_link_libraries(teufel.undulator ${PROJECT_NAME}lib
-                             ${HDF5_LIBRARIES}
-                             ${SDDS_LIBRARIES}
-                             ${PUGIXML_LIBRARIES}
-                             ${MUPARSER_LIBRARY}
                              ${ZLIB_LIBRARY_RELEASE} )
     add_executable(teufel.loop ${PROJECT_TESTS_DIR}/teufel.loop.cpp)
     target_link_libraries(teufel.loop ${PROJECT_NAME}lib
