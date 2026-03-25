@@ -137,7 +137,22 @@ A few libraries are required to build the TEUFEL executable.
   In both cases the script
   teufel/lib/FindMUPARSER.cmake will find and include the library.
 
-Then we create a build directory in the downloaded source directory.
+If you are working on a cluster, often several versions of needed libraries are available.
+As an example we give the exact versions of modules to be loaded on the ROSI cluster.
+Other combinations will likely work but have not been tested. It is recommended to load
+the same modules when executing TEUFEL runs.
+
+<pre>
+module load genoa
+module load GCC/11.3.0
+module load zlib/1.3.1
+module load OpenMPI/4.1.4
+module load HDF5/1.12.2
+module load cmake/3.15.4
+</pre>
+
+We do a typical "out-off-source" build using cmake.
+First we create a build directory in the downloaded source directory.
 
 <pre>
 mkdir build
