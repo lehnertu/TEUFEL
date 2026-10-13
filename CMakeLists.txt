@@ -134,6 +134,18 @@ target_link_libraries(teufel
                              ${MUPARSER_LIBRARY}
                              ${ZLIB_LIBRARY_RELEASE} )
 
+add_executable(teufel_omp ${PROJECT_SOURCE_DIR}/src/teufel_omp.cpp)
+target_compile_options(teufel_omp PRIVATE ${MPI_CXX_COMPILE_FLAGS})
+target_link_options(teufel_omp PRIVATE ${MPI_CXX_LINK_FLAGS})
+target_link_libraries(teufel_omp
+                             ${PROJECT_NAME}lib
+                             ${HDF5_LIBRARIES}
+                             ${SDDS_LIBRARIES}
+                             ${MPI_CXX_LIBRARIES}
+                             ${PUGIXML_LIBRARIES}
+                             ${MUPARSER_LIBRARY}
+                             ${ZLIB_LIBRARY_RELEASE} )
+
 #[[
 add_executable(propagate ${PROJECT_SOURCE_DIR}/src/propagate.cpp)
 set_target_properties(propagate PROPERTIES
