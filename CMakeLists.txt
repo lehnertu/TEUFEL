@@ -124,16 +124,29 @@ configure_file (
 
 
 add_executable(teufel ${PROJECT_SOURCE_DIR}/src/teufel_hybrid.cpp)
-target_compile_options(teufel PRIVATE ${MPI_CXX_COMPILE_FLAGS})
-target_link_options(teufel PRIVATE ${MPI_CXX_LINK_FLAGS})
+if(TARGET MPI::MPI_CXX)
+    target_link_libraries(teufel PRIVATE MPI::MPI_CXX)
+else()
+    if(MPI_CXX_COMPILE_FLAGS)
+        separate_arguments(MPI_CXX_COMPILE_FLAGS_LIST NATIVE_COMMAND "${MPI_CXX_COMPILE_FLAGS}")
+        target_compile_options(teufel PRIVATE ${MPI_CXX_COMPILE_FLAGS_LIST})
+    endif()
+    if(MPI_CXX_LINK_FLAGS)
+        separate_arguments(MPI_CXX_LINK_FLAGS_LIST NATIVE_COMMAND "${MPI_CXX_LINK_FLAGS}")
+        target_link_options(teufel PRIVATE ${MPI_CXX_LINK_FLAGS_LIST})
+    endif()
+endif()
 target_link_libraries(teufel
+                             PRIVATE
                              ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
-                             ${MPI_CXX_LIBRARIES}
                              ${PUGIXML_LIBRARIES}
                              ${MUPARSER_LIBRARY}
                              ${ZLIB_LIBRARY_RELEASE} )
+if(NOT TARGET MPI::MPI_CXX)
+    target_link_libraries(teufel PRIVATE ${MPI_CXX_LIBRARIES})
+endif()
 
 add_executable(teufel_omp ${PROJECT_SOURCE_DIR}/src/teufel_omp.cpp)
 target_link_libraries(teufel_omp
@@ -219,3 +232,4 @@ if(BUILD_TESTS)
                              ${SDDS_LIBRARIES}
                              ${ZLIB_LIBRARY_RELEASE} )
 endif()
+
