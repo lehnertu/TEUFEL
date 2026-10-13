@@ -65,33 +65,25 @@
 int main(int argc, char *argv[])
 {
 
-    int NumberOfNodes = 1;
-    teufel::rank = 0;
     int NumberOfThreads = omp_get_max_threads();
     
-    if (teufel::rank==0)
-    {
-        std::cout << std::endl;
-        std::cout << " TEUFEL " << TEUFEL_VERSION_MAJOR << ".";
-        std::cout.width(2);
-        std::cout.fill('0');
-        std::cout << TEUFEL_VERSION_MINOR << ".";
-        std::cout.width(2);
-        std::cout.fill('0');
-        std::cout << TEUFEL_VERSION_PATCH << std::endl;
-        cout << std::endl <<" THz-Emission from Undulators and Free-Electron Lasers" << std::endl << std::endl;
-        cout << std::endl <<" TEUFEL parallel computing on " << NumberOfNodes << " nodes." << std::endl;
-        cout << std::endl;
-    }
+    std::cout << std::endl;
+    std::cout << " TEUFEL " << TEUFEL_VERSION_MAJOR << ".";
+    std::cout.width(2);
+    std::cout.fill('0');
+    std::cout << TEUFEL_VERSION_MINOR << ".";
+    std::cout.width(2);
+    std::cout.fill('0');
+    std::cout << TEUFEL_VERSION_PATCH << std::endl;
+    cout << std::endl <<" THz-Emission from Undulators and Free-Electron Lasers" << std::endl << std::endl;
+    cout << std::endl <<" TEUFEL parallel computing on " << NumberOfThreads << " threads." << std::endl;
+    cout << std::endl;
     cout << std::flush;
-    usleep(100000);
-    MPI_Barrier(MPI_COMM_WORLD);
 
-    char processor_name[MPI_MAX_PROCESSOR_NAME];
-    int namelen;
+    char processor_name[256] = {0};
     int mem_size = -1;
     int PID = getpid();
-    MPI_Get_processor_name(processor_name, &namelen);
+    gethostname(processor_name, sizeof(processor_name)-1);
     std::string line;
     std::string delimiter = ":";
     std::ifstream myfile;
@@ -112,7 +104,7 @@ int main(int argc, char *argv[])
         myfile.close();
     }
 
-    cout << "node " << teufel::rank << " : " << processor_name
+    cout << "host " << processor_name
         << " PID=" << PID
         << " total memory " << mem_size/1e3 << " MB"
         << " using " << NumberOfThreads << " parallel threads"
@@ -133,38 +125,33 @@ int main(int argc, char *argv[])
                 mem_size = std::stoi(rest);
             }
         }
-        cout << "node " << teufel::rank << " memory usage : " << mem_size/1e3 << " MB" << std::endl;
+        cout << "memory usage : " << mem_size/1e3 << " MB" << std::endl;
         myfile.close();
     }
     
-    MPI_Barrier(MPI_COMM_WORLD);
-    usleep(100000);
-    if (teufel::rank==0) cout << std::endl << std::flush;
-    usleep(100000);
-    MPI_Barrier(MPI_COMM_WORLD);
+    cout << std::endl << std::flush;
     
     // ===============================================================
-    // parsing the input file by all nodes in parallel
-    // console output is only printed from rank 0
+    // parsing the input file
     // ===============================================================
     
     // The first command line argument is interpreted as the input file name.
     // This is an XML document which is opened and parsed here.
     pugi::xml_document doc;
     if (argc < 2) {
-        if (teufel::rank==0) std::cout << "Usage is teufel <infile>" << std::endl << std::endl;
+        std::cout << "Usage is teufel <infile>" << std::endl << std::endl;
         exit(1);
     } else {
-        if (teufel::rank==0) std::cout << "reading XML input from " << argv[1] << std::endl;
+        std::cout << "reading XML input from " << argv[1] << std::endl;
         pugi::xml_parse_result result = doc.load_file(argv[1]);
         if (result)
         {
-            if (teufel::rank==0) std::cout << "input parsed without errors" << std::endl;
+            std::cout << "input parsed without errors" << std::endl;
         }
         else
         {
-            if (teufel::rank==0) std::cout << "ERROR reading file " << argv[1] << std::endl;
-            if (teufel::rank==0) std::cout << "Error description: " << result.description() << std::endl;
+            std::cout << "ERROR reading file " << argv[1] << std::endl;
+            std::cout << "Error description: " << result.description() << std::endl;
             exit(1);
         }
     };
@@ -173,8 +160,8 @@ int main(int argc, char *argv[])
         throw(IOexception("TEUFEL::InputParser - root node <teufel> not found."));
     string description = root.attribute("description").value();
     string author = root.attribute("author").value();
-    if (teufel::rank==0) std::cout << "case : " << description << std::endl;
-    if (teufel::rank==0) std::cout << "by : " << author << std::endl << std::endl;
+    std::cout << "case : " << description << std::endl;
+    std::cout << "by : " << author << std::endl << std::endl;
     
     // Further parsing of the input document is done by the parser object.
     InputParser *parse = new InputParser(root);
@@ -183,13 +170,9 @@ int main(int argc, char *argv[])
     // All lattice elements found when parsing the input are added to this.
     Lattice *lattice = new Lattice;
     int NoE = parse->parseLattice(lattice);
-    if (teufel::rank==0) std::cout << std::endl;
-    if (teufel::rank==0) std::cout << "lattice of " << NoE << " elements created." << std::endl;
-    MPI_Barrier(MPI_COMM_WORLD);
-    usleep(100000);
-    if (teufel::rank==0) cout << std::endl << std::flush;
-    usleep(100000);
-    MPI_Barrier(MPI_COMM_WORLD);
+    std::cout << std::endl;
+    std::cout << "lattice of " << NoE << " elements created." << std::endl;
+    cout << std::endl << std::flush;
     
     // We create an empty beam object.
     // Then we call the parser to fill in the necessary information from the input file.
@@ -198,67 +181,50 @@ int main(int argc, char *argv[])
     // or other bunch-related procedures. This way it is possible to log information
     // for inidividual bunches making up the total beam.
     // 
-    // After every tracking step, the current particle information distributed over
-    // the compute nodes will be re-gathered into this object.
-    // Every node is doing that, so the total beam history is available for interactions.
-    if (teufel::rank==0) std::cout << "TEUFEL: creating master beam." << std::endl << std::endl;
+    // The tracked particle information is stored in this object after every
+    // tracking step, so the total beam history is available for interactions.
+    std::cout << "TEUFEL: creating master beam." << std::endl << std::endl;
     Beam *masterBeam = new Beam();
     std::vector<Logger*> listLoggers;
     ProbeInfo probe{false, 0, "", 0, 0};
     int NoB = parse->parseBeam(masterBeam, &listLoggers, &probe);
-    if (teufel::rank==0) std::cout << std::endl;
-    if (teufel::rank==0) std::cout << "beam of " << NoB << " bunches created." << std::endl;
-    if (teufel::rank==0) std::cout << "total number of particles : " << masterBeam->getNOP() << std::endl;
-    if (teufel::rank==0) std::cout << "total charge : "
+    std::cout << std::endl;
+    std::cout << "beam of " << NoB << " bunches created." << std::endl;
+    std::cout << "total number of particles : " << masterBeam->getNOP() << std::endl;
+    std::cout << "total charge : "
         << masterBeam->getTotalCharge()*1.0e9 << "nC" << std::endl;
-    if (teufel::rank==0) std::cout << "defined " << (int)listLoggers.size() << " loggers." << std::endl;
-    MPI_Barrier(MPI_COMM_WORLD);
-    usleep(100000);
-    if (teufel::rank==0) cout << std::endl << std::flush;
-    usleep(100000);
-    MPI_Barrier(MPI_COMM_WORLD);
+    std::cout << "defined " << (int)listLoggers.size() << " loggers." << std::endl;
+    cout << std::endl << std::flush;
 
     // get all tracking information from the input file
     std::vector<watch_t> watches;
     std::list<InteractionField*> interactions;
     parse->parseTracking(masterBeam, &watches, &interactions);
-    if (teufel::rank==0) std::cout << std::endl;
-    if (teufel::rank==0) std::cout << "defined " << (int)watches.size() << " watch points." << std::endl;
+    std::cout << std::endl;
+    std::cout << "defined " << (int)watches.size() << " watch points." << std::endl;
     // all interaction fields are added to the lattice to be included in the particel tracking
     for (InteractionField* f : interactions) lattice->addElement(f);
-    if (teufel::rank==0) std::cout << "defined " << (int)interactions.size() << " interactions." << std::endl;
-    if (teufel::rank==0) std::cout << "lattice containing " << (int)lattice->count() << " components." << std::endl;
-    MPI_Barrier(MPI_COMM_WORLD);
-    usleep(100000);
-    if (teufel::rank==0) std::cout << std::endl << std::flush;
-    usleep(100000);
-    MPI_Barrier(MPI_COMM_WORLD);
+    std::cout << "defined " << (int)interactions.size() << " interactions." << std::endl;
+    std::cout << "lattice containing " << (int)lattice->count() << " components." << std::endl;
+    std::cout << std::endl << std::flush;
     
     // parse all observer definitions
     std::vector<BaseObserver*> listObservers;
     parse->parseObservers(&listObservers);
-    if (teufel::rank==0) std::cout << std::endl;
-    if (teufel::rank==0) std::cout << "defined " << (int)listObservers.size() << " observers." << std::endl;
-    MPI_Barrier(MPI_COMM_WORLD);
-    usleep(100000);
-    if (teufel::rank==0) std::cout << std::endl << std::flush;
-    usleep(100000);
-    MPI_Barrier(MPI_COMM_WORLD);
+    std::cout << std::endl;
+    std::cout << "defined " << (int)listObservers.size() << " observers." << std::endl;
+    std::cout << std::endl << std::flush;
 
     // We register the number of time steps to track the beam.
     // This has been set by the parser, but will be cleared when
     // initalizing the trajectories for actual tracking.
     int NOTS = masterBeam->getNOTS();
     double time_step = masterBeam->getTimeStep();
-    if (teufel::rank==0) std::cout << "tracking for " << NOTS << " time steps dt=" << time_step << " s" << std::endl;
-    if (teufel::rank==0) std::cout << "master beam trajectory storage : "
+    std::cout << "tracking for " << NOTS << " time steps dt=" << time_step << " s" << std::endl;
+    std::cout << "master beam trajectory storage : "
         << (double)masterBeam->getNOP() * NOTS * 10.0 * sizeof(double) / 1e6
         << " MB  for " << masterBeam->getNOP() << " particles" << std::endl;
-    MPI_Barrier(MPI_COMM_WORLD);
-    usleep(100000);
-    if (teufel::rank==0) std::cout << std::endl << std::flush;
-    usleep(100000);
-    MPI_Barrier(MPI_COMM_WORLD);
+    std::cout << std::endl << std::flush;
 
     // done parsing the input file
     delete parse;
@@ -278,45 +244,19 @@ int main(int argc, char *argv[])
                 mem_size = std::stoi(rest);
             }
         }
-        cout << "node " << teufel::rank << " memory usage : " << mem_size/1e3 << " MB" << std::endl;
+        cout << "memory usage : " << mem_size/1e3 << " MB" << std::endl;
         myfile.close();
     }
-    MPI_Barrier(MPI_COMM_WORLD);
-    usleep(100000);
-    if (teufel::rank==0) cout << std::endl << std::flush;
-    usleep(100000);
-    MPI_Barrier(MPI_COMM_WORLD);
+    cout << std::endl << std::flush;
 
     // ===============================================================
-    // broadcast the masterBeam to all nodes
+    // reset the master beam to the initial step
     // ===============================================================
 
-    int MASTER_NOP = masterBeam->getNOP();
-    int TRACKING_NOP = (MASTER_NOP + NumberOfNodes -1) / NumberOfNodes;
-    if (teufel::rank==0) std::cout << "tracking " << TRACKING_NOP << " particles per node." << std::endl;
-    if (teufel::rank==0) std::cout << "tracking beam trajectory storage : "
-        << (double)TRACKING_NOP * NOTS * 10.0 * sizeof(double) / 1e6
-        << " MB  for " << TRACKING_NOP << " particles" << std::endl;
-    // allocate communication buffers holding the required number of particles
-    // the master buffer must provide space for missing particles on some nodes
-    int MASTER_BUFSIZE = TRACKING_NOP * NumberOfNodes * 10;
-    int TRACKING_BUFSIZE = TRACKING_NOP * 10;
-    if (MASTER_BUFSIZE < masterBeam->getStepBufferSize())
-    {
-        throw(IOexception("TEUFEL internal error: master buffer too small - aborting."));
-        return(-1);
-    };
-    // buffer for MPI communication
-    double *masterBuffer = new double[MASTER_BUFSIZE];
-    double *trackingBuffer = new double[TRACKING_BUFSIZE];
-    
-    // fill the send buffer on the master node
+    // the initial step is stored in a buffer and re-loaded into the beam
+    double *masterBuffer = new double[masterBeam->getStepBufferSize()];
     masterBeam->bufferStep(masterBuffer);
 
-    // the buffer ins transfered from the master to all nodes
-    MPI_Bcast(masterBuffer, MASTER_BUFSIZE, MPI_DOUBLE,
-        0, MPI_COMM_WORLD);
-        
     // update the beam from the buffer
     masterBeam->clearTrajectories();
     // we will use the master beam to store the gathered tracking data
@@ -327,14 +267,9 @@ int main(int argc, char *argv[])
     // all particles just have the step=0 coordinates
     masterBeam->setNOTS(0);
     masterBeam->setTimeStep(time_step);
-    // now all nodes have an identical beam containig all particles
-    
-    MPI_Barrier(MPI_COMM_WORLD);
-    usleep(100000);
-    if (teufel::rank==0) cout << "master beam setup done." << std::endl;
-    if (teufel::rank==0) cout << std::endl << std::flush;
-    usleep(100000);
-    MPI_Barrier(MPI_COMM_WORLD);
+
+    std::cout << "master beam setup done." << std::endl;
+    std::cout << std::endl << std::flush;
 
     ss.str(std::string());
     ss << "/proc/" << PID << "/status";
@@ -351,27 +286,17 @@ int main(int argc, char *argv[])
                 mem_size = std::stoi(rest);
             }
         }
-        cout << "node " << teufel::rank << " memory usage : " << mem_size/1e3 << " MB" << std::endl;
+        cout << "memory usage : " << mem_size/1e3 << " MB" << std::endl;
         myfile.close();
     }
-    MPI_Barrier(MPI_COMM_WORLD);
-    usleep(100000);
-    if (teufel::rank==0) cout << std::endl << std::flush;
-    usleep(100000);
-    MPI_Barrier(MPI_COMM_WORLD);
+    cout << std::endl << std::flush;
 
     // ===============================================================
-    // re-distribute all particles into one bunch per node
-    // all containing approximately equal numbers of particles
-    // (the last node may have less)
+    // copy all particles into the bunch that will actually be tracked
     // ===============================================================
 
-    // this is the bunch every compute node will actually track
+    // this is the bunch that will actually be tracked
     Bunch *trackedBunch = new Bunch();
-    if (teufel::rank == 0) std::cout << "distribute particles " << TRACKING_NOP << " per node" << std::endl;
-    // particles are distributed in chunks of TRACKING_NOP to the individual nodes
-    int current_node = 0;              // the node to which we assign particles
-    int current_node_particles = 0;    // the number of particles already assigned to the current node
     // traverse the beam and copy particles
     int nob = masterBeam->getNOB();
     for (int i=0; i<nob; i++)
@@ -381,30 +306,18 @@ int main(int argc, char *argv[])
         for (int j=0; j<nop; j++)
         {
             ChargedParticle *master_particle = b->getParticle(j);
-            // if the particle is for this node
-            if (teufel::rank==current_node)
-            {
-                // create a new particle as an exact copy of the master beam particle
-                ChargedParticle *p = new ChargedParticle(master_particle);
-                p->preAllocate(NOTS+1);
-                trackedBunch->Add(p);
-            }
-            current_node_particles++;
-            // next node if we have enough particles here
-            if (current_node_particles==TRACKING_NOP)
-            {
-                current_node_particles = 0;
-                current_node++;
-            }
+            // create a new particle as an exact copy of the master beam particle
+            ChargedParticle *p = new ChargedParticle(master_particle);
+            p->preAllocate(NOTS+1);
+            trackedBunch->Add(p);
         }
     }
     
     // ===============================================================
-    // track the beam on all nodes in parallel
+    // track the beam
     // ===============================================================
 
-    // this is the beam we will actually track (private per node)
-    std::cout << "TEUFEL: node " << teufel::rank << " setup tracked beam." << std::endl;
+    // this is the beam we will actually track
     Beam *trackedBeam = new Beam();
     trackedBeam->Add(trackedBunch);
     // copy the tracking information from the master beam
@@ -414,18 +327,17 @@ int main(int argc, char *argv[])
     trackedBeam->setupTracking(lattice);
 
     // setup the ProbeLogger to observe trackedBeam
-    if (teufel::rank == 0)
-        if (probe.requested)
-        {
-            std::cout << "writing " << probe.number << " particles ";
-            std::cout << "every " << probe.step << " steps ";
-            std::cout << "to " << probe.filename << std::endl;
-            std::cout << std::endl;
-            ProbeLogger<Beam>* pl = new ProbeLogger<Beam>(trackedBeam, probe.filename, probe.step, probe.number);
-            listLoggers.push_back(pl);
-        };
+    if (probe.requested)
+    {
+        std::cout << "writing " << probe.number << " particles ";
+        std::cout << "every " << probe.step << " steps ";
+        std::cout << "to " << probe.filename << std::endl;
+        std::cout << std::endl;
+        ProbeLogger<Beam>* pl = new ProbeLogger<Beam>(trackedBeam, probe.filename, probe.step, probe.number);
+        listLoggers.push_back(pl);
+    };
     
-    std::cout << "TEUFEL: node " << teufel::rank << " tracking a beam of " <<
+    std::cout << "TEUFEL: tracking a beam of " <<
         trackedBeam->getNOP() << " particles." << std::endl;
     ss.str(std::string());
     ss << "/proc/" << PID << "/status";
@@ -442,22 +354,106 @@ int main(int argc, char *argv[])
                 mem_size = std::stoi(rest);
             }
         }
-        cout << "node " << teufel::rank << " memory usage : " << mem_size/1e3 << " MB" << std::endl;
+        cout << "memory usage : " << mem_size/1e3 << " MB" << std::endl;
         myfile.close();
     }
     
-    MPI_Barrier(MPI_COMM_WORLD);
-    usleep(100000);
-    if (teufel::rank==0) cout << std::endl << std::flush;
-    usleep(100000);
-    MPI_Barrier(MPI_COMM_WORLD);
+    cout << std::endl << std::flush;
 
     // handle watch point of initial particle distribution if requested
-    if (teufel::rank == 0)
+    for (int iw=0; iw<(int)watches.size(); iw++)
+    {
+        watch_t w = watches.at(iw);
+        if (w.step == 0)
+        {
+            std::cout << "writing watch point " << w.filename << std::endl;
+            if (w.type == hdf5)
+            {
+                int nw = masterBeam->WriteWatchPointHDF5(w.filename);
+                std::cout << nw << " particles written." << std::endl;
+                std::cout << std::endl;
+            };
+            if (w.type == sdds)
+            {
+                int res = masterBeam->WriteWatchPointSDDS(w.filename);
+                if (res==0)
+                {
+                    std::cout << masterBeam->getNOP() << " particles written." << std::endl;
+                    std::cout << std::endl;
+                } else {
+                    std::cout << "error " << res << " while writing." << std::endl;
+                    std::cout << std::endl;
+                };
+            };
+        }
+    }
+
+    // update loggers with initial particle distribution
+    for (int il=0; il<(int)listLoggers.size(); il++)
+        listLoggers.at(il)->update();
+                    
+    // initalize the interaction fields
+    // field source is the master beam - it is queried before every tracking step
+    // the fields act on the tracked beam
+    std::cout << "TEUFEL: initializing interactions." << std::endl;
+    for (InteractionField* f : interactions) f->init(masterBeam);
+    
+    // record the start time
+    double start_time = omp_get_wtime();
+    double print_time = start_time;
+    double current_time = start_time;
+
+    // this is the global tracking clock
+    // if the beam internal clock deviates this will result in exceptions from the interaction fields
+    double tracking_time = 0.0;
+    double tracking_time_step = masterBeam->getTimeStep();
+    std::cout << "start tracking : beam is at step=" << masterBeam->getNOTS();
+    std::cout << " t=" << tracking_time << " s" << std::endl;
+    std::cout << std::endl;
+
+    // do the tracking of the beam
+    // Shared memory parallelization is used for field integration only.
+    // It may be employed in the future during tracking for
+    // computing the interaction field between the particles.
+    // With a-priori fields tracking is not parallelized.
+    for (int step=0; step<NOTS; step++)
+    {
+    
+        // compute the interactions
+        // source is the master beam containing all particles
+        //! @todo we should not compute the interaction from the master beam
+        //! but from the tracked beam
+        for (InteractionField* f : interactions) f->update(tracking_time);
+        
+        // do a step
+        trackedBeam->doStep(lattice);
+        tracking_time += tracking_time_step;
+        
+        // for (int i=0; i<trackedBunch->getNOP(); i++)
+        // {
+        //     ChargedParticle *p = trackedBunch->getParticle(i);
+        //     p->StepVay(lattice);
+        // }
+            
+        // the master beam is updated from the tracked beam
+        trackedBeam->bufferStep(masterBuffer);
+        masterBeam->setStepFromBuffer(masterBuffer);
+        // stepping sanity check
+        if (masterBeam->getNOTS()!=step+1)
+        {
+            std::cout << "  beam is at step=" << masterBeam->getNOTS() << "  main() is at step=" << step << std::endl;
+            throw(IOexception("main() - beam is at wrong step"));
+        }
+
+        // update the loggers
+        for (int il=0; il<(int)listLoggers.size(); il++)
+            if (listLoggers.at(il)->log_requested(step+1)) listLoggers.at(il)->update();
+        
+        // handle watch points
         for (int iw=0; iw<(int)watches.size(); iw++)
         {
             watch_t w = watches.at(iw);
-            if (w.step == 0)
+            if (w.step == step+1)
             {
                 std::cout << "writing watch point " << w.filename << std::endl;
                 if (w.type == hdf5)
@@ -480,125 +476,13 @@ int main(int argc, char *argv[])
                 };
             }
         }
-
-    // update loggers with initial particle distribution
-    if (teufel::rank == 0)
-        for (int il=0; il<(int)listLoggers.size(); il++)
-            listLoggers.at(il)->update();
-                    
-    // initalize the interaction fields
-    // field source is the master beam - it is queried before every tracking step
-    // at that time identical information is available on all nodes
-    // the fields act on the tracked beam
-    if (teufel::rank==0)
-    {
-        std::cout << "TEUFEL: initializing interactions." << std::endl;
-    }
-    for (InteractionField* f : interactions) f->init(masterBeam);
-    
-    // record the start time
-    double start_time = MPI_Wtime();
-    double print_time = start_time;
-    double current_time = start_time;
-
-    // this is the global tracking clock
-    // if the beam internal clock deviates this will result in exceptions from the interaction fields
-    double tracking_time = 0.0;
-    double tracking_time_step = masterBeam->getTimeStep();
-    std::cout << "start tracking : beam is at step=" << masterBeam->getNOTS();
-    std::cout << " t=" << tracking_time << " s" << std::endl;
-    std::cout << std::endl;
-
-    // do the tracking of the beam
-    // Shared memory parallelization is used for field integration only.
-    // It may be employed in the future during tracking for
-    // computing the interaction field between the particles.
-    // With a-priori fields tracking will only be MPI parallelized.
-    for (int step=0; step<NOTS; step++)
-    {
-    
-        // compute the interactions on all nodes independently
-        // source is the master beam containing all particles
-        //! @todo we should not compute the interaction from the master beam
-        //! but from the tracked beam and gather the fields
-        //! @todo but we should compute the geometry of the interaction field
-        //! commonly for all nodes from the master beam before updating
-        //! @todo we should gather the storage information from all nodes to the master node
-        for (InteractionField* f : interactions) f->update(tracking_time);
-        
-        // do a step
-        trackedBeam->doStep(lattice);
-        tracking_time += tracking_time_step;
-        
-        // for (int i=0; i<trackedBunch->getNOP(); i++)
-        // {
-        //     ChargedParticle *p = trackedBunch->getParticle(i);
-        //     p->StepVay(lattice);
-        // }
-            
-        MPI_Barrier(MPI_COMM_WORLD);
-        // distribute the step result to all nodes
-        // each node buffers its own tracked bunch
-        trackedBeam->bufferStep(trackingBuffer);
-        // the buffers are gathered into the master buffer on all nodes
-        MPI_Allgather(trackingBuffer, TRACKING_BUFSIZE, MPI_DOUBLE,
-                      masterBuffer, TRACKING_BUFSIZE, MPI_DOUBLE, MPI_COMM_WORLD);
-        // each node updates the master beam from the master buffer
-        masterBeam->setStepFromBuffer(masterBuffer);
-        // stepping sanity check
-        if (masterBeam->getNOTS()!=step+1)
-        {
-            std::cout << "  beam is at step=" << masterBeam->getNOTS() << "  main() is at step=" << step << std::endl;
-            throw(IOexception("main() - beam is at wrong step"));
-        }
-        MPI_Barrier(MPI_COMM_WORLD);
-        // now we have all trajectory data available on all nodes
-
-        // update the loggers
-        if (teufel::rank == 0)
-        {
-            for (int il=0; il<(int)listLoggers.size(); il++)
-                if (listLoggers.at(il)->log_requested(step+1)) listLoggers.at(il)->update();
-        }
-        
-        // handle watch points
-        if (teufel::rank == 0)
-            for (int iw=0; iw<(int)watches.size(); iw++)
-            {
-                watch_t w = watches.at(iw);
-                if (w.step == step+1)
-                {
-                    std::cout << "writing watch point " << w.filename << std::endl;
-                    if (w.type == hdf5)
-                    {
-                        int nw = masterBeam->WriteWatchPointHDF5(w.filename);
-                        std::cout << nw << " particles written." << std::endl;
-                        std::cout << std::endl;
-                    };
-                    if (w.type == sdds)
-                    {
-                        int res = masterBeam->WriteWatchPointSDDS(w.filename);
-                        if (res==0)
-                        {
-                            std::cout << masterBeam->getNOP() << " particles written." << std::endl;
-                            std::cout << std::endl;
-                        } else {
-                            std::cout << "error " << res << " while writing." << std::endl;
-                            std::cout << std::endl;
-                        };
-                    };
-                }
-            }
         
         // make a print once every 30s
-        current_time = MPI_Wtime();
+        current_time = omp_get_wtime();
         if (current_time-print_time > 30)
         {
-            if (teufel::rank == 0)
-            {
-                std::cout << "time elapsed : " << current_time-start_time << " s   ";
-                std::cout << "tracking step : " << step << std::endl;
-            };
+            std::cout << "time elapsed : " << current_time-start_time << " s   ";
+            std::cout << "tracking step : " << step << std::endl;
             ss.str(std::string());
             ss << "/proc/" << PID << "/status";
             myfile.open(ss.str());
@@ -614,7 +498,7 @@ int main(int argc, char *argv[])
                         mem_size = std::stoi(rest);
                     }
                 }
-                cout << "node " << teufel::rank << " memory usage : " << mem_size/1e3 << " MB" << std::endl;
+                cout << "memory usage : " << mem_size/1e3 << " MB" << std::endl;
                 myfile.close();
             }
             print_time = current_time;
@@ -622,12 +506,8 @@ int main(int argc, char *argv[])
         
     }
     
-    MPI_Barrier(MPI_COMM_WORLD);
-    usleep(100000);
-    cout << "node " << teufel::rank << " finished tracking " << trackedBeam->getNOP() << " particles"
+    cout << "finished tracking " << trackedBeam->getNOP() << " particles"
         << " over " << trackedBeam->getNOTS() << " time steps" << std::endl;
-    usleep(100000);
-    MPI_Barrier(MPI_COMM_WORLD);
     
     ss.str(std::string());
     ss << "/proc/" << PID << "/status";
@@ -644,43 +524,27 @@ int main(int argc, char *argv[])
                 mem_size = std::stoi(rest);
             }
         }
-        cout << "node " << teufel::rank << " memory usage : " << mem_size/1e3 << " MB" << std::endl;
+        cout << "memory usage : " << mem_size/1e3 << " MB" << std::endl;
         myfile.close();
     }
-    MPI_Barrier(MPI_COMM_WORLD);
-    usleep(100000);
-    if (teufel::rank==0) cout << std::endl << std::flush;
-    usleep(100000);
-    MPI_Barrier(MPI_COMM_WORLD);
+    cout << std::endl << std::flush;
     
     // record the finish time
-    if (teufel::rank == 0)
-    {
-        double stop_time = MPI_Wtime();
-        std::cout << "time elapsed during tracking : " << stop_time-start_time << " s" << std::endl << std::endl;
-    };
+    double stop_time = omp_get_wtime();
+    std::cout << "time elapsed during tracking : " << stop_time-start_time << " s" << std::endl << std::endl;
 
     // write the logged data
-    if (teufel::rank == 0)
-    {
-        for (int i=0; i<(int)listLoggers.size(); i++)
-            listLoggers.at(i)->WriteData();
+    for (int i=0; i<(int)listLoggers.size(); i++)
+        listLoggers.at(i)->WriteData();
 
-        for (InteractionField* f : interactions)
-            f->write_output();
-    }
+    for (InteractionField* f : interactions)
+        f->write_output();
 
     // ===============================================================
-    // Compute the radiation observations :
-    // Each node does the computation for it's own set of particles.
-    // The fields are combined before writing the files.
+    // Compute the radiation observations
     // ===============================================================
 
-    MPI_Barrier(MPI_COMM_WORLD);
-    usleep(100000);
-    if (teufel::rank==0) cout << std::endl << std::flush;
-    usleep(100000);
-    MPI_Barrier(MPI_COMM_WORLD);
+    cout << std::endl << std::flush;
     
     // we remove all interaction fields from the lattice
     // we don't want these to be included with the lattice observations
@@ -690,8 +554,7 @@ int main(int argc, char *argv[])
         GeneralField* elem = lattice->at(i_lat);
         if (!elem->is_external())
         {
-            if (teufel::rank == 0)
-                std::cout << "deleting interaction field from lattice at index " << i_lat  << std::endl;
+            std::cout << "deleting interaction field from lattice at index " << i_lat  << std::endl;
             lattice->remove(i_lat);
         } else { 
             i_lat++;
@@ -705,15 +568,10 @@ int main(int argc, char *argv[])
     // compute all observations
     for (int i=0; i<(int)listObservers.size(); i++)
     {
-        double start_time = MPI_Wtime();
-        if (teufel::rank == 0)
-        {
-            std::cout << std::endl << "computing observer No. " << i+1 << std::endl;
-        };
+        double start_time = omp_get_wtime();
+        std::cout << std::endl << "computing observer No. " << i+1 << std::endl;
         BaseObserver *observer = listObservers.at(i);
-        MPI_Barrier(MPI_COMM_WORLD);
-        usleep(100000);
-        std::cout << "node " << teufel::rank << " integrating ... " << std::endl;
+        std::cout << "integrating ... " << std::endl;
         // OpenMP parallelization is handled inside the observer object
         // try and handle the different observer types
         if (auto obs = dynamic_cast<Observer<Beam>*>(observer))
@@ -726,81 +584,27 @@ int main(int argc, char *argv[])
             obs->setSource(lattice);
             obs->integrate();
         }
-        double stop_time = MPI_Wtime();
-        MPI_Barrier(MPI_COMM_WORLD);
-        usleep(100000);
-        if (teufel::rank == 0)
-        {
-            std::cout << "time elapsed : " << stop_time-start_time << " s" << std::endl;
-        };
+        double stop_time = omp_get_wtime();
+        std::cout << "time elapsed : " << stop_time-start_time << " s" << std::endl;
         
-        // collect all the field computed on the individual nodes into the master node
-        //! @todo this should be done in chunks, otherwise we temporarily need
-        //! 3 times the observer memory (original and 2 buffers).
-        unsigned int count = observer->getBufferSize();
-        std::cout << "Node " << teufel::rank << " allocating buffers for "<< count << " doubles" << std::endl;
-        // fill the buffer and get its address
-        double* nodeBuffer = observer->getBuffer();
-        if (nodeBuffer==0)
+        // a SnapshotObserver need special attention - it needs to
+        // buffer all particle positions from the master beam
+        if (SnapshotObserver<Beam> *obs = dynamic_cast<SnapshotObserver<Beam>*>(observer))
         {
-            std::cout << "MPI_Reduce for Obsserver : node " << teufel::rank << " was unable to get the node buffer." << std::endl;
-            throw(IOexception("memory allocation error"));
-        };
-        // we have to define a buffer for the sum on all nodes
-        double* reduceBuffer = new double[count];
-        if (reduceBuffer==0)
-        {
-            std::cout << "MPI_Reduce for Obsserver : node " << teufel::rank << " was unable to get the recude buffer." << std::endl;
-            throw(IOexception("memory allocation error"));
-        };
-        MPI_Barrier(MPI_COMM_WORLD);
-        usleep(100000);
-        if (teufel::rank == 0)
-            std::cout << std::endl << "All buffers allocated." << std::endl << std::flush;
-        MPI_Reduce(
-            nodeBuffer,                 // send buffer
-            reduceBuffer,               // receive buffer
-            count,                      // number of values
-            MPI_DOUBLE,                 // data type
-            MPI_SUM,                    // operation
-            0,                          // rank of the root process
-            MPI_COMM_WORLD              // communicator
-        );
-        MPI_Barrier(MPI_COMM_WORLD);
-        usleep(100000);
-        if (teufel::rank == 0)
-            std::cout << "Reduce finished." << std::endl << std::flush;
-        // the root node copies the data from the reduce buffer into the Observer
-        // and writes it to the output file
-        if (teufel::rank == 0)
-        {
-            observer->fromBuffer(reduceBuffer,count);
-            // a SnapshotObserver need special attention - it needs to
-            // buffer all particle positions from the master beam
-            if (SnapshotObserver<Beam> *obs = dynamic_cast<SnapshotObserver<Beam>*>(observer))
-            {
-                obs->setSource(masterBeam);
-                std::cout << "SnaphotObserver collecting particle coordinates from master beam." << std::endl << std::flush;
-                int num = obs->storeParticlePositions();
-                std::cout << "SnaphotObserver stored coordinates of " << num << " particles." << std::endl << std::flush;
-            }
-            // produce the output
-            try
-            { 
-                observer->generateOutput();
-                std::cout << "Observer output file written." << std::endl;
-            }
-            catch (exception const & e) { cout << e.what() << endl;}
+            obs->setSource(masterBeam);
+            std::cout << "SnaphotObserver collecting particle coordinates from master beam." << std::endl << std::flush;
+            int num = obs->storeParticlePositions();
+            std::cout << "SnaphotObserver stored coordinates of " << num << " particles." << std::endl << std::flush;
         }
-        // if (teufel::rank == 0) delete reduceBuffer;
-        delete[] reduceBuffer;
-        delete[] nodeBuffer;
+        // produce the output
+        try
+        { 
+            observer->generateOutput();
+            std::cout << "Observer output file written." << std::endl;
+        }
+        catch (exception const & e) { cout << e.what() << endl;}
 
-        MPI_Barrier(MPI_COMM_WORLD);
-        usleep(100000);
-        cout << "node " << teufel::rank << " done with observer " << i+1 << std::endl << std::flush;
-        usleep(100000);
-        MPI_Barrier(MPI_COMM_WORLD);
+        cout << "done with observer " << i+1 << std::endl << std::flush;
 
     }
 
@@ -831,13 +635,8 @@ int main(int argc, char *argv[])
     delete trackedBeam;
 
     delete[] masterBuffer;
-    delete[] trackingBuffer;
 
-    MPI_Barrier(MPI_COMM_WORLD);
-    usleep(100000);
-    if (teufel::rank==0)
-        std::cout << std::endl << " TEUFEL run finished." << std::endl << std::endl;
+    std::cout << std::endl << " TEUFEL run finished." << std::endl << std::endl;
     
-    MPI_Finalize();
     return 0;
 }

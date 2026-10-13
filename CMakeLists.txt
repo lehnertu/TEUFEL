@@ -105,6 +105,7 @@ include_directories( ${PROJECT_BINARY_DIR}
 aux_source_directory(${PROJECT_SOURCE_DIR}/src lib_sources )
 # the main program is not part of the library
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/teufel_hybrid.cpp)
+list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/teufel_omp.cpp)
 # stand-alone codes are not part of the library
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/propagate.cpp)
 list(REMOVE_ITEM lib_sources ${PROJECT_SOURCE_DIR}/src/reflection.cpp)
@@ -135,13 +136,10 @@ target_link_libraries(teufel
                              ${ZLIB_LIBRARY_RELEASE} )
 
 add_executable(teufel_omp ${PROJECT_SOURCE_DIR}/src/teufel_omp.cpp)
-target_compile_options(teufel_omp PRIVATE ${MPI_CXX_COMPILE_FLAGS})
-target_link_options(teufel_omp PRIVATE ${MPI_CXX_LINK_FLAGS})
 target_link_libraries(teufel_omp
                              ${PROJECT_NAME}lib
                              ${HDF5_LIBRARIES}
                              ${SDDS_LIBRARIES}
-                             ${MPI_CXX_LIBRARIES}
                              ${PUGIXML_LIBRARIES}
                              ${MUPARSER_LIBRARY}
                              ${ZLIB_LIBRARY_RELEASE} )
